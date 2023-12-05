@@ -1,8 +1,11 @@
 mod api;
+mod findex_backend;
+
 use actix_web::{middleware::Logger, web::Data, App, HttpServer};
 use api::fetch;
-use cloudproof_findex::{BackendConfiguration, InstantiatedFindex};
+use cloudproof_findex::BackendConfiguration;
 use env_logger::Env;
+use findex_backend::SqliteFindexBackend;
 use std::{io::Result, sync::Mutex};
 
 #[actix_web::main]
@@ -13,7 +16,7 @@ async fn main() -> Result<()> {
         "./data/entry.sql".to_string(),
         "./data/chain.sql".to_string(),
     );
-    let findex = Mutex::new(InstantiatedFindex::new(findex_config).await.unwrap());
+    let findex = Mutex::new(SqliteFindexBackend::new(findex_config).unwrap());
     let findex_data = Data::new(findex);
     HttpServer::new(move || {
         App::new()
