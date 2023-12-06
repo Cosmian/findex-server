@@ -2,7 +2,7 @@ mod api;
 mod findex_backend;
 
 use actix_web::{middleware::Logger, web::Data, App, HttpServer};
-use api::fetch;
+use api::{fetch, insert};
 use cloudproof_findex::BackendConfiguration;
 use env_logger::Env;
 use findex_backend::SqliteFindexBackend;
@@ -23,6 +23,7 @@ async fn main() -> Result<()> {
             .wrap(Logger::default())
             .app_data(findex_data.clone())
             .service(fetch)
+            .service(insert)
     })
     .bind(("0.0.0.0", 8080))?
     .run()

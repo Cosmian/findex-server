@@ -8,8 +8,8 @@ use cloudproof_findex::{
 use cosmian_findex::DxEnc;
 use cosmian_findex::{ChainTable, EntryTable, ENTRY_LENGTH, LINK_LENGTH};
 pub struct SqliteFindexBackend {
-    entry: EntryTable<ENTRY_LENGTH, SqlEntryBackend>,
-    chain: ChainTable<LINK_LENGTH, SqlChainBackend>,
+    pub entry: EntryTable<ENTRY_LENGTH, SqlEntryBackend>,
+    pub chain: ChainTable<LINK_LENGTH, SqlChainBackend>,
 }
 
 impl SqliteFindexBackend {
