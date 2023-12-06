@@ -19,7 +19,7 @@ impl SqliteFindexBackend {
                 entry: EntryTable::setup(SqlEntryBackend::new(&entry_params)?),
                 chain: ChainTable::setup(SqlChainBackend::new(&chain_params)?),
             }),
-            _ => unreachable!(),
+            _ => todo!(),
         }
     }
 }
