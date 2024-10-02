@@ -1,28 +1,29 @@
 mod api;
-mod findex_backend;
+mod common;
 
 use actix_web::{middleware::Logger, web::Data, App, HttpServer};
 use api::health;
+use common::env::Config;
 use env_logger::Env;
+use log::info;
 use std::{io::Result, sync::Mutex};
 
 #[actix_web::main]
 async fn main() -> Result<()> {
-    env_logger::Builder::from_env(Env::default().default_filter_or("debug")).init();
-    // Instantiate Findex Backend
-    // let findex_config = BackendConfiguration::Sqlite(
-    //     "./data/entry.sql".to_string(),
-    //     "./data/chain.sql".to_string(),
-    // );
-    // let findex = Mutex::new(SqliteFindexBackend::new(findex_config).unwrap());
-    // let findex_data = Data::new(findex);
+    let config = Config::from_env();
+    env_logger::Builder::new()
+        .filter(None, config.log_level)
+        .init();
+
+    info!("Loaded env, starting Http server ...");
+
     HttpServer::new(move || {
         App::new()
             .wrap(Logger::default())
             // .app_data(findex_data.clone())
             .service(health)
     })
-    .bind(("0.0.0.0", 9999))?
+    .bind((config.host, config.port))?
     .run()
     .await
 }

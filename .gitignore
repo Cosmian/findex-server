@@ -3,3 +3,4 @@
 Cargo.lock
 .cargo_check/
 .vscode
+.env
