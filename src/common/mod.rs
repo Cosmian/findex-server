@@ -1,2 +1,2 @@
-pub mod env;
+mod env;
 pub(crate) use env::Config;

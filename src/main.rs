@@ -8,9 +8,7 @@ use actix_web::{
     web::{self, Data},
     App, HttpServer,
 };
-use api::health;
-use common::env::Config;
-use env_logger::Env;
+use common::Config;
 use log::info;
 
 use std::{io::Result, sync::Mutex};

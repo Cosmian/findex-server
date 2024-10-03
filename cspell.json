@@ -1,0 +1,10 @@
+{
+    "language": "en",
+    "allowCompoundWords": true,
+    "words": [
+        "actix",
+        "dotenv",
+        "findex"
+    ],
+    "useGitignore": true
+}
