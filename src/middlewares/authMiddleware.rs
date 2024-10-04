@@ -9,16 +9,15 @@ use actix_service::{Service, Transform};
 use actix_web::{
     body::{BoxBody, EitherBody},
     dev::{ServiceRequest, ServiceResponse},
-    Error, HttpMessage,
+    Error,
 };
 use futures::{
     future::{ok, Ready},
     Future,
 };
-use log::debug;
 
+use super::{jwt_token_auth::manage_jwt_request, JwtConfig};
 
-struct JwtConfig;
 
 #[derive(Clone)]
 pub struct AuthTransformer {
@@ -77,7 +76,7 @@ where
     fn call(&self, req: ServiceRequest) -> Self::Future {
         let service = self.service.clone();
 
-        // TODO : delete this ?
+        // TODO : implement this
         // if req.extensions().contains::<PeerCommonName>() {
         //     debug!(
         //         "Request extension PeerCommonName found! Certificate client authentication has \
@@ -89,10 +88,14 @@ where
         //     });
         // }
 
+        /*
+         * There is a JWT config, treat the request as a jwt auth request
+         */
         if let Some(configurations) = self.jwt_configurations.clone() {
             return Box::pin(async move { manage_jwt_request(service, configurations, req).await });
         }
-
-        Box::pin(async move { manage_api_token_request(service,  req).await })
+        
+        todo!("TODO: NOT IMPLEMENTED TOKEN AUTH")
+        // Box::pin(async move { manage_api_token_request(service,  req).await })
     }
 }

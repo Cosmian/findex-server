@@ -3,17 +3,26 @@ name = "findex-server"
 version = "0.2.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[features]
+# Do not verify auth0 token expiration date and https ssl is auto-signed (to avoid to be banned by letsencrypt)
+insecure = []
 
 [dependencies]
 actix-cors = "0.7.0"
+actix-identity = "0.8.0"
 actix-service = "2.0.2"
 actix-web = "4.9.0"
+alcoholic_jwt = "4091.0.0"
+chrono = "0.4.38"
 dotenv = "0.15.0"
 env_logger = "0.11.5"
 futures = "0.3.30"
 log = "0.4.22"
+reqwest = { version = "0.12.8",  features = ["json"]  }
 serde = {version = "1.0.210" ,  features = ["derive"] }
+serde_json = "1.0.128"
+thiserror = "1.0.64"
+tracing = "0.1.40"
 # TODO : will be added later, focus on auth first
 # cloudproof_findex = { git = "https://github.com/Cosmian/cloudproof_rust.git", branch = "fix/sync_findex_develop", features = ["backend-sqlite", "serialization"] }
 # cosmian_findex = { git = "https://github.com/Cosmian/findex", branch = "develop" }
