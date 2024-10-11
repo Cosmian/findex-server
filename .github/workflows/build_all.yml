@@ -1,0 +1,69 @@
+---
+name: Build all
+
+on:
+  workflow_call:
+    inputs:
+      toolchain:
+        required: true
+        type: string
+      debug_or_release:
+        required: true
+        type: string
+
+jobs:
+  # rhel9:
+  #   name: RHEL9
+  #   uses: ./.github/workflows/build_rhel9.yml
+  #   secrets: inherit
+  #   with:
+  #     toolchain: ${{ inputs.toolchain }}
+  #     archive-name: rhel9
+  #     target: x86_64-unknown-linux-gnu
+  #     debug_or_release: ${{ inputs.debug_or_release }}
+
+  generic-linux:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - distribution: ubuntu-24.04
+            archive-name: ubuntu_24_04
+            target: x86_64-unknown-linux-gnu
+    name: ${{ matrix.distribution }}
+    uses: ./.github/workflows/build_generic.yml
+    secrets: inherit
+    with:
+      toolchain: ${{ inputs.toolchain }}
+      distribution: ${{ matrix.distribution }}
+      archive-name: ${{ matrix.archive-name }}
+      target: ${{ matrix.target }}
+      debug_or_release: ${{ inputs.debug_or_release }}
+      skip_services_tests: --skip test_redis
+
+  generic-macos:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - distribution: macos-14
+            archive-name: macos_arm
+            target: aarch64-apple-darwin
+    name: ${{ matrix.distribution }}
+    uses: ./.github/workflows/build_generic.yml
+    secrets: inherit
+    with:
+      toolchain: ${{ inputs.toolchain }}
+      distribution: ${{ matrix.distribution }}
+      archive-name: ${{ matrix.archive-name }}
+      target: ${{ matrix.target }}
+      debug_or_release: ${{ inputs.debug_or_release }}
+      skip_services_tests: --skip test_redis
+
+  cleanup:
+    needs:
+      # - rhel9
+      - generic-linux
+      - generic-macos
+    uses: Cosmian/reusable_workflows/.github/workflows/cleanup_cache.yml@develop
+    secrets: inherit

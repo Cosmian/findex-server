@@ -1,0 +1,25 @@
+---
+name: CI checks
+
+on:
+  push:
+
+jobs:
+  cargo-audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: EmbarkStudios/cargo-deny-action@v1
+
+  cargo-lint:
+    uses: ./.github/workflows/clippy.yml
+    with:
+      toolchain: nightly-2024-06-09
+
+  build_tests:
+    uses: ./.github/workflows/build_all.yml
+    secrets: inherit
+    with:
+      toolchain: nightly-2024-06-09
+      debug_or_release: debug
