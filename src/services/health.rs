@@ -11,6 +11,6 @@ mod tests {
 
     #[test]
     fn test_health() {
-        assert_eq!(health(), true);
+        assert!(health());
     }
 }
