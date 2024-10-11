@@ -3,13 +3,15 @@ use std::{rc::Rc, sync::Arc};
 use actix_identity::Identity;
 use actix_service::Service;
 use actix_web::{
-    body::{BoxBody, EitherBody},  dev::{ServiceRequest, ServiceResponse}, http::header, Error, FromRequest, HttpMessage, HttpResponse
+    body::{BoxBody, EitherBody},
+    dev::{ServiceRequest, ServiceResponse},
+    http::header,
+    Error, FromRequest, HttpMessage, HttpResponse,
 };
 use serde::de;
 use tracing::{debug, error, trace};
 
 use super::{error::LoginError, types::LoginResult, JwtConfig, UserClaim};
-
 
 pub(crate) async fn manage_jwt_request<S, B>(
     service: Rc<S>,

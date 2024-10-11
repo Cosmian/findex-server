@@ -1,5 +1,5 @@
-use thiserror::Error;
 use crate::middlewares::LoginError;
+use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum FindexServerError {
@@ -9,7 +9,6 @@ pub enum FindexServerError {
     // Any errors related to a bad behavior of the server but not related to the user input
     #[error("Unexpected server error: {0}")]
     ServerError(String),
-
     // #[error("Configuration error: {0}")]
     // Config(String),
 

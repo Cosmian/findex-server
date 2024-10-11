@@ -27,12 +27,8 @@ pub(crate) struct LoginTransformerFactory {
 
 impl LoginTransformerFactory {
     #[must_use]
-    pub(crate) const fn new(
-        jwt_configurations: Option<Arc<Vec<JwtConfig>>>,
-    ) -> Self {
-        Self {
-            jwt_configurations,
-        }
+    pub(crate) const fn new(jwt_configurations: Option<Arc<Vec<JwtConfig>>>) -> Self {
+        Self { jwt_configurations }
     }
 }
 
@@ -91,19 +87,19 @@ where
         // }
 
         /*
-        * There is a JWT config, treat the request as a jwt auth request
-        */
+         * There is a JWT config, treat the request as a jwt auth request
+         */
         if let Some(configurations) = self.jwt_configurations.clone() {
             return Box::pin(async move { manage_jwt_request(service, configurations, req).await });
         } else {
             let fut = self.service.call(req);
             Box::pin(async move {
                 let res = fut.await?;
-    
+
                 println!("Hi from response");
                 Ok(res.map_into_left_body())
             })
-        }        
+        }
         // todo!("TODO: NOT IMPLEMENTED TOKEN AUTH")
         // Box::pin(async move { manage_api_token_request(service,  req).await })
     }

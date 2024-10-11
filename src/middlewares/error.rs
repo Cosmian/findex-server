@@ -1,6 +1,5 @@
 use thiserror::Error;
 
-
 #[derive(Error, Debug, Clone)]
 pub enum LoginError {
     // Any actions of the user which is not allowed

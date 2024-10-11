@@ -40,7 +40,9 @@ impl JwksManager {
         Ok(self
             .jwks
             .read()
-            .map_err(|e| LoginError::ServerError(format!("cannot lock JWKS for read. Error: {e:?}")))?
+            .map_err(|e| {
+                LoginError::ServerError(format!("cannot lock JWKS for read. Error: {e:?}"))
+            })?
             .iter()
             .find_map(|(_, jwks)| jwks.find(kid))
             .cloned())
@@ -52,7 +54,9 @@ impl JwksManager {
     pub async fn refresh(&self) -> LoginResult<()> {
         let refresh_is_allowed = {
             let mut last_update = self.last_update.write().map_err(|e| {
-                LoginError::ServerError((format!("cannot lock last_update for write. Error: {e:?}")))
+                LoginError::ServerError(
+                    (format!("cannot lock last_update for write. Error: {e:?}")),
+                )
             })?;
 
             let can_be_refreshed = last_update.map_or(true, |lu| {
