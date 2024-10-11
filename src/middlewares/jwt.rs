@@ -14,11 +14,12 @@ pub(crate) struct UserClaim {
     pub email: Option<String>,
     pub iss: Option<String>,
     pub sub: Option<String>,
-    pub aud: Option<String>,
+    pub aud: Option<Vec<String>>,
     pub iat: Option<usize>,
     pub exp: Option<usize>,
     pub nbf: Option<usize>,
     pub jti: Option<String>,
+    pub scope: Option<String>,
     // Google CSE
     pub role: Option<String>,
     // Google CSE
@@ -53,12 +54,16 @@ impl JwtConfig {
     /// Decode a JWT bearer header
     pub(crate) fn decode_bearer_header(&self, authorization_content: &str) -> LoginResult<UserClaim> {
         let bearer: Vec<&str> = authorization_content.splitn(2, ' ').collect();
-        assert!(
-            bearer.len() == 2 && bearer[0] == "Bearer",
-            "bad auth header content"
-        );
+        // assert!(
+        //     bearer.len() == 2 && bearer[0] == "Bearer",
+        //     "bad auth header content"
+        // );
             // LoginError::Unauthorized(("Bad authorization header content (bad bearer)".to_owned()})
-        
+        if !(bearer.len() == 2 && bearer[0] == "Bearer") {
+            return Err(LoginError::Unauthorized("Bad authorization header content (bad bearer)".to_owned()));
+        }
+
+
 
         let token: &str = bearer[1];
         self.decode_authentication_token(token)
@@ -106,6 +111,8 @@ impl JwtConfig {
 
         let valid_jwt = alcoholic_jwt::validate(token, &jwk, validations)
             .map_err(|err| LoginError::Unauthorized(("Cannot validate token: {err:?}".to_owned())))?;
+
+        debug!("JWT is valid, the claims are {0:?}", valid_jwt.claims);
 
         let payload = serde_json::from_value(valid_jwt.claims)
             .map_err(|err| LoginError::Unauthorized(("JWT claims is malformed: {err:?}".to_owned())))?;

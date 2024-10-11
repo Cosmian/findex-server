@@ -15,16 +15,17 @@ use futures::{
     future::{ok, Ready},
     Future,
 };
+use log::debug;
 
 use super::{jwt_token_auth::manage_jwt_request, JwtConfig};
 
-
+// in artix web terminology, transformers are basically factories that create middleware
 #[derive(Clone)]
-pub struct AuthTransformer {
+pub(crate) struct LoginTransformerFactory {
     jwt_configurations: Option<Arc<Vec<JwtConfig>>>,
 }
 
-impl AuthTransformer {
+impl LoginTransformerFactory {
     #[must_use]
     pub(crate) const fn new(
         jwt_configurations: Option<Arc<Vec<JwtConfig>>>,
@@ -35,7 +36,7 @@ impl AuthTransformer {
     }
 }
 
-impl<S, B> Transform<S, ServiceRequest> for AuthTransformer
+impl<S, B> Transform<S, ServiceRequest> for LoginTransformerFactory
 where
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
     S::Future: 'static,
@@ -44,22 +45,22 @@ where
     type Future = Ready<Result<Self::Transform, Self::InitError>>;
     type InitError = ();
     type Response = ServiceResponse<EitherBody<B, BoxBody>>;
-    type Transform = AuthMiddleware<S>;
+    type Transform = LoginMiddleware<S>;
 
     fn new_transform(&self, service: S) -> Self::Future {
-        ok(AuthMiddleware {
+        ok(LoginMiddleware {
             service: Rc::new(service),
             jwt_configurations: self.jwt_configurations.clone(),
         })
     }
 }
 
-pub(crate) struct AuthMiddleware<S> {
+pub(crate) struct LoginMiddleware<S> {
     service: Rc<S>,
     jwt_configurations: Option<Arc<Vec<JwtConfig>>>,
 }
 
-impl<S, B> Service<ServiceRequest> for AuthMiddleware<S>
+impl<S, B> Service<ServiceRequest> for LoginMiddleware<S>
 where
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
     S::Future: 'static,
@@ -75,6 +76,7 @@ where
 
     fn call(&self, req: ServiceRequest) -> Self::Future {
         let service = self.service.clone();
+        debug!("entered the call !");
 
         // TODO : implement this
         // if req.extensions().contains::<PeerCommonName>() {
@@ -89,13 +91,20 @@ where
         // }
 
         /*
-         * There is a JWT config, treat the request as a jwt auth request
-         */
+        * There is a JWT config, treat the request as a jwt auth request
+        */
         if let Some(configurations) = self.jwt_configurations.clone() {
             return Box::pin(async move { manage_jwt_request(service, configurations, req).await });
-        }
-        
-        todo!("TODO: NOT IMPLEMENTED TOKEN AUTH")
+        } else {
+            let fut = self.service.call(req);
+            Box::pin(async move {
+                let res = fut.await?;
+    
+                println!("Hi from response");
+                Ok(res.map_into_left_body())
+            })
+        }        
+        // todo!("TODO: NOT IMPLEMENTED TOKEN AUTH")
         // Box::pin(async move { manage_api_token_request(service,  req).await })
     }
 }
