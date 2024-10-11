@@ -112,14 +112,14 @@ impl JwtConfig {
 
         tracing::trace!("JWK has been found:\n{jwk:?}");
 
-        let valid_jwt = alcoholic_jwt::validate(token, &jwk, validations).map_err(|err| {
-            LoginError::Unauthorized(("Cannot validate token: {err:?}".to_owned()))
+        let valid_jwt = alcoholic_jwt::validate(token, &jwk, validations).map_err(|_err| {
+            LoginError::Unauthorized("Cannot validate token: {err:?}".to_owned())
         })?;
 
         debug!("JWT is valid, the claims are {0:?}", valid_jwt.claims);
 
-        let payload = serde_json::from_value(valid_jwt.claims).map_err(|err| {
-            LoginError::Unauthorized(("JWT claims is malformed: {err:?}".to_owned()))
+        let payload = serde_json::from_value(valid_jwt.claims).map_err(|_err| {
+            LoginError::Unauthorized("JWT claims is malformed: {err:?}".to_owned())
         })?;
 
         debug!("JWT payload: {payload:?}");

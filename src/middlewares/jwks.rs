@@ -29,7 +29,7 @@ impl JwksManager {
     /// Lock `jwks` to replace it
     fn set_jwks(&self, new_jwks: HashMap<String, JWKS>) -> LoginResult<()> {
         let mut jwks = self.jwks.write().map_err(|e| {
-            LoginError::ServerError((format!("cannot lock JWKS for write. Error: {e:?}")))
+            LoginError::ServerError(format!("cannot lock JWKS for write. Error: {e:?}"))
         })?;
         *jwks = new_jwks;
         Ok(())

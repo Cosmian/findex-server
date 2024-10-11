@@ -1,5 +1,5 @@
-mod authMiddleware;
-pub(crate) use authMiddleware::LoginTransformerFactory;
+mod auth_middleware;
+pub(crate) use auth_middleware::LoginTransformerFactory;
 
 mod jwt_token_auth;
 pub(crate) use jwt_token_auth::{manage_jwt_request, JwtAuthClaim}; // NO  // Y

@@ -91,16 +91,15 @@ where
          */
         if let Some(configurations) = self.jwt_configurations.clone() {
             return Box::pin(async move { manage_jwt_request(service, configurations, req).await });
-        } else {
-            let fut = self.service.call(req);
-            Box::pin(async move {
-                let res = fut.await?;
-
-                println!("Hi from response");
-                Ok(res.map_into_left_body())
-            })
         }
-        // todo!("TODO: NOT IMPLEMENTED TOKEN AUTH")
-        // Box::pin(async move { manage_api_token_request(service,  req).await })
+        let fut = self.service.call(req);
+        Box::pin(async move {
+            let res = fut.await?;
+
+            println!("Hi from response");
+            Ok(res.map_into_left_body())
+        })
     }
+    // todo!("TODO: NOT IMPLEMENTED TOKEN AUTH")
+    // Box::pin(async move { manage_api_token_request(service,  req).await })
 }
