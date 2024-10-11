@@ -1,0 +1,32 @@
+---
+name: CI nightly release
+
+on:
+  push:
+    # any tags, including tags with / like v1.0/alpha
+    tags:
+      - '**'
+  schedule:
+    # every day at 1 AM
+    - cron: 00 1 * * *
+  workflow_dispatch:
+
+jobs:
+  cargo-audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: EmbarkStudios/cargo-deny-action@v1
+
+  cargo-lint:
+    uses: ./.github/workflows/clippy.yml
+    with:
+      toolchain: nightly-2024-06-09
+
+  build:
+    uses: ./.github/workflows/build_all.yml
+    secrets: inherit
+    with:
+      toolchain: nightly-2024-06-09
+      debug_or_release: release

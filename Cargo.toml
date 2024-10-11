@@ -2,6 +2,8 @@
 name = "findex-server"
 version = "0.2.0"
 edition = "2021"
+license = "BUSL-1.1" # "Business Source License 1.1"
+license-file = "LICENSE"
 
 [features]
 # Do not verify auth0 token expiration date and https ssl is auto-signed (to avoid to be banned by letsencrypt)
@@ -28,4 +30,3 @@ tracing = "0.1.40"
 # TODO : will be added later, focus on auth first
 # cloudproof_findex = { git = "https://github.com/Cosmian/cloudproof_rust.git", branch = "fix/sync_findex_develop", features = ["backend-sqlite", "serialization"] }
 # cosmian_findex = { git = "https://github.com/Cosmian/findex", branch = "develop" }
-
