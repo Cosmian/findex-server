@@ -1,203 +1,91 @@
-#![deny(
-    nonstandard_style,
-    refining_impl_trait,
-    future_incompatible,
-    keyword_idents,
-    let_underscore,
-    rust_2024_compatibility,
-    unreachable_pub,
-    unused,
-    unsafe_code,
-    clippy::all,
-    clippy::suspicious,
-    clippy::complexity,
-    clippy::perf,
-    clippy::style,
-    clippy::pedantic,
-    clippy::cargo,
-    clippy::nursery,
+use std::path::PathBuf;
 
-    // restriction lints
-    clippy::unwrap_used,
-    clippy::get_unwrap,
-    clippy::expect_used,
-    clippy::indexing_slicing,
-    clippy::unwrap_in_result,
-    clippy::assertions_on_result_states,
-    clippy::panic,
-    clippy::panic_in_result_fn,
-    clippy::renamed_function_params,
-    clippy::verbose_file_reads,
-    clippy::str_to_string,
-    clippy::string_to_string,
-    clippy::unreachable,
-    clippy::as_conversions,
-    clippy::print_stdout,
-    clippy::empty_structs_with_brackets,
-    clippy::unseparated_literal_suffix,
-    clippy::map_err_ignore,
-    clippy::redundant_clone,
-    // clippy::use_debug,
-)]
-#![allow(
-    clippy::module_name_repetitions,
-    clippy::similar_names,
-    clippy::too_many_lines,
-    clippy::cargo_common_metadata,
-    clippy::multiple_crate_versions,
-    clippy::missing_errors_doc,
-    clippy::missing_panics_doc,
-    clippy::redundant_pub_crate,
-    clippy::cognitive_complexity
-)]
-
-mod api;
-mod common;
-mod error;
-mod middlewares;
-mod routes;
-mod services;
-
-use std::sync::Arc;
-
-use crate::middlewares::{JwksManager, JwtConfig, LoginTransformerFactory};
-use actix_cors::Cors;
-use actix_identity::IdentityMiddleware;
-use actix_service::ServiceFactory;
-use actix_web::{
-    body::{BoxBody, EitherBody, MessageBody},
-    dev::{ServiceRequest, ServiceResponse},
-    middleware::Logger,
-    web::{self, Data, ServiceConfig},
-    App, Error, HttpServer,
+use clap::Parser;
+use cosmian_findex_server::{
+    config::{ClapConfig, ServerParams},
+    error::FindexServerError,
+    findex_server::start_findex_server,
+    findex_server_bail,
+    log_utils::log_init,
+    result::FResult,
 };
-use common::Config;
-use error::FindexServerError;
-use log::{debug, info};
-use tokio;
+use dotenvy::dotenv;
+use tracing::{debug, info};
 
-use routes::health_get;
+const FINDEX_SERVER_CONF: &str = "/etc/cosmian_findex_server/server.toml";
 
-#[derive(Debug, Clone)]
-pub struct IdpConfig {
-    pub jwt_issuer_uri: String,
-    pub jwks_uri: Option<String>,
-    pub jwt_audience: Option<String>,
-}
-
-impl From<FindexServerError> for std::io::Error {
-    fn from(error: FindexServerError) -> Self {
-        // Convert your custom error to std::io::Error
-        std::io::Error::new(std::io::ErrorKind::Other, error.to_string())
+/// The main entrypoint of the program.
+///
+/// This function sets up the necessary environment variables and logging options,
+/// then parses the command line arguments using [`ClapConfig::parse()`](https://docs.rs/clap/latest/clap/struct.ClapConfig.html#method.parse).
+#[tokio::main]
+#[allow(clippy::needless_return)]
+async fn main() -> FResult<()> {
+    // Set up environment variables and logging options
+    if std::env::var("RUST_BACKTRACE").is_err() {
+        unsafe {
+            std::env::set_var("RUST_BACKTRACE", "full");
+        }
     }
-}
+    if std::env::var("RUST_LOG").is_err() {
+        unsafe {
+            std::env::set_var(
+                "RUST_LOG",
+                "info,cosmian=info,cosmian_findex_server=info,actix_web=info,sqlx::query=error,\
+                 mysql=info",
+            );
+        }
+    }
 
-type FindexServerResult<T> = Result<T, FindexServerError>;
+    log_init(None);
 
-fn config_app(config: Data<Config>) -> Box<dyn Fn(&mut ServiceConfig)> {
-    Box::new(move |cfg: &mut ServiceConfig| {
-        cfg.wrap(IdentityMiddleware::default())
-            // .wrap(Cors::permissive())
-            // .wrap(Logger::default())
-            // .app_data(findex_data.clone())
-            // .route("/health", web::get().to(health_get))
-            .app_data(config.clone())
+    // Load variable from a .env file
+    dotenv().ok();
 
-        // cfg.app_data(config.cData<Config>)
-        //     .service(web::resource("/notes").route(web::get().to(notes)));
-    })
-}
-
-fn create_app() -> App<
-    impl ServiceFactory<
-        ServiceRequest,
-        Config = (),
-        Response = ServiceResponse<impl MessageBody>,
-        Error = Error,
-        InitError = (),
-    >,
-> {
-    App::new()
-        .wrap(IdentityMiddleware::default())
-        .wrap(Cors::permissive())
-        .wrap(Logger::default())
-}
-
-#[actix_web::main]
-async fn main() -> FindexServerResult<()> {
-    let config = web::Data::new(Config::from_env());
-    let config_for_bind = config.clone();
-    env_logger::Builder::new()
-        .filter(None, config.log_level)
-        .init();
-
-    info!("Loaded env, starting Http server ...");
-    debug!("debugging!");
-
-    // let idp_config_google = IdpConfig {
-    //     jwt_issuer_uri: "https://accounts.google.com".to_string(),
-    //     jwks_uri: Some("https://www.googleapis.com/oauth2/v3/certs".to_string()),
-    //     jwt_audience: Some("cosmian_kms".to_string()),
-    // };
-    //
-    let idp_config = Some(IdpConfig {
-        jwt_issuer_uri: "https://findex-server.eu.auth0.com/".to_string(),
-        jwks_uri: Some("https://findex-server.eu.auth0.com/.well-known/jwks.json".to_string()),
-        jwt_audience: Some("https://findex-server/".to_string()),
-    });
-
-    let jwt_config_for_middleware = if let Some(identity_provider_configurations) = idp_config {
-        let jwks_manager = Arc::new(
-            JwksManager::new(vec![identity_provider_configurations
-                .jwks_uri
-                .unwrap()
-                .clone()])
-            .await?,
-        );
-        let jwt_config = JwtConfig {
-            jwt_issuer_uri: identity_provider_configurations.jwt_issuer_uri.clone(),
-            jwks: jwks_manager.clone(),
-            jwt_audience: identity_provider_configurations.jwt_audience.clone(),
-        };
-        Some(Arc::new(Vec::<JwtConfig>::from_iter([jwt_config])))
+    let conf = if let Ok(conf_path) = std::env::var("COSMIAN_FINDEX_SERVER_CONF") {
+        let conf_path = PathBuf::from(conf_path);
+        if !conf_path.exists() {
+            findex_server_bail!(FindexServerError::ServerError(format!(
+                "Cannot read findex server config at specified path: {conf_path:?} - file does not \
+                 exist"
+            )));
+        }
+        conf_path
     } else {
-        None
+        PathBuf::from(FINDEX_SERVER_CONF)
     };
 
-    HttpServer::new(move || {
-        App::new()
-        // .wrap(LoginTransformerFactory::new(
-        //     jwt_config_for_middleware.clone()
-        //     // Some(Arc::new(Vec::<JwtConfig>::from_iter([])))
-        // ))
-        // .wrap(IdentityMiddleware::default())
-        // .wrap(Cors::permissive())
-        // .wrap(Logger::default())
-        // // .app_data(findex_data.clone())
-        // .route("/health", web::get().to(health_get))
-        // .app_data(config.clone())
-    })
-    .bind((config_for_bind.get_ref().host.clone(), config_for_bind.port))?
-    // .map_err(FindexServerError::from)? // Convert std::io::Error to FindexServerError
-    .run()
-    .await?;
+    let clap_config = if conf.exists() {
+        ClapConfig::parse(); // Do that do catch --help or --version even if we use a conf file
 
-    Ok(())
-}
+        info!(
+            "Configuration file {conf:?} found. Command line arguments and env variables are \
+             ignored."
+        );
 
-#[cfg(test)]
-mod tests {
-    use actix_web::{http::header::ContentType, test, App};
+        let conf_content = std::fs::read_to_string(&conf).map_err(|e| {
+            FindexServerError::ServerError(format!(
+                "Cannot read findex server config at: {conf:?} - {e:?}"
+            ))
+        })?;
+        toml::from_str(&conf_content).map_err(|e| {
+            FindexServerError::ServerError(format!(
+                "Cannot parse findex server config at: {conf:?} - {e:?}"
+            ))
+        })?
+    } else {
+        ClapConfig::parse()
+    };
 
-    use super::*;
+    // Instantiate a config object using the env variables and the args of the binary
+    debug!("Command line config: {clap_config:#?}");
 
-    #[actix_web::test]
-    async fn test_index_get() {
-        let app = test::init_service(App::new().service(index)).await;
-        let req = test::TestRequest::default()
-            .insert_header(ContentType::plaintext())
-            .to_request();
-        let resp = test::call_service(&app, req).await;
-        assert!(resp.status().is_success());
-    }
+    // Parse the Server Config from the command line arguments
+    let server_params = ServerParams::try_from(clap_config)?;
+
+    #[cfg(feature = "insecure")]
+    info!("Feature Insecure enabled");
+
+    // Start Findex server
+    Box::pin(start_findex_server(server_params, None)).await
 }

@@ -1,16 +1,14 @@
-mod auth_middleware;
-pub(crate) use auth_middleware::LoginTransformerFactory;
+mod main;
+pub(crate) use main::AuthTransformer;
 
 mod jwt_token_auth;
-pub(crate) use jwt_token_auth::{manage_jwt_request, JwtAuthClaim}; // NO  // Y
+pub(crate) use jwt_token_auth::{manage_jwt_request, JwtAuthClaim};
+
+mod ssl_auth;
+pub(crate) use ssl_auth::{extract_peer_certificate, PeerCommonName, SslAuth};
 
 mod jwt;
-pub(crate) use jwt::{JwtConfig, JwtTokenHeaders, UserClaim};
-
-mod error;
-pub(crate) use error::LoginError;
+pub(crate) use jwt::{JwtConfig, UserClaim};
 
 mod jwks;
 pub(crate) use jwks::JwksManager;
-
-mod types;

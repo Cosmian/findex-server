@@ -1,32 +1,93 @@
 [package]
-name = "findex-server"
-version = "0.2.0"
+name = "cosmian_findex_server"
+version = "0.1.0"
+authors = ["Hatem M'naouer <hatem.mnaouer@cosmian.com>"]
+categories = ["security"]
 edition = "2021"
-license = "BUSL-1.1" # "Business Source License 1.1"
-license-file = "LICENSE"
+keywords = ["findex", "cosmian"]
+license = "BUSL-1.1"
+repository = "https://github.com/Cosmian/findex-server"
+rust-version = "1.71.0"
+description = "Cosmian Findex server"
+
+[[bin]]
+name = "cosmian_findex_server"
+path = "src/main.rs"
+test = false
+
+[lib]
+# doc test linking as a separate binary is extremely slow
+# and is not needed for internal lib
+doctest = false
 
 [features]
 # Do not verify auth0 token expiration date and https ssl is auto-signed (to avoid to be banned by letsencrypt)
 insecure = []
 
 [dependencies]
-actix-cors = "0.7.0"
-actix-identity = "0.8.0"
-actix-service = "2.0.2"
-actix-web = "4.9.0"
-alcoholic_jwt = "4091.0.0"
-chrono = "0.4.38"
-clippy = "0.0.302"
-dotenv = "0.15.0"
-env_logger = "0.11.5"
-futures = "0.3.30"
-log = "0.4.22"
-reqwest = { version = "0.12.8",  features = ["json"]  }
-serde = {version = "1.0.210" ,  features = ["derive"] }
-serde_json = "1.0.128"
-thiserror = "1.0.64"
-tokio = {version="1.40.0", features=["full"]}
-tracing = "0.1.40"
-# TODO : will be added later, focus on auth first
-# cloudproof_findex = { git = "https://github.com/Cosmian/cloudproof_rust.git", branch = "fix/sync_findex_develop", features = ["backend-sqlite", "serialization"] }
-# cosmian_findex = { git = "https://github.com/Cosmian/findex", branch = "develop" }
+actix-cors = "0.6"
+actix-identity = "0.6"
+actix-service = "2.0"
+actix-tls = "3.4"
+actix-web = { version = "4.9.0", features = ["macros", "openssl"] }
+alcoholic_jwt = "4091"
+argon2 = "0.5"
+async-trait = "0.1"
+base64 = "0.21"
+chrono = "0.4"
+clap = { version = "4.5", features = [
+  "help",
+  "env",
+  "std",
+  "usage",
+  "error-context",
+  "derive",
+  "cargo",
+] }
+cloudproof = "3.0"
+cloudproof_findex = { version = "5.0", features = ["findex-redis"] }
+dotenvy = "0.15"
+futures = "0.3"
+hex = { version = "0.4", default-features = false }
+lazy_static = "1.5"
+num-bigint-dig = { version = "0.8", features = [
+  "std",
+  "rand",
+  "serde",
+  "zeroize",
+] }
+num_cpus = "1.16"
+openssl = { version = "0.10", default-features = false }
+rawsql = "0.1"
+redis = { version = "0.23", features = [
+  "aio",
+  "ahash",
+  "script",
+  "connection-manager",
+  "tokio-comp",
+] }
+# Important: align the rustls version with reqwest rustls dependency
+# When using client certificate authentication, reqwest will use the
+# native-tls crate to create an Identity; this will be different backend
+# implementations depending on the operating system. On linux, it will
+# use openssl
+# The default features is to guarantee that the native-tls crate will be used
+reqwest = { version = "0.11", features = ["default", "json"] }
+serde = "1.0"
+serde_json = "1.0"
+sqlx = { version = "0.8.2", default-features = false, features = [
+  "json",
+  "runtime-tokio-native-tls",
+  "mysql",
+  "postgres",
+  "sqlite",
+] }
+thiserror = "1.0"
+time = { version = "0.3", features = ["local-offset", "formatting"] }
+tokio = { version = "1.40", features = ["full"] }
+toml = "0.8"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+url = "2.5"
+x509-parser = "0.16"
+zeroize = { version = "1.8", default-features = false }

@@ -4,21 +4,19 @@ use alcoholic_jwt::token_kid;
 use serde::{Deserialize, Serialize};
 use tracing::debug;
 
-use crate::middlewares::error::LoginError;
-
-use super::{jwks::JwksManager, types::LoginResult};
+use super::JwksManager;
+use crate::{error::FindexServerError, findex_server_ensure, result::FResult};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub(crate) struct UserClaim {
     pub email: Option<String>,
     pub iss: Option<String>,
     pub sub: Option<String>,
-    pub aud: Option<Vec<String>>,
+    pub aud: Option<String>,
     pub iat: Option<usize>,
     pub exp: Option<usize>,
     pub nbf: Option<usize>,
     pub jti: Option<String>,
-    pub scope: Option<String>,
     // Google CSE
     pub role: Option<String>,
     // Google CSE
@@ -27,6 +25,16 @@ pub(crate) struct UserClaim {
     pub perimeter_id: Option<String>,
     // Google CSE
     pub kacls_url: Option<String>,
+    // Google CSE
+    pub spki_hash: Option<String>,
+    // Google CSE
+    pub spki_hash_algorithm: Option<String>,
+    // Google CSE
+    pub message_id: Option<String>,
+    // Google CSE
+    pub email_type: Option<String>,
+    // Google CSE
+    pub google_email: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -43,7 +51,7 @@ pub(crate) struct JwtTokenHeaders {
 }
 
 #[derive(Debug)]
-pub struct JwtConfig {
+pub(crate) struct JwtConfig {
     pub jwt_issuer_uri: String,
     pub jwt_audience: Option<String>,
     pub jwks: Arc<JwksManager>,
@@ -51,31 +59,24 @@ pub struct JwtConfig {
 
 impl JwtConfig {
     /// Decode a JWT bearer header
-    pub(crate) fn decode_bearer_header(
-        &self,
-        authorization_content: &str,
-    ) -> LoginResult<UserClaim> {
+    pub(crate) fn decode_bearer_header(&self, authorization_content: &str) -> FResult<UserClaim> {
         let bearer: Vec<&str> = authorization_content.splitn(2, ' ').collect();
-        // assert!(
-        //     bearer.len() == 2 && bearer[0] == "Bearer",
-        //     "bad auth header content"
-        // );
-        // LoginError::Unauthorized(("Bad authorization header content (bad bearer)".to_owned()})
-        if !(bearer.len() == 2 && bearer[0] == "Bearer") {
-            return Err(LoginError::Unauthorized(
-                "Bad authorization header content (bad bearer)".to_owned(),
-            ));
-        }
+        findex_server_ensure!(
+            bearer.len() == 2 && bearer[0] == "Bearer",
+            FindexServerError::Unauthorized(
+                "Bad authorization header content (bad bearer)".to_owned()
+            )
+        );
 
         let token: &str = bearer[1];
         self.decode_authentication_token(token)
     }
 
     /// Decode a json web token (JWT)
-    pub(crate) fn decode_authentication_token(&self, token: &str) -> LoginResult<UserClaim> {
-        assert!(
+    pub(crate) fn decode_authentication_token(&self, token: &str) -> FResult<UserClaim> {
+        findex_server_ensure!(
             !token.is_empty(),
-            "token is empty" // LoginError::Unauthorized(("token is empty".to_owned()})
+            FindexServerError::Unauthorized("token is empty".to_owned())
         );
         tracing::trace!(
             "validating authentication token, expected JWT issuer: {}",
@@ -98,28 +99,25 @@ impl JwtConfig {
         // If a JWKS contains multiple keys, the correct KID first
         // needs to be fetched from the token headers.
         let kid = token_kid(token)
-            .map_err(|e| LoginError::Unauthorized(format!("Failed to decode kid: {e}")))?
+            .map_err(|e| FindexServerError::Unauthorized(format!("Failed to decode kid: {e}")))?
             .ok_or_else(|| {
-                LoginError::Unauthorized("No 'kid' claim present in token".to_owned())
+                FindexServerError::Unauthorized("No 'kid' claim present in token".to_owned())
             })?;
 
         tracing::trace!("looking for kid `{kid}` JWKS:\n{:?}", self.jwks);
 
-        let jwk = self
-            .jwks
-            .find(&kid)?
-            .ok_or_else(|| LoginError::Unauthorized("Specified key not found in set".to_owned()))?;
+        let jwk = self.jwks.find(&kid)?.ok_or_else(|| {
+            FindexServerError::Unauthorized("Specified key not found in set".to_owned())
+        })?;
 
         tracing::trace!("JWK has been found:\n{jwk:?}");
 
-        let valid_jwt = alcoholic_jwt::validate(token, &jwk, validations).map_err(|_err| {
-            LoginError::Unauthorized("Cannot validate token: {err:?}".to_owned())
+        let valid_jwt = alcoholic_jwt::validate(token, &jwk, validations).map_err(|err| {
+            FindexServerError::Unauthorized(format!("Cannot validate token: {err:?}"))
         })?;
 
-        debug!("JWT is valid, the claims are {0:?}", valid_jwt.claims);
-
-        let payload = serde_json::from_value(valid_jwt.claims).map_err(|_err| {
-            LoginError::Unauthorized("JWT claims is malformed: {err:?}".to_owned())
+        let payload = serde_json::from_value(valid_jwt.claims).map_err(|err| {
+            FindexServerError::Unauthorized(format!("JWT claims is malformed: {err:?}"))
         })?;
 
         debug!("JWT payload: {payload:?}");

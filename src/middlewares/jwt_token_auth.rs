@@ -10,7 +10,8 @@ use actix_web::{
 };
 use tracing::{debug, error, trace};
 
-use super::{error::LoginError, types::LoginResult, JwtConfig, UserClaim};
+use super::UserClaim;
+use crate::{error::FindexServerError, middlewares::jwt::JwtConfig, result::FResult};
 
 pub(crate) async fn manage_jwt_request<S, B>(
     service: Rc<S>,
@@ -21,14 +22,12 @@ where
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
 {
     trace!("Starting JWT Authentication...");
-    debug!("Checking JWT token...");
     match manage_jwt(configs, &req).await {
         Ok(auth_claim) => {
             req.extensions_mut().insert(auth_claim);
             Ok(service.call(req).await?.map_into_left_body())
         }
         Err(e) => {
-            debug!("JWT token is not valid!");
             error!("{:?} {} 401 unauthorized: {e:?}", req.method(), req.path(),);
             Ok(req
                 .into_response(HttpResponse::Unauthorized().finish())
@@ -37,7 +36,10 @@ where
     }
 }
 
-fn extract_user_claim(configs: &[JwtConfig], identity: &str) -> Result<UserClaim, Vec<LoginError>> {
+fn extract_user_claim(
+    configs: &[JwtConfig],
+    identity: &str,
+) -> Result<UserClaim, Vec<FindexServerError>> {
     let mut jwt_log_errors = Vec::new();
     for idp_config in configs {
         match idp_config.decode_bearer_header(identity) {
@@ -53,9 +55,8 @@ fn extract_user_claim(configs: &[JwtConfig], identity: &str) -> Result<UserClaim
 pub(crate) async fn manage_jwt(
     configs: Arc<Vec<JwtConfig>>,
     req: &ServiceRequest,
-) -> LoginResult<JwtAuthClaim> {
+) -> FResult<JwtAuthClaim> {
     trace!("JWT Authentication...");
-    debug!("Checking JWT token222...");
 
     let identity = Identity::extract(req.request())
         .into_inner()
@@ -84,14 +85,14 @@ pub(crate) async fn manage_jwt(
             Ok(JwtAuthClaim::new(email))
         }
         Ok(None) => {
-            debug!("No mail in JWT, creating some fake mail just to test...");
-            Ok(JwtAuthClaim::new("satancute666@hell.com".to_owned()))
-            // error!(
-            //     "{:?} {} 401 unauthorized, no email in JWT",
-            //     req.method(),
-            //     req.path()
-            // );
-            // Err(LoginError::InvalidRequest("No email in JWT".to_owned()))
+            error!(
+                "{:?} {} 401 unauthorized, no email in JWT",
+                req.method(),
+                req.path()
+            );
+            Err(FindexServerError::InvalidRequest(
+                "No email in JWT".to_owned(),
+            ))
         }
         Err(jwt_log_errors) => {
             for error in &jwt_log_errors {
@@ -102,7 +103,7 @@ pub(crate) async fn manage_jwt(
                 req.method(),
                 req.path(),
             );
-            Err(LoginError::InvalidRequest("Bad JWT".to_owned()))
+            Err(FindexServerError::InvalidRequest("bad JWT".to_owned()))
         }
     }
 }
