@@ -49,6 +49,7 @@ jobs:
         run: |
           set -ex
 
+          yum -y install openssl-devel openssl
           yum -y install python-devel
           yum -y install wget
           yum -y install perl-IPC-Cmd perl-Digest-SHA1 perl-CPAN perl-devel
@@ -73,6 +74,6 @@ jobs:
         with:
           name: ${{ inputs.archive-name }}-${{ inputs.debug_or_release }}
           path: |
-            target/${{ inputs.target }}/${{ inputs.debug_or_release }}/findex-server
+            target/${{ inputs.target }}/${{ inputs.debug_or_release }}/cosmian_findex_server
           retention-days: 1
           if-no-files-found: error
