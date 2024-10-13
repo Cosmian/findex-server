@@ -3,3 +3,4 @@
 .cargo_check/
 .vscode
 .env
+cosmian-findex-server/

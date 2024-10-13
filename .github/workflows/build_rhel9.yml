@@ -75,5 +75,6 @@ jobs:
           name: ${{ inputs.archive-name }}-${{ inputs.debug_or_release }}
           path: |
             target/${{ inputs.target }}/${{ inputs.debug_or_release }}/cosmian_findex_server
+            target/${{ inputs.target }}/${{ inputs.debug_or_release }}/findex
           retention-days: 1
           if-no-files-found: error
