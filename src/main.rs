@@ -1,55 +1,55 @@
-// #![deny(
-//     nonstandard_style,
-//     refining_impl_trait,
-//     future_incompatible,
-//     keyword_idents,
-//     let_underscore,
-//     rust_2024_compatibility,
-//     unreachable_pub,
-//     unused,
-//     unsafe_code,
-//     clippy::all,
-//     clippy::suspicious,
-//     clippy::complexity,
-//     clippy::perf,
-//     clippy::style,
-//     clippy::pedantic,
-//     clippy::cargo,
-//     clippy::nursery,
+#![deny(
+    nonstandard_style,
+    refining_impl_trait,
+    future_incompatible,
+    keyword_idents,
+    let_underscore,
+    rust_2024_compatibility,
+    unreachable_pub,
+    unused,
+    unsafe_code,
+    clippy::all,
+    clippy::suspicious,
+    clippy::complexity,
+    clippy::perf,
+    clippy::style,
+    clippy::pedantic,
+    clippy::cargo,
+    clippy::nursery,
 
-//     // restriction lints
-//     clippy::unwrap_used,
-//     clippy::get_unwrap,
-//     clippy::expect_used,
-//     clippy::indexing_slicing,
-//     clippy::unwrap_in_result,
-//     clippy::assertions_on_result_states,
-//     clippy::panic,
-//     clippy::panic_in_result_fn,
-//     clippy::renamed_function_params,
-//     clippy::verbose_file_reads,
-//     clippy::str_to_string,
-//     clippy::string_to_string,
-//     clippy::unreachable,
-//     clippy::as_conversions,
-//     clippy::print_stdout,
-//     clippy::empty_structs_with_brackets,
-//     clippy::unseparated_literal_suffix,
-//     clippy::map_err_ignore,
-//     clippy::redundant_clone,
-//     // clippy::use_debug,
-// )]
-// #![allow(
-//     clippy::module_name_repetitions,
-//     clippy::similar_names,
-//     clippy::too_many_lines,
-//     clippy::cargo_common_metadata,
-//     clippy::multiple_crate_versions,
-//     clippy::missing_errors_doc,
-//     clippy::missing_panics_doc,
-//     clippy::redundant_pub_crate,
-//     clippy::cognitive_complexity
-// )]
+    // restriction lints
+    clippy::unwrap_used,
+    clippy::get_unwrap,
+    clippy::expect_used,
+    clippy::indexing_slicing,
+    clippy::unwrap_in_result,
+    clippy::assertions_on_result_states,
+    clippy::panic,
+    clippy::panic_in_result_fn,
+    clippy::renamed_function_params,
+    clippy::verbose_file_reads,
+    clippy::str_to_string,
+    clippy::string_to_string,
+    clippy::unreachable,
+    clippy::as_conversions,
+    clippy::print_stdout,
+    clippy::empty_structs_with_brackets,
+    clippy::unseparated_literal_suffix,
+    clippy::map_err_ignore,
+    clippy::redundant_clone,
+    // clippy::use_debug,
+)]
+#![allow(
+    clippy::module_name_repetitions,
+    clippy::similar_names,
+    clippy::too_many_lines,
+    clippy::cargo_common_metadata,
+    clippy::multiple_crate_versions,
+    clippy::missing_errors_doc,
+    clippy::missing_panics_doc,
+    clippy::redundant_pub_crate,
+    clippy::cognitive_complexity
+)]
 
 mod api;
 mod common;
@@ -60,21 +60,20 @@ mod services;
 
 use std::sync::Arc;
 
-use crate::middlewares::{JwksManager, JwtConfig, LoginTransformerFactory};
+use crate::middlewares::{JwksManager, JwtConfig};
 use actix_cors::Cors;
 use actix_identity::IdentityMiddleware;
 use actix_service::ServiceFactory;
 use actix_web::{
-    body::{BoxBody, EitherBody, MessageBody},
+    body::MessageBody,
     dev::{ServiceRequest, ServiceResponse},
     middleware::Logger,
-    web::{self, Data, ServiceConfig},
+    web::{self},
     App, Error, HttpServer,
 };
 use common::Config;
 use error::FindexServerError;
 use log::{debug, info};
-use tokio;
 
 use routes::health_get;
 
@@ -104,6 +103,8 @@ fn create_app(/* config: &Data<Config>,  */jwt_config_for_middleware: &Option<Ar
         InitError = (),
     >,
 > {
+    debug!("{:?}", jwt_config_for_middleware); // TODO: remove this line
+
     App::new()
         // .wrap(LoginTransformerFactory::new(
         //     jwt_config_for_middleware.clone()
@@ -158,36 +159,40 @@ async fn main() -> FindexServerResult<()> {
     .run()
     .await?;
 
-    Ok(())
+Ok(())
 }
 
 #[cfg(test)]
 mod tests {
     use std::error::Error;
 
-    use actix_web::{http::header::ContentType, test, App};
+    use actix_web::test;
     use serde::{ Deserialize, Serialize};
 
     use super::*;
 
+    #[derive(Debug, Deserialize, Serialize)]
+    struct HealthState {
+        status: String
+    }
+
     #[actix_web::test]
     async fn test_index_get() -> Result<(), Box<dyn Error>> {
         let config = web::Data::new(Config::from_env());
-        let config_for_bind = config.clone();
         env_logger::Builder::new()
             .filter(None, config.log_level)
             .init();
-    
+
         info!("Loaded env, starting Http server ...");
         debug!("debugging!");
-    
-    
+
+
         let idp_config = Some(IdpConfig {
             jwt_issuer_uri: "https://findex-server.eu.auth0.com/".to_owned(),
             jwks_uri: Some("https://findex-server.eu.auth0.com/.well-known/jwks.json".to_owned()),
             jwt_audience: Some("https://findex-server/".to_owned()),
         });
-    
+
         let jwt_config_for_middleware = if let Some(identity_provider_configurations) = idp_config {
             if let Some(jwks_uri) = identity_provider_configurations.jwks_uri.clone() {
                 let jwks_manager = Arc::new(JwksManager::new(vec![jwks_uri]).await?);
@@ -209,12 +214,8 @@ mod tests {
                 create_app(&jwt_config_for_middleware.clone())
         ).await;
         let req = test::TestRequest::get().uri("/health").to_request();
-        #[derive(Debug, Deserialize, Serialize)]
-        struct HealthState {
-            status: String
-        }
         let resp: HealthState = test::call_and_read_body_json(&app, req).await;
-        
+
         assert_eq!(resp.status, "OK");
         Ok(())
     }

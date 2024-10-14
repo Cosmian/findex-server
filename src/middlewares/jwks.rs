@@ -8,14 +8,14 @@ use super::{error::LoginError, types::LoginResult};
 static REFRESH_INTERVAL: i64 = 60; // in secs
 
 #[derive(Debug)]
-pub struct JwksManager {
+pub(crate) struct JwksManager {
     uris: Vec<String>,
     jwks: RwLock<HashMap<String, JWKS>>,
     last_update: RwLock<Option<DateTime<Utc>>>,
 }
 
 impl JwksManager {
-    pub async fn new(uris: Vec<String>) -> LoginResult<Self> {
+    pub(crate) async fn new(uris: Vec<String>) -> LoginResult<Self> {
         let jwks_manager = Self {
             uris,
             jwks: HashMap::new().into(),
@@ -26,17 +26,17 @@ impl JwksManager {
         Ok(jwks_manager)
     }
 
-    /// Lock `jwks` to replace it
+    /// First lock `jwks` for write and return an error if not possible and then
+    /// replace it with the new JWKS value.
     fn set_jwks(&self, new_jwks: HashMap<String, JWKS>) -> LoginResult<()> {
-        let mut jwks = self.jwks.write().map_err(|e| {
+        *(self.jwks.write().map_err(|e| {
             LoginError::ServerError(format!("cannot lock JWKS for write. Error: {e:?}"))
-        })?;
-        *jwks = new_jwks;
+        })?) = new_jwks;
         Ok(())
     }
 
     /// Find the key identifier `kid` in each registered JWKS
-    pub fn find(&self, kid: &str) -> LoginResult<Option<JWK>> {
+    pub(crate) fn find(&self, kid: &str) -> LoginResult<Option<JWK>> {
         Ok(self
             .jwks
             .read()
@@ -51,11 +51,11 @@ impl JwksManager {
     /// Fetch again all JWKS using the `uris`.
     ///
     /// The threshold to refresh JWKS is set to `REFRESH_INTERVAL`.
-    pub async fn refresh(&self) -> LoginResult<()> {
+    pub(crate) async fn refresh(&self) -> LoginResult<()> {
         let refresh_is_allowed = {
             let mut last_update = self.last_update.write().map_err(|e| {
                 LoginError::ServerError(
-                    (format!("cannot lock last_update for write. Error: {e:?}")),
+                    format!("cannot lock last_update for write. Error: {e:?}"),
                 )
             })?;
 

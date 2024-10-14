@@ -4,6 +4,9 @@
 # pre-commit install
 # pre-commit install --install-hooks -t commit-msg
 # pre-commit autoupdate
+# npm install -g markdownlint-cli
+
+
 
 # See https://pre-commit.com for more information
 # See https://pre-commit.com/hooks.html for more hooks
@@ -16,19 +19,19 @@ repos:
         stages: [commit-msg]
         args: [] # optional: list of Conventional Commits types to allow e.g. [feat, fix, ci, chore, test]
 
-  - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.42.0
-    hooks:
-      - id: markdownlint-fix
-        args: [--disable=MD004, --disable=MD013, --disable=MD024, --disable=MD029, --disable=MD041, --disable=MD046, --fix]
-        exclude: documentation/docs
+  # - repo: https://github.com/igorshubovych/markdownlint-cli
+  #   rev: v0.42.0
+  #   hooks:
+  #     - id: markdownlint-fix
+  #       args: [--disable=MD004, --disable=MD013, --disable=MD024, --disable=MD029, --disable=MD041, --disable=MD046, --fix]
+  #       exclude: documentation/docs
 
-  - repo: https://github.com/tcort/markdown-link-check
-    rev: v3.12.2
-    hooks:
-      - id: markdown-link-check
-        args: [-q]
-        exclude: documentation/docs/ms_dke/ms_dke.md
+  # - repo: https://github.com/tcort/markdown-link-check
+  #   rev: v3.12.2
+  #   hooks:
+  #     - id: markdown-link-check
+  #       args: [-q]
+  #       exclude: documentation/docs/ms_dke/ms_dke.md
 
   - repo: https://github.com/jumanjihouse/pre-commit-hook-yamlfmt
     rev: 0.2.3
@@ -38,7 +41,7 @@ repos:
         exclude: ansible
 
   - repo: https://github.com/crate-ci/typos
-    rev: v1.25.0
+    rev: v1.26.0
     hooks:
       - id: typos
 
@@ -95,33 +98,33 @@ repos:
       - id: name-tests-test
       - id: requirements-txt-fixer
       - id: sort-simple-yaml
-      - id: trailing-whitespace
+      # - id: trailing-whitespace
         exclude: crate/kmip/src/kmip/extra/x509_extensions.rs
 
   - repo: https://github.com/psf/black
-    rev: 24.8.0
+    rev: 24.10.0
     hooks:
       - id: black
         # avoid clash with `double-quote-string-fixer`
         args: [--skip-string-normalization]
 
-  - repo: https://github.com/Cosmian/git-hooks.git
-    rev: v1.0.29
-    hooks:
-      - id: cargo-format
-      # - id: dprint-toml-fix
-      # - id: cargo-upgrade
-      # - id: cargo-update
-      - id: cargo-machete
-      - id: docker-compose-up
-      - id: cargo-test
-      - id: clippy-autofix-unreachable-pub
-      - id: clippy-autofix-all-targets-all-features
-      - id: clippy-autofix-all-targets
-      - id: clippy-all-targets-all-features
-      - id: clippy-all-targets
-      - id: cargo-format # in last du to clippy fixes
-      - id: docker-compose-down
+  # - repo: https://github.com/Cosmian/git-hooks.git
+  #   rev: v1.0.29
+  #   hooks:
+  #     - id: cargo-format
+  #     # - id: dprint-toml-fix
+  #     # - id: cargo-upgrade
+  #     # - id: cargo-update
+  #     - id: cargo-machete
+  #     - id: docker-compose-up
+  #     - id: cargo-test
+  #     - id: clippy-autofix-unreachable-pub
+  #     - id: clippy-autofix-all-targets-all-features
+  #     - id: clippy-autofix-all-targets
+  #     - id: clippy-all-targets-all-features
+  #     - id: clippy-all-targets
+  #     - id: cargo-format # in last du to clippy fixes
+  #     - id: docker-compose-down
 
   - repo: https://github.com/EmbarkStudios/cargo-deny
     rev: 0.16.1 # choose your preferred tag

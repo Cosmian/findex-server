@@ -1,11 +1,13 @@
-use actix_web::{HttpRequest, HttpResponse, Responder};
+use actix_web::{HttpResponse, Responder};
 
 use crate::services::health;
 
-pub async fn health_get(_req: HttpRequest) -> impl Responder {
-    let is_health_ok: bool = health();
-    match is_health_ok {
-        true => HttpResponse::Ok().json(serde_json::json!({"status": "OK"})),
-        false => HttpResponse::ServiceUnavailable().json("Service Unhealthy"),
+pub(crate) async fn health_get() -> impl Responder {
+    if health() {
+        return HttpResponse::Ok().json(serde_json::json!({"status": "OK"}))
     }
+    HttpResponse::ServiceUnavailable().json("Service Unhealthy")
 }
+
+// check this out:
+// https://stackoverflow.com/questions/74816014/passing-actix-web-payload-to-function
