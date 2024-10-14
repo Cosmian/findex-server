@@ -8,10 +8,12 @@ use actix_web::{
     http::header,
     Error, FromRequest, HttpMessage, HttpResponse,
 };
+use log::warn;
 use tracing::{debug, error, trace};
 
 use super::{error::LoginError, types::LoginResult, JwtConfig, UserClaim};
 
+#[allow(clippy::future_not_send)]
 pub(crate) async fn manage_jwt_request<S, B>(
     service: Rc<S>,
     configs: Arc<Vec<JwtConfig>>,
@@ -49,13 +51,19 @@ fn extract_user_claim(configs: &[JwtConfig], identity: &str) -> Result<UserClaim
     }
     Err(jwt_log_errors)
 }
-
+/**
+ * Problem : 
+ * Why do we need to use `#[allow(clippy::future_not_send)]`?
+ * uses a single Tokio instance per thread and actors get mapped specifically to cores.
+ * Because things don't move between threads, you don't have to worry about implementing send.
+ * source : some dude on redddit ?
+ */
+#[allow(clippy::future_not_send)]
 pub(crate) async fn manage_jwt(
     configs: Arc<Vec<JwtConfig>>,
     req: &ServiceRequest,
 ) -> LoginResult<JwtAuthClaim> {
     trace!("JWT Authentication...");
-    debug!("Checking JWT token222...");
 
     let identity = Identity::extract(req.request())
         .into_inner()
@@ -74,8 +82,12 @@ pub(crate) async fn manage_jwt(
     let mut private_claim = extract_user_claim(&configs, &identity);
     // If no configuration could get the claim, try refreshing them and extract user claim again
     if private_claim.is_err() {
-        configs[0].jwks.refresh().await?;
-        private_claim = extract_user_claim(&configs, &identity);
+        if let Some(config) = configs.first() {
+            config.jwks.refresh().await?;
+            private_claim = extract_user_claim(&configs, &identity);
+        } else {
+            return Err(LoginError::InvalidRequest("No JWT configuration available".to_owned()));
+        }
     }
 
     match private_claim.map(|user_claim| user_claim.email) {
@@ -84,8 +96,8 @@ pub(crate) async fn manage_jwt(
             Ok(JwtAuthClaim::new(email))
         }
         Ok(None) => {
-            debug!("No mail in JWT, creating some fake mail just to test...");
-            Ok(JwtAuthClaim::new("satancute666@hell.com".to_owned()))
+            warn!("No mail in JWT, creating some fake mail just to test...");
+            Ok(JwtAuthClaim::new("coucou@bonjour.com".to_owned()))
             // error!(
             //     "{:?} {} 401 unauthorized, no email in JWT",
             //     req.method(),
@@ -109,6 +121,7 @@ pub(crate) async fn manage_jwt(
 
 #[derive(Debug)]
 pub(crate) struct JwtAuthClaim {
+    #[allow(dead_code)] // TODO: will be removed once used
     pub email: String,
 }
 

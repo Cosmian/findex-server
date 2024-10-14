@@ -43,7 +43,7 @@ pub(crate) struct JwtTokenHeaders {
 }
 
 #[derive(Debug)]
-pub struct JwtConfig {
+pub(crate) struct JwtConfig {
     pub jwt_issuer_uri: String,
     pub jwt_audience: Option<String>,
     pub jwks: Arc<JwksManager>,
@@ -56,27 +56,24 @@ impl JwtConfig {
         authorization_content: &str,
     ) -> LoginResult<UserClaim> {
         let bearer: Vec<&str> = authorization_content.splitn(2, ' ').collect();
-        // assert!(
-        //     bearer.len() == 2 && bearer[0] == "Bearer",
-        //     "bad auth header content"
-        // );
-        // LoginError::Unauthorized(("Bad authorization header content (bad bearer)".to_owned()})
-        if !(bearer.len() == 2 && bearer[0] == "Bearer") {
+
+        if !(bearer.len() == 2 && bearer.first() == Option::Some(&"Bearer")) {
             return Err(LoginError::Unauthorized(
                 "Bad authorization header content (bad bearer)".to_owned(),
             ));
         }
 
-        let token: &str = bearer[1];
+        let token: &str = bearer.get(1).ok_or_else(|| {
+            LoginError::Unauthorized("Bad authorization header content (missing token)".to_owned())
+        })?;
         self.decode_authentication_token(token)
     }
 
     /// Decode a json web token (JWT)
     pub(crate) fn decode_authentication_token(&self, token: &str) -> LoginResult<UserClaim> {
-        assert!(
-            !token.is_empty(),
-            "token is empty" // LoginError::Unauthorized(("token is empty".to_owned()})
-        );
+        if token.is_empty() {
+            return Err(LoginError::Unauthorized("token is empty".to_owned()));
+        }
         tracing::trace!(
             "validating authentication token, expected JWT issuer: {}",
             self.jwt_issuer_uri

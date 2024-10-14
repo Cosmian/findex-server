@@ -4,7 +4,7 @@ Findex server implementation
 
 ## Spelling
 
-CSpell is used to keep spelling consistant and correct accross some projects. The file exceptions are listed in [cspell.json](/home/cosmian/Desktop/repos/findex-server/cspell.json)
+CSpell is used to keep spelling consistent and correct across some projects. The file exceptions are listed in [cspell.json](/home/cosmian/Desktop/repos/findex-server/cspell.json)
 
 #### Usage via VS Code :
 

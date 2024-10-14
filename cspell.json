@@ -5,7 +5,8 @@
         "actix",
         "dotenv",
         "findex",
-        "kacls"
+        "kacls",
+        "splitn"
     ],
     "useGitignore": true
 }

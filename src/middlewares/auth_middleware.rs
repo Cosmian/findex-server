@@ -15,7 +15,7 @@ use futures::{
     future::{ok, Ready},
     Future,
 };
-use log::debug;
+use log::{debug, info};
 
 use super::{jwt_token_auth::manage_jwt_request, JwtConfig};
 
@@ -27,6 +27,7 @@ pub(crate) struct LoginTransformerFactory {
 
 impl LoginTransformerFactory {
     #[must_use]
+    #[allow(dead_code)] // TODO : remove this, only for testing
     pub(crate) const fn new(jwt_configurations: Option<Arc<Vec<JwtConfig>>>) -> Self {
         Self { jwt_configurations }
     }
@@ -96,7 +97,7 @@ where
         Box::pin(async move {
             let res = fut.await?;
 
-            println!("Hi from response");
+            info!("Hi from response");
             Ok(res.map_into_left_body())
         })
     }

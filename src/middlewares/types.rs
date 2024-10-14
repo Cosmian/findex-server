@@ -1,3 +1,3 @@
 use super::error::LoginError;
 
-pub type LoginResult<R> = Result<R, LoginError>;
+pub(crate) type LoginResult<R> = Result<R, LoginError>;
