@@ -21,15 +21,18 @@ impl LogoutAction {
     ///
     /// # Errors
     ///
-    /// Returns an error if there is an issue loading or saving the configuration file.
-    ///
+    /// Returns an error if there is an issue loading or saving the
+    /// configuration file.
     #[allow(clippy::print_stdout)]
     pub fn process(&self, conf_path: &PathBuf) -> CliResult<()> {
         let mut conf = ClientConf::load(conf_path)?;
         conf.findex_access_token = None;
         conf.save(conf_path)?;
 
-        println!("\nThe access token was removed from the Findex server configuration file: {conf_path:?}");
+        println!(
+            "\nThe access token was removed from the Findex server configuration file: \
+             {conf_path:?}"
+        );
 
         Ok(())
     }

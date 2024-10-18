@@ -17,7 +17,8 @@ impl MarkdownAction {
     ///
     /// # Errors
     ///
-    /// Returns an error if there is an issue creating or writing to the markdown file.
+    /// Returns an error if there is an issue creating or writing to the
+    /// markdown file.
     #[allow(clippy::print_stdout)]
     pub fn process(&self, cmd: &Command) -> CliResult<()> {
         let mut output = String::new();
@@ -144,7 +145,7 @@ fn write_subcommands<'a>(
             format!("{}.{}", parent_index, i + 1)
         };
         let full_command = if parent_command.is_empty() {
-            sub_command.get_name().to_string()
+            sub_command.get_name().to_owned()
         } else {
             format!("{} {}", parent_command, sub_command.get_name())
         };

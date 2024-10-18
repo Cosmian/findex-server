@@ -1,13 +1,29 @@
-use crate::result::FResult;
 use async_trait::async_trait;
+use cloudproof_findex::{
+    db_interfaces::{redis::FindexTable, rest::UpsertData},
+    reexport::cosmian_findex::{
+        TokenToEncryptedValueMap, TokenWithEncryptedValueList, Tokens, ENTRY_LENGTH, LINK_LENGTH,
+    },
+};
 
-#[async_trait(?Send)]
-pub(crate) trait Database {
-    /// Insert the given Object in the database.
-    ///
-    /// A new UUID will be created if none is supplier.
-    /// This method will fail if a `uid` is supplied
-    /// and an object with the same id already exists
-    #[allow(dead_code)]
-    async fn create(&self) -> FResult<()>;
+use crate::error::result::FResult;
+
+#[async_trait]
+pub(crate) trait Database: Sync + Send {
+    async fn fetch(
+        &self,
+        findex_table: FindexTable,
+        tokens: Tokens,
+    ) -> FResult<TokenWithEncryptedValueList<ENTRY_LENGTH>>;
+
+    async fn upsert_entries(
+        &self,
+        upsert_data: UpsertData<ENTRY_LENGTH>,
+    ) -> FResult<TokenToEncryptedValueMap<ENTRY_LENGTH>>;
+
+    async fn insert_chains(&self, items: TokenToEncryptedValueMap<LINK_LENGTH>) -> FResult<()>;
+
+    async fn delete(&self, findex_table: FindexTable, entry_uids: Tokens) -> FResult<()>;
+
+    async fn dump_tokens(&self) -> FResult<Tokens>;
 }

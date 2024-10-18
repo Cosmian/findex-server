@@ -32,7 +32,7 @@ where
 
 impl<T> RestClientResultHelper<T> for Option<T> {
     fn context(self, context: &str) -> ClientResult<T> {
-        self.ok_or_else(|| ClientError::Default(context.to_string()))
+        self.ok_or_else(|| ClientError::Default(context.to_owned()))
     }
 
     fn with_context<D, O>(self, op: O) -> ClientResult<T>

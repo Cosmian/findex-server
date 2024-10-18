@@ -3,8 +3,8 @@ use std::{path::PathBuf, process};
 use clap::{CommandFactory, Parser, Subcommand};
 use cosmian_findex_cli::{
     actions::{
-        login::LoginAction, logout::LogoutAction, markdown::MarkdownAction,
-        new_database::NewDatabaseAction, version::ServerVersionAction,
+        findex::FindexCommands, login::LoginAction, logout::LogoutAction, markdown::MarkdownAction,
+        version::ServerVersionAction,
     },
     error::result::CliResult,
 };
@@ -30,21 +30,23 @@ struct Cli {
 
     /// Allow to connect using a self-signed cert or untrusted cert chain
     ///
-    /// `accept_invalid_certs` is useful if the CLI needs to connect to an HTTPS Findex server
-    /// running an invalid or insecure SSL certificate
+    /// `accept_invalid_certs` is useful if the CLI needs to connect to an HTTPS
+    /// Findex server running an invalid or insecure SSL certificate
     #[arg(long)]
     pub(crate) accept_invalid_certs: Option<bool>,
 }
 
 #[derive(Subcommand)]
 enum CliCommands {
-    NewDatabase(NewDatabaseAction),
+    #[command(subcommand)]
+    Findex(FindexCommands),
     ServerVersion(ServerVersionAction),
     Login(LoginAction),
     Logout(LogoutAction),
 
     /// Action to auto-generate doc in Markdown format
-    /// Run `cargo run --bin findex -- markdown documentation/docs/cli/main_commands.md`
+    /// Run `cargo run --bin findex -- markdown
+    /// documentation/docs/cli/main_commands.md`
     #[clap(hide = true)]
     Markdown(MarkdownAction),
 }
@@ -80,7 +82,7 @@ async fn main_() -> CliResult<()> {
                 conf.initialize_findex_client(opts.url.as_deref(), opts.accept_invalid_certs)?;
 
             match command {
-                CliCommands::NewDatabase(action) => action.process(&findex_rest_client).await?,
+                CliCommands::Findex(action) => action.process(&findex_rest_client).await?,
                 CliCommands::ServerVersion(action) => action.process(&findex_rest_client).await?,
                 _ => {
                     tracing::error!("unexpected command");

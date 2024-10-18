@@ -2,12 +2,12 @@
 name = "cosmian_findex_server"
 version.workspace = true
 authors.workspace = true
+categories.workspace = true
 edition.workspace = true
+keywords.workspace = true
 license.workspace = true
 repository.workspace = true
 rust-version.workspace = true
-categories.workspace = true
-keywords.workspace = true
 description = "Cosmian Findex server"
 
 [[bin]]
@@ -31,11 +31,9 @@ actix-service = "2.0"
 actix-tls = "3.4"
 actix-web = { workspace = true, features = ["macros", "openssl"] }
 alcoholic_jwt = "4091"
-argon2 = "0.5"
-async-trait = "0.1"
+async-trait = { workspace = true }
 base64 = { workspace = true }
 chrono = { workspace = true }
-cosmian_logger = { path = "../logger" }
 clap = { workspace = true, features = [
   "help",
   "env",
@@ -45,21 +43,17 @@ clap = { workspace = true, features = [
   "derive",
   "cargo",
 ] }
-cloudproof = { workspace = true }
-cloudproof_findex = { version = "5.0", features = ["findex-redis"] }
+cloudproof_findex = { workspace = true, features = ["redis-interface"] }
+cosmian_logger = { path = "../logger" }
 dotenvy = "0.15"
 futures = "0.3"
-hex = { workspace = true, default-features = false }
-lazy_static = "1.5"
 num-bigint-dig = { workspace = true, features = [
   "std",
   "rand",
   "serde",
   "zeroize",
 ] }
-num_cpus = { workspace = true }
 openssl = { workspace = true, default-features = false }
-rawsql = "0.1"
 redis = { version = "0.23", features = [
   "aio",
   "ahash",
@@ -82,7 +76,6 @@ sqlx = { version = "0.8.2", default-features = false, features = [
   "sqlite",
 ] }
 thiserror = { workspace = true }
-time = { workspace = true, features = ["local-offset", "formatting"] }
 tokio = { workspace = true, features = ["full"] }
 toml = "0.8"
 tracing = { workspace = true }

@@ -11,7 +11,10 @@ use actix_web::{
 use tracing::{debug, error, trace};
 
 use super::UserClaim;
-use crate::{error::FindexServerError, middlewares::jwt::JwtConfig, result::FResult};
+use crate::{
+    error::{result::FResult, server::FindexServerError},
+    middlewares::jwt::JwtConfig,
+};
 
 pub(crate) async fn manage_jwt_request<S, B>(
     service: Rc<S>,
@@ -73,7 +76,8 @@ pub(crate) async fn manage_jwt(
     trace!("Checking JWT identity: {identity}");
 
     let mut private_claim = extract_user_claim(&configs, &identity);
-    // If no configuration could get the claim, try refreshing them and extract user claim again
+    // If no configuration could get the claim, try refreshing them and extract user
+    // claim again
     if private_claim.is_err() {
         configs
             .first()

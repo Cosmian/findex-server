@@ -5,7 +5,8 @@ use rustls::{
     Certificate, Error as RustTLSError, ServerName,
 };
 
-/// A TLS verifier adding the ability to match the leaf certificate with a trusted one.
+/// A TLS verifier adding the ability to match the leaf certificate with a
+/// trusted one.
 pub(crate) struct LeafCertificateVerifier {
     // The certificate we expect to see in the TLS connection
     expected_cert: Certificate,

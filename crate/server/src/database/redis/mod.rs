@@ -1,130 +1,190 @@
-use argon2::Argon2;
+use std::collections::{HashMap, HashSet};
+
 use async_trait::async_trait;
-use cloudproof::reexport::crypto_core::{reexport::rand_core::SeedableRng, FixedSizeCBytes};
-use std::{
-    collections::HashSet,
-    sync::{Arc, Mutex},
-};
-
-use cloudproof::reexport::crypto_core::{kdf256, Aes256Gcm, CsRng, Instantiable, SymmetricKey};
 use cloudproof_findex::{
-    implementations::redis::{FindexRedis, FindexRedisError, RemovedLocationsFinder},
-    parameters::MASTER_KEY_LENGTH,
-    Label, Location,
+    db_interfaces::{
+        redis::{build_key, FindexTable, TABLE_PREFIX_LENGTH},
+        rest::UpsertData,
+    },
+    reexport::cosmian_findex::{
+        CoreError, EncryptedValue, Token, TokenToEncryptedValueMap, TokenWithEncryptedValueList,
+        Tokens, ENTRY_LENGTH, LINK_LENGTH,
+    },
 };
-use redis::aio::ConnectionManager;
-
-use crate::{error::FindexServerError, result::FResult, secret::Secret};
+use redis::{aio::ConnectionManager, pipe, AsyncCommands, Script};
+use tracing::{instrument, trace};
 
 use super::Database;
+use crate::error::{result::FResult, server::FindexServerError};
 
-pub(crate) const REDIS_WITH_FINDEX_MASTER_KEY_LENGTH: usize = 32;
-pub(crate) const REDIS_WITH_FINDEX_MASTER_KEY_DERIVATION_SALT: &[u8; 16] = b"rediswithfindex_";
-pub(crate) const REDIS_WITH_FINDEX_MASTER_FINDEX_KEY_DERIVATION_SALT: &[u8; 6] = b"findex";
-pub(crate) const REDIS_WITH_FINDEX_MASTER_DB_KEY_DERIVATION_SALT: &[u8; 2] = b"db";
+// TODO(manu): miss the clear_database parameter
+// TODO(manu): move secret to client crate
 
-pub(crate) const DB_KEY_LENGTH: usize = 32;
+/// The conditional upsert script used to only update a table if the
+/// indexed value matches ARGV[2]. When the value does not match, the
+/// indexed value is returned.
+const CONDITIONAL_UPSERT_SCRIPT: &str = r"
+        local value=redis.call('GET',ARGV[1])
+        if((value==false) or (not(value == false) and (ARGV[2] == value))) then
+            redis.call('SET', ARGV[1], ARGV[3])
+            return
+        else
+            return value
+        end;
+    ";
 
 #[allow(dead_code)]
-pub(crate) struct ObjectsDB {
+pub(crate) struct Redis {
     mgr: ConnectionManager,
-    dem: Aes256Gcm,
-    rng: Mutex<CsRng>,
+    upsert_script: Script,
 }
 
-impl ObjectsDB {
-    pub(crate) fn new(mgr: ConnectionManager, db_key: &SymmetricKey<DB_KEY_LENGTH>) -> Self {
-        Self {
-            mgr,
-            dem: Aes256Gcm::new(db_key),
-            rng: Mutex::new(CsRng::from_entropy()),
-        }
-    }
-}
-#[async_trait]
-impl RemovedLocationsFinder for ObjectsDB {
-    async fn find_removed_locations(
-        &self,
-        _locations: HashSet<Location>,
-    ) -> Result<HashSet<Location>, FindexRedisError> {
-        // Objects and permissions are never removed from the DB
-        Ok(HashSet::new())
-    }
-}
-
-#[allow(dead_code)]
-pub(crate) struct RedisWithFindex {
-    objects_db: Arc<ObjectsDB>,
-    findex: Arc<FindexRedis>,
-    findex_key: SymmetricKey<MASTER_KEY_LENGTH>,
-    label: Label,
-}
-
-impl RedisWithFindex {
-    pub(crate) async fn instantiate(
-        redis_url: &str,
-        master_key: Secret<REDIS_WITH_FINDEX_MASTER_KEY_LENGTH>,
-        label: &[u8],
-    ) -> FResult<Self> {
-        // derive a Findex Key
-        let mut findex_key = SymmetricKey::<MASTER_KEY_LENGTH>::default();
-        kdf256!(
-            &mut findex_key,
-            REDIS_WITH_FINDEX_MASTER_FINDEX_KEY_DERIVATION_SALT,
-            &*master_key
-        );
-        // derive a DB Key
-        let mut db_key = SymmetricKey::<DB_KEY_LENGTH>::default();
-        kdf256!(
-            &mut db_key,
-            REDIS_WITH_FINDEX_MASTER_DB_KEY_DERIVATION_SALT,
-            &*master_key
-        );
-
+impl Redis {
+    pub(crate) async fn instantiate(redis_url: &str) -> FResult<Self> {
         let client = redis::Client::open(redis_url)?;
         let mgr = ConnectionManager::new(client).await?;
-        let objects_db = Arc::new(ObjectsDB::new(mgr.clone(), &db_key));
-        let findex =
-            Arc::new(FindexRedis::connect_with_manager(mgr.clone(), objects_db.clone()).await?);
         Ok(Self {
-            objects_db,
-            findex,
-            findex_key,
-            label: Label::from(label),
+            mgr,
+            upsert_script: Script::new(CONDITIONAL_UPSERT_SCRIPT),
         })
     }
+}
 
-    pub(crate) fn master_key_from_password(
-        master_password: &str,
-    ) -> FResult<SymmetricKey<REDIS_WITH_FINDEX_MASTER_KEY_LENGTH>> {
-        let output_key_material = derive_key_from_password::<REDIS_WITH_FINDEX_MASTER_KEY_LENGTH>(
-            REDIS_WITH_FINDEX_MASTER_KEY_DERIVATION_SALT,
-            master_password.as_bytes(),
-        )?;
+#[async_trait]
+impl Database for Redis {
+    #[instrument(ret(Display), err, skip_all)]
+    async fn fetch(
+        &self,
+        findex_table: FindexTable,
+        tokens: Tokens,
+    ) -> FResult<TokenWithEncryptedValueList<ENTRY_LENGTH>> {
+        trace!(
+            "fetch: table {findex_table:?}, number of tokens: {}",
+            tokens.len()
+        );
+        let uids = tokens.into_iter().collect::<Vec<_>>();
 
-        let master_secret_key: SymmetricKey<REDIS_WITH_FINDEX_MASTER_KEY_LENGTH> =
-            SymmetricKey::try_from_slice(&output_key_material)?;
+        let redis_keys = uids
+            .iter()
+            .map(|uid| build_key(findex_table, uid))
+            .collect::<Vec<_>>();
 
-        Ok(master_secret_key)
+        let values: Vec<Vec<u8>> = self.mgr.clone().mget(redis_keys).await?;
+
+        // Zip and filter empty values out.
+        let res = uids
+            .into_iter()
+            .zip(values)
+            .filter_map(|(k, v)| {
+                if v.is_empty() {
+                    None
+                } else {
+                    Some(EncryptedValue::try_from(v.as_slice()).map(|v| (k, v)))
+                }
+            })
+            .collect::<Result<Vec<_>, CoreError>>()?;
+
+        trace!("fetch_entry_table non empty tuples len: {}", res.len());
+
+        let result: TokenWithEncryptedValueList<ENTRY_LENGTH> = res.into();
+
+        Ok(result)
     }
-}
 
-pub(crate) fn derive_key_from_password<const LENGTH: usize>(
-    salt: &[u8; 16],
-    password: &[u8],
-) -> Result<Secret<LENGTH>, FindexServerError> {
-    let mut output_key_material = Secret::<LENGTH>::new();
+    #[instrument(ret(Display), err, skip_all)]
+    async fn upsert_entries(
+        &self,
+        upsert_data: UpsertData<ENTRY_LENGTH>,
+    ) -> FResult<TokenToEncryptedValueMap<ENTRY_LENGTH>> {
+        trace!(
+            "upsert_entries: number of upsert data: {}",
+            upsert_data.len()
+        );
 
-    Argon2::default()
-        .hash_password_into(password, salt, output_key_material.as_mut())
-        .map_err(|e| FindexServerError::CryptographicError(e.to_string()))?;
+        let mut old_values = HashMap::new();
+        let mut new_values = HashMap::new();
+        for (token, (old_value, new_value)) in upsert_data {
+            if let Some(old_value) = old_value {
+                old_values.insert(token, old_value);
+            }
+            new_values.insert(token, new_value);
+        }
 
-    Ok(output_key_material)
-}
+        trace!(
+            "upsert_entries: number of old_values {}, number of new_values {}",
+            old_values.len(),
+            new_values.len()
+        );
 
-#[async_trait(?Send)]
-impl Database for RedisWithFindex {
-    async fn create(&self) -> FResult<()> {
-        Ok(())
+        let mut rejected = HashMap::with_capacity(new_values.len());
+        for (uid, new_value) in new_values {
+            let new_value = Vec::from(&new_value);
+            let old_value = old_values.get(&uid).map(Vec::from).unwrap_or_default();
+            let key = build_key(FindexTable::Entry, &uid);
+
+            let indexed_value: Vec<_> = self
+                .upsert_script
+                .arg(key)
+                .arg(old_value)
+                .arg(new_value)
+                .invoke_async(&mut self.mgr.clone())
+                .await?;
+
+            if !indexed_value.is_empty() {
+                let encrypted_value = EncryptedValue::try_from(indexed_value.as_slice())?;
+                rejected.insert(uid, encrypted_value);
+            }
+        }
+
+        trace!("upsert_entries: rejected: {}", rejected.len());
+
+        Ok(rejected.into())
+    }
+
+    #[instrument(ret, err, skip_all)]
+    async fn insert_chains(&self, items: TokenToEncryptedValueMap<LINK_LENGTH>) -> FResult<()> {
+        let mut pipe = pipe();
+        for (k, v) in &*items {
+            pipe.set(build_key(FindexTable::Chain, k), Vec::from(v));
+        }
+        pipe.atomic()
+            .query_async(&mut self.mgr.clone())
+            .await
+            .map_err(FindexServerError::from)
+    }
+
+    #[instrument(ret, err, skip_all)]
+    async fn delete(&self, findex_table: FindexTable, entry_uids: Tokens) -> FResult<()> {
+        let mut pipeline = pipe();
+        for uid in entry_uids {
+            pipeline.del(build_key(findex_table, &uid));
+        }
+        pipeline
+            .atomic()
+            .query_async(&mut self.mgr.clone())
+            .await
+            .map_err(FindexServerError::from)
+    }
+
+    #[instrument(ret(Display), err, skip_all)]
+    #[allow(clippy::indexing_slicing)]
+    async fn dump_tokens(&self) -> FResult<Tokens> {
+        let keys: Vec<Vec<u8>> = self
+            .mgr
+            .clone()
+            .keys(build_key(FindexTable::Entry, b"*"))
+            .await?;
+
+        trace!("dumping {} keywords (ET+CT)", keys.len());
+
+        let mut tokens_set = HashSet::new();
+        for key in keys {
+            if key[..TABLE_PREFIX_LENGTH] == [0x00, u8::from(FindexTable::Entry)] {
+                if let Ok(token) = Token::try_from(&key[TABLE_PREFIX_LENGTH..]) {
+                    tokens_set.insert(token);
+                }
+            }
+        }
+        Ok(Tokens::from(tokens_set))
     }
 }

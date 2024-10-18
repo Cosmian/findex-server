@@ -1,21 +1,24 @@
-use crate::error::FindexServerError;
+use crate::error::server::FindexServerError;
 
 pub type FResult<R> = Result<R, FindexServerError>;
 
-/// A helper trait for `FResult` that provides additional methods for error handling.
+/// A helper trait for `FResult` that provides additional methods for error
+/// handling.
 pub trait FResultHelper<T> {
     /// Sets the context for the error.
     ///
     /// # Errors
     ///
-    /// Returns a `FResult` with the specified context if the original result is an error.
+    /// Returns a `FResult` with the specified context if the original result is
+    /// an error.
     fn context(self, context: &str) -> FResult<T>;
 
     /// Sets the context for the error using a closure.
     ///
     /// # Errors
     ///
-    /// Returns a `FResult` with the context returned by the closure if the original result is an error.
+    /// Returns a `FResult` with the context returned by the closure if the
+    /// original result is an error.
     fn with_context<O>(self, op: O) -> FResult<T>
     where
         O: FnOnce() -> String;

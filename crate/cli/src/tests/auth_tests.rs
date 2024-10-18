@@ -7,7 +7,7 @@ use cosmian_findex_client::FINDEX_CLI_CONF_ENV;
 use cosmian_logger::log_utils::log_init;
 use tempfile::TempDir;
 use test_findex_server::{
-    start_test_server_with_options, AuthenticationOptions, DBConfig, TestsContext,
+    start_test_server_with_options, AuthenticationOptions, DBConfig, DatabaseType, TestsContext,
 };
 use tracing::{info, trace};
 
@@ -24,8 +24,7 @@ pub(crate) async fn test_all_authentications() -> CliResult<()> {
     info!("Testing server with no auth");
     let ctx = start_test_server_with_options(
         DBConfig {
-            database_type: Some("sqlite".to_owned()),
-            sqlite_path: PathBuf::from("./sqlite-data-auth-tests"),
+            database_type: Some(DatabaseType::Redis),
             clear_database: true,
             ..DBConfig::default()
         },
@@ -40,8 +39,7 @@ pub(crate) async fn test_all_authentications() -> CliResult<()> {
     ctx.stop_server().await?;
 
     let default_db_config = DBConfig {
-        database_type: Some("sqlite".to_owned()),
-        sqlite_path: PathBuf::from("./sqlite-data-auth-tests"),
+        database_type: Some(DatabaseType::Redis),
         clear_database: false,
         ..DBConfig::default()
     };
@@ -102,9 +100,9 @@ pub(crate) async fn test_all_authentications() -> CliResult<()> {
     .await?;
     ctx.stop_server().await?;
 
-    // On recent versions of macOS, the root Certificate for the client is searched on the keychains
-    // and not found, since it is a local self-signed certificate.
-    // This is likely a bug in reqwest
+    // On recent versions of macOS, the root Certificate for the client is searched
+    // on the keychains and not found, since it is a local self-signed
+    // certificate. This is likely a bug in reqwest
     #[cfg(not(target_os = "macos"))]
     {
         // tls client cert auth

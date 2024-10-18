@@ -8,7 +8,7 @@ use openssl::rand::rand_bytes;
 use serde::Deserialize;
 use zeroize::{Zeroize, ZeroizeOnDrop};
 
-use crate::result::FResult;
+use crate::error::result::FResult;
 
 /// Guarantees to be zeroized on drop with
 /// feature `zeroize` enabled from `num_bigint_dig` crate.

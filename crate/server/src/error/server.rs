@@ -1,8 +1,10 @@
 use std::{array::TryFromSliceError, sync::mpsc::SendError};
 
 use actix_web::{dev::ServerHandle, error::QueryPayloadError};
-use cloudproof::reexport::crypto_core::CryptoCoreError;
-use cloudproof_findex::implementations::redis::FindexRedisError;
+use cloudproof_findex::{
+    db_interfaces::DbInterfaceError, reexport::cosmian_findex::CoreError,
+    ser_de::SerializationError,
+};
 use redis::ErrorKind;
 use thiserror::Error;
 use x509_parser::prelude::{PEMError, X509Error};
@@ -76,18 +78,6 @@ impl From<x509_parser::nom::Err<PEMError>> for FindexServerError {
     }
 }
 
-impl From<CryptoCoreError> for FindexServerError {
-    fn from(e: CryptoCoreError) -> Self {
-        Self::CryptographicError(e.to_string())
-    }
-}
-
-impl From<FindexRedisError> for FindexServerError {
-    fn from(e: FindexRedisError) -> Self {
-        Self::Findex(e.to_string())
-    }
-}
-
 impl From<std::string::FromUtf8Error> for FindexServerError {
     fn from(e: std::string::FromUtf8Error) -> Self {
         Self::ConversionError(e.to_string())
@@ -120,12 +110,6 @@ impl From<openssl::error::ErrorStack> for FindexServerError {
 
 impl From<serde_json::Error> for FindexServerError {
     fn from(e: serde_json::Error) -> Self {
-        Self::InvalidRequest(e.to_string())
-    }
-}
-
-impl From<cloudproof::reexport::cover_crypt::Error> for FindexServerError {
-    fn from(e: cloudproof::reexport::cover_crypt::Error) -> Self {
         Self::InvalidRequest(e.to_string())
     }
 }
@@ -176,6 +160,12 @@ impl From<url::ParseError> for FindexServerError {
     }
 }
 
+impl From<SerializationError> for FindexServerError {
+    fn from(e: SerializationError) -> Self {
+        Self::Findex(e.to_string())
+    }
+}
+
 impl From<base64::DecodeError> for FindexServerError {
     fn from(e: base64::DecodeError) -> Self {
         Self::ConversionError(e.to_string())
@@ -185,6 +175,18 @@ impl From<base64::DecodeError> for FindexServerError {
 impl From<tracing::dispatcher::SetGlobalDefaultError> for FindexServerError {
     fn from(e: tracing::dispatcher::SetGlobalDefaultError) -> Self {
         Self::ServerError(e.to_string())
+    }
+}
+
+impl From<DbInterfaceError> for FindexServerError {
+    fn from(e: DbInterfaceError) -> Self {
+        Self::DatabaseError(e.to_string())
+    }
+}
+
+impl From<CoreError> for FindexServerError {
+    fn from(e: CoreError) -> Self {
+        Self::Findex(e.to_string())
     }
 }
 
@@ -214,13 +216,13 @@ macro_rules! findex_server_ensure {
 #[macro_export]
 macro_rules! findex_server_error {
     ($msg:literal) => {
-        $crate::error::FindexServerError::ServerError(::core::format_args!($msg).to_string())
+        $crate::error::server::FindexServerError::ServerError(::core::format_args!($msg).to_string())
     };
     ($err:expr $(,)?) => ({
-        $crate::error::FindexServerError::ServerError($err.to_string())
+        $crate::error::server::FindexServerError::ServerError($err.to_string())
     });
     ($fmt:expr, $($arg:tt)*) => {
-        $crate::error::FindexServerError::ServerError(::core::format_args!($fmt, $($arg)*).to_string())
+        $crate::error::server::FindexServerError::ServerError(::core::format_args!($fmt, $($arg)*).to_string())
     };
 }
 

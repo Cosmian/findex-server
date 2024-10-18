@@ -36,7 +36,7 @@ pub(crate) async fn test_new_database() -> CliResult<()> {
 }
 
 #[tokio::test]
-#[allow(clippy::needless_return)]
+#[allow(clippy::needless_return, clippy::panic_in_result_fn)]
 pub(crate) async fn test_conf_does_not_exist() -> CliResult<()> {
     log_init(option_env!("RUST_LOG"));
     let ctx = start_default_test_findex_server().await;

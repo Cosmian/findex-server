@@ -19,7 +19,6 @@ cosmian_findex_server = { path = "../server", features = [
   "insecure",
 ], default-features = false }
 cosmian_logger = { path = "../logger" }
-tempfile = "3.1"
 tokio = { workspace = true, features = ["rt-multi-thread"] }
 tracing = { workspace = true }
 

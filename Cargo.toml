@@ -12,8 +12,11 @@ resolver = "2"
 [workspace.package]
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.71.0"
-authors = ["Hatem M'naouer <hatem.mnaouer@cosmian.com>"]
+rust-version = "1.82.0"
+authors = [
+  "Emmanuel Coste<emmanuel.coste@cosmian.com>",
+  "Hatem M'naouer <hatem.mnaouer@cosmian.com>",
+]
 license = "BUSL-1.1"
 license-file = "LICENSE"
 repository = "https://github.com/Cosmian/cosmian_findex_server"
@@ -37,21 +40,24 @@ incremental = false
 [profile.dev.package."*"]
 opt-level = 0
 
+# todo(manu): check if all deps are really required
 [workspace.dependencies]
 actix-rt = "2.10"
 actix-server = { version = "2.5", default-features = false }
 actix-web = { version = "4.9.0", default-features = false }
+async-trait = "0.1.83"
 base64 = "0.21"
 chrono = "0.4"
 clap = { version = "4.5", default-features = false }
-cloudproof = "3.0"
+# cloudproof_findex = { path = "../cloudproof_rust/crates/findex" }
+cloudproof_findex = { git = "https://www.github.com/Cosmian/cloudproof_rust", branch = "feat/add_basic_findex_rest_client" }
 der = { version = "0.7", default-features = false }
 env_logger = "0.11"
 hex = { version = "0.4", default-features = false }
 leb128 = "0.2.5"
 log = { version = "0.4", default-features = false }
 native-tls = "0.2"
-num_cpus = "1.13"
+num_cpus = "1.16"
 num-bigint-dig = { version = "0.8", default-features = false }
 openssl = { version = "0.10", default-features = false }
 pem = "3.0"
@@ -64,11 +70,11 @@ sha3 = { version = "0.10", default-features = false }
 strum = { version = "0.25", default-features = false }
 thiserror = "1.0"
 time = "0.3"
-tokio = { version = "1.39", default-features = false }
+tokio = { version = "1.40", default-features = false }
 tracing-subscriber = { version = "0.3", default-features = false }
 tracing = "0.1"
 url = "2.5"
-uuid = "1.10"
+uuid = "1.11"
 x509-cert = { version = "0.2.5", default-features = false }
 x509-parser = "0.16"
 zeroize = { version = "1.8", default-features = false }

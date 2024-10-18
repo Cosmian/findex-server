@@ -16,7 +16,6 @@ doctest = false
 
 [dependencies]
 base64 = { workspace = true }
-cloudproof = { workspace = true }
 der = { workspace = true }
 log = { workspace = true }
 pem = { workspace = true }
@@ -28,4 +27,8 @@ thiserror = { workspace = true }
 tracing = { workspace = true }
 url = { workspace = true }
 webpki-roots = "0.22"
-x509-cert = { workspace = true }
+x509-cert = { workspace = true, features = ["pem"] }
+
+[dev-dependencies]
+faker_rand = "0.1"
+rand = "0.8"

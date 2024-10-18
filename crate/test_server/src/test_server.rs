@@ -11,10 +11,11 @@ use cosmian_findex_client::{
     client_bail, client_error, write_json_object_to_file, ClientConf, ClientError, FindexClient,
 };
 use cosmian_findex_server::{
-    config::{ClapConfig, DBConfig, HttpConfig, HttpParams, JwtAuthConfig, ServerParams},
+    config::{
+        ClapConfig, DBConfig, DatabaseType, HttpConfig, HttpParams, JwtAuthConfig, ServerParams,
+    },
     findex_server::start_findex_server,
 };
-use tempfile::TempDir;
 use tokio::sync::OnceCell;
 use tracing::{info, trace};
 
@@ -28,23 +29,7 @@ use crate::test_jwt::{get_auth0_jwt_config, AUTH0_TOKEN};
 pub(crate) static ONCE: OnceCell<TestsContext> = OnceCell::const_new();
 pub(crate) static ONCE_SERVER_WITH_AUTH: OnceCell<TestsContext> = OnceCell::const_new();
 
-fn sqlite_db_config() -> DBConfig {
-    trace!("TESTS: using sqlite");
-    let tmp_dir = TempDir::new().unwrap();
-    let file_path = tmp_dir.path().join("test_sqlite.db");
-    // let file_path = PathBuf::from("test_sqlite.db");
-    if file_path.exists() {
-        std::fs::remove_file(&file_path).unwrap();
-    }
-    DBConfig {
-        database_type: Some("sqlite".to_string()),
-        clear_database: true,
-        sqlite_path: file_path,
-        ..DBConfig::default()
-    }
-}
-
-fn redis_findex_db_config() -> DBConfig {
+fn redis_db_config() -> DBConfig {
     trace!("TESTS: using redis-findex");
     let url = if let Ok(var_env) = env::var("REDIS_HOST") {
         format!("redis://{var_env}:6379")
@@ -52,22 +37,17 @@ fn redis_findex_db_config() -> DBConfig {
         "redis://localhost:6379".to_owned()
     };
     DBConfig {
-        database_type: Some("redis-findex".to_string()),
+        database_type: Some(DatabaseType::Redis),
         clear_database: true,
         database_url: Some(url),
         sqlite_path: Default::default(),
-        redis_master_password: Some("password".to_string()),
-        redis_findex_label: Some("label".to_string()),
     }
 }
 
 fn get_db_config() -> DBConfig {
-    env::var_os("FINDEX_TEST_DB").map_or_else(sqlite_db_config, |v| {
-        match v.to_str().unwrap_or("") {
-            "redis-findex" => redis_findex_db_config(),
-            "sqlite" => sqlite_db_config(),
-            _ => sqlite_db_config(),
-        }
+    env::var_os("FINDEX_TEST_DB").map_or_else(redis_db_config, |v| match v.to_str().unwrap_or("") {
+        "redis" => redis_db_config(),
+        _ => redis_db_config(),
     })
 }
 
@@ -193,8 +173,9 @@ fn start_test_findex_server(
 
 /// Wait for the server to start by reading the version
 async fn wait_for_server_to_start(findex_client: &FindexClient) -> Result<(), ClientError> {
-    // Depending on the running environment, the server could take a bit of time to start
-    // We try to query it with a dummy request until be sure it is started.
+    // Depending on the running environment, the server could take a bit of time to
+    // start We try to query it with a dummy request until be sure it is
+    // started.
     let mut retry = true;
     let mut timeout = 5;
     let mut waiting = 1;
@@ -320,7 +301,8 @@ fn generate_owner_conf(server_params: &ServerParams) -> Result<(String, ClientCo
             None
         },
 
-        // We use the private key since the private key is the public key with additional information.
+        // We use the private key since the private key is the public key with additional
+        // information.
         ..ClientConf::default()
     };
     // write the conf to a file
@@ -330,7 +312,8 @@ fn generate_owner_conf(server_params: &ServerParams) -> Result<(String, ClientCo
     Ok((owner_client_conf_path, owner_client_conf))
 }
 
-/// Generate a user configuration for user.client@acme.com and return the file path
+/// Generate a user configuration for user.client@acme.com and return the file
+/// path
 fn generate_user_conf(port: u16, owner_client_conf: &ClientConf) -> Result<String, ClientError> {
     // This create root dir
     let root_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
@@ -362,7 +345,7 @@ fn generate_user_conf(port: u16, owner_client_conf: &ClientConf) -> Result<Strin
 #[tokio::test]
 async fn test_start_server() -> Result<(), ClientError> {
     let context = start_test_server_with_options(
-        sqlite_db_config(),
+        redis_db_config(),
         6660,
         AuthenticationOptions {
             use_jwt_token: false,

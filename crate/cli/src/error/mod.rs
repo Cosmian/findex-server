@@ -2,6 +2,10 @@ use std::{array::TryFromSliceError, num::TryFromIntError, str::Utf8Error};
 
 #[cfg(test)]
 use assert_cmd::cargo::CargoError;
+use cloudproof_findex::{
+    db_interfaces::DbInterfaceError,
+    reexport::{cosmian_crypto_core::CryptoCoreError, cosmian_findex},
+};
 use cosmian_findex_client::ClientError;
 use hex::FromHexError;
 use pem::PemError;
@@ -72,18 +76,6 @@ pub enum CliError {
 impl From<der::Error> for CliError {
     fn from(e: der::Error) -> Self {
         Self::Conversion(e.to_string())
-    }
-}
-
-impl From<cloudproof::reexport::crypto_core::reexport::pkcs8::Error> for CliError {
-    fn from(e: cloudproof::reexport::crypto_core::reexport::pkcs8::Error) -> Self {
-        Self::Conversion(e.to_string())
-    }
-}
-
-impl From<cloudproof::reexport::cover_crypt::Error> for CliError {
-    fn from(e: cloudproof::reexport::cover_crypt::Error) -> Self {
-        Self::InvalidRequest(e.to_string())
     }
 }
 
@@ -166,6 +158,24 @@ impl From<std::fmt::Error> for CliError {
     }
 }
 
+impl From<CryptoCoreError> for CliError {
+    fn from(e: CryptoCoreError) -> Self {
+        Self::Cryptographic(e.to_string())
+    }
+}
+
+impl From<cosmian_findex::Error<DbInterfaceError>> for CliError {
+    fn from(e: cosmian_findex::Error<DbInterfaceError>) -> Self {
+        Self::Cryptographic(e.to_string())
+    }
+}
+
+impl From<DbInterfaceError> for CliError {
+    fn from(e: DbInterfaceError) -> Self {
+        Self::Cryptographic(e.to_string())
+    }
+}
+
 /// Return early with an error if a condition is not satisfied.
 ///
 /// This macro is equivalent to `if !$cond { return Err(From::from($err)); }`.
@@ -217,6 +227,7 @@ macro_rules! cli_bail {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
 
     use crate::error::result::CliResult;

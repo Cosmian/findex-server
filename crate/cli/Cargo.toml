@@ -9,7 +9,7 @@ rust-version.workspace = true
 description = "CLI used to manage the Cosmian Findex."
 
 [[bin]]
-name = "findex"
+name = "cosmian_findex_cli"
 path = "src/main.rs"
 test = false
 
@@ -32,7 +32,7 @@ clap = { workspace = true, features = [
   "derive",
   "cargo",
 ] }
-cloudproof = { workspace = true }
+cloudproof_findex = { workspace = true, features = ["rest-interface"] }
 cosmian_findex_client = { path = "../client" }
 cosmian_logger = { path = "../logger" }
 der = { workspace = true, features = ["pem"] }
@@ -52,9 +52,9 @@ actix-rt = { workspace = true }
 actix-server = { workspace = true }
 assert_cmd = "2.0"
 const-oid = { version = "0.9", features = ["db"] }
-test_findex_server = { path = "../test_server" }
 openssl = { workspace = true }
 predicates = "3.1"
-regex = { version = "1.10", default-features = false }
-tempfile = "3.11"
+regex = { version = "1.11", default-features = false }
+tempfile = "3.13"
+test_findex_server = { path = "../test_server" }
 x509-parser = { workspace = true, features = ["verify"] }

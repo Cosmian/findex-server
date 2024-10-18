@@ -14,11 +14,13 @@ impl ServerVersionAction {
     ///
     /// # Arguments
     ///
-    /// * `findex_rest_client` - The Findex server client instance used to communicate with the Findex server server.
+    /// * `findex_rest_client` - The Findex server client instance used to
+    ///   communicate with the Findex server server.
     ///
     /// # Errors
     ///
-    /// Returns an error if the version query fails or if there is an issue writing to the console.
+    /// Returns an error if the version query fails or if there is an issue
+    /// writing to the console.
     pub async fn process(&self, findex_rest_client: &FindexClient) -> CliResult<()> {
         let version = findex_rest_client
             .version()

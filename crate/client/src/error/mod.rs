@@ -64,12 +64,6 @@ impl From<der::Error> for ClientError {
     }
 }
 
-impl From<cloudproof::reexport::crypto_core::CryptoCoreError> for ClientError {
-    fn from(e: cloudproof::reexport::crypto_core::CryptoCoreError) -> Self {
-        Self::UnexpectedError(e.to_string())
-    }
-}
-
 /// Construct a server error from a string.
 #[macro_export]
 macro_rules! client_error {

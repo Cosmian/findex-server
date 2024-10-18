@@ -5,6 +5,7 @@ use std::{
     path::PathBuf,
 };
 
+// todo(manu): finder.json configuration tests are incorrect (delete secret_database)
 use der::{DecodePem, Encode};
 #[cfg(target_os = "linux")]
 use log::info;
@@ -15,17 +16,21 @@ use x509_cert::Certificate as X509Certificate;
 #[cfg(target_os = "linux")]
 use crate::client_bail;
 use crate::{
-    error::{result::RestClientResultHelper, ClientError},
+    error::{
+        result::{ClientResult, RestClientResultHelper},
+        ClientError,
+    },
     FindexClient,
 };
 
 /// Returns the path to the current user's home folder.
 ///
-/// On Linux and macOS, the home folder is typically located at `/home/<username>`
-/// or `/Users/<username>`, respectively. On Windows, the home folder is typically
-/// located at `C:\Users\<username>`. However, the location of the home folder can
-/// be changed by the user or by system administrators, so it's important to check
-/// for the existence of the appropriate environment variables.
+/// On Linux and macOS, the home folder is typically located at
+/// `/home/<username>` or `/Users/<username>`, respectively. On Windows, the
+/// home folder is typically located at `C:\Users\<username>`. However, the
+/// location of the home folder can be changed by the user or by system
+/// administrators, so it's important to check for the existence of the
+/// appropriate environment variables.
 ///
 /// Returns `None` if the home folder cannot be determined.
 fn get_home_folder() -> Option<PathBuf> {
@@ -42,7 +47,8 @@ fn get_home_folder() -> Option<PathBuf> {
     {
         return Some(PathBuf::from(hdrive).join(hpath));
     }
-    // If none of the above environment variables exist, the home folder cannot be determined
+    // If none of the above environment variables exist, the home folder cannot be
+    // determined
     None
 }
 
@@ -54,7 +60,8 @@ fn get_default_conf_path() -> Result<PathBuf, ClientError> {
         .map(|home| home.join(".cosmian/findex_client.json"))
 }
 
-/// used for serialization
+/// Required for `serde` serialization
+#[allow(clippy::trivially_copy_pass_by_ref)]
 const fn not(b: &bool) -> bool {
     !*b
 }
@@ -134,7 +141,8 @@ impl Default for ClientConf {
     }
 }
 
-/// This method is used to configure the Findex CLI by reading a JSON configuration file.
+/// This method is used to configure the Findex CLI by reading a JSON
+/// configuration file.
 ///
 /// The method looks for a JSON configuration file with the following structure:
 ///
@@ -148,17 +156,22 @@ impl Default for ClientConf {
 ///     "ssl_client_pkcs12_password": "password"
 /// }
 /// ```
-/// The path to the configuration file is specified through the `FINDEX_CLI_CONF` environment variable.
-/// If the environment variable is not set, a default path is used.
-/// If the configuration file does not exist at the path, a new file is created with default values.
+/// The path to the configuration file is specified through the
+/// `FINDEX_CLI_CONF` environment variable. If the environment variable is not
+/// set, a default path is used. If the configuration file does not exist at the
+/// path, a new file is created with default values.
 ///
-/// This function returns a Findex client configured according to the settings specified in the configuration file.
+/// This function returns a Findex client configured according to the settings
+/// specified in the configuration file.
 pub const FINDEX_CLI_CONF_ENV: &str = "FINDEX_CLI_CONF";
 #[cfg(target_os = "linux")]
 pub(crate) const FINDEX_CLI_CONF_DEFAULT_SYSTEM_PATH: &str = "/etc/cosmian/findex.json";
 
 impl ClientConf {
-    pub fn location(conf: Option<PathBuf>) -> Result<PathBuf, ClientError> {
+    /// Returns the path to the configuration file.
+    /// # Errors
+    /// Returns an error if the configuration file does not exist.
+    pub fn location(conf: Option<PathBuf>) -> ClientResult<PathBuf> {
         // Obtain the configuration file path from:
         // - the `--conf` arg
         // - the environment variable corresponding to `FINDEX_CLI_CONF_ENV`
@@ -174,8 +187,8 @@ impl ClientConf {
             // Error if the specified file does not exist
             if !conf_path.exists() {
                 return Err(ClientError::NotSupported(format!(
-                    "Configuration file {conf_path:?} specified in {FINDEX_CLI_CONF_ENV} environment \
-                     variable does not exist"
+                    "Configuration file {conf_path:?} specified in {FINDEX_CLI_CONF_ENV} \
+                     environment variable does not exist"
                 )));
             }
             return Ok(conf_path);
@@ -193,17 +206,19 @@ impl ClientConf {
                 let default_system_path = PathBuf::from(FINDEX_CLI_CONF_DEFAULT_SYSTEM_PATH);
                 if default_system_path.exists() {
                     info!(
-                        "No active user, using configuration at {FINDEX_CLI_CONF_DEFAULT_SYSTEM_PATH}"
+                        "No active user, using configuration at \
+                         {FINDEX_CLI_CONF_DEFAULT_SYSTEM_PATH}"
                     );
                     return Ok(default_system_path);
                 }
                 client_bail!(
-                    "no configuration found at {FINDEX_CLI_CONF_DEFAULT_SYSTEM_PATH}, and no current \
-                     user, bailing out"
+                    "no configuration found at {FINDEX_CLI_CONF_DEFAULT_SYSTEM_PATH}, and no \
+                     current user, bailing out"
                 );
             }
             Ok(user_conf) => {
-                // the user home exists, if there is no conf file, check /etc/cosmian/findex.json
+                // the user home exists, if there is no conf file, check
+                // /etc/cosmian/findex.json
                 if !user_conf.exists() {
                     let default_system_path = PathBuf::from(FINDEX_CLI_CONF_DEFAULT_SYSTEM_PATH);
                     if default_system_path.exists() {
@@ -223,7 +238,11 @@ impl ClientConf {
         }
     }
 
-    pub fn save(&self, conf_path: &PathBuf) -> Result<(), ClientError> {
+    /// Save the configuration to a file.
+    /// # Errors
+    /// Returns an error if the configuration cannot be serialized or written to
+    /// the file.
+    pub fn save(&self, conf_path: &PathBuf) -> ClientResult<()> {
         fs::write(
             conf_path,
             serde_json::to_string_pretty(&self)
@@ -236,8 +255,14 @@ impl ClientConf {
         Ok(())
     }
 
-    pub fn load(conf_path: &PathBuf) -> Result<Self, ClientError> {
-        // Deserialize the configuration from the file, or create a default configuration if none exists
+    /// Load the configuration from a file.
+    /// If the file does not exist, create it with default values.
+    /// # Errors
+    /// Returns an error if the configuration cannot be deserialized or read
+    /// from the file.
+    pub fn load(conf_path: &PathBuf) -> ClientResult<Self> {
+        // Deserialize the configuration from the file, or create a default
+        // configuration if none exists
         let conf = if conf_path.exists() {
             // Configuration file exists, read and deserialize it
             let file = File::open(conf_path)
@@ -245,7 +270,8 @@ impl ClientConf {
             serde_json::from_reader(BufReader::new(file))
                 .with_context(|| format!("Error while parsing configuration file {conf_path:?}"))?
         } else {
-            // Configuration file doesn't exist, create it with default values and serialize it
+            // Configuration file doesn't exist, create it with default values and serialize
+            // it
             let parent = conf_path
                 .parent()
                 .with_context(|| format!("Unable to get parent directory of {conf_path:?}"))?;
@@ -263,8 +289,10 @@ impl ClientConf {
 
     /// Initialize a Findex REST client.
     ///
-    /// Parameters `findex_server_url` and `accept_invalid_certs` from the command line
-    /// will override the ones from the configuration file.
+    /// Parameters `findex_server_url` and `accept_invalid_certs` from the
+    /// command line will override the ones from the configuration file.
+    /// # Errors
+    /// Returns an error if the Findex REST client cannot be instantiated.
     pub fn initialize_findex_client(
         &self,
         findex_server_url: Option<&str>,
@@ -297,6 +325,7 @@ impl ClientConf {
     }
 }
 
+#[allow(unsafe_code, clippy::unwrap_used)]
 #[cfg(test)]
 mod tests {
     use std::{env, fs, path::PathBuf};
@@ -310,22 +339,22 @@ mod tests {
             env::set_var(FINDEX_CLI_CONF_ENV, "test_data/configs/findex.json");
         }
         let conf_path = ClientConf::location(None).unwrap();
-        assert!(ClientConf::load(&conf_path).is_ok());
+        ClientConf::load(&conf_path).unwrap();
 
         // another valid conf
         unsafe {
             env::set_var(FINDEX_CLI_CONF_ENV, "test_data/configs/findex_partial.json");
         }
         let conf_path = ClientConf::location(None).unwrap();
-        assert!(ClientConf::load(&conf_path).is_ok());
+        ClientConf::load(&conf_path).unwrap();
 
         // Default conf file
         unsafe {
             env::remove_var(FINDEX_CLI_CONF_ENV);
         }
-        let _ = fs::remove_file(get_default_conf_path().unwrap());
+        fs::remove_file(get_default_conf_path().unwrap()).unwrap();
         let conf_path = ClientConf::location(None).unwrap();
-        assert!(ClientConf::load(&conf_path).is_ok());
+        ClientConf::load(&conf_path).unwrap();
         assert!(get_default_conf_path().unwrap().exists());
 
         // invalid conf
@@ -342,6 +371,6 @@ mod tests {
         }
         let conf_path =
             ClientConf::location(Some(PathBuf::from("test_data/configs/findex.json"))).unwrap();
-        assert!(ClientConf::load(&conf_path).is_ok());
+        ClientConf::load(&conf_path).unwrap();
     }
 }

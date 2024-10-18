@@ -3,7 +3,7 @@ use std::fmt::{self};
 use clap::Parser;
 use serde::{Deserialize, Serialize};
 
-use super::{DBConfig, HttpConfig, JwtAuthConfig, WorkspaceConfig};
+use super::{DBConfig, HttpConfig, JwtAuthConfig};
 
 const DEFAULT_USERNAME: &str = "admin";
 
@@ -13,7 +13,6 @@ impl Default for ClapConfig {
             db: DBConfig::default(),
             http: HttpConfig::default(),
             auth: JwtAuthConfig::default(),
-            workspace: WorkspaceConfig::default(),
             default_username: DEFAULT_USERNAME.to_owned(),
             force_default_username: false,
         }
@@ -33,15 +32,13 @@ pub struct ClapConfig {
     #[clap(flatten)]
     pub auth: JwtAuthConfig,
 
-    #[clap(flatten)]
-    pub workspace: WorkspaceConfig,
-
     /// The default username to use when no authentication method is provided
     #[clap(long, env = "FINDEX_SERVER_DEFAULT_USERNAME", default_value = DEFAULT_USERNAME)]
     pub default_username: String,
 
     /// When an authentication method is provided, perform the authentication
-    /// but always use the default username instead of the one provided by the authentication method
+    /// but always use the default username instead of the one provided by the
+    /// authentication method
     #[clap(long, env = "FINDEX_SERVER_FORCE_DEFAULT_USERNAME")]
     pub force_default_username: bool,
 }
@@ -56,7 +53,6 @@ impl fmt::Debug for ClapConfig {
             x
         };
         let x = x.field("Findex server http", &self.http);
-        let x = x.field("workspace", &self.workspace);
         let x = x.field("default username", &self.default_username);
         let x = x.field("force default username", &self.force_default_username);
         x.finish()

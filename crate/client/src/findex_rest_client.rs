@@ -21,11 +21,13 @@ use crate::{
 #[derive(Clone)]
 pub struct FindexClient {
     pub server_url: String,
-    client: Client,
+    pub client: Client,
 }
 
 impl FindexClient {
     /// Instantiate a new Findex REST Client
+    /// # Errors
+    /// It returns an error if the client cannot be instantiated
     #[allow(clippy::too_many_arguments)]
     #[allow(dead_code)]
     pub fn instantiate(
@@ -39,7 +41,7 @@ impl FindexClient {
     ) -> Result<Self, ClientError> {
         let server_url = server_url
             .strip_suffix('/')
-            .map_or_else(|| server_url.to_string(), std::string::ToString::to_string);
+            .map_or_else(|| server_url.to_owned(), std::string::ToString::to_string);
 
         let mut headers = HeaderMap::new();
         if let Some(bearer_token) = bearer_token {
@@ -57,17 +59,16 @@ impl FindexClient {
 
         // We deal with 4 scenarios:
         // 1. HTTP: no TLS
-        // 2. HTTPS:
-        //    a) self-signed: we want to remove the verifications
-        //    b) signed in a tee context: we want to verify the /quote and then only accept the allowed certificate
-        //          -> For efficiency purpose, this verification is made outside this call (async with the queries)
-        //             Only the verified certificate is used here
-        //    c) signed in a non-tee context: we want classic TLS verification based on the root ca
-        let builder = if let Some(certificate) = allowed_tee_tls_cert {
-            build_tls_client_tee(certificate, accept_invalid_certs)
-        } else {
-            ClientBuilder::new().danger_accept_invalid_certs(accept_invalid_certs)
-        };
+        // 2. HTTPS: a) self-signed: we want to remove the verifications b) signed in a
+        //    tee context: we want to verify the /quote and then only accept the allowed
+        //    certificate -> For efficiency purpose, this verification is made outside
+        //    this call (async with the queries) Only the verified certificate is used
+        //    here c) signed in a non-tee context: we want classic TLS verification
+        //    based on the root ca
+        let builder = allowed_tee_tls_cert.map_or_else(
+            || ClientBuilder::new().danger_accept_invalid_certs(accept_invalid_certs),
+            |certificate| build_tls_client_tee(certificate, accept_invalid_certs),
+        );
 
         // If a PKCS12 file is provided, use it to build the client
         let builder = match ssl_client_pkcs12_path {
@@ -97,7 +98,9 @@ impl FindexClient {
 
     /// This operation requests the server to create a new database.
     /// The returned secrets could be shared between several users.
-    pub async fn new_database(&self) -> Result<String, ClientError> {
+    /// # Errors
+    /// It returns an error if the request fails
+    pub async fn new_database(&self) -> ClientResult<String> {
         let endpoint = "/new_database";
         let server_url = format!("{}{endpoint}", self.server_url);
         let response = self.client.get(server_url).send().await?;
@@ -111,6 +114,10 @@ impl FindexClient {
         Err(ClientError::RequestFailed(p))
     }
 
+    /// This operation requests the server to create a new table.
+    /// The returned secrets could be shared between several users.
+    /// # Errors
+    /// It returns an error if the request fails
     pub async fn version(&self) -> ClientResult<String> {
         let endpoint = "/version";
         let server_url = format!("{}{endpoint}", self.server_url);
@@ -126,8 +133,8 @@ impl FindexClient {
     }
 }
 
-/// Some errors are returned by the Middleware without going through our own error manager.
-/// In that case, we make the error clearer here for the client.
+/// Some errors are returned by the Middleware without going through our own
+/// error manager. In that case, we make the error clearer here for the client.
 async fn handle_error(endpoint: &str, response: Response) -> Result<String, ClientError> {
     trace!("Error response received on {endpoint}: Response: {response:?}");
     let status = response.status();
@@ -149,8 +156,9 @@ async fn handle_error(endpoint: &str, response: Response) -> Result<String, Clie
 }
 
 /// Build a `TLSClient` to use with a Findex running inside a tee.
-/// The TLS verification is the basic one but also includes the verification of the leaf certificate
-/// The TLS socket is mounted since the leaf certificate is exactly the same as the expected one.
+/// The TLS verification is the basic one but also includes the verification of
+/// the leaf certificate The TLS socket is mounted since the leaf certificate is
+/// exactly the same as the expected one.
 pub(crate) fn build_tls_client_tee(
     leaf_cert: Certificate,
     accept_invalid_certs: bool,

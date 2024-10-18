@@ -5,7 +5,14 @@ use crate::error::ClientError;
 pub type RestClientResult<R> = Result<R, ClientError>;
 
 pub trait ClientResultHelper<T> {
+    /// Add a context to the error message
+    /// # Errors
+    /// It returns the error with the context added
     fn context(self, context: &str) -> RestClientResult<T>;
+
+    /// Add a context to the error message
+    /// # Errors
+    /// It returns the error with the context added
     fn with_context<D, O>(self, op: O) -> RestClientResult<T>
     where
         D: Display + Send + Sync + 'static,
@@ -31,7 +38,7 @@ where
 
 impl<T> ClientResultHelper<T> for Option<T> {
     fn context(self, context: &str) -> RestClientResult<T> {
-        self.ok_or_else(|| ClientError::Default(context.to_string()))
+        self.ok_or_else(|| ClientError::Default(context.to_owned()))
     }
 
     fn with_context<D, O>(self, op: O) -> RestClientResult<T>

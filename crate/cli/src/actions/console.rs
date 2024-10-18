@@ -15,7 +15,7 @@ impl Stdout {
     #[must_use]
     pub fn new(stdout: &str) -> Self {
         Self {
-            stdout: stdout.to_string(),
+            stdout: stdout.to_owned(),
         }
     }
 
@@ -28,7 +28,7 @@ impl Stdout {
     pub fn write(&self) -> CliResult<()> {
         // Check if the output format should be JSON
         let json_format_from_env = std::env::var(KMS_CLI_FORMAT)
-            .unwrap_or_else(|_| CLI_DEFAULT_FORMAT.to_string())
+            .unwrap_or_else(|_| CLI_DEFAULT_FORMAT.to_owned())
             .to_lowercase()
             == CLI_JSON_FORMAT;
 
