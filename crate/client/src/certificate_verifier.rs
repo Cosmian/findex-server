@@ -1,9 +1,8 @@
-use std::{sync::Arc, time::SystemTime};
-
 use rustls::{
     client::{ServerCertVerified, ServerCertVerifier},
     Certificate, Error as RustTLSError, ServerName,
 };
+use std::{sync::Arc, time::SystemTime};
 
 /// A TLS verifier adding the ability to match the leaf certificate with a
 /// trusted one.

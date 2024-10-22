@@ -1,5 +1,8 @@
-use std::{rc::Rc, sync::Arc};
-
+use super::UserClaim;
+use crate::{
+    error::{result::FResult, server::FindexServerError},
+    middlewares::jwt::JwtConfig,
+};
 use actix_identity::Identity;
 use actix_service::Service;
 use actix_web::{
@@ -8,13 +11,8 @@ use actix_web::{
     http::header,
     Error, FromRequest, HttpMessage, HttpResponse,
 };
+use std::{rc::Rc, sync::Arc};
 use tracing::{debug, error, trace};
-
-use super::UserClaim;
-use crate::{
-    error::{result::FResult, server::FindexServerError},
-    middlewares::jwt::JwtConfig,
-};
 
 pub(crate) async fn manage_jwt_request<S, B>(
     service: Rc<S>,

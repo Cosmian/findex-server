@@ -1,14 +1,12 @@
-use std::sync::Arc;
-
-use alcoholic_jwt::token_kid;
-use serde::{Deserialize, Serialize};
-use tracing::{debug, trace};
-
 use super::JwksManager;
 use crate::{
     error::{result::FResult, server::FindexServerError},
     findex_server_ensure,
 };
+use alcoholic_jwt::token_kid;
+use serde::{Deserialize, Serialize};
+use std::sync::Arc;
+use tracing::{debug, trace};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub(crate) struct UserClaim {

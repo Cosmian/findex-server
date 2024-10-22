@@ -1,5 +1,7 @@
-use std::sync::Arc;
-
+use crate::{
+    core::FindexServer,
+    routes::error::{Response, ResponseBytes},
+};
 use actix_web::{
     post,
     web::{Bytes, Data, Json},
@@ -12,14 +14,8 @@ use cloudproof_findex::{
     },
     ser_de::ffi_ser_de::deserialize_token_set,
 };
+use std::sync::Arc;
 use tracing::{info, trace};
-
-use crate::{
-    core::FindexServer,
-    routes::error::{Response, ResponseBytes},
-};
-
-// todo(manu): warning: remove eol in imports
 
 #[post("/indexes/fetch_entries")]
 pub(crate) async fn fetch_entries(
@@ -33,7 +29,7 @@ pub(crate) async fn fetch_entries(
     trace!("fetch_entries: number of tokens: {}:", tokens.len());
 
     // Collect into a vector to fix the order.
-    let uids_and_values = findex_server.db.fetch(FindexTable::Entry, tokens).await?;
+    let uids_and_values = findex_server.db.fetch_entries(tokens).await?;
     trace!(
         "fetch_entries: number of uids_and_values: {}:",
         uids_and_values.len()
@@ -59,7 +55,7 @@ pub(crate) async fn fetch_chains(
     let tokens = deserialize_token_set(&bytes)?;
     trace!("fetch_chains: number of tokens: {}:", tokens.len());
 
-    let uids_and_values = findex_server.db.fetch(FindexTable::Chain, tokens).await?;
+    let uids_and_values = findex_server.db.fetch_chains(tokens).await?;
     trace!(
         "fetch_chains: number of uids_and_values: {}:",
         uids_and_values.len()

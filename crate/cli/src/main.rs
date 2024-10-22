@@ -1,5 +1,3 @@
-use std::{path::PathBuf, process};
-
 use clap::{CommandFactory, Parser, Subcommand};
 use cosmian_findex_cli::{
     actions::{
@@ -10,6 +8,7 @@ use cosmian_findex_cli::{
 };
 use cosmian_findex_client::ClientConf;
 use cosmian_logger::log_utils::log_init;
+use std::{path::PathBuf, process};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]

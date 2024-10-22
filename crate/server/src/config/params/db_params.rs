@@ -1,5 +1,4 @@
 use std::fmt::{self, Display};
-
 use url::Url;
 
 pub enum DbParams {

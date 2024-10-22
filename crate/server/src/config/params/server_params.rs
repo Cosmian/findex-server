@@ -1,13 +1,11 @@
-use std::{fmt, path::PathBuf};
-
-use openssl::x509::X509;
-
 use super::{DbParams, HttpParams};
 use crate::{
     config::{ClapConfig, IdpConfig},
     error::result::FResult,
     findex_server_bail,
 };
+use openssl::x509::X509;
+use std::{fmt, path::PathBuf};
 
 /// This structure is the context used by the server
 /// while it is running. There is a singleton instance

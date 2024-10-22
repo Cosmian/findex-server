@@ -694,7 +694,6 @@ checksum = "1462739cb27611015575c0c11df5df7601141071f07518d56fcc1be504cbec97"
 [[package]]
 name = "cloudproof_findex"
 version = "6.0.2"
-source = "git+https://www.github.com/Cosmian/cloudproof_rust?branch=feat/add_basic_findex_rest_client#86831a602104b255dc6f0e16233d917ea43dbf5b"
 dependencies = [
  "async-trait",
  "base64 0.21.7",
@@ -795,7 +794,6 @@ dependencies = [
 [[package]]
 name = "cosmian_findex"
 version = "6.0.1"
-source = "git+https://www.github.com/Cosmian/findex?branch=fix/missing_some_structs_serialization#9c7ff1a4b98b21fb981157ca873dec767e0d8285"
 dependencies = [
  "async-trait",
  "base64 0.21.7",
@@ -820,6 +818,7 @@ dependencies = [
  "const-oid",
  "cosmian_findex_client",
  "cosmian_logger",
+ "csv",
  "der",
  "hex",
  "oauth2",
@@ -992,6 +991,27 @@ dependencies = [
  "generic-array",
  "rand_core",
  "typenum",
+]
+
+[[package]]
+name = "csv"
+version = "1.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ac574ff4d437a7b5ad237ef331c17ccca63c46479e5b5453eb8e10bb99a759fe"
+dependencies = [
+ "csv-core",
+ "itoa",
+ "ryu",
+ "serde",
+]
+
+[[package]]
+name = "csv-core"
+version = "0.1.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5efa2b3d7902f4b634a20cae3c9c4e6209dc4779feb6863329607560143efa70"
+dependencies = [
+ "memchr",
 ]
 
 [[package]]
@@ -3140,6 +3160,27 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
 
 [[package]]
+name = "tls_codec"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b5e78c9c330f8c85b2bae7c8368f2739157db9991235123aa1b15ef9502bfb6a"
+dependencies = [
+ "tls_codec_derive",
+ "zeroize",
+]
+
+[[package]]
+name = "tls_codec_derive"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8d9ef545650e79f30233c0003bcc2504d7efac6dad25fca40744de773fe2049c"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "tokio"
 version = "1.40.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3795,6 +3836,7 @@ dependencies = [
  "const-oid",
  "der",
  "spki",
+ "tls_codec",
 ]
 
 [[package]]

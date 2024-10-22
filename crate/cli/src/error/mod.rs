@@ -1,5 +1,3 @@
-use std::{array::TryFromSliceError, num::TryFromIntError, str::Utf8Error};
-
 #[cfg(test)]
 use assert_cmd::cargo::CargoError;
 use cloudproof_findex::{
@@ -9,6 +7,7 @@ use cloudproof_findex::{
 use cosmian_findex_client::ClientError;
 use hex::FromHexError;
 use pem::PemError;
+use std::{array::TryFromSliceError, num::TryFromIntError, str::Utf8Error};
 use thiserror::Error;
 
 pub mod result;
@@ -173,6 +172,12 @@ impl From<cosmian_findex::Error<DbInterfaceError>> for CliError {
 impl From<DbInterfaceError> for CliError {
     fn from(e: DbInterfaceError) -> Self {
         Self::Cryptographic(e.to_string())
+    }
+}
+
+impl From<csv::Error> for CliError {
+    fn from(e: csv::Error) -> Self {
+        Self::Conversion(e.to_string())
     }
 }
 

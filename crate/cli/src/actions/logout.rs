@@ -1,9 +1,7 @@
-use std::path::PathBuf;
-
+use crate::error::result::CliResult;
 use clap::Parser;
 use cosmian_findex_client::ClientConf;
-
-use crate::error::result::CliResult;
+use std::path::PathBuf;
 
 /// Logout from the Identity Provider.
 ///

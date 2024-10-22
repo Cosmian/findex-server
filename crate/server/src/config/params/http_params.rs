@@ -1,11 +1,9 @@
-use std::fmt;
-
-use openssl::pkcs12::{ParsedPkcs12_2, Pkcs12};
-
 use crate::{
     config::HttpConfig,
     error::result::{FResult, FResultHelper},
 };
+use openssl::pkcs12::{ParsedPkcs12_2, Pkcs12};
+use std::fmt;
 
 /// The HTTP parameters of the API server
 pub enum HttpParams {

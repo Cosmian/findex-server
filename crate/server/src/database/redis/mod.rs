@@ -1,5 +1,5 @@
-use std::collections::{HashMap, HashSet};
-
+use super::Database;
+use crate::error::{result::FResult, server::FindexServerError};
 use async_trait::async_trait;
 use cloudproof_findex::{
     db_interfaces::{
@@ -12,12 +12,12 @@ use cloudproof_findex::{
     },
 };
 use redis::{aio::ConnectionManager, pipe, AsyncCommands, Script};
+use std::{
+    collections::{HashMap, HashSet},
+    convert::TryFrom,
+};
 use tracing::{instrument, trace};
 
-use super::Database;
-use crate::error::{result::FResult, server::FindexServerError};
-
-// TODO(manu): miss the clear_database parameter
 // TODO(manu): move secret to client crate
 
 /// The conditional upsert script used to only update a table if the
@@ -40,37 +40,45 @@ pub(crate) struct Redis {
 }
 
 impl Redis {
-    pub(crate) async fn instantiate(redis_url: &str) -> FResult<Self> {
+    pub(crate) async fn instantiate(redis_url: &str, clear_database: bool) -> FResult<Self> {
         let client = redis::Client::open(redis_url)?;
         let mgr = ConnectionManager::new(client).await?;
+
+        if clear_database {
+            Self::clear_database(mgr.clone()).await?;
+        }
         Ok(Self {
             mgr,
             upsert_script: Script::new(CONDITIONAL_UPSERT_SCRIPT),
         })
     }
+
+    #[allow(dependency_on_unit_never_type_fallback)]
+    pub(crate) async fn clear_database(mgr: ConnectionManager) -> FResult<()> {
+        redis::cmd("FLUSHDB").query_async(&mut mgr.clone()).await?;
+        Ok(())
+    }
 }
 
 #[async_trait]
 impl Database for Redis {
+    // todo(manu): merge the 2 fetch
     #[instrument(ret(Display), err, skip_all)]
-    async fn fetch(
+    async fn fetch_entries(
         &self,
-        findex_table: FindexTable,
         tokens: Tokens,
     ) -> FResult<TokenWithEncryptedValueList<ENTRY_LENGTH>> {
-        trace!(
-            "fetch: table {findex_table:?}, number of tokens: {}",
-            tokens.len()
-        );
+        trace!("fetch_entries: number of tokens: {}", tokens.len());
         let uids = tokens.into_iter().collect::<Vec<_>>();
+        trace!("fetch_entries: uids len: {}", uids.len());
 
         let redis_keys = uids
             .iter()
-            .map(|uid| build_key(findex_table, uid))
+            .map(|uid| build_key(FindexTable::Entry, uid))
             .collect::<Vec<_>>();
+        trace!("fetch_entries: redis_keys len: {}", redis_keys.len());
 
         let values: Vec<Vec<u8>> = self.mgr.clone().mget(redis_keys).await?;
-
         // Zip and filter empty values out.
         let res = uids
             .into_iter()
@@ -83,10 +91,44 @@ impl Database for Redis {
                 }
             })
             .collect::<Result<Vec<_>, CoreError>>()?;
-
-        trace!("fetch_entry_table non empty tuples len: {}", res.len());
+        trace!("fetch_entries: non empty tuples len: {}", res.len());
 
         let result: TokenWithEncryptedValueList<ENTRY_LENGTH> = res.into();
+
+        Ok(result)
+    }
+
+    #[instrument(ret(Display), err, skip_all)]
+    async fn fetch_chains(
+        &self,
+        tokens: Tokens,
+    ) -> FResult<TokenWithEncryptedValueList<LINK_LENGTH>> {
+        trace!("fetch_chains: number of tokens: {}", tokens.len());
+        let uids = tokens.into_iter().collect::<Vec<_>>();
+        trace!("fetch_chains: uids len: {}", uids.len());
+
+        let redis_keys = uids
+            .iter()
+            .map(|uid| build_key(FindexTable::Chain, uid))
+            .collect::<Vec<_>>();
+        trace!("fetch_chains: redis_keys len: {}", redis_keys.len());
+
+        let values: Vec<Vec<u8>> = self.mgr.clone().mget(redis_keys).await?;
+        // Zip and filter empty values out.
+        let res = uids
+            .into_iter()
+            .zip(values)
+            .filter_map(|(k, v)| {
+                if v.is_empty() {
+                    None
+                } else {
+                    Some(EncryptedValue::try_from(v.as_slice()).map(|v| (k, v)))
+                }
+            })
+            .collect::<Result<Vec<_>, CoreError>>()?;
+        trace!("fetch_entries: non empty tuples len: {}", res.len());
+
+        let result: TokenWithEncryptedValueList<LINK_LENGTH> = res.into();
 
         Ok(result)
     }

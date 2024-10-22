@@ -1,14 +1,12 @@
+use crate::{
+    error::{result::ClientResult, ClientError},
+    ClientResultHelper,
+};
+use serde::{de::DeserializeOwned, Serialize};
 use std::{
     fs::{self, File},
     io::Read,
     path::{Path, PathBuf},
-};
-
-use serde::{de::DeserializeOwned, Serialize};
-
-use crate::{
-    error::{result::ClientResult, ClientError},
-    ClientResultHelper,
 };
 
 /// Read all bytes from a file

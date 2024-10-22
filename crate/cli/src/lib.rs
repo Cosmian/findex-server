@@ -15,12 +15,6 @@
     clippy::cargo,
     clippy::nursery,
 
-    // // restriction lints
-    // clippy::map_err_ignore,
-    // clippy::print_stdout,
-    // clippy::redundant_clone,
-    // clippy::todo
-
     // restriction lints
     clippy::unwrap_used,
     clippy::get_unwrap,

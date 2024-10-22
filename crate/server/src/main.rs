@@ -1,5 +1,3 @@
-use std::path::PathBuf;
-
 use clap::Parser;
 use cosmian_findex_server::{
     config::{ClapConfig, ServerParams},
@@ -9,6 +7,7 @@ use cosmian_findex_server::{
 };
 use cosmian_logger::log_utils::log_init;
 use dotenvy::dotenv;
+use std::path::PathBuf;
 use tracing::{debug, info};
 
 const FINDEX_SERVER_CONF: &str = "/etc/cosmian_findex_server/server.toml";

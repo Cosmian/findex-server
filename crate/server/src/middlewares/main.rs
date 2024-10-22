@@ -1,10 +1,5 @@
-use std::{
-    pin::Pin,
-    rc::Rc,
-    sync::Arc,
-    task::{Context, Poll},
-};
-
+use super::{manage_jwt_request, PeerCommonName};
+use crate::middlewares::jwt::JwtConfig;
 use actix_service::{Service, Transform};
 use actix_web::{
     body::{BoxBody, EitherBody},
@@ -15,10 +10,13 @@ use futures::{
     future::{ok, Ready},
     Future,
 };
+use std::{
+    pin::Pin,
+    rc::Rc,
+    sync::Arc,
+    task::{Context, Poll},
+};
 use tracing::debug;
-
-use super::{manage_jwt_request, PeerCommonName};
-use crate::middlewares::jwt::JwtConfig;
 
 #[derive(Clone)]
 pub(crate) struct AuthTransformer {

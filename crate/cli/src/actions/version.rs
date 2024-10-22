@@ -1,8 +1,7 @@
-use clap::Parser;
-use cosmian_findex_client::FindexClient;
-
 use super::console;
 use crate::error::result::{CliResult, CliResultHelper};
+use clap::Parser;
+use cosmian_findex_client::FindexClient;
 
 /// Print the version of the server
 #[derive(Parser, Debug)]

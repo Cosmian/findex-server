@@ -1,10 +1,7 @@
-use std::{
-    collections::HashMap,
-    path::PathBuf,
-    sync::mpsc::{self, Sender},
-    thread,
+use crate::{
+    cli_bail,
+    error::{result::CliResult, CliError},
 };
-
 use actix_web::{
     get,
     web::{self, Data},
@@ -23,12 +20,14 @@ use oauth2::{
     RedirectUrl, Scope, TokenUrl,
 };
 use serde::Deserialize;
-use url::Url;
-
-use crate::{
-    cli_bail,
-    error::{result::CliResult, CliError},
+use std::{
+    collections::HashMap,
+    convert::TryFrom,
+    path::PathBuf,
+    sync::mpsc::{self, Sender},
+    thread,
 };
+use url::Url;
 
 /// Login to the Identity Provider of the Findex server using the `OAuth2`
 /// authorization code flow.
@@ -299,7 +298,7 @@ impl LoginState {
     /// authorization code to be received from the browser window. Once the
     /// code is received, the server is closed and the authorization code is
     /// returned.
-    #[allow(clippy::unwrap_used)] // todo(manu): remove this
+    #[allow(clippy::unwrap_used)] // hard to remove
     fn receive_authorization_parameters() -> CliResult<HashMap<String, String>> {
         let (auth_params_tx, auth_params_rx) = mpsc::channel::<HashMap<String, String>>();
         // Spawn the server into a runtime

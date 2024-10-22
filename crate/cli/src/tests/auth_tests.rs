@@ -1,17 +1,15 @@
 #![allow(unused)]
-use std::{path::PathBuf, process::Command};
-
+use crate::{error::result::CliResult, tests::PROG_NAME};
 use assert_cmd::prelude::*;
 use base64::Engine;
 use cosmian_findex_client::FINDEX_CLI_CONF_ENV;
 use cosmian_logger::log_utils::log_init;
+use std::{path::PathBuf, process::Command};
 use tempfile::TempDir;
 use test_findex_server::{
     start_test_server_with_options, AuthenticationOptions, DBConfig, DatabaseType, TestsContext,
 };
 use tracing::{info, trace};
-
-use crate::{error::result::CliResult, tests::PROG_NAME};
 
 // let us not make other test cases fail
 const PORT: u16 = 9999;

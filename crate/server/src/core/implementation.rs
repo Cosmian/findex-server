@@ -1,6 +1,3 @@
-use actix_web::{HttpMessage, HttpRequest};
-use tracing::debug;
-
 use crate::{
     config::{DbParams, ServerParams},
     database::{Database, Redis},
@@ -8,12 +5,13 @@ use crate::{
     findex_server_bail,
     middlewares::{JwtAuthClaim, PeerCommonName},
 };
+use actix_web::{HttpMessage, HttpRequest};
+use tracing::debug;
 
 #[allow(dead_code)]
 pub(crate) struct FindexServer {
     pub(crate) params: ServerParams,
     pub(crate) db: Box<dyn Database + Sync + Send>,
-    // pub(crate) findex_configuration: Configuration,
 }
 
 impl FindexServer {
@@ -21,7 +19,9 @@ impl FindexServer {
         let db: Box<dyn Database + Sync + Send> =
             if let Some(mut db_params) = shared_config.db_params.as_mut() {
                 match &mut db_params {
-                    DbParams::Redis(url) => Box::new(Redis::instantiate(url.as_str()).await?),
+                    DbParams::Redis(url) => Box::new(
+                        Redis::instantiate(url.as_str(), shared_config.clear_db_on_start).await?,
+                    ),
                 }
             } else {
                 findex_server_bail!("Fatal: no database configuration provided. Stopping.")

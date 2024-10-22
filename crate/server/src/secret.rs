@@ -1,14 +1,12 @@
+use crate::error::result::FResult;
+use num_bigint_dig::BigUint;
+use openssl::rand::rand_bytes;
+use serde::Deserialize;
 use std::{
     ops::{Deref, DerefMut},
     pin::Pin,
 };
-
-use num_bigint_dig::BigUint;
-use openssl::rand::rand_bytes;
-use serde::Deserialize;
 use zeroize::{Zeroize, ZeroizeOnDrop};
-
-use crate::error::result::FResult;
 
 /// Guarantees to be zeroized on drop with
 /// feature `zeroize` enabled from `num_bigint_dig` crate.

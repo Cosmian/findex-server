@@ -1,3 +1,4 @@
+use crate::error::result::FResult;
 use async_trait::async_trait;
 use cloudproof_findex::{
     db_interfaces::{redis::FindexTable, rest::UpsertData},
@@ -6,15 +7,17 @@ use cloudproof_findex::{
     },
 };
 
-use crate::error::result::FResult;
-
 #[async_trait]
 pub(crate) trait Database: Sync + Send {
-    async fn fetch(
+    async fn fetch_entries(
         &self,
-        findex_table: FindexTable,
         tokens: Tokens,
     ) -> FResult<TokenWithEncryptedValueList<ENTRY_LENGTH>>;
+
+    async fn fetch_chains(
+        &self,
+        tokens: Tokens,
+    ) -> FResult<TokenWithEncryptedValueList<LINK_LENGTH>>;
 
     async fn upsert_entries(
         &self,

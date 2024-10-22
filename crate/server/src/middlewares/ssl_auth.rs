@@ -1,9 +1,3 @@
-use std::{
-    any::Any,
-    pin::Pin,
-    task::{Context, Poll},
-};
-
 use actix_service::{Service, Transform};
 use actix_tls::accept::openssl::TlsStream;
 use actix_web::{
@@ -17,6 +11,11 @@ use futures::{
     Future,
 };
 use openssl::{nid::Nid, x509::X509};
+use std::{
+    any::Any,
+    pin::Pin,
+    task::{Context, Poll},
+};
 use tracing::{debug, error, trace};
 
 use crate::{error::result::FResult, findex_server_bail};

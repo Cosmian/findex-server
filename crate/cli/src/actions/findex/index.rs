@@ -1,8 +1,7 @@
-use std::collections::{HashMap, HashSet};
-
+use super::FindexParameters;
+use crate::{actions::console, error::result::CliResult};
 use clap::Parser;
 use cloudproof_findex::{
-    db_interfaces::DbInterfaceError,
     reexport::{
         cosmian_crypto_core::FixedSizeCBytes,
         cosmian_findex::{Data, IndexedValue, IndexedValueToKeywordsMap, Keyword, Label, UserKey},
@@ -10,58 +9,12 @@ use cloudproof_findex::{
     Configuration, InstantiatedFindex,
 };
 use cosmian_findex_client::FindexClient;
-use serde::{Deserialize, Serialize};
-use tracing::trace;
-
-use super::FindexParameters;
-use crate::{
-    actions::console,
-    error::result::{CliResult, CliResultHelper},
+use std::{
+    collections::{HashMap, HashSet},
+    fs::File,
+    path::PathBuf,
 };
-
-// to be deleted - start
-// todo(manu): replace this by adding a CLI argument to provide the dataset file
-
-#[allow(non_snake_case)]
-#[derive(Debug, Deserialize, Serialize)]
-pub struct User {
-    pub(crate) firstName: String,
-    pub(crate) lastName: String,
-    pub(crate) phone: String,
-    pub(crate) email: String,
-    pub(crate) country: String,
-    pub(crate) region: String,
-    pub(crate) employeeNumber: String,
-    pub(crate) security: String,
-}
-
-impl User {
-    #[must_use]
-    pub fn values(&self) -> Vec<String> {
-        vec![
-            self.firstName.clone(),
-            self.lastName.clone(),
-            self.phone.clone(),
-            self.email.clone(),
-            self.country.clone(),
-            self.region.clone(),
-            self.employeeNumber.clone(),
-            self.security.clone(),
-        ]
-    }
-}
-
-/// Get the users from the dataset
-/// # Errors
-/// It returns an error if the dataset cannot be read or if the dataset cannot
-/// be deserialized into a list of users
-pub fn get_users() -> Result<Vec<User>, DbInterfaceError> {
-    trace!("Current working directory: {:?}", std::env::current_dir()?);
-    let dataset = std::fs::read_to_string("../../crate/client/datasets/users.json")?;
-    serde_json::from_str::<Vec<User>>(&dataset)
-        .map_err(|e| DbInterfaceError::Serialization(e.to_string()))
-}
-// to be deleted - end
+use tracing::trace;
 
 /// Index data with Findex
 #[derive(Parser, Debug)]
@@ -69,6 +22,10 @@ pub fn get_users() -> Result<Vec<User>, DbInterfaceError> {
 pub struct IndexAction {
     #[clap(flatten)]
     pub findex_parameters: FindexParameters,
+
+    /// The path to the CSV file containing the data to index
+    #[clap(long)]
+    pub csv: PathBuf,
 }
 
 impl IndexAction {
@@ -83,7 +40,7 @@ impl IndexAction {
     ///
     /// Returns an error if the version query fails or if there is an issue
     /// writing to the console.
-    #[allow(clippy::future_not_send)] // todo(manu): remove this
+    #[allow(clippy::future_not_send)]
     pub async fn process(&self, findex_rest_client: &FindexClient) -> CliResult<()> {
         let config = Configuration::Rest(
             findex_rest_client.client.clone(),
@@ -96,40 +53,35 @@ impl IndexAction {
         let user_key = UserKey::try_from_slice(&key)?;
         let label = Label::from(self.findex_parameters.label.as_str());
 
-        // to be deleted - start
-        let users = get_users()?;
-        #[allow(clippy::cast_possible_wrap, clippy::as_conversions)]
-        let additions = users
-            .iter()
-            .enumerate()
-            .map(|(idx, user)| {
-                (
-                    IndexedValue::Data(Data::from((idx as i64).to_be_bytes().as_slice())),
-                    user.values()
-                        .iter()
-                        .map(|word| Keyword::from(word.as_bytes()))
-                        .collect::<HashSet<_>>(),
-                )
-            })
-            .collect::<Vec<(IndexedValue<Keyword, Data>, HashSet<Keyword>)>>();
+        // read the database
+        let mut csv_additions = Vec::new();
+        let file = File::open(self.csv.clone())?;
+        let mut rdr = csv::Reader::from_reader(file);
+        for result in rdr.byte_records() {
+            // The iterator yields Result<StringRecord, Error>, so we check the
+            // error here.
+            let record = result?;
+            let indexed_value: IndexedValue<Keyword, Data> =
+                IndexedValue::Data(Data::from(record.as_slice()));
+            trace!("bytes conversion: {:?}", record.as_slice());
+            let keywords = record.iter().map(Keyword::from).collect::<HashSet<_>>();
+            csv_additions.push((indexed_value, keywords));
+            trace!("CSV line: {record:?}");
+        }
         let additions: HashMap<IndexedValue<Keyword, Data>, HashSet<Keyword>> =
-            additions.iter().cloned().collect();
-        // to be deleted - end
+            csv_additions.iter().cloned().collect();
+        trace!("additions: {additions:?}");
 
-        findex
+        let keywords = findex
             .add(
                 &user_key,
                 &label,
                 IndexedValueToKeywordsMap::from(additions),
             )
             .await?;
+        trace!("indexing done: keywords: {keywords}");
 
-        let version = findex_rest_client
-            .version()
-            .await
-            .with_context(|| "Can't execute the version query on the findex server")?;
-
-        console::Stdout::new(&version).write()?;
+        console::Stdout::new(&format!("indexing done: keywords: {keywords}")).write()?;
 
         Ok(())
     }

@@ -1,18 +1,3 @@
-use std::{
-    env,
-    fs::{self, File},
-    io::BufReader,
-    path::PathBuf,
-};
-
-// todo(manu): finder.json configuration tests are incorrect (delete secret_database)
-use der::{DecodePem, Encode};
-#[cfg(target_os = "linux")]
-use log::info;
-use rustls::Certificate;
-use serde::{Deserialize, Serialize};
-use x509_cert::Certificate as X509Certificate;
-
 #[cfg(target_os = "linux")]
 use crate::client_bail;
 use crate::{
@@ -22,6 +7,18 @@ use crate::{
     },
     FindexClient,
 };
+use der::{DecodePem, Encode};
+#[cfg(target_os = "linux")]
+use log::info;
+use rustls::Certificate;
+use serde::{Deserialize, Serialize};
+use std::{
+    env,
+    fs::{self, File},
+    io::BufReader,
+    path::PathBuf,
+};
+use x509_cert::Certificate as X509Certificate;
 
 /// Returns the path to the current user's home folder.
 ///
@@ -121,8 +118,6 @@ pub struct ClientConf {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ssl_client_pkcs12_password: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub findex_database_secret: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub oauth2_conf: Option<Oauth2Conf>,
 }
 
@@ -133,7 +128,6 @@ impl Default for ClientConf {
             findex_server_url: "http://0.0.0.0:9998".to_owned(),
             verified_cert: None,
             findex_access_token: None,
-            findex_database_secret: None,
             ssl_client_pkcs12_path: None,
             ssl_client_pkcs12_password: None,
             oauth2_conf: None,
@@ -151,7 +145,6 @@ impl Default for ClientConf {
 ///     "accept_invalid_certs": false,
 ///     "findex_server_url": "http://127.0.0.1:9998",
 ///     "findex_access_token": "AA...AAA",
-///     "findex_database_secret": "BB...BBB",
 ///     "ssl_client_pkcs12_path": "/path/to/client.p12",
 ///     "ssl_client_pkcs12_password": "password"
 /// }
@@ -307,7 +300,6 @@ impl ClientConf {
             self.findex_access_token.as_deref(),
             self.ssl_client_pkcs12_path.as_deref(),
             self.ssl_client_pkcs12_password.as_deref(),
-            self.findex_database_secret.as_deref(),
             accept_invalid_certs,
             if let Some(certificate) = &self.verified_cert {
                 Some(Certificate(

@@ -1,10 +1,11 @@
+use crate::error::result::CliResult;
 use clap::{Parser, Subcommand};
 use cosmian_findex_client::FindexClient;
 use index::IndexAction;
-
-use crate::error::result::CliResult;
+use search::SearchAction;
 
 pub mod index;
+pub mod search;
 
 /// Index data with Findex
 #[derive(Parser, Debug)]
@@ -23,7 +24,7 @@ pub struct FindexParameters {
 #[derive(Subcommand)]
 pub enum FindexCommands {
     Index(IndexAction),
-    // Search(SearchAction), // to be added
+    Search(SearchAction),
 }
 
 impl FindexCommands {
@@ -42,6 +43,7 @@ impl FindexCommands {
     pub async fn process(&self, findex_rest_client: &FindexClient) -> CliResult<()> {
         match self {
             Self::Index(action) => action.process(findex_rest_client).await,
+            Self::Search(action) => action.process(findex_rest_client).await,
         }
     }
 }

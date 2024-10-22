@@ -1,21 +1,19 @@
-use std::{
-    fs::File,
-    io::{BufReader, Read},
-    sync::Arc,
-    time::Duration,
+use crate::{
+    certificate_verifier::{LeafCertificateVerifier, NoVerifier},
+    error::{result::ClientResult, ClientError},
+    ClientResultHelper,
 };
-
 use log::trace;
 use reqwest::{
     header::{HeaderMap, HeaderValue},
     Client, ClientBuilder, Identity, Response, StatusCode,
 };
 use rustls::{client::WebPkiVerifier, Certificate};
-
-use crate::{
-    certificate_verifier::{LeafCertificateVerifier, NoVerifier},
-    error::{result::ClientResult, ClientError},
-    ClientResultHelper,
+use std::{
+    fs::File,
+    io::{BufReader, Read},
+    sync::Arc,
+    time::Duration,
 };
 
 #[derive(Clone)]
@@ -35,7 +33,6 @@ impl FindexClient {
         bearer_token: Option<&str>,
         ssl_client_pkcs12_path: Option<&str>,
         ssl_client_pkcs12_password: Option<&str>,
-        database_secret: Option<&str>,
         accept_invalid_certs: bool,
         allowed_tee_tls_cert: Option<Certificate>,
     ) -> Result<Self, ClientError> {
@@ -48,12 +45,6 @@ impl FindexClient {
             headers.insert(
                 "Authorization",
                 HeaderValue::from_str(format!("Bearer {bearer_token}").as_str())?,
-            );
-        }
-        if let Some(database_secret) = database_secret {
-            headers.insert(
-                "FindexDatabaseSecret",
-                HeaderValue::from_str(database_secret)?,
             );
         }
 
