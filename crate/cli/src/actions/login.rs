@@ -1,7 +1,11 @@
-use crate::{
-    cli_bail,
-    error::{result::CliResult, CliError},
+use std::{
+    collections::HashMap,
+    convert::TryFrom,
+    path::PathBuf,
+    sync::mpsc::{self, Sender},
+    thread,
 };
+
 use actix_web::{
     get,
     web::{self, Data},
@@ -20,14 +24,12 @@ use oauth2::{
     RedirectUrl, Scope, TokenUrl,
 };
 use serde::Deserialize;
-use std::{
-    collections::HashMap,
-    convert::TryFrom,
-    path::PathBuf,
-    sync::mpsc::{self, Sender},
-    thread,
-};
 use url::Url;
+
+use crate::{
+    cli_bail,
+    error::{result::CliResult, CliError},
+};
 
 /// Login to the Identity Provider of the Findex server using the `OAuth2`
 /// authorization code flow.

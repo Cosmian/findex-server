@@ -1,10 +1,11 @@
+use std::{array::TryFromSliceError, sync::mpsc::SendError};
+
 use actix_web::{dev::ServerHandle, error::QueryPayloadError};
 use cloudproof_findex::{
     db_interfaces::DbInterfaceError, reexport::cosmian_findex::CoreError,
     ser_de::SerializationError,
 };
 use redis::ErrorKind;
-use std::{array::TryFromSliceError, sync::mpsc::SendError};
 use thiserror::Error;
 use x509_parser::prelude::{PEMError, X509Error};
 

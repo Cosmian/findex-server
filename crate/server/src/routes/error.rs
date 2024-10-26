@@ -1,10 +1,11 @@
-use crate::error::server::FindexServerError;
 use actix_web::{
     http::{header, StatusCode},
     web::Json,
     HttpResponse, HttpResponseBuilder,
 };
 use tracing::{error, warn};
+
+use crate::error::server::FindexServerError;
 
 pub(crate) type Response<T> = Result<Json<T>, FindexServerError>;
 pub(crate) type ResponseBytes = Result<HttpResponse, FindexServerError>;

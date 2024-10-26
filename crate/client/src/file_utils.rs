@@ -1,12 +1,14 @@
-use crate::{
-    error::{result::ClientResult, ClientError},
-    ClientResultHelper,
-};
-use serde::{de::DeserializeOwned, Serialize};
 use std::{
     fs::{self, File},
     io::Read,
-    path::{Path, PathBuf},
+    path::Path,
+};
+
+use serde::{de::DeserializeOwned, Serialize};
+
+use crate::{
+    error::{result::ClientResult, ClientError},
+    ClientResultHelper,
 };
 
 /// Read all bytes from a file
@@ -60,51 +62,4 @@ where
     let bytes = serde_json::to_vec::<T>(json_object)
         .with_context(|| "failed parsing the object from the json file")?;
     write_bytes_to_file(&bytes, file)
-}
-
-/// Write the decrypted data to a file
-///
-/// If no `output_file` is provided, then
-/// it reuses the `input_file` name with the extension `plain`.
-/// # Errors
-/// It returns an error if the file cannot be written
-pub fn write_single_decrypted_data(
-    plaintext: &[u8],
-    input_file: &Path,
-    output_file: Option<&PathBuf>,
-) -> Result<(), ClientError> {
-    let output_file = output_file.map_or_else(
-        || input_file.with_extension("plain"),
-        std::clone::Clone::clone,
-    );
-
-    write_bytes_to_file(plaintext, &output_file)
-        .with_context(|| "failed to write the decrypted file")?;
-
-    tracing::info!("The decrypted file is available at {output_file:?}");
-    Ok(())
-}
-
-/// Write the encrypted data to a file
-///
-/// If no `output_file` is provided, then
-/// it reuses the `input_file` name with the extension `enc`.
-/// # Errors
-/// It returns an error if the file cannot be written
-pub fn write_single_encrypted_data(
-    encrypted_data: &[u8],
-    input_file: &Path,
-    output_file: Option<&PathBuf>,
-) -> Result<(), ClientError> {
-    // Write the encrypted file
-    let output_file = output_file.map_or_else(
-        || input_file.with_extension("enc"),
-        std::clone::Clone::clone,
-    );
-
-    write_bytes_to_file(encrypted_data, &output_file)
-        .with_context(|| "failed to write the encrypted file")?;
-
-    tracing::info!("The encrypted file is available at {output_file:?}");
-    Ok(())
 }

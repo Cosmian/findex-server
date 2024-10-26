@@ -1,14 +1,18 @@
+use std::{path::PathBuf, process};
+
 use clap::{CommandFactory, Parser, Subcommand};
 use cosmian_findex_cli::{
     actions::{
-        findex::FindexCommands, login::LoginAction, logout::LogoutAction, markdown::MarkdownAction,
+        findex::{add::AddAction, search::SearchAction},
+        login::LoginAction,
+        logout::LogoutAction,
+        markdown::MarkdownAction,
         version::ServerVersionAction,
     },
     error::result::CliResult,
 };
 use cosmian_findex_client::ClientConf;
 use cosmian_logger::log_utils::log_init;
-use std::{path::PathBuf, process};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -37,8 +41,8 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum CliCommands {
-    #[command(subcommand)]
-    Findex(FindexCommands),
+    Add(AddAction),
+    Search(SearchAction),
     ServerVersion(ServerVersionAction),
     Login(LoginAction),
     Logout(LogoutAction),
@@ -81,8 +85,9 @@ async fn main_() -> CliResult<()> {
                 conf.initialize_findex_client(opts.url.as_deref(), opts.accept_invalid_certs)?;
 
             match command {
-                CliCommands::Findex(action) => action.process(&findex_rest_client).await?,
-                CliCommands::ServerVersion(action) => action.process(&findex_rest_client).await?,
+                CliCommands::Add(action) => action.process(findex_rest_client).await?,
+                CliCommands::Search(action) => action.process(findex_rest_client).await?,
+                CliCommands::ServerVersion(action) => action.process(findex_rest_client).await?,
                 _ => {
                     tracing::error!("unexpected command");
                 }

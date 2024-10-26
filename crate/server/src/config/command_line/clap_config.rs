@@ -1,7 +1,9 @@
-use super::{DBConfig, HttpConfig, JwtAuthConfig};
+use std::fmt::{self};
+
 use clap::Parser;
 use serde::{Deserialize, Serialize};
-use std::fmt::{self};
+
+use super::{DBConfig, HttpConfig, JwtAuthConfig};
 
 const DEFAULT_USERNAME: &str = "admin";
 

@@ -1,7 +1,5 @@
-use crate::{
-    core::FindexServer,
-    routes::error::{Response, ResponseBytes},
-};
+use std::sync::Arc;
+
 use actix_web::{
     post,
     web::{Bytes, Data, Json},
@@ -14,8 +12,12 @@ use cloudproof_findex::{
     },
     ser_de::ffi_ser_de::deserialize_token_set,
 };
-use std::sync::Arc;
 use tracing::{info, trace};
+
+use crate::{
+    core::FindexServer,
+    routes::error::{Response, ResponseBytes},
+};
 
 #[post("/indexes/fetch_entries")]
 pub(crate) async fn fetch_entries(

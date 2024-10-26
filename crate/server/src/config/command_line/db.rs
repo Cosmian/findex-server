@@ -1,8 +1,10 @@
-use crate::{config::params::DbParams, error::result::FResult, findex_server_error};
+use std::{fmt::Display, path::PathBuf};
+
 use clap::{Args, ValueEnum};
 use serde::{Deserialize, Serialize};
-use std::{fmt::Display, path::PathBuf};
 use url::Url;
+
+use crate::{config::params::DbParams, error::result::FResult, findex_server_error};
 
 #[derive(ValueEnum, Clone, Deserialize, Serialize)]
 pub enum DatabaseType {

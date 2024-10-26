@@ -1,4 +1,11 @@
-use crate::test_jwt::{get_auth0_jwt_config, AUTH0_TOKEN};
+use std::{
+    env,
+    path::PathBuf,
+    sync::mpsc,
+    thread::{self, JoinHandle},
+    time::Duration,
+};
+
 use actix_server::ServerHandle;
 use cosmian_findex_client::{
     client_bail, client_error, write_json_object_to_file, ClientConf, ClientError, FindexClient,
@@ -9,15 +16,10 @@ use cosmian_findex_server::{
     },
     findex_server::start_findex_server,
 };
-use std::{
-    env,
-    path::PathBuf,
-    sync::mpsc,
-    thread::{self, JoinHandle},
-    time::Duration,
-};
 use tokio::sync::OnceCell;
 use tracing::{info, trace};
+
+use crate::test_jwt::{get_auth0_jwt_config, AUTH0_TOKEN};
 
 /// In order to run most tests in parallel,
 /// we use that to avoid to try to start N Findex servers (one per test)

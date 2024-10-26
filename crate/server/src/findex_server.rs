@@ -1,14 +1,5 @@
-use crate::{
-    config::{self, JwtAuthConfig, ServerParams},
-    core::FindexServer,
-    error::result::FResult,
-    findex_server_bail,
-    middlewares::{extract_peer_certificate, AuthTransformer, JwksManager, JwtConfig, SslAuth},
-    routes::{
-        delete_chains, delete_entries, dump_tokens, fetch_chains, fetch_entries, get_version,
-        insert_chains, upsert_entries,
-    },
-};
+use std::sync::{mpsc, Arc};
+
 use actix_cors::Cors;
 use actix_identity::IdentityMiddleware;
 use actix_web::{
@@ -21,8 +12,19 @@ use openssl::{
     ssl::{SslAcceptor, SslAcceptorBuilder, SslMethod, SslVerifyMode},
     x509::store::X509StoreBuilder,
 };
-use std::sync::{mpsc, Arc};
 use tracing::info;
+
+use crate::{
+    config::{self, JwtAuthConfig, ServerParams},
+    core::FindexServer,
+    error::result::FResult,
+    findex_server_bail,
+    middlewares::{extract_peer_certificate, AuthTransformer, JwksManager, JwtConfig, SslAuth},
+    routes::{
+        delete_chains, delete_entries, dump_tokens, fetch_chains, fetch_entries, get_version,
+        insert_chains, upsert_entries,
+    },
+};
 
 /// Starts the Findex server based on the provided configuration.
 ///

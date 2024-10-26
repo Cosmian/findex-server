@@ -1,5 +1,6 @@
-use crate::error::ClientError;
 use std::fmt::Display;
+
+use crate::error::ClientError;
 
 pub type RestClientResult<R> = Result<R, ClientError>;
 

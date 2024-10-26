@@ -1,6 +1,7 @@
-use crate::{config::IdpConfig, error::server::FindexServerError, findex_server_ensure};
 use clap::Args;
 use serde::{Deserialize, Serialize};
+
+use crate::{config::IdpConfig, error::server::FindexServerError, findex_server_ensure};
 
 // Support for JWT token inspired by the doc at : https://cloud.google.com/api-gateway/docs/authenticating-users-jwt
 // and following pages

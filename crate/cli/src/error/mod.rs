@@ -1,3 +1,5 @@
+use std::{array::TryFromSliceError, num::TryFromIntError, str::Utf8Error};
+
 #[cfg(test)]
 use assert_cmd::cargo::CargoError;
 use cloudproof_findex::{
@@ -7,7 +9,6 @@ use cloudproof_findex::{
 use cosmian_findex_client::ClientError;
 use hex::FromHexError;
 use pem::PemError;
-use std::{array::TryFromSliceError, num::TryFromIntError, str::Utf8Error};
 use thiserror::Error;
 
 pub mod result;

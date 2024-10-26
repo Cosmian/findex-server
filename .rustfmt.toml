@@ -49,7 +49,7 @@ use_field_init_shorthand = true
 version = "Two"
 
 # # Controls the edition of the Rust Style Guide to use for formatting (RFC 3338)
-# # Default value: "2015"
+# Default value: "2015"
 # style_edition = "2021"
 
 # The following rust files listing have been made in october 2021.

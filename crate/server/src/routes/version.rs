@@ -1,4 +1,5 @@
-use crate::{core::FindexServer, error::result::FResult};
+use std::sync::Arc;
+
 use actix_web::{
     get,
     web::{Data, Json},
@@ -6,8 +7,9 @@ use actix_web::{
 };
 use clap::crate_version;
 use openssl::version;
-use std::sync::Arc;
 use tracing::info;
+
+use crate::{core::FindexServer, error::result::FResult};
 
 /// Get the Findex server version
 #[get("/version")]

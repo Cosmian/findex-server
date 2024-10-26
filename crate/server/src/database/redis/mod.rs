@@ -1,5 +1,8 @@
-use super::Database;
-use crate::error::{result::FResult, server::FindexServerError};
+use std::{
+    collections::{HashMap, HashSet},
+    convert::TryFrom,
+};
+
 use async_trait::async_trait;
 use cloudproof_findex::{
     db_interfaces::{
@@ -12,11 +15,10 @@ use cloudproof_findex::{
     },
 };
 use redis::{aio::ConnectionManager, pipe, AsyncCommands, Script};
-use std::{
-    collections::{HashMap, HashSet},
-    convert::TryFrom,
-};
 use tracing::{instrument, trace};
+
+use super::Database;
+use crate::error::{result::FResult, server::FindexServerError};
 
 // TODO(manu): move secret to client crate
 
@@ -25,7 +27,7 @@ use tracing::{instrument, trace};
 /// indexed value is returned.
 const CONDITIONAL_UPSERT_SCRIPT: &str = r"
         local value=redis.call('GET',ARGV[1])
-        if((value==false) or (not(value == false) and (ARGV[2] == value))) then
+        if ((value==false) or (ARGV[2] == value)) then
             redis.call('SET', ARGV[1], ARGV[3])
             return
         else
@@ -143,8 +145,8 @@ impl Database for Redis {
             upsert_data.len()
         );
 
-        let mut old_values = HashMap::new();
-        let mut new_values = HashMap::new();
+        let mut old_values = HashMap::with_capacity(upsert_data.len());
+        let mut new_values = HashMap::with_capacity(upsert_data.len());
         for (token, (old_value, new_value)) in upsert_data {
             if let Some(old_value) = old_value {
                 old_values.insert(token, old_value);

@@ -1,5 +1,5 @@
 use crate::{
-    actions::findex::index::IndexAction,
+    actions::findex::add::AddAction,
     error::{result::CliResult, CliError},
     tests::{utils::recover_cmd_logs, PROG_NAME},
 };
@@ -9,22 +9,19 @@ use std::process::Command;
 use tracing::debug;
 
 #[allow(clippy::unwrap_used)]
-pub(crate) fn index_cmd(cli_conf_path: &str, action: IndexAction) -> CliResult<String> {
-    let mut args = vec!["index".to_owned()];
-
-    args.push("--key".to_owned());
-    args.push(action.findex_parameters.key.clone());
-
-    args.push("--label".to_owned());
-    args.push(action.findex_parameters.label);
-
-    args.push("--csv".to_owned());
-    args.push(action.csv.to_str().unwrap().to_owned());
-
+pub(crate) fn add_cmd(cli_conf_path: &str, action: AddAction) -> CliResult<String> {
     let mut cmd = Command::cargo_bin(PROG_NAME)?;
+    let args = vec![
+        "--key".to_owned(),
+        action.findex_parameters.key.clone(),
+        "--label".to_owned(),
+        action.findex_parameters.label,
+        "--csv".to_owned(),
+        action.csv.to_str().unwrap().to_owned(),
+    ];
     cmd.env(FINDEX_CLI_CONF_ENV, cli_conf_path);
 
-    cmd.arg("findex").args(args);
+    cmd.arg("add").args(args);
     debug!("cmd: {:?}", cmd);
     let output = recover_cmd_logs(&mut cmd);
     if output.status.success() {

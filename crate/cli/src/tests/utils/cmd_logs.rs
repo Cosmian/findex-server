@@ -4,7 +4,7 @@ use std::{
 };
 
 /// Recover output logs from a command call `cmd` and re-inject it into stdio
-#[allow(clippy::unwrap_used)]
+#[allow(clippy::unwrap_used, dead_code)]
 pub(crate) fn recover_cmd_logs(cmd: &mut Command) -> Output {
     let output = cmd
         .stdout(Stdio::piped())

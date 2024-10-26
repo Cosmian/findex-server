@@ -9,22 +9,21 @@ use std::process::Command;
 use tracing::debug;
 
 pub(crate) fn search_cmd(cli_conf_path: &str, action: SearchAction) -> CliResult<String> {
-    let mut args = vec!["search".to_owned()];
+    let mut args = vec![
+        "--key".to_owned(),
+        action.findex_parameters.key.clone(),
+        "--label".to_owned(),
+        action.findex_parameters.label,
+    ];
 
-    args.push("--key".to_owned());
-    args.push(action.findex_parameters.key.clone());
-
-    args.push("--label".to_owned());
-    args.push(action.findex_parameters.label);
-
-    for word in action.word {
-        args.push("--word".to_owned());
+    for word in action.keyword {
+        args.push("--keyword".to_owned());
         args.push(word);
     }
     let mut cmd = Command::cargo_bin(PROG_NAME)?;
     cmd.env(FINDEX_CLI_CONF_ENV, cli_conf_path);
 
-    cmd.arg("findex").args(args);
+    cmd.arg("search").args(args);
     debug!("cmd: {:?}", cmd);
     let output = recover_cmd_logs(&mut cmd);
     if output.status.success() {

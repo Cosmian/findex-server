@@ -1,6 +1,7 @@
+use std::{fmt::Display, path::PathBuf};
+
 use clap::Args;
 use serde::{Deserialize, Serialize};
-use std::{fmt::Display, path::PathBuf};
 
 const DEFAULT_PORT: u16 = 6666;
 const DEFAULT_HOSTNAME: &str = "0.0.0.0";

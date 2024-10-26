@@ -1,5 +1,6 @@
-use crate::error::result::CliResult;
 use serde::Serialize;
+
+use crate::error::result::CliResult;
 
 pub const KMS_CLI_FORMAT: &str = "KMS_CLI_FORMAT";
 pub const CLI_DEFAULT_FORMAT: &str = "text";

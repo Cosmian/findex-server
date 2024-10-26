@@ -1,5 +1,6 @@
-use crate::config::{ClapConfig, DBConfig, DatabaseType, HttpConfig, JwtAuthConfig};
 use std::path::PathBuf;
+
+use crate::config::{ClapConfig, DBConfig, DatabaseType, HttpConfig, JwtAuthConfig};
 
 #[test]
 fn test_toml() {

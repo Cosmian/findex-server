@@ -1,4 +1,3 @@
-use crate::error::result::FResult;
 use async_trait::async_trait;
 use cloudproof_findex::{
     db_interfaces::{redis::FindexTable, rest::UpsertData},
@@ -6,6 +5,8 @@ use cloudproof_findex::{
         TokenToEncryptedValueMap, TokenWithEncryptedValueList, Tokens, ENTRY_LENGTH, LINK_LENGTH,
     },
 };
+
+use crate::error::result::FResult;
 
 #[async_trait]
 pub(crate) trait Database: Sync + Send {

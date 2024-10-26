@@ -1,5 +1,6 @@
-use super::CliError;
 use std::fmt::Display;
+
+use super::CliError;
 
 pub type CliResult<R> = Result<R, CliError>;
 

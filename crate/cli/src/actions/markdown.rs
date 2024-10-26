@@ -1,6 +1,8 @@
-use crate::error::result::CliResult;
-use clap::{builder::StyledStr, Command, Parser};
 use std::{fmt::Write, fs::File, io::Write as io_Write, path::PathBuf};
+
+use clap::{builder::StyledStr, Command, Parser};
+
+use crate::error::result::CliResult;
 
 /// Generate the CLI documentation as markdown
 #[derive(Parser, Debug)]

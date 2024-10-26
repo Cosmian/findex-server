@@ -1,3 +1,14 @@
+use std::{
+    env,
+    fs::{self, File},
+    io::BufReader,
+    path::PathBuf,
+};
+
+#[cfg(target_os = "linux")]
+use log::info;
+use serde::{Deserialize, Serialize};
+
 #[cfg(target_os = "linux")]
 use crate::client_bail;
 use crate::{
@@ -7,18 +18,6 @@ use crate::{
     },
     FindexClient,
 };
-use der::{DecodePem, Encode};
-#[cfg(target_os = "linux")]
-use log::info;
-use rustls::Certificate;
-use serde::{Deserialize, Serialize};
-use std::{
-    env,
-    fs::{self, File},
-    io::BufReader,
-    path::PathBuf,
-};
-use x509_cert::Certificate as X509Certificate;
 
 /// Returns the path to the current user's home folder.
 ///
@@ -301,13 +300,6 @@ impl ClientConf {
             self.ssl_client_pkcs12_path.as_deref(),
             self.ssl_client_pkcs12_password.as_deref(),
             accept_invalid_certs,
-            if let Some(certificate) = &self.verified_cert {
-                Some(Certificate(
-                    X509Certificate::from_pem(certificate.as_bytes())?.to_der()?,
-                ))
-            } else {
-                None
-            },
         )
         .with_context(|| {
             format!("Unable to instantiate a Findex REST client to server at {findex_server_url}")

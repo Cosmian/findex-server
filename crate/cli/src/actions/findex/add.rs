@@ -1,35 +1,36 @@
-use super::FindexParameters;
-use crate::{actions::console, error::result::CliResult};
-use clap::Parser;
-use cloudproof_findex::{
-    reexport::{
-        cosmian_crypto_core::FixedSizeCBytes,
-        cosmian_findex::{Data, IndexedValue, IndexedValueToKeywordsMap, Keyword, Label, UserKey},
-    },
-    Configuration, InstantiatedFindex,
-};
-use cosmian_findex_client::FindexClient;
 use std::{
     collections::{HashMap, HashSet},
     fs::File,
     path::PathBuf,
 };
+
+use clap::Parser;
+use cloudproof_findex::reexport::cosmian_findex::{
+    Data, IndexedValue, IndexedValueToKeywordsMap, Keyword,
+};
+use cosmian_findex_client::FindexClient;
 use tracing::trace;
 
-/// Index data with Findex
+use super::FindexParameters;
+use crate::{
+    actions::{console, findex::instantiate_findex},
+    error::result::CliResult,
+};
+
+/// Findex: Index data.
 #[derive(Parser, Debug)]
 #[clap(verbatim_doc_comment)]
-pub struct IndexAction {
+pub struct AddAction {
     #[clap(flatten)]
-    pub findex_parameters: FindexParameters,
+    pub(crate) findex_parameters: FindexParameters,
 
     /// The path to the CSV file containing the data to index
     #[clap(long)]
-    pub csv: PathBuf,
+    pub(crate) csv: PathBuf,
 }
 
-impl IndexAction {
-    /// Process the server version action.
+impl AddAction {
+    /// Add keywords to be indexed with `Findex`.
     ///
     /// # Arguments
     ///
@@ -41,18 +42,7 @@ impl IndexAction {
     /// Returns an error if the version query fails or if there is an issue
     /// writing to the console.
     #[allow(clippy::future_not_send)]
-    pub async fn process(&self, findex_rest_client: &FindexClient) -> CliResult<()> {
-        let config = Configuration::Rest(
-            findex_rest_client.client.clone(),
-            findex_rest_client.server_url.clone(),
-            findex_rest_client.server_url.clone(),
-        );
-        let findex = InstantiatedFindex::new(config).await?;
-
-        let key = hex::decode(self.findex_parameters.key.clone())?;
-        let user_key = UserKey::try_from_slice(&key)?;
-        let label = Label::from(self.findex_parameters.label.as_str());
-
+    pub async fn process(&self, findex_rest_client: FindexClient) -> CliResult<()> {
         // read the database
         let mut csv_additions = Vec::new();
         let file = File::open(self.csv.clone())?;
@@ -72,10 +62,11 @@ impl IndexAction {
             csv_additions.iter().cloned().collect();
         trace!("additions: {additions:?}");
 
+        let findex = instantiate_findex(findex_rest_client).await?;
         let keywords = findex
             .add(
-                &user_key,
-                &label,
+                &self.findex_parameters.user_key()?,
+                &self.findex_parameters.label(),
                 IndexedValueToKeywordsMap::from(additions),
             )
             .await?;

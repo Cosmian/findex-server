@@ -1,7 +1,9 @@
-use crate::error::{result::FResult, server::FindexServerError};
+use std::{collections::HashMap, sync::RwLock};
+
 use alcoholic_jwt::{JWK, JWKS};
 use chrono::{DateTime, Duration, Utc};
-use std::{collections::HashMap, sync::RwLock};
+
+use crate::error::{result::FResult, server::FindexServerError};
 
 static REFRESH_INTERVAL: i64 = 60; // in secs
 
