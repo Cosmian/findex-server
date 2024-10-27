@@ -172,12 +172,16 @@ impl TryFrom<Oauth2LoginConfig> for LoginState {
     fn try_from(login_config: Oauth2LoginConfig) -> Result<Self, Self::Error> {
         let mut redirect_url = Url::parse("http://localhost:17899/authorization")?;
         // if the port is specified in the environment variable, use it
-        if let Ok(port_s) = std::env::var("KMS_CLI_OAUTH2_REDIRECT_URL_PORT") {
+        if let Ok(port_s) = std::env::var("FINDEX_CLI_OAUTH2_REDIRECT_URL_PORT") {
             let port = port_s.parse::<u16>().map_err(|e| {
-                CliError::Default(format!("Invalid KMS_CLI_OAUTH2_REDIRECT_URL_PORT: {e:?}"))
+                CliError::Default(format!(
+                    "Invalid FINDEX_CLI_OAUTH2_REDIRECT_URL_PORT: {e:?}"
+                ))
             })?;
             redirect_url.set_port(Some(port)).map_err(|e| {
-                CliError::Default(format!("Invalid KMS_CLI_OAUTH2_REDIRECT_URL_PORT: {e:?}"))
+                CliError::Default(format!(
+                    "Invalid FINDEX_CLI_OAUTH2_REDIRECT_URL_PORT: {e:?}"
+                ))
             })?;
         }
 

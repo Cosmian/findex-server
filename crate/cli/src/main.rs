@@ -22,8 +22,8 @@ struct Cli {
 
     /// Configuration file location
     ///
-    /// This is an alternative to the env variable `KMS_CLI_CONF`.
-    /// Takes precedence over `KMS_CLI_CONF` env variable.
+    /// This is an alternative to the env variable `FINDEX_CLI_CONF`.
+    /// Takes precedence over `FINDEX_CLI_CONF` env variable.
     #[arg(short, long)]
     conf: Option<PathBuf>,
 
