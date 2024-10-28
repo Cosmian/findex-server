@@ -341,18 +341,53 @@ fn generate_user_conf(port: u16, owner_client_conf: &ClientConf) -> Result<Strin
 }
 
 #[cfg(test)]
-#[allow(clippy::needless_return)]
-#[tokio::test]
-async fn test_start_server() -> Result<(), ClientError> {
-    let context = start_test_server_with_options(
-        redis_db_config(),
-        6660,
-        AuthenticationOptions {
-            use_jwt_token: false,
-            use_https: true,
-            use_client_cert: true,
-        },
-    )
-    .await?;
-    context.stop_server().await
+mod test {
+    use cosmian_findex_client::ClientError;
+    use tracing::trace;
+
+    use crate::{
+        start_test_server_with_options, test_server::redis_db_config, AuthenticationOptions,
+    };
+
+    #[allow(clippy::needless_return)]
+    #[tokio::test]
+    async fn test_start_server() -> Result<(), ClientError> {
+        let context = start_test_server_with_options(
+            redis_db_config(),
+            6660,
+            AuthenticationOptions {
+                use_jwt_token: false,
+                use_https: true,
+                use_client_cert: true,
+            },
+        )
+        .await?;
+        context.stop_server().await
+    }
+
+    #[allow(clippy::needless_return)]
+    #[tokio::test]
+    async fn test_server_auth_matrix() -> Result<(), ClientError> {
+        let test_cases = vec![
+            (false, false, false, "all_disabled"),
+            (true, false, false, "https_no_auth"),
+            (false, false, true, "https_cert"),
+            (false, true, false, "https_jwt"),
+        ];
+        for (use_https, use_jwt_token, use_client_cert, description) in test_cases {
+            trace!("Running test case: {}", description);
+            let context = start_test_server_with_options(
+                redis_db_config(),
+                6661,
+                AuthenticationOptions {
+                    use_https,
+                    use_jwt_token,
+                    use_client_cert,
+                },
+            )
+            .await?;
+            context.stop_server().await?;
+        }
+        Ok(())
+    }
 }

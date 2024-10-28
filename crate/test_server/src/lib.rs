@@ -4,6 +4,5 @@ pub use test_server::{
     start_test_server_with_options, AuthenticationOptions, TestsContext,
 };
 
-mod test_server;
-
 mod test_jwt;
+mod test_server;
