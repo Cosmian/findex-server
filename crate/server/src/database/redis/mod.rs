@@ -20,8 +20,6 @@ use tracing::{instrument, trace};
 use super::Database;
 use crate::error::{result::FResult, server::FindexServerError};
 
-// TODO(manu): move secret to client crate
-
 /// The conditional upsert script used to only update a table if the
 /// indexed value matches ARGV[2]. When the value does not match, the
 /// indexed value is returned.

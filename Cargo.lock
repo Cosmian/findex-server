@@ -875,7 +875,6 @@ dependencies = [
  "cosmian_logger",
  "dotenvy",
  "futures",
- "num-bigint-dig",
  "openssl",
  "redis",
  "reqwest",
@@ -888,7 +887,6 @@ dependencies = [
  "tracing",
  "url",
  "x509-parser",
- "zeroize",
 ]
 
 [[package]]
@@ -1886,7 +1884,6 @@ dependencies = [
  "num-iter",
  "num-traits",
  "rand",
- "serde",
  "smallvec",
  "zeroize",
 ]

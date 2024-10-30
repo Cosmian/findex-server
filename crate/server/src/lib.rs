@@ -59,7 +59,6 @@ pub mod error;
 pub mod findex_server;
 pub mod middlewares;
 pub mod routes;
-pub mod secret;
 
 #[allow(clippy::panic, clippy::unwrap_used, clippy::expect_used, unsafe_code)]
 #[cfg(test)]

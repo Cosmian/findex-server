@@ -47,12 +47,6 @@ cloudproof_findex = { workspace = true, features = ["redis-interface"] }
 cosmian_logger = { path = "../logger" }
 dotenvy = "0.15"
 futures = "0.3"
-num-bigint-dig = { version = "0.8", features = [
-  "std",
-  "rand",
-  "serde",
-  "zeroize",
-] }
 openssl = { workspace = true, default-features = false }
 redis = { version = "0.23", features = [
   "aio",
@@ -81,4 +75,3 @@ toml = "0.8"
 tracing = { workspace = true }
 url = { workspace = true }
 x509-parser = { workspace = true }
-zeroize = { workspace = true, default-features = false }
