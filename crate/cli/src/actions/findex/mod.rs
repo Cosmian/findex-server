@@ -11,10 +11,9 @@ use tracing::debug;
 
 use crate::error::result::CliResult;
 
-pub mod add;
+pub mod add_or_delete;
 pub mod search;
 
-/// Index data with Findex
 #[derive(Parser, Debug)]
 #[clap(verbatim_doc_comment)]
 // todo(manu): review global struct exposition

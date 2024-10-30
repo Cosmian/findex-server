@@ -1,5 +1,5 @@
 use crate::{
-    actions::findex::add::AddAction,
+    actions::findex::add_or_delete::AddOrDeleteAction,
     error::{result::CliResult, CliError},
     tests::{utils::recover_cmd_logs, PROG_NAME},
 };
@@ -9,7 +9,11 @@ use std::process::Command;
 use tracing::debug;
 
 #[allow(clippy::unwrap_used)]
-pub(crate) fn add_cmd(cli_conf_path: &str, action: AddAction) -> CliResult<String> {
+pub(crate) fn add_or_delete_cmd(
+    cli_conf_path: &str,
+    command: &str,
+    action: AddOrDeleteAction,
+) -> CliResult<String> {
     let mut cmd = Command::cargo_bin(PROG_NAME)?;
     let args = vec![
         "--key".to_owned(),
@@ -21,7 +25,7 @@ pub(crate) fn add_cmd(cli_conf_path: &str, action: AddAction) -> CliResult<Strin
     ];
     cmd.env(FINDEX_CLI_CONF_ENV, cli_conf_path);
 
-    cmd.arg("add").args(args);
+    cmd.arg(command).args(args);
     debug!("cmd: {:?}", cmd);
     let output = recover_cmd_logs(&mut cmd);
     if output.status.success() {

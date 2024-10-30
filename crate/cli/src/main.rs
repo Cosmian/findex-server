@@ -3,7 +3,7 @@ use std::{path::PathBuf, process};
 use clap::{CommandFactory, Parser, Subcommand};
 use cosmian_findex_cli::{
     actions::{
-        findex::{add::AddAction, search::SearchAction},
+        findex::{add_or_delete::AddOrDeleteAction, search::SearchAction},
         login::LoginAction,
         logout::LogoutAction,
         markdown::MarkdownAction,
@@ -41,7 +41,10 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum CliCommands {
-    Add(AddAction),
+    /// Index data.
+    Add(AddOrDeleteAction),
+    /// Delete indexed keywords
+    Delete(AddOrDeleteAction),
     Search(SearchAction),
     ServerVersion(ServerVersionAction),
     Login(LoginAction),
@@ -85,7 +88,8 @@ async fn main_() -> CliResult<()> {
                 conf.initialize_findex_client(opts.url.as_deref(), opts.accept_invalid_certs)?;
 
             match command {
-                CliCommands::Add(action) => action.process(findex_rest_client).await?,
+                CliCommands::Add(action) => action.add(findex_rest_client).await?,
+                CliCommands::Delete(action) => action.delete(findex_rest_client).await?,
                 CliCommands::Search(action) => action.process(findex_rest_client).await?,
                 CliCommands::ServerVersion(action) => action.process(findex_rest_client).await?,
                 _ => {
