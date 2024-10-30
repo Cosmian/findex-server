@@ -27,7 +27,7 @@ pub(crate) trait Database: Sync + Send {
 
     async fn insert_chains(&self, items: TokenToEncryptedValueMap<LINK_LENGTH>) -> FResult<()>;
 
-    async fn delete(&self, findex_table: FindexTable, entry_uids: Tokens) -> FResult<()>;
+    async fn delete(&self, findex_table: FindexTable, tokens: Tokens) -> FResult<()>;
 
     async fn dump_tokens(&self) -> FResult<Tokens>;
 }

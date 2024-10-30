@@ -96,6 +96,8 @@ impl From<sqlx::Error> for FindexServerError {
     }
 }
 
+// todo(manu): remove useless convert
+
 impl From<std::io::Error> for FindexServerError {
     fn from(e: std::io::Error) -> Self {
         Self::ServerError(e.to_string())
