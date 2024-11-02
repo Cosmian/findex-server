@@ -35,7 +35,7 @@ openssl x509 -req -days 3650 -in owner.client.acme.com.csr -CA ca.crt -CAkey ca.
 
 # Generate a PKCS12 file
 openssl pkcs12 -export -out owner.client.acme.com.p12 -inkey owner.client.acme.com.key -in owner.client.acme.com.crt -certfile ca.crt -password pass:password
-
+openssl pkcs12 -legacy -export -out owner.client.acme.com.old.format.p12 -inkey owner.client.acme.com.key -in owner.client.acme.com.crt -certfile ca.crt -password pass:password
 
 ## "user" client cert
 
@@ -50,3 +50,4 @@ openssl x509 -req -days 3650 -in user.client.acme.com.csr -CA ca.crt -CAkey ca.k
 
 # Generate a PKCS12 file
 openssl pkcs12 -export -out user.client.acme.com.p12 -inkey user.client.acme.com.key -in user.client.acme.com.crt -certfile ca.crt -password pass:password
+openssl pkcs12 -legacy -export -out user.client.acme.com.old.format.p12 -inkey user.client.acme.com.key -in user.client.acme.com.crt -certfile ca.crt -password pass:password

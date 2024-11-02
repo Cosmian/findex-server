@@ -48,5 +48,5 @@ pub(crate) trait Database: Sync + Send {
     #[allow(dead_code)]
     async fn grant_access(&self, user_id: &str, role: Role, index_id: &str) -> FResult<String>;
     #[allow(dead_code)]
-    async fn revoke_access(&self, user_id: &str, role: Role, index_id: &str) -> FResult<String>;
+    async fn revoke_access(&self, user_id: &str) -> FResult<String>;
 }

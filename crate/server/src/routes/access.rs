@@ -49,7 +49,7 @@ pub(crate) async fn grant_access(
     let user_role = findex_server.get_access(&user, &index_id).await?;
     if Role::Admin != user_role {
         return Err(FindexServerError::Unauthorized(format!(
-            "{user} is not allowed to delegate access to index {index_id} with a role {role}",
+            "Delegating access to an index requires an admin role. User {user} with role {user_role} does not allow granting access to index {index_id} with role {role}",
         )));
     }
 
@@ -59,6 +59,31 @@ pub(crate) async fn grant_access(
         .await?;
 
     Ok(Json(SuccessResponse {
-        success: format!("Access for {user_id} successfully added"),
+        success: format!("Access for {user_id} on index {index_id} successfully added"),
+    }))
+}
+
+#[post("/access/revoke/{user_id}/{index_id}")]
+pub(crate) async fn revoke_access(
+    req: HttpRequest,
+    params: web::Path<(String, String)>,
+    findex_server: Data<Arc<FindexServer>>,
+) -> FResult<Json<SuccessResponse>> {
+    let user = findex_server.get_user(&req);
+    let (user_id, index_id) = params.into_inner();
+    info!("user {user}: POST /access/revoke/{user_id}/{index_id}");
+
+    // Check if the user has the right to revoke access: only admins can do that
+    let user_role = findex_server.get_access(&user, &index_id).await?;
+    if Role::Admin != user_role {
+        return Err(FindexServerError::Unauthorized(format!(
+            "Revoking access to an index requires an admin role. User {user} with role {user_role} does not allow revoking access to index {index_id}",
+        )));
+    }
+
+    findex_server.db.revoke_access(&user_id).await?;
+
+    Ok(Json(SuccessResponse {
+        success: format!("Access for {user_id} on index {index_id} successfully added"),
     }))
 }

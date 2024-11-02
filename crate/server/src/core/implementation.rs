@@ -1,5 +1,5 @@
 use actix_web::{HttpMessage, HttpRequest};
-use tracing::{debug, trace};
+use tracing::{debug, instrument, trace};
 
 use crate::{
     config::{DbParams, ServerParams},
@@ -67,6 +67,7 @@ impl FindexServer {
     }
 
     #[allow(dead_code)]
+    #[instrument(ret(Display), err, skip(self))]
     pub(crate) async fn get_access(&self, user_id: &str, index_id: &str) -> FResult<Role> {
         if user_id == self.params.default_username {
             trace!("User is the default user, granting admin access");

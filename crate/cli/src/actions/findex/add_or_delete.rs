@@ -9,7 +9,7 @@ use cloudproof_findex::reexport::cosmian_findex::{
     Data, IndexedValue, IndexedValueToKeywordsMap, Keyword,
 };
 use cosmian_findex_client::FindexClient;
-use tracing::trace;
+use tracing::{instrument, trace};
 
 use super::FindexParameters;
 use crate::{
@@ -37,6 +37,7 @@ impl AddOrDeleteAction {
     /// - The CSV file cannot be opened.
     /// - There is an error reading the CSV records.
     /// - There is an error converting the CSV records to the expected data types.
+    #[instrument(ret(Display), err, skip(self))]
     pub(crate) fn csv_to_hashmap(&self) -> CliResult<IndexedValueToKeywordsMap> {
         // read the database
         let mut csv_in_memory = Vec::new();
@@ -48,14 +49,12 @@ impl AddOrDeleteAction {
             let record = result?;
             let indexed_value: IndexedValue<Keyword, Data> =
                 IndexedValue::Data(Data::from(record.as_slice()));
-            trace!("bytes conversion: {:?}", record.as_slice());
             let keywords = record.iter().map(Keyword::from).collect::<HashSet<_>>();
             csv_in_memory.push((indexed_value, keywords));
             trace!("CSV line: {record:?}");
         }
         let result: HashMap<IndexedValue<Keyword, Data>, HashSet<Keyword>> =
             csv_in_memory.iter().cloned().collect();
-        trace!("csv_to_hashmap: result: {result:?}");
         Ok(IndexedValueToKeywordsMap::from(result))
     }
 

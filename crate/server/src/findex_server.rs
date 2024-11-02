@@ -22,7 +22,7 @@ use crate::{
     middlewares::{extract_peer_certificate, AuthTransformer, JwksManager, JwtConfig, SslAuth},
     routes::{
         create_access, delete_chains, delete_entries, dump_tokens, fetch_chains, fetch_entries,
-        get_version, grant_access, insert_chains, upsert_entries,
+        get_version, grant_access, insert_chains, revoke_access, upsert_entries,
     },
 };
 
@@ -258,6 +258,7 @@ pub(crate) async fn prepare_findex_server(
             // Access rights endpoints
             .service(create_access)
             .service(grant_access)
+            .service(revoke_access)
             // Version endpoint
             .service(get_version);
 

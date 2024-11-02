@@ -268,18 +268,29 @@ impl Database for Redis {
         Ok(uuid)
     }
 
-    // #[instrument(ret(Display), err, skip(self))]
+    #[instrument(ret(Display), err, skip(self))]
     async fn get_access(&self, user_id: &str, index_id: &str) -> FResult<Role> {
-        trace!("get_access: user_id: {user_id}, index_id: {index_id}");
         let key = user_id.as_bytes().to_vec();
         let value: Option<Vec<u8>> = self.mgr.clone().get(key).await?;
 
         if value.is_none() {
-            return Err(FindexServerError::Unauthorized(
-                "No access since no role found".to_owned(),
-            ));
+            return Err(FindexServerError::Unauthorized(format!(
+                "No access for {user_id} since no role found for index {index_id}"
+            )));
         }
-        Ok(Role::Admin) //to remove
+        trace!("get_access: value: {:?}", value);
+        let serialized_value = value.ok_or_else(|| {
+            FindexServerError::Unauthorized(format!(
+                "No access for {user_id} since no role found for index {index_id}"
+            ))
+        })?;
+        let role_u8 = serialized_value.get(1).ok_or_else(|| {
+            FindexServerError::Unauthorized(format!(
+                "No access for {user_id} since invalid serialized role found for index {index_id}"
+            ))
+        })?;
+        let role = Role::try_from(*role_u8)?;
+        Ok(role)
     }
 
     #[allow(dependency_on_unit_never_type_fallback)]
@@ -292,8 +303,10 @@ impl Database for Redis {
         Ok(user_id.to_owned())
     }
 
-    // async fn revoke_access(&self, user_id: &str, role: Role, index_id: &str) -> FResult<String> {
-    async fn revoke_access(&self, _user_id: &str, _role: Role, _index_id: &str) -> FResult<String> {
-        todo!()
+    #[allow(dependency_on_unit_never_type_fallback)]
+    async fn revoke_access(&self, user_id: &str) -> FResult<String> {
+        let key = user_id.as_bytes().to_vec();
+        self.mgr.clone().del(key).await?;
+        Ok(user_id.to_owned())
     }
 }

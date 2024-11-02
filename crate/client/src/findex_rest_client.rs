@@ -135,6 +135,26 @@ impl FindexClient {
         let p = handle_error(&endpoint, response).await?;
         Err(ClientError::RequestFailed(p))
     }
+
+    #[instrument(ret(Display), err, skip(self))]
+    pub async fn revoke_access(
+        &self,
+        user_id: &str,
+        index_id: &str,
+    ) -> ClientResult<SuccessResponse> {
+        let endpoint = format!("/access/revoke/{user_id}/{index_id}");
+        let server_url = format!("{}{endpoint}", self.server_url);
+        trace!("POST revoke_access: {server_url}");
+        let response = self.client.post(server_url).send().await?;
+        let status_code = response.status();
+        if status_code.is_success() {
+            return Ok(response.json::<SuccessResponse>().await?);
+        }
+
+        // process error
+        let p = handle_error(&endpoint, response).await?;
+        Err(ClientError::RequestFailed(p))
+    }
 }
 
 /// Some errors are returned by the Middleware without going through our own

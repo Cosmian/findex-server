@@ -12,7 +12,7 @@ use cloudproof_findex::{
     },
     ser_de::ffi_ser_de::deserialize_token_set,
 };
-use tracing::{info, trace};
+use tracing::{debug, info, trace};
 
 use crate::{
     core::{FindexServer, Role},
@@ -105,7 +105,9 @@ pub(crate) async fn upsert_entries(
     let user = findex_server.get_user(&req);
     info!("user {user}: POST /indexes/{id}/upsert_entries",);
 
-    if findex_server.get_access(&user, &id).await? < Role::Write {
+    let user_role = findex_server.get_access(&user, &id).await?;
+    debug!("user {user} has role: {user_role}");
+    if user_role < Role::Write {
         return Err(FindexServerError::Unauthorized(format!(
             "User {user} is not allowed to write on index {id} (upsert_entries)",
         )));
@@ -234,3 +236,4 @@ pub(crate) async fn dump_tokens(
         .content_type("application/octet-stream")
         .body(bytes))
 }
+// todo(manu): put findex parameters in cli conf
