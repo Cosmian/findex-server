@@ -1,14 +1,17 @@
 use std::{
+    fmt::Display,
     fs::File,
     io::{BufReader, Read},
     time::Duration,
 };
 
-use log::trace;
+// use log::trace;
 use reqwest::{
     header::{HeaderMap, HeaderValue},
     Client, ClientBuilder, Identity, Response, StatusCode,
 };
+use serde::{Deserialize, Serialize};
+use tracing::{instrument, trace};
 
 use crate::{
     error::{result::ClientResult, ClientError},
@@ -79,6 +82,7 @@ impl FindexClient {
     /// The returned secrets could be shared between several users.
     /// # Errors
     /// It returns an error if the request fails
+    #[instrument(ret(Display), err, skip(self))]
     pub async fn version(&self) -> ClientResult<String> {
         let endpoint = "/version";
         let server_url = format!("{}{endpoint}", self.server_url);
@@ -90,6 +94,45 @@ impl FindexClient {
 
         // process error
         let p = handle_error(endpoint, response).await?;
+        Err(ClientError::RequestFailed(p))
+    }
+
+    #[instrument(ret(Display), err, skip(self))]
+    pub async fn create_access(&self) -> ClientResult<SuccessResponse> {
+        let endpoint = "/access/create".to_owned();
+        let server_url = format!("{}{endpoint}", self.server_url);
+        trace!("POST create_access: {server_url}");
+        let response = self.client.post(server_url).send().await?;
+        trace!("Response: {response:?}");
+        let status_code = response.status();
+        if status_code.is_success() {
+            return Ok(response.json::<SuccessResponse>().await?);
+        }
+
+        // process error
+        let p = handle_error(&endpoint, response).await?;
+        Err(ClientError::RequestFailed(p))
+    }
+
+    // todo(manu): move those function to cli crate
+    #[instrument(ret(Display), err, skip(self))]
+    pub async fn grant_access(
+        &self,
+        user_id: &str,
+        role: &str,
+        index_id: &str,
+    ) -> ClientResult<SuccessResponse> {
+        let endpoint = format!("/access/grant/{user_id}/{role}/{index_id}");
+        let server_url = format!("{}{endpoint}", self.server_url);
+        trace!("POST grant_access: {server_url}");
+        let response = self.client.post(server_url).send().await?;
+        let status_code = response.status();
+        if status_code.is_success() {
+            return Ok(response.json::<SuccessResponse>().await?);
+        }
+
+        // process error
+        let p = handle_error(&endpoint, response).await?;
         Err(ClientError::RequestFailed(p))
     }
 }
@@ -114,4 +157,15 @@ async fn handle_error(endpoint: &str, response: Response) -> Result<String, Clie
             text
         }
     ))
+}
+
+#[derive(Deserialize, Serialize, Debug)] // Debug is required by ok_json()
+pub struct SuccessResponse {
+    pub success: String,
+}
+
+impl Display for SuccessResponse {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self.success)
+    }
 }

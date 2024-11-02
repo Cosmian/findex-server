@@ -6,7 +6,7 @@ use std::{
 use async_trait::async_trait;
 use cloudproof_findex::{
     db_interfaces::{
-        redis::{build_key, FindexTable, TABLE_PREFIX_LENGTH},
+        redis::{FindexTable, TABLE_PREFIX_LENGTH},
         rest::UpsertData,
     },
     reexport::cosmian_findex::{
@@ -16,9 +16,13 @@ use cloudproof_findex::{
 };
 use redis::{aio::ConnectionManager, pipe, AsyncCommands, Script};
 use tracing::{instrument, trace};
+use uuid::Uuid;
 
 use super::Database;
-use crate::error::{result::FResult, server::FindexServerError};
+use crate::{
+    core::Role,
+    error::{result::FResult, server::FindexServerError},
+};
 
 /// The conditional upsert script used to only update a table if the
 /// indexed value matches ARGV[2]. When the value does not match, the
@@ -32,6 +36,16 @@ const CONDITIONAL_UPSERT_SCRIPT: &str = r"
             return value
         end;
     ";
+
+/// Generate a key for the entry table or chain table
+fn build_key(index_id: &str, table: FindexTable, uid: &[u8]) -> Vec<u8> {
+    [index_id.as_bytes(), &[0x00, u8::from(table)], uid].concat()
+}
+
+#[allow(dead_code)]
+fn build_value(role: Role, index_id: &str) -> Vec<u8> {
+    [&[0x00, u8::from(role)], index_id.as_bytes()].concat()
+}
 
 #[allow(dead_code)]
 pub(crate) struct Redis {
@@ -66,6 +80,7 @@ impl Database for Redis {
     #[instrument(ret(Display), err, skip_all)]
     async fn fetch_entries(
         &self,
+        index_id: &str,
         tokens: Tokens,
     ) -> FResult<TokenWithEncryptedValueList<ENTRY_LENGTH>> {
         trace!("fetch_entries: number of tokens: {}", tokens.len());
@@ -74,7 +89,7 @@ impl Database for Redis {
 
         let redis_keys = uids
             .iter()
-            .map(|uid| build_key(FindexTable::Entry, uid))
+            .map(|uid| build_key(index_id, FindexTable::Entry, uid))
             .collect::<Vec<_>>();
         trace!("fetch_entries: redis_keys len: {}", redis_keys.len());
 
@@ -101,6 +116,7 @@ impl Database for Redis {
     #[instrument(ret(Display), err, skip_all)]
     async fn fetch_chains(
         &self,
+        index_id: &str,
         tokens: Tokens,
     ) -> FResult<TokenWithEncryptedValueList<LINK_LENGTH>> {
         trace!("fetch_chains: number of tokens: {}", tokens.len());
@@ -109,7 +125,7 @@ impl Database for Redis {
 
         let redis_keys = uids
             .iter()
-            .map(|uid| build_key(FindexTable::Chain, uid))
+            .map(|uid| build_key(index_id, FindexTable::Chain, uid))
             .collect::<Vec<_>>();
         trace!("fetch_chains: redis_keys len: {}", redis_keys.len());
 
@@ -136,6 +152,7 @@ impl Database for Redis {
     #[instrument(ret(Display), err, skip_all)]
     async fn upsert_entries(
         &self,
+        index_id: &str,
         upsert_data: UpsertData<ENTRY_LENGTH>,
     ) -> FResult<TokenToEncryptedValueMap<ENTRY_LENGTH>> {
         trace!(
@@ -162,7 +179,7 @@ impl Database for Redis {
         for (uid, new_value) in new_values {
             let new_value = Vec::from(&new_value);
             let old_value = old_values.get(&uid).map(Vec::from).unwrap_or_default();
-            let key = build_key(FindexTable::Entry, &uid);
+            let key = build_key(index_id, FindexTable::Entry, &uid);
 
             let indexed_value: Vec<_> = self
                 .upsert_script
@@ -184,10 +201,14 @@ impl Database for Redis {
     }
 
     #[instrument(ret, err, skip_all)]
-    async fn insert_chains(&self, items: TokenToEncryptedValueMap<LINK_LENGTH>) -> FResult<()> {
+    async fn insert_chains(
+        &self,
+        index_id: &str,
+        items: TokenToEncryptedValueMap<LINK_LENGTH>,
+    ) -> FResult<()> {
         let mut pipe = pipe();
         for (k, v) in &*items {
-            pipe.set(build_key(FindexTable::Chain, k), Vec::from(v));
+            pipe.set(build_key(index_id, FindexTable::Chain, k), Vec::from(v));
         }
         pipe.atomic()
             .query_async(&mut self.mgr.clone())
@@ -196,10 +217,15 @@ impl Database for Redis {
     }
 
     #[instrument(ret, err, skip_all)]
-    async fn delete(&self, findex_table: FindexTable, entry_uids: Tokens) -> FResult<()> {
+    async fn delete(
+        &self,
+        index_id: &str,
+        findex_table: FindexTable,
+        entry_uids: Tokens,
+    ) -> FResult<()> {
         let mut pipeline = pipe();
         for uid in entry_uids {
-            pipeline.del(build_key(findex_table, &uid));
+            pipeline.del(build_key(index_id, findex_table, &uid));
         }
         pipeline
             .atomic()
@@ -210,11 +236,11 @@ impl Database for Redis {
 
     #[instrument(ret(Display), err, skip_all)]
     #[allow(clippy::indexing_slicing)]
-    async fn dump_tokens(&self) -> FResult<Tokens> {
+    async fn dump_tokens(&self, index_id: &str) -> FResult<Tokens> {
         let keys: Vec<Vec<u8>> = self
             .mgr
             .clone()
-            .keys(build_key(FindexTable::Entry, b"*"))
+            .keys(build_key(index_id, FindexTable::Entry, b"*"))
             .await?;
 
         trace!("dumping {} keywords (ET+CT)", keys.len());
@@ -228,5 +254,46 @@ impl Database for Redis {
             }
         }
         Ok(Tokens::from(tokens_set))
+    }
+
+    #[allow(dependency_on_unit_never_type_fallback)]
+    #[instrument(ret(Display), err, skip(self))]
+    async fn create_access(&self, user_id: &str) -> FResult<String> {
+        let key = user_id.as_bytes().to_vec();
+        let uuid = Uuid::new_v4().to_string();
+        self.mgr
+            .clone()
+            .set(key, build_value(Role::Admin, uuid.as_str()))
+            .await?;
+        Ok(uuid)
+    }
+
+    // #[instrument(ret(Display), err, skip(self))]
+    async fn get_access(&self, user_id: &str, index_id: &str) -> FResult<Role> {
+        trace!("get_access: user_id: {user_id}, index_id: {index_id}");
+        let key = user_id.as_bytes().to_vec();
+        let value: Option<Vec<u8>> = self.mgr.clone().get(key).await?;
+
+        if value.is_none() {
+            return Err(FindexServerError::Unauthorized(
+                "No access since no role found".to_owned(),
+            ));
+        }
+        Ok(Role::Admin) //to remove
+    }
+
+    #[allow(dependency_on_unit_never_type_fallback)]
+    async fn grant_access(&self, user_id: &str, role: Role, index_id: &str) -> FResult<String> {
+        let key = user_id.as_bytes().to_vec();
+        self.mgr
+            .clone()
+            .set(key, build_value(role, index_id))
+            .await?;
+        Ok(user_id.to_owned())
+    }
+
+    // async fn revoke_access(&self, user_id: &str, role: Role, index_id: &str) -> FResult<String> {
+    async fn revoke_access(&self, _user_id: &str, _role: Role, _index_id: &str) -> FResult<String> {
+        todo!()
     }
 }

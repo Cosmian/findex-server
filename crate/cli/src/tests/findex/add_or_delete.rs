@@ -20,6 +20,8 @@ pub(crate) fn add_or_delete_cmd(
         action.findex_parameters.key.clone(),
         "--label".to_owned(),
         action.findex_parameters.label,
+        "--index-id".to_owned(),
+        action.findex_parameters.index_id,
         "--csv".to_owned(),
         action.csv.to_str().unwrap().to_owned(),
     ];

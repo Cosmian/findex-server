@@ -76,7 +76,7 @@ pub async fn start_default_test_findex_server_with_cert_auth() -> &'static Tests
         .get_or_try_init(|| {
             start_test_server_with_options(
                 get_db_config(),
-                9991,
+                6661,
                 AuthenticationOptions {
                     use_jwt_token: false,
                     use_https: true,

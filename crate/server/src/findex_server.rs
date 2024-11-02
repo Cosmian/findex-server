@@ -21,8 +21,8 @@ use crate::{
     findex_server_bail,
     middlewares::{extract_peer_certificate, AuthTransformer, JwksManager, JwtConfig, SslAuth},
     routes::{
-        delete_chains, delete_entries, dump_tokens, fetch_chains, fetch_entries, get_version,
-        insert_chains, upsert_entries,
+        create_access, delete_chains, delete_entries, dump_tokens, fetch_chains, fetch_entries,
+        get_version, grant_access, insert_chains, upsert_entries,
     },
 };
 
@@ -247,6 +247,7 @@ pub(crate) async fn prepare_findex_server(
             // CORS middleware is the last one so that the auth middlewares do not run on
             // preflight (OPTION) requests.
             .wrap(Cors::permissive())
+            // Findex endpoints
             .service(fetch_entries)
             .service(fetch_chains)
             .service(upsert_entries)
@@ -254,6 +255,10 @@ pub(crate) async fn prepare_findex_server(
             .service(delete_entries)
             .service(delete_chains)
             .service(dump_tokens)
+            // Access rights endpoints
+            .service(create_access)
+            .service(grant_access)
+            // Version endpoint
             .service(get_version);
 
         app.service(default_scope)

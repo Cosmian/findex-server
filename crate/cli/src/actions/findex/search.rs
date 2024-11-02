@@ -35,7 +35,8 @@ impl SearchAction {
     /// writing to the console.
     #[allow(clippy::future_not_send)] // todo(manu): to remove this, changes must be done on `findex` repository
     pub async fn process(&self, findex_rest_client: FindexClient) -> CliResult<()> {
-        let findex = instantiate_findex(findex_rest_client).await?;
+        let findex =
+            instantiate_findex(findex_rest_client, &self.findex_parameters.index_id).await?;
         let results = findex
             .search(
                 &self.findex_parameters.user_key()?,

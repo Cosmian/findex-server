@@ -1,3 +1,4 @@
+mod access;
 mod auth_tests;
 mod findex;
 mod utils;

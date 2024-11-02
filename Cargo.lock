@@ -694,7 +694,6 @@ checksum = "1462739cb27611015575c0c11df5df7601141071f07518d56fcc1be504cbec97"
 [[package]]
 name = "cloudproof_findex"
 version = "6.0.2"
-source = "git+https://www.github.com/Cosmian/cloudproof_rust?branch=feat/add_basic_findex_rest_client#e61e161d2b45fda5fc8205dfc80b4b086c7d661c"
 dependencies = [
  "async-trait",
  "base64 0.21.7",
@@ -847,13 +846,13 @@ dependencies = [
  "base64 0.21.7",
  "der",
  "faker_rand",
- "log",
  "pem",
  "rand",
  "reqwest",
  "serde",
  "serde_json",
  "thiserror",
+ "tracing",
  "url",
 ]
 
@@ -887,6 +886,7 @@ dependencies = [
  "toml",
  "tracing",
  "url",
+ "uuid",
  "x509-parser",
 ]
 
@@ -3414,6 +3414,15 @@ dependencies = [
  "idna",
  "percent-encoding",
  "serde",
+]
+
+[[package]]
+name = "uuid"
+version = "1.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f8c5f0a0af699448548ad1a2fbf920fb4bee257eae39953ba95cb84891a0446a"
+dependencies = [
+ "getrandom",
 ]
 
 [[package]]

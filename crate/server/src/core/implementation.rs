@@ -1,5 +1,5 @@
 use actix_web::{HttpMessage, HttpRequest};
-use tracing::debug;
+use tracing::{debug, trace};
 
 use crate::{
     config::{DbParams, ServerParams},
@@ -8,6 +8,8 @@ use crate::{
     findex_server_bail,
     middlewares::{JwtAuthClaim, PeerCommonName},
 };
+
+use super::Role;
 
 #[allow(dead_code)]
 pub(crate) struct FindexServer {
@@ -37,7 +39,8 @@ impl FindexServer {
     /// Get the user from the request depending on the authentication method
     /// The user is encoded in the JWT `Authorization` header
     /// If the header is not present, the user is extracted from the client
-    /// certificate If the client certificate is not present, the user is
+    /// certificate.
+    ///  If the client certificate is not present, the user is
     /// extracted from the configuration file
     pub(crate) fn get_user(&self, req_http: &HttpRequest) -> String {
         let default_username = self.params.default_username.clone();
@@ -61,5 +64,14 @@ impl FindexServer {
         );
         debug!("Authenticated user: {}", user);
         user
+    }
+
+    #[allow(dead_code)]
+    pub(crate) async fn get_access(&self, user_id: &str, index_id: &str) -> FResult<Role> {
+        if user_id == self.params.default_username {
+            trace!("User is the default user, granting admin access");
+            return Ok(Role::Admin);
+        }
+        self.db.get_access(user_id, index_id).await
     }
 }

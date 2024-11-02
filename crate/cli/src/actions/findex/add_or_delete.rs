@@ -71,7 +71,7 @@ impl AddOrDeleteAction {
     /// - There is an error adding the data to the Findex index.
     /// - There is an error writing the result to the console.
     pub async fn add(&self, findex_rest_client: FindexClient) -> CliResult<()> {
-        let keywords = instantiate_findex(findex_rest_client)
+        let keywords = instantiate_findex(findex_rest_client, &self.findex_parameters.index_id)
             .await?
             .add(
                 &self.findex_parameters.user_key()?,
@@ -98,7 +98,7 @@ impl AddOrDeleteAction {
     /// - There is an error deleting the data from the Findex index.    pub async fn delete(&self, `findex_rest_client`: `FindexClient`) -> `CliResult`<()> {
     /// - There is an error writing the result to the console.
     pub async fn delete(&self, findex_rest_client: FindexClient) -> CliResult<()> {
-        let keywords = instantiate_findex(findex_rest_client)
+        let keywords = instantiate_findex(findex_rest_client, &self.findex_parameters.index_id)
             .await?
             .delete(
                 &self.findex_parameters.user_key()?,

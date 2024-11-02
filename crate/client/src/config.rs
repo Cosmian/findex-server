@@ -5,9 +5,10 @@ use std::{
     path::PathBuf,
 };
 
-#[cfg(target_os = "linux")]
-use log::info;
+// #[cfg(target_os = "linux")]
+// use log::info;
 use serde::{Deserialize, Serialize};
+use tracing::info;
 
 #[cfg(target_os = "linux")]
 use crate::client_bail;
