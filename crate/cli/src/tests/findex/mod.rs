@@ -5,14 +5,15 @@ use test_findex_server::{
     start_default_test_findex_server, start_default_test_findex_server_with_cert_auth,
 };
 use tracing::trace;
+use uuid::Uuid;
 
 use crate::{
     actions::{
-        access::{GrantAccess, RevokeAccess},
         findex::{add_or_delete::AddOrDeleteAction, search::SearchAction, FindexParameters},
+        permissions::{GrantAccess, RevokeAccess},
     },
     error::result::CliResult,
-    tests::access::{create_access_cmd, grant_access_cmd, revoke_access_cmd},
+    tests::permissions::{create_access_cmd, grant_access_cmd, revoke_access_cmd},
 };
 
 pub(crate) mod add_or_delete;
@@ -65,16 +66,17 @@ fn search(cli_conf_path: &str, index_id: &str) -> CliResult<String> {
 }
 
 #[allow(clippy::panic_in_result_fn)]
-fn findex(cli_conf_path: &str, index_id: &str) -> CliResult<()> {
-    // todo(manu): rename index_id to zone (or something else)
+fn add_search_delete(cli_conf_path: &str, index_id: &str) -> CliResult<()> {
     add(cli_conf_path, index_id)?;
 
+    // make sure searching returns the expected results
     let search_results = search(cli_conf_path, index_id)?;
     assert!(search_results.contains("States9686")); // for Southborough
     assert!(search_results.contains("States14061")); // for Northbridge
 
     delete(cli_conf_path, index_id)?;
 
+    // make sure no results are returned after deletion
     let search_results = search(cli_conf_path, index_id)?;
     assert!(!search_results.contains("States9686")); // for Southborough
     assert!(!search_results.contains("States14061")); // for Northbridge
@@ -86,7 +88,10 @@ fn findex(cli_conf_path: &str, index_id: &str) -> CliResult<()> {
 pub(crate) async fn test_findex_no_auth() -> CliResult<()> {
     log_init(None);
     let ctx = start_default_test_findex_server().await;
-    findex(&ctx.owner_client_conf_path, "my_owned_index")?;
+    add_search_delete(
+        &ctx.owner_client_conf_path,
+        Uuid::new_v4().to_string().as_str(),
+    )?;
     Ok(())
 }
 
@@ -96,9 +101,9 @@ pub(crate) async fn test_findex_cert_auth() -> CliResult<()> {
     let ctx = start_default_test_findex_server_with_cert_auth().await;
 
     let index_id = create_access_cmd(&ctx.owner_client_conf_path)?;
-    trace!("zone: {index_id}");
+    trace!("index_id: {index_id}");
 
-    findex(&ctx.owner_client_conf_path, &index_id)?;
+    add_search_delete(&ctx.owner_client_conf_path, &index_id)?;
     Ok(())
 }
 
@@ -119,7 +124,8 @@ pub(crate) async fn test_findex_grant_read_access() -> CliResult<()> {
         GrantAccess {
             user: "user.client@acme.com".to_owned(),
             index_id: index_id.clone(),
-            role: "reader".to_owned(),
+            permission: "reader".to_owned(), /* todo(manu): use a mutual struct between server and
+                                              * client */
         },
     )?;
 
@@ -137,7 +143,7 @@ pub(crate) async fn test_findex_grant_read_access() -> CliResult<()> {
         GrantAccess {
             user: "user.client@acme.com".to_owned(),
             index_id: index_id.clone(),
-            role: "writer".to_owned(),
+            permission: "writer".to_owned(),
         },
     )?;
 
@@ -155,7 +161,7 @@ pub(crate) async fn test_findex_grant_read_access() -> CliResult<()> {
         GrantAccess {
             user: "user.client@acme.com".to_owned(),
             index_id: index_id.clone(),
-            role: "admin".to_owned(),
+            permission: "admin".to_owned(),
         },
     )
     .unwrap_err();
@@ -179,9 +185,6 @@ pub(crate) async fn test_findex_no_access() -> CliResult<()> {
     log_init(None);
     let ctx = start_default_test_findex_server_with_cert_auth().await;
 
-    assert!(findex(&ctx.user_client_conf_path, "whatever").is_err());
+    assert!(add_search_delete(&ctx.user_client_conf_path, "whatever").is_err());
     Ok(())
 }
-
-// todo(manu):
-//  - grant_access twice

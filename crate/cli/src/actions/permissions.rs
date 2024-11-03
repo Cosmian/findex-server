@@ -1,6 +1,5 @@
 use clap::Parser;
 use cosmian_rest_client::RestClient;
-use tracing::trace;
 
 use crate::{
     actions::console,
@@ -41,7 +40,7 @@ impl AccessAction {
 pub struct CreateAccess;
 
 impl CreateAccess {
-    /// Create a new Index with a default `admin` role.
+    /// Create a new Index with a default `admin` permission.
     ///
     /// Generates an unique index ID which is returned to the owner.
     /// This ID will be shared between several users that will be able to:
@@ -50,8 +49,8 @@ impl CreateAccess {
     ///
     /// # Arguments
     ///
-    /// * `rest_client` - A reference to the Findex client used to
-    ///   communicate with the Findex server.
+    /// * `rest_client` - A reference to the Findex client used to communicate
+    ///   with the Findex server.
     ///
     /// # Errors
     ///
@@ -61,8 +60,7 @@ impl CreateAccess {
             .create_access()
             .await
             .with_context(|| "Can't execute the create access query on the findex server")?;
-
-        trace!("cli: New access successfully created: {}", response.success);
+        // should replace the user configuration file
         console::Stdout::new(&response.success).write()?;
 
         Ok(response.success)
@@ -86,9 +84,9 @@ pub struct GrantAccess {
     #[clap(long, required = true)]
     pub index_id: String,
 
-    /// The role to grant (`reader`, `writer`, `admin`)
+    /// The permission to grant (`reader`, `writer`, `admin`)
     #[clap(long, required = true)]
-    pub role: String,
+    pub permission: String,
 }
 
 impl GrantAccess {
@@ -96,15 +94,15 @@ impl GrantAccess {
     ///
     /// # Arguments
     ///
-    /// * `rest_client` - A reference to the Findex client used to
-    ///   communicate with the Findex server.
+    /// * `rest_client` - A reference to the Findex client used to communicate
+    ///   with the Findex server.
     ///
     /// # Errors
     ///
     /// Returns an error if the query execution on the Findex server fails.
     pub async fn run(&self, rest_client: RestClient) -> CliResult<String> {
         let response = rest_client
-            .grant_access(&self.user, &self.role, &self.index_id)
+            .grant_access(&self.user, &self.permission, &self.index_id)
             .await
             .with_context(|| "Can't execute the grant access query on the findex server")?;
 
@@ -133,8 +131,8 @@ impl RevokeAccess {
     ///
     /// # Arguments
     ///
-    /// * `rest_client` - A reference to the Findex client used to
-    ///   communicate with the Findex server.
+    /// * `rest_client` - A reference to the Findex client used to communicate
+    ///   with the Findex server.
     ///
     /// # Errors
     ///

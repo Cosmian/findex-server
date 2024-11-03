@@ -1,13 +1,14 @@
 use actix_web::{HttpMessage, HttpRequest};
 use tracing::{debug, instrument, trace};
 
-use super::Role;
+use super::Permission;
 use crate::{
     config::{DbParams, ServerParams},
     database::{Database, Redis},
     error::result::FResult,
     findex_server_bail,
     middlewares::{JwtAuthClaim, PeerCommonName},
+    routes::get_index_id,
 };
 
 #[allow(dead_code)]
@@ -67,11 +68,21 @@ impl FindexServer {
 
     #[allow(dead_code)]
     #[instrument(ret(Display), err, skip(self))]
-    pub(crate) async fn get_access(&self, user_id: &str, index_id: &str) -> FResult<Role> {
+    pub(crate) async fn get_permission(
+        &self,
+        user_id: &str,
+        index_id: &str,
+    ) -> FResult<Permission> {
         if user_id == self.params.default_username {
-            trace!("User is the default user, granting admin access");
-            return Ok(Role::Admin);
+            trace!("User is the default user and has admin access");
+            return Ok(Permission::Admin);
         }
-        self.db.get_access(user_id, index_id).await
+
+        let permission = self
+            .db
+            .get_permission(user_id, &get_index_id(index_id)?)
+            .await?;
+        trace!("User {user_id} has: {permission}");
+        Ok(permission)
     }
 }

@@ -14,7 +14,7 @@ use tracing::{info, trace};
 use crate::{error::result::CliResult, tests::PROG_NAME};
 
 // let us not make other test cases fail
-const PORT: u16 = 9999;
+const PORT: u16 = 6666;
 
 #[tokio::test]
 #[allow(clippy::needless_return)]
@@ -25,7 +25,7 @@ pub(crate) async fn test_all_authentications() -> CliResult<()> {
     let ctx = start_test_server_with_options(
         DBConfig {
             database_type: Some(DatabaseType::Redis),
-            clear_database: true,
+            clear_database: false,
             ..DBConfig::default()
         },
         PORT,

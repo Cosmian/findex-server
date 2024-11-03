@@ -21,6 +21,7 @@ impl actix_web::error::ResponseError for FindexServerError {
             | Self::Redis(_)
             | Self::Findex(_)
             | Self::Certificate(_)
+            | Self::Deserialization(_)
             | Self::ServerError(_) => StatusCode::INTERNAL_SERVER_ERROR,
 
             Self::InvalidRequest(_) | Self::ClientConnectionError(_) | Self::UrlError(_) => {

@@ -117,10 +117,10 @@ impl RestClient {
     pub async fn grant_access(
         &self,
         user_id: &str,
-        role: &str,
+        permission: &str,
         index_id: &str,
     ) -> ClientResult<SuccessResponse> {
-        let endpoint = format!("/access/grant/{user_id}/{role}/{index_id}");
+        let endpoint = format!("/access/grant/{user_id}/{permission}/{index_id}");
         let server_url = format!("{}{endpoint}", self.server_url);
         trace!("POST grant_access: {server_url}");
         let response = self.client.post(server_url).send().await?;

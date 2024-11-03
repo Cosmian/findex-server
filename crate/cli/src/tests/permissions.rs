@@ -6,7 +6,7 @@ use regex::{Regex, RegexBuilder};
 use tracing::{debug, trace};
 
 use crate::{
-    actions::access::{GrantAccess, RevokeAccess},
+    actions::permissions::{GrantAccess, RevokeAccess},
     error::{result::CliResult, CliError},
     tests::{utils::recover_cmd_logs, PROG_NAME},
 };
@@ -14,7 +14,7 @@ use crate::{
 /// Extract the `key_uid` (prefixed by a pattern) from a text
 #[allow(clippy::unwrap_used)]
 pub(crate) fn extract_uid<'a>(text: &'a str, pattern: &'a str) -> Option<&'a str> {
-    let formatted = format!(r"^\s*{pattern}: (?P<uid>.+?)[\s\.]*?$");
+    let formatted = format!(r"\[\S+\] {pattern}: (?P<uid>[0-9a-fA-F-]+)");
     let uid_regex: Regex = RegexBuilder::new(formatted.as_str())
         .multi_line(true)
         .build()
@@ -35,10 +35,11 @@ pub(crate) fn create_access_cmd(cli_conf_path: &str) -> CliResult<String> {
     if output.status.success() {
         let findex_output = std::str::from_utf8(&output.stdout)?;
         trace!("findex_output: {}", findex_output);
-        let unique_identifier = extract_uid(findex_output, "New access successfully created")
-            .ok_or_else(|| {
-                CliError::Default("failed extracting the unique identifier".to_owned())
-            })?;
+        let unique_identifier = extract_uid(
+            findex_output,
+            "New admin access successfully created on index",
+        )
+        .ok_or_else(|| CliError::Default("failed extracting the unique identifier".to_owned()))?;
         return Ok(unique_identifier.to_owned());
     }
     Err(CliError::Default(
@@ -46,6 +47,7 @@ pub(crate) fn create_access_cmd(cli_conf_path: &str) -> CliResult<String> {
     ))
 }
 
+#[allow(dead_code)]
 pub(crate) fn grant_access_cmd(cli_conf_path: &str, action: GrantAccess) -> CliResult<String> {
     let mut cmd = Command::cargo_bin(PROG_NAME)?;
     let args = vec![
@@ -54,8 +56,8 @@ pub(crate) fn grant_access_cmd(cli_conf_path: &str, action: GrantAccess) -> CliR
         action.user.clone(),
         "--index-id".to_owned(),
         action.index_id,
-        "--role".to_owned(),
-        action.role,
+        "--permission".to_owned(),
+        action.permission,
     ];
     cmd.env(FINDEX_CLI_CONF_ENV, cli_conf_path);
 
@@ -71,6 +73,7 @@ pub(crate) fn grant_access_cmd(cli_conf_path: &str, action: GrantAccess) -> CliR
     ))
 }
 
+#[allow(dead_code)]
 pub(crate) fn revoke_access_cmd(cli_conf_path: &str, action: RevokeAccess) -> CliResult<String> {
     let mut cmd = Command::cargo_bin(PROG_NAME)?;
     let args = vec![

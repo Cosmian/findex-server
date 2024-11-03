@@ -3,11 +3,11 @@ use std::{path::PathBuf, process};
 use clap::{CommandFactory, Parser, Subcommand};
 use cosmian_findex_cli::{
     actions::{
-        access::AccessAction,
         findex::{add_or_delete::AddOrDeleteAction, search::SearchAction},
         login::LoginAction,
         logout::LogoutAction,
         markdown::MarkdownAction,
+        permissions::AccessAction,
         version::ServerVersionAction,
     },
     error::result::CliResult,

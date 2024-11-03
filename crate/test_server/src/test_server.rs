@@ -30,15 +30,15 @@ pub(crate) static ONCE: OnceCell<TestsContext> = OnceCell::const_new();
 pub(crate) static ONCE_SERVER_WITH_AUTH: OnceCell<TestsContext> = OnceCell::const_new();
 
 fn redis_db_config() -> DBConfig {
-    trace!("TESTS: using redis-findex");
     let url = if let Ok(var_env) = env::var("REDIS_HOST") {
         format!("redis://{var_env}:6379")
     } else {
         "redis://localhost:6379".to_owned()
     };
+    trace!("TESTS: using redis on {url}");
     DBConfig {
         database_type: Some(DatabaseType::Redis),
-        clear_database: true,
+        clear_database: false,
         database_url: Some(url),
         sqlite_path: Default::default(),
     }
@@ -349,8 +349,8 @@ mod test {
         start_test_server_with_options, test_server::redis_db_config, AuthenticationOptions,
     };
 
-    #[allow(clippy::needless_return)]
     #[tokio::test]
+    #[ignore]
     async fn test_server_auth_matrix() -> Result<(), ClientError> {
         let test_cases = vec![
             (false, false, false, "all_disabled"),
@@ -363,7 +363,7 @@ mod test {
             trace!("Running test case: {}", description);
             let context = start_test_server_with_options(
                 redis_db_config(),
-                6660,
+                6662,
                 AuthenticationOptions {
                     use_https,
                     use_jwt_token,

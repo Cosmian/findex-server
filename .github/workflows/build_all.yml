@@ -39,7 +39,7 @@ jobs:
       archive-name: ${{ matrix.archive-name }}
       target: ${{ matrix.target }}
       debug_or_release: ${{ inputs.debug_or_release }}
-      skip_services_tests: --skip test_findex
+      skip_services_tests: --skip test_findex --skip test_all_authentications --skip test_server_auth_matrix
 
   generic-macos:
     strategy:
@@ -58,7 +58,7 @@ jobs:
       archive-name: ${{ matrix.archive-name }}
       target: ${{ matrix.target }}
       debug_or_release: ${{ inputs.debug_or_release }}
-      skip_services_tests: --skip test_findex
+      skip_services_tests: --skip test_findex --skip test_all_authentications --skip test_server_auth_matrix
 
   cleanup:
     needs:

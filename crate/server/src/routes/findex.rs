@@ -15,24 +15,28 @@ use cloudproof_findex::{
 use tracing::{debug, info, trace};
 
 use crate::{
-    core::{FindexServer, Role},
+    core::{FindexServer, Permission},
     error::server::FindexServerError,
-    routes::error::{Response, ResponseBytes},
+    routes::{
+        error::{Response, ResponseBytes},
+        get_index_id,
+    },
 };
 
-#[post("/indexes/{id}/fetch_entries")]
+#[post("/indexes/{index_id}/fetch_entries")]
 pub(crate) async fn fetch_entries(
     req: HttpRequest,
-    id: web::Path<String>,
+    index_id: web::Path<String>,
     bytes: Bytes,
     findex_server: Data<Arc<FindexServer>>,
 ) -> ResponseBytes {
     let user = findex_server.get_user(&req);
-    info!("user {user}: POST /indexes/{id}/fetch_entries");
+    info!("user {user}: POST /indexes/{index_id}/fetch_entries");
 
-    if findex_server.get_access(&user, &id).await? < Role::Read {
+    // todo(manu): log permission
+    if findex_server.get_permission(&user, &index_id).await? < Permission::Read {
         return Err(FindexServerError::Unauthorized(format!(
-            "User {user} is not allowed to read index {id} (fetch_entries)",
+            "User {user} is not allowed to read index {index_id} (fetch_entries)",
         )));
     }
 
@@ -44,7 +48,7 @@ pub(crate) async fn fetch_entries(
     // Collect into a vector to fix the order.
     let uids_and_values = findex_server
         .db
-        .fetch_entries(&id.into_inner(), tokens)
+        .fetch_entries(&get_index_id(index_id.as_str())?, tokens)
         .await?;
     trace!(
         "fetch_entries: number of uids_and_values: {}:",
@@ -59,19 +63,19 @@ pub(crate) async fn fetch_entries(
         .body(bytes))
 }
 
-#[post("/indexes/{id}/fetch_chains")]
+#[post("/indexes/{index_id}/fetch_chains")]
 pub(crate) async fn fetch_chains(
     req: HttpRequest,
-    id: web::Path<String>,
+    index_id: web::Path<String>,
     bytes: Bytes,
     findex_server: Data<Arc<FindexServer>>,
 ) -> ResponseBytes {
     let user = findex_server.get_user(&req);
-    info!("user {user}: POST /indexes/{id}/fetch_chains");
+    info!("user {user}: POST /indexes/{index_id}/fetch_chains");
 
-    if findex_server.get_access(&user, &id).await? < Role::Read {
+    if findex_server.get_permission(&user, &index_id).await? < Permission::Read {
         return Err(FindexServerError::Unauthorized(format!(
-            "User {user} is not allowed to read index {id} (fetch_chains)",
+            "User {user} is not allowed to read index {index_id} (fetch_chains)",
         )));
     }
 
@@ -81,7 +85,7 @@ pub(crate) async fn fetch_chains(
 
     let uids_and_values = findex_server
         .db
-        .fetch_chains(&id.into_inner(), tokens)
+        .fetch_chains(&get_index_id(index_id.as_str())?, tokens)
         .await?;
     trace!(
         "fetch_chains: number of uids_and_values: {}:",
@@ -95,21 +99,21 @@ pub(crate) async fn fetch_chains(
         .body(bytes))
 }
 
-#[post("/indexes/{id}/upsert_entries")]
+#[post("/indexes/{index_id}/upsert_entries")]
 pub(crate) async fn upsert_entries(
     req: HttpRequest,
-    id: web::Path<String>,
+    index_id: web::Path<String>,
     bytes: Bytes,
     findex_server: Data<Arc<FindexServer>>,
 ) -> ResponseBytes {
     let user = findex_server.get_user(&req);
-    info!("user {user}: POST /indexes/{id}/upsert_entries",);
+    info!("user {user}: POST /indexes/{index_id}/upsert_entries",);
 
-    let user_role = findex_server.get_access(&user, &id).await?;
-    debug!("user {user} has role: {user_role}");
-    if user_role < Role::Write {
+    let user_permission = findex_server.get_permission(&user, &index_id).await?;
+    debug!("user {user} has permission: {user_permission}");
+    if user_permission < Permission::Write {
         return Err(FindexServerError::Unauthorized(format!(
-            "User {user} is not allowed to write on index {id} (upsert_entries)",
+            "User {user} is not allowed to write on index {index_id} (upsert_entries)",
         )));
     }
 
@@ -120,7 +124,7 @@ pub(crate) async fn upsert_entries(
 
     let rejected = findex_server
         .db
-        .upsert_entries(&id.into_inner(), upsert_data)
+        .upsert_entries(&get_index_id(index_id.as_str())?, upsert_data)
         .await?;
 
     let bytes = rejected.serialize()?.to_vec();
@@ -129,19 +133,19 @@ pub(crate) async fn upsert_entries(
         .body(bytes))
 }
 
-#[post("/indexes/{id}/insert_chains")]
+#[post("/indexes/{index_id}/insert_chains")]
 pub(crate) async fn insert_chains(
     req: HttpRequest,
-    id: web::Path<String>,
+    index_id: web::Path<String>,
     bytes: Bytes,
     findex_server: Data<Arc<FindexServer>>,
 ) -> Response<()> {
     let user = findex_server.get_user(&req);
-    info!("user {user}: POST /indexes/{id}/insert_chains",);
+    info!("user {user}: POST /indexes/{index_id}/insert_chains",);
 
-    if findex_server.get_access(&user, &id).await? < Role::Write {
+    if findex_server.get_permission(&user, &index_id).await? < Permission::Write {
         return Err(FindexServerError::Unauthorized(format!(
-            "User {user} is not allowed to write on index {id} (insert_chains)",
+            "User {user} is not allowed to write on index {index_id} (insert_chains)",
         )));
     }
 
@@ -150,25 +154,28 @@ pub(crate) async fn insert_chains(
 
     findex_server
         .db
-        .insert_chains(&id.into_inner(), token_to_value_encrypted_value_map)
+        .insert_chains(
+            &get_index_id(index_id.as_str())?,
+            token_to_value_encrypted_value_map,
+        )
         .await?;
 
     Ok(Json(()))
 }
 
-#[post("/indexes/{id}/delete_entries")]
+#[post("/indexes/{index_id}/delete_entries")]
 pub(crate) async fn delete_entries(
     req: HttpRequest,
-    id: web::Path<String>,
+    index_id: web::Path<String>,
     bytes: Bytes,
     findex_server: Data<Arc<FindexServer>>,
 ) -> Response<()> {
     let user = findex_server.get_user(&req);
-    info!("user {user}: POST /indexes/{id}/delete_entries",);
+    info!("user {user}: POST /indexes/{index_id}/delete_entries",);
 
-    if findex_server.get_access(&user, &id).await? < Role::Write {
+    if findex_server.get_permission(&user, &index_id).await? < Permission::Write {
         return Err(FindexServerError::Unauthorized(format!(
-            "User {user} is not allowed to write on index {id} (delete_entries)",
+            "User {user} is not allowed to write on index {index_id} (delete_entries)",
         )));
     }
 
@@ -178,25 +185,29 @@ pub(crate) async fn delete_entries(
 
     findex_server
         .db
-        .delete(&id.into_inner(), FindexTable::Entry, tokens)
+        .delete(
+            &get_index_id(index_id.as_str())?,
+            FindexTable::Entry,
+            tokens,
+        )
         .await?;
 
     Ok(Json(()))
 }
 
-#[post("/indexes/{id}/delete_chains")]
+#[post("/indexes/{index_id}/delete_chains")]
 pub(crate) async fn delete_chains(
     req: HttpRequest,
-    id: web::Path<String>,
+    index_id: web::Path<String>,
     bytes: Bytes,
     findex_server: Data<Arc<FindexServer>>,
 ) -> Response<()> {
     let user = findex_server.get_user(&req);
-    info!("user {user}: POST /indexes/{id}/delete_chains",);
+    info!("user {user}: POST /indexes/{index_id}/delete_chains",);
 
-    if findex_server.get_access(&user, &id).await? < Role::Write {
+    if findex_server.get_permission(&user, &index_id).await? < Permission::Write {
         return Err(FindexServerError::Unauthorized(format!(
-            "User {user} is not allowed to write on index {id} (delete_chains)",
+            "User {user} is not allowed to write on index {index_id} (delete_chains)",
         )));
     }
 
@@ -206,28 +217,35 @@ pub(crate) async fn delete_chains(
 
     findex_server
         .db
-        .delete(&id.into_inner(), FindexTable::Chain, tokens)
+        .delete(
+            &get_index_id(index_id.as_str())?,
+            FindexTable::Chain,
+            tokens,
+        )
         .await?;
 
     Ok(Json(()))
 }
 
-#[post("/indexes/{id}/dump_tokens")]
+#[post("/indexes/{index_id}/dump_tokens")]
 pub(crate) async fn dump_tokens(
     req: HttpRequest,
-    id: web::Path<String>,
+    index_id: web::Path<String>,
     findex_server: Data<Arc<FindexServer>>,
 ) -> ResponseBytes {
     let user = findex_server.get_user(&req);
-    info!("user {user}: POST /indexes/{id}/dump_tokens");
+    info!("user {user}: POST /indexes/{index_id}/dump_tokens");
 
-    if findex_server.get_access(&user, &id).await? < Role::Read {
+    if findex_server.get_permission(&user, &index_id).await? < Permission::Read {
         return Err(FindexServerError::Unauthorized(format!(
-            "User {user} is not allowed to read index {id} (dump_tokens)",
+            "User {user} is not allowed to read index {index_id} (dump_tokens)",
         )));
     }
 
-    let tokens = findex_server.db.dump_tokens(&id.into_inner()).await?;
+    let tokens = findex_server
+        .db
+        .dump_tokens(&get_index_id(index_id.as_str())?)
+        .await?;
     trace!("dump_tokens: number of tokens: {}:", tokens.len());
 
     let bytes = tokens.serialize()?.to_vec();

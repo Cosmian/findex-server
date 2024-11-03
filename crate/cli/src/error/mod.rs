@@ -45,7 +45,7 @@ pub enum CliError {
     Unauthorized(String),
 
     // A cryptographic error
-    #[error("Cryptographic error: {0}")]
+    #[error("CLI Cryptographic error: {0}")]
     Cryptographic(String),
 
     // Conversion errors

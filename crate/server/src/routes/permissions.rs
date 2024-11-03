@@ -6,11 +6,12 @@ use actix_web::{
     HttpRequest,
 };
 use serde::{Deserialize, Serialize};
-use tracing::{info, trace};
+use tracing::info;
 
 use crate::{
-    core::{FindexServer, Role},
+    core::{FindexServer, Permission},
     error::{result::FResult, server::FindexServerError},
+    routes::get_index_id,
 };
 
 #[derive(Deserialize, Serialize, Debug)] // Debug is required by ok_json()
@@ -27,40 +28,44 @@ pub(crate) async fn create_access(
     info!("user {user}: POST /access/create");
 
     // Check if the user has the right to grant access: only admins can do that
-    let index_id = findex_server.db.create_access(&user).await?;
-    trace!("New access successfully created: {index_id}");
+    let index_id = findex_server.db.create_index_id(&user).await?;
 
     Ok(Json(SuccessResponse {
-        success: format!("New access successfully created: {index_id}"),
+        success: format!("[{user}] New admin access successfully created on index: {index_id}"),
     }))
 }
 
-#[post("/access/grant/{user_id}/{role}/{index_id}")]
+#[post("/access/grant/{user_id}/{permission}/{index_id}")]
 pub(crate) async fn grant_access(
     req: HttpRequest,
     params: web::Path<(String, String, String)>,
     findex_server: Data<Arc<FindexServer>>,
 ) -> FResult<Json<SuccessResponse>> {
     let user = findex_server.get_user(&req);
-    let (user_id, role, index_id) = params.into_inner();
-    info!("user {user}: POST /access/grant/{user_id}/{role}/{index_id}");
+    let (user_id, permission, index_id) = params.into_inner();
+    info!("user {user}: POST /access/grant/{user_id}/{permission}/{index_id}");
 
     // Check if the user has the right to grant access: only admins can do that
-    let user_role = findex_server.get_access(&user, &index_id).await?;
-    if Role::Admin != user_role {
+    let user_permission = findex_server.get_permission(&user, &index_id).await?;
+    if Permission::Admin != user_permission {
         return Err(FindexServerError::Unauthorized(format!(
-            "Delegating access to an index requires an admin role. User {user} with role \
-             {user_role} does not allow granting access to index {index_id} with role {role}",
+            "Delegating access to an index requires an admin permission. User {user} with \
+             permission {user_permission} does not allow granting access to index {index_id} with \
+             permission {permission}",
         )));
     }
 
     findex_server
         .db
-        .grant_access(&user_id, Role::from_str(role.as_str())?, &index_id)
+        .grant_permission(
+            &user_id,
+            Permission::from_str(permission.as_str())?,
+            &get_index_id(&index_id)?,
+        )
         .await?;
 
     Ok(Json(SuccessResponse {
-        success: format!("Access for {user_id} on index {index_id} successfully added"),
+        success: format!("[{user_id}] Access {permission} on index {index_id} successfully added"),
     }))
 }
 
@@ -75,15 +80,18 @@ pub(crate) async fn revoke_access(
     info!("user {user}: POST /access/revoke/{user_id}/{index_id}");
 
     // Check if the user has the right to revoke access: only admins can do that
-    let user_role = findex_server.get_access(&user, &index_id).await?;
-    if Role::Admin != user_role {
+    let user_permission = findex_server.get_permission(&user, &index_id).await?;
+    if Permission::Admin != user_permission {
         return Err(FindexServerError::Unauthorized(format!(
-            "Revoking access to an index requires an admin role. User {user} with role \
-             {user_role} does not allow revoking access to index {index_id}",
+            "Revoking access to an index requires an admin permission. User {user} with \
+             permission {user_permission} does not allow revoking access to index {index_id}",
         )));
     }
 
-    findex_server.db.revoke_access(&user_id).await?;
+    findex_server
+        .db
+        .revoke_permission(&user_id, &get_index_id(&index_id)?)
+        .await?;
 
     Ok(Json(SuccessResponse {
         success: format!("Access for {user_id} on index {index_id} successfully added"),

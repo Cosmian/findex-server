@@ -18,9 +18,9 @@ use redis::{aio::ConnectionManager, pipe, AsyncCommands, Script};
 use tracing::{instrument, trace};
 use uuid::Uuid;
 
-use super::Database;
+use super::{database_trait::Permissions, Database};
 use crate::{
-    core::Role,
+    core::Permission,
     error::{result::FResult, server::FindexServerError},
 };
 
@@ -38,13 +38,8 @@ const CONDITIONAL_UPSERT_SCRIPT: &str = r"
     ";
 
 /// Generate a key for the entry table or chain table
-fn build_key(index_id: &str, table: FindexTable, uid: &[u8]) -> Vec<u8> {
-    [index_id.as_bytes(), &[0x00, u8::from(table)], uid].concat()
-}
-
-#[allow(dead_code)]
-fn build_value(role: Role, index_id: &str) -> Vec<u8> {
-    [&[0x00, u8::from(role)], index_id.as_bytes()].concat()
+fn build_key(index_id: &Uuid, table: FindexTable, uid: &[u8]) -> Vec<u8> {
+    [index_id.as_bytes().as_ref(), &[0x00, u8::from(table)], uid].concat()
 }
 
 #[allow(dead_code)]
@@ -80,7 +75,7 @@ impl Database for Redis {
     #[instrument(ret(Display), err, skip_all)]
     async fn fetch_entries(
         &self,
-        index_id: &str,
+        index_id: &Uuid,
         tokens: Tokens,
     ) -> FResult<TokenWithEncryptedValueList<ENTRY_LENGTH>> {
         trace!("fetch_entries: number of tokens: {}", tokens.len());
@@ -116,7 +111,7 @@ impl Database for Redis {
     #[instrument(ret(Display), err, skip_all)]
     async fn fetch_chains(
         &self,
-        index_id: &str,
+        index_id: &Uuid,
         tokens: Tokens,
     ) -> FResult<TokenWithEncryptedValueList<LINK_LENGTH>> {
         trace!("fetch_chains: number of tokens: {}", tokens.len());
@@ -152,7 +147,7 @@ impl Database for Redis {
     #[instrument(ret(Display), err, skip_all)]
     async fn upsert_entries(
         &self,
-        index_id: &str,
+        index_id: &Uuid,
         upsert_data: UpsertData<ENTRY_LENGTH>,
     ) -> FResult<TokenToEncryptedValueMap<ENTRY_LENGTH>> {
         trace!(
@@ -203,7 +198,7 @@ impl Database for Redis {
     #[instrument(ret, err, skip_all)]
     async fn insert_chains(
         &self,
-        index_id: &str,
+        index_id: &Uuid,
         items: TokenToEncryptedValueMap<LINK_LENGTH>,
     ) -> FResult<()> {
         let mut pipe = pipe();
@@ -219,7 +214,7 @@ impl Database for Redis {
     #[instrument(ret, err, skip_all)]
     async fn delete(
         &self,
-        index_id: &str,
+        index_id: &Uuid,
         findex_table: FindexTable,
         entry_uids: Tokens,
     ) -> FResult<()> {
@@ -236,7 +231,7 @@ impl Database for Redis {
 
     #[instrument(ret(Display), err, skip_all)]
     #[allow(clippy::indexing_slicing)]
-    async fn dump_tokens(&self, index_id: &str) -> FResult<Tokens> {
+    async fn dump_tokens(&self, index_id: &Uuid) -> FResult<Tokens> {
         let keys: Vec<Vec<u8>> = self
             .mgr
             .clone()
@@ -258,55 +253,78 @@ impl Database for Redis {
 
     #[allow(dependency_on_unit_never_type_fallback)]
     #[instrument(ret(Display), err, skip(self))]
-    async fn create_access(&self, user_id: &str) -> FResult<String> {
+    async fn create_index_id(&self, user_id: &str) -> FResult<Uuid> {
+        let uuid = Uuid::new_v4();
         let key = user_id.as_bytes().to_vec();
-        let uuid = Uuid::new_v4().to_string();
-        self.mgr
-            .clone()
-            .set(key, build_value(Role::Admin, uuid.as_str()))
-            .await?;
+        let permissions = (self.get_permissions(user_id).await).map_or_else(
+            |_| Permissions::new(uuid, Permission::Admin),
+            |mut permissions| {
+                permissions.grant_permission(uuid, Permission::Admin);
+                permissions
+            },
+        );
+        self.mgr.clone().set(key, permissions.serialize()).await?;
+
         Ok(uuid)
     }
 
     #[instrument(ret(Display), err, skip(self))]
-    async fn get_access(&self, user_id: &str, index_id: &str) -> FResult<Role> {
+    async fn get_permissions(&self, user_id: &str) -> FResult<Permissions> {
         let key = user_id.as_bytes().to_vec();
         let value: Option<Vec<u8>> = self.mgr.clone().get(key).await?;
-
-        if value.is_none() {
-            return Err(FindexServerError::Unauthorized(format!(
-                "No access for {user_id} since no role found for index {index_id}"
-            )));
-        }
-        trace!("get_access: value: {:?}", value);
+        trace!("get_permissions: value: {:?}", value);
         let serialized_value = value.ok_or_else(|| {
             FindexServerError::Unauthorized(format!(
-                "No access for {user_id} since no role found for index {index_id}"
+                "No access for {user_id} since unwrapping serialized value failed"
             ))
         })?;
-        let role_u8 = serialized_value.get(1).ok_or_else(|| {
-            FindexServerError::Unauthorized(format!(
-                "No access for {user_id} since invalid serialized role found for index {index_id}"
-            ))
+        Permissions::deserialize(&serialized_value)
+    }
+
+    #[allow(dead_code)]
+    #[instrument(ret(Display), err, skip(self))]
+    async fn get_permission(&self, user_id: &str, index_id: &Uuid) -> FResult<Permission> {
+        let permissions = self.get_permissions(user_id).await?;
+        let permission = permissions.get_permission(index_id).ok_or_else(|| {
+            FindexServerError::Unauthorized(format!("No access for {user_id} on index {index_id}"))
         })?;
-        let role = Role::try_from(*role_u8)?;
-        Ok(role)
+
+        Ok(permission)
     }
 
     #[allow(dependency_on_unit_never_type_fallback)]
-    async fn grant_access(&self, user_id: &str, role: Role, index_id: &str) -> FResult<String> {
+    async fn grant_permission(
+        &self,
+        user_id: &str,
+        permission: Permission,
+        index_id: &Uuid,
+    ) -> FResult<()> {
         let key = user_id.as_bytes().to_vec();
-        self.mgr
-            .clone()
-            .set(key, build_value(role, index_id))
-            .await?;
-        Ok(user_id.to_owned())
+        let permissions = match self.get_permissions(user_id).await {
+            Ok(mut permissions) => {
+                permissions.grant_permission(*index_id, permission);
+                permissions
+            }
+            Err(_) => Permissions::new(*index_id, permission),
+        };
+
+        self.mgr.clone().set(key, permissions.serialize()).await?;
+        Ok(())
     }
 
     #[allow(dependency_on_unit_never_type_fallback)]
-    async fn revoke_access(&self, user_id: &str) -> FResult<String> {
+    async fn revoke_permission(&self, user_id: &str, index_id: &Uuid) -> FResult<()> {
         let key = user_id.as_bytes().to_vec();
-        self.mgr.clone().del(key).await?;
-        Ok(user_id.to_owned())
+        match self.get_permissions(user_id).await {
+            Ok(mut permissions) => {
+                permissions.revoke_permission(index_id);
+                self.mgr.clone().set(key, permissions.serialize()).await?;
+            }
+            Err(_) => {
+                trace!("Nothing to revoke since no permission found for index {index_id}");
+            }
+        };
+
+        Ok(())
     }
 }
