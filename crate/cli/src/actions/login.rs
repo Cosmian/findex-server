@@ -12,7 +12,7 @@ use actix_web::{
     App, HttpResponse, HttpServer,
 };
 use clap::Parser;
-use cosmian_findex_client::ClientConf;
+use cosmian_rest_client::ClientConf;
 use oauth2::{
     basic::BasicClient,
     http::{

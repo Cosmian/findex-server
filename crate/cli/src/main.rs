@@ -12,8 +12,8 @@ use cosmian_findex_cli::{
     },
     error::result::CliResult,
 };
-use cosmian_findex_client::ClientConf;
 use cosmian_logger::log_utils::log_init;
+use cosmian_rest_client::ClientConf;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -87,15 +87,15 @@ async fn main_() -> CliResult<()> {
 
         command => {
             let conf = ClientConf::load(&conf_path)?;
-            let findex_rest_client =
+            let rest_client =
                 conf.initialize_findex_client(opts.url.as_deref(), opts.accept_invalid_certs)?;
 
             match command {
-                CliCommands::Add(action) => action.add(findex_rest_client).await?,
-                CliCommands::Delete(action) => action.delete(findex_rest_client).await?,
-                CliCommands::Search(action) => action.process(findex_rest_client).await?,
-                CliCommands::ServerVersion(action) => action.process(findex_rest_client).await?,
-                CliCommands::AccessRights(action) => action.process(findex_rest_client).await?,
+                CliCommands::Add(action) => action.add(rest_client).await?,
+                CliCommands::Delete(action) => action.delete(rest_client).await?,
+                CliCommands::Search(action) => action.process(rest_client).await?,
+                CliCommands::ServerVersion(action) => action.process(rest_client).await?,
+                CliCommands::AccessRights(action) => action.process(rest_client).await?,
                 _ => {
                     tracing::error!("unexpected command");
                 }

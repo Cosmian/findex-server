@@ -7,14 +7,14 @@ use std::{
 };
 
 use actix_server::ServerHandle;
-use cosmian_findex_client::{
-    client_bail, client_error, write_json_object_to_file, ClientConf, ClientError, FindexClient,
-};
 use cosmian_findex_server::{
     config::{
         ClapConfig, DBConfig, DatabaseType, HttpConfig, HttpParams, JwtAuthConfig, ServerParams,
     },
     findex_server::start_findex_server,
+};
+use cosmian_rest_client::{
+    client_bail, client_error, write_json_object_to_file, ClientConf, ClientError, RestClient,
 };
 use tokio::sync::OnceCell;
 use tracing::{info, trace};
@@ -172,7 +172,7 @@ fn start_test_findex_server(
 }
 
 /// Wait for the server to start by reading the version
-async fn wait_for_server_to_start(findex_client: &FindexClient) -> Result<(), ClientError> {
+async fn wait_for_server_to_start(findex_client: &RestClient) -> Result<(), ClientError> {
     // Depending on the running environment, the server could take a bit of time to
     // start We try to query it with a dummy request until be sure it is
     // started.
@@ -342,7 +342,7 @@ fn generate_user_conf(port: u16, owner_client_conf: &ClientConf) -> Result<Strin
 
 #[cfg(test)]
 mod test {
-    use cosmian_findex_client::ClientError;
+    use cosmian_rest_client::ClientError;
     use tracing::trace;
 
     use crate::{

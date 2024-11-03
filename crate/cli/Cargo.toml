@@ -33,7 +33,7 @@ clap = { workspace = true, features = [
   "cargo",
 ] }
 cloudproof_findex = { workspace = true, features = ["rest-interface"] }
-cosmian_findex_client = { path = "../client" }
+cosmian_rest_client = { path = "../client" }
 cosmian_logger = { path = "../logger" }
 csv = "1.3.0"
 der = { workspace = true, features = ["pem"] }

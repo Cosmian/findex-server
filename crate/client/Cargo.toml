@@ -1,5 +1,5 @@
 [package]
-name = "cosmian_findex_client"
+name = "cosmian_rest_client"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true

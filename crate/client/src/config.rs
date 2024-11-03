@@ -17,7 +17,7 @@ use crate::{
         result::{ClientResult, RestClientResultHelper},
         ClientError,
     },
-    FindexClient,
+    RestClient,
 };
 
 /// Returns the path to the current user's home folder.
@@ -290,12 +290,12 @@ impl ClientConf {
         &self,
         findex_server_url: Option<&str>,
         accept_invalid_certs: Option<bool>,
-    ) -> Result<FindexClient, ClientError> {
+    ) -> Result<RestClient, ClientError> {
         let findex_server_url = findex_server_url.unwrap_or(&self.findex_server_url);
         let accept_invalid_certs = accept_invalid_certs.unwrap_or(self.accept_invalid_certs);
 
         // Instantiate a Findex server REST client with the given configuration
-        let findex_rest_client = FindexClient::instantiate(
+        let rest_client = RestClient::instantiate(
             findex_server_url,
             self.findex_access_token.as_deref(),
             self.ssl_client_pkcs12_path.as_deref(),
@@ -306,7 +306,7 @@ impl ClientConf {
             format!("Unable to instantiate a Findex REST client to server at {findex_server_url}")
         })?;
 
-        Ok(findex_rest_client)
+        Ok(rest_client)
     }
 }
 

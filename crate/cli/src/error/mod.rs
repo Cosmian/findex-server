@@ -6,7 +6,7 @@ use cloudproof_findex::{
     db_interfaces::DbInterfaceError,
     reexport::{cosmian_crypto_core::CryptoCoreError, cosmian_findex},
 };
-use cosmian_findex_client::ClientError;
+use cosmian_rest_client::ClientError;
 use hex::FromHexError;
 use pem::PemError;
 use thiserror::Error;

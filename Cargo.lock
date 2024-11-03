@@ -694,6 +694,7 @@ checksum = "1462739cb27611015575c0c11df5df7601141071f07518d56fcc1be504cbec97"
 [[package]]
 name = "cloudproof_findex"
 version = "6.0.2"
+source = "git+https://www.github.com/Cosmian/cloudproof_rust?branch=feat/add_basic_findex_rest_client#cd1649c39d0e0c89e4815aa25f867d11721c4ce5"
 dependencies = [
  "async-trait",
  "base64 0.21.7",
@@ -817,8 +818,8 @@ dependencies = [
  "clap",
  "cloudproof_findex",
  "const-oid",
- "cosmian_findex_client",
  "cosmian_logger",
+ "cosmian_rest_client",
  "csv",
  "der",
  "hex",
@@ -837,23 +838,6 @@ dependencies = [
  "tracing",
  "url",
  "x509-parser",
-]
-
-[[package]]
-name = "cosmian_findex_client"
-version = "0.1.0"
-dependencies = [
- "base64 0.21.7",
- "der",
- "faker_rand",
- "pem",
- "rand",
- "reqwest",
- "serde",
- "serde_json",
- "thiserror",
- "tracing",
- "url",
 ]
 
 [[package]]
@@ -895,6 +879,23 @@ version = "0.1.0"
 dependencies = [
  "tracing",
  "tracing-subscriber",
+]
+
+[[package]]
+name = "cosmian_rest_client"
+version = "0.1.0"
+dependencies = [
+ "base64 0.21.7",
+ "der",
+ "faker_rand",
+ "pem",
+ "rand",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "tracing",
+ "url",
 ]
 
 [[package]]
@@ -3031,9 +3032,9 @@ name = "test_findex_server"
 version = "0.1.0"
 dependencies = [
  "actix-server",
- "cosmian_findex_client",
  "cosmian_findex_server",
  "cosmian_logger",
+ "cosmian_rest_client",
  "criterion",
  "tokio",
  "tracing",

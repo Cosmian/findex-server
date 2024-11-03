@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use clap::Parser;
-use cosmian_findex_client::ClientConf;
+use cosmian_rest_client::ClientConf;
 
 use crate::error::result::CliResult;
 

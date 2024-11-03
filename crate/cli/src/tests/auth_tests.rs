@@ -3,8 +3,8 @@ use std::{path::PathBuf, process::Command};
 
 use assert_cmd::prelude::*;
 use base64::Engine;
-use cosmian_findex_client::FINDEX_CLI_CONF_ENV;
 use cosmian_logger::log_utils::log_init;
+use cosmian_rest_client::FINDEX_CLI_CONF_ENV;
 use tempfile::TempDir;
 use test_findex_server::{
     start_test_server_with_options, AuthenticationOptions, DBConfig, DatabaseType, TestsContext,

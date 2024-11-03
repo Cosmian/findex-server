@@ -18,12 +18,12 @@ use crate::{
 };
 
 #[derive(Clone)]
-pub struct FindexClient {
+pub struct RestClient {
     pub server_url: String,
     pub client: Client,
 }
 
-impl FindexClient {
+impl RestClient {
     /// Instantiate a new Findex REST Client
     /// # Errors
     /// It returns an error if the client cannot be instantiated
@@ -113,7 +113,6 @@ impl FindexClient {
         Err(ClientError::RequestFailed(p))
     }
 
-    // todo(manu): move those function to cli crate
     #[instrument(ret(Display), err, skip(self))]
     pub async fn grant_access(
         &self,

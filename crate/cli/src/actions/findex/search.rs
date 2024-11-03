@@ -1,6 +1,6 @@
 use clap::Parser;
 use cloudproof_findex::reexport::cosmian_findex::{Keyword, Keywords};
-use cosmian_findex_client::FindexClient;
+use cosmian_rest_client::RestClient;
 use tracing::trace;
 
 use super::FindexParameters;
@@ -26,7 +26,7 @@ impl SearchAction {
     ///
     /// # Arguments
     ///
-    /// * `findex_rest_client` - The Findex server client instance used to
+    /// * `rest_client` - The Findex server client instance used to
     ///   communicate with the Findex server server.
     ///
     /// # Errors
@@ -34,9 +34,8 @@ impl SearchAction {
     /// Returns an error if the version query fails or if there is an issue
     /// writing to the console.
     #[allow(clippy::future_not_send)] // todo(manu): to remove this, changes must be done on `findex` repository
-    pub async fn process(&self, findex_rest_client: FindexClient) -> CliResult<()> {
-        let findex =
-            instantiate_findex(findex_rest_client, &self.findex_parameters.index_id).await?;
+    pub async fn process(&self, rest_client: RestClient) -> CliResult<()> {
+        let findex = instantiate_findex(rest_client, &self.findex_parameters.index_id).await?;
         let results = findex
             .search(
                 &self.findex_parameters.user_key()?,

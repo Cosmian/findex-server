@@ -45,8 +45,8 @@ actix-server = { version = "2.5", default-features = false }
 actix-web = { version = "4.9.0", default-features = false }
 base64 = "0.21"
 clap = { version = "4.5", default-features = false }
-cloudproof_findex = { path = "../cloudproof_rust/crates/findex" }
-# cloudproof_findex = { git = "https://www.github.com/Cosmian/cloudproof_rust", branch = "feat/add_basic_findex_rest_client" }
+# cloudproof_findex = { path = "../cloudproof_rust/crates/findex" }
+cloudproof_findex = { git = "https://www.github.com/Cosmian/cloudproof_rust", branch = "feat/add_basic_findex_rest_client" }
 der = { version = "0.7", default-features = false }
 openssl = { version = "0.10", default-features = false }
 pem = "3.0"

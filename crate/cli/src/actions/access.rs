@@ -1,5 +1,5 @@
 use clap::Parser;
-use cosmian_findex_client::FindexClient;
+use cosmian_rest_client::RestClient;
 use tracing::trace;
 
 use crate::{
@@ -20,16 +20,16 @@ impl AccessAction {
     ///
     /// # Arguments
     ///
-    /// * `findex_rest_client` - The Findex client used for the action.
+    /// * `rest_client` - The Findex client used for the action.
     ///
     /// # Errors
     ///
     /// Returns an error if there was a problem running the action.
-    pub async fn process(&self, findex_rest_client: FindexClient) -> CliResult<()> {
+    pub async fn process(&self, rest_client: RestClient) -> CliResult<()> {
         match self {
-            Self::Create(action) => action.run(findex_rest_client).await?,
-            Self::Grant(action) => action.run(findex_rest_client).await?,
-            Self::Revoke(action) => action.run(findex_rest_client).await?,
+            Self::Create(action) => action.run(rest_client).await?,
+            Self::Grant(action) => action.run(rest_client).await?,
+            Self::Revoke(action) => action.run(rest_client).await?,
         };
 
         Ok(())
@@ -50,14 +50,14 @@ impl CreateAccess {
     ///
     /// # Arguments
     ///
-    /// * `findex_rest_client` - A reference to the Findex client used to
+    /// * `rest_client` - A reference to the Findex client used to
     ///   communicate with the Findex server.
     ///
     /// # Errors
     ///
     /// Returns an error if the query execution on the Findex server fails.
-    pub async fn run(&self, findex_rest_client: FindexClient) -> CliResult<String> {
-        let response = findex_rest_client
+    pub async fn run(&self, rest_client: RestClient) -> CliResult<String> {
+        let response = rest_client
             .create_access()
             .await
             .with_context(|| "Can't execute the create access query on the findex server")?;
@@ -96,14 +96,14 @@ impl GrantAccess {
     ///
     /// # Arguments
     ///
-    /// * `findex_rest_client` - A reference to the Findex client used to
+    /// * `rest_client` - A reference to the Findex client used to
     ///   communicate with the Findex server.
     ///
     /// # Errors
     ///
     /// Returns an error if the query execution on the Findex server fails.
-    pub async fn run(&self, findex_rest_client: FindexClient) -> CliResult<String> {
-        let response = findex_rest_client
+    pub async fn run(&self, rest_client: RestClient) -> CliResult<String> {
+        let response = rest_client
             .grant_access(&self.user, &self.role, &self.index_id)
             .await
             .with_context(|| "Can't execute the grant access query on the findex server")?;
@@ -133,14 +133,14 @@ impl RevokeAccess {
     ///
     /// # Arguments
     ///
-    /// * `findex_rest_client` - A reference to the Findex client used to
+    /// * `rest_client` - A reference to the Findex client used to
     ///   communicate with the Findex server.
     ///
     /// # Errors
     ///
     /// Returns an error if the query execution on the Findex server fails.
-    pub async fn run(&self, findex_rest_client: FindexClient) -> CliResult<String> {
-        let response = findex_rest_client
+    pub async fn run(&self, rest_client: RestClient) -> CliResult<String> {
+        let response = rest_client
             .revoke_access(&self.user, &self.index_id)
             .await
             .with_context(|| "Can't execute the revoke access query on the findex server")?;
