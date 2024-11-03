@@ -1,3 +1,11 @@
+use add_or_delete::add_or_delete_cmd;
+use cosmian_logger::log_utils::log_init;
+use search::search_cmd;
+use test_findex_server::{
+    start_default_test_findex_server, start_default_test_findex_server_with_cert_auth,
+};
+use tracing::trace;
+
 use crate::{
     actions::{
         access::{GrantAccess, RevokeAccess},
@@ -6,13 +14,6 @@ use crate::{
     error::result::CliResult,
     tests::access::{create_access_cmd, grant_access_cmd, revoke_access_cmd},
 };
-use add_or_delete::add_or_delete_cmd;
-use cosmian_logger::log_utils::log_init;
-use search::search_cmd;
-use test_findex_server::{
-    start_default_test_findex_server, start_default_test_findex_server_with_cert_auth,
-};
-use tracing::trace;
 
 pub(crate) mod add_or_delete;
 pub(crate) mod search;

@@ -1,6 +1,7 @@
 use actix_web::{HttpMessage, HttpRequest};
 use tracing::{debug, instrument, trace};
 
+use super::Role;
 use crate::{
     config::{DbParams, ServerParams},
     database::{Database, Redis},
@@ -8,8 +9,6 @@ use crate::{
     findex_server_bail,
     middlewares::{JwtAuthClaim, PeerCommonName},
 };
-
-use super::Role;
 
 #[allow(dead_code)]
 pub(crate) struct FindexServer {

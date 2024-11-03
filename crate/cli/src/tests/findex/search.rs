@@ -1,12 +1,14 @@
+use std::process::Command;
+
+use assert_cmd::prelude::*;
+use cosmian_findex_client::FINDEX_CLI_CONF_ENV;
+use tracing::debug;
+
 use crate::{
     actions::findex::search::SearchAction,
     error::{result::CliResult, CliError},
     tests::{utils::recover_cmd_logs, PROG_NAME},
 };
-use assert_cmd::prelude::*;
-use cosmian_findex_client::FINDEX_CLI_CONF_ENV;
-use std::process::Command;
-use tracing::debug;
 
 pub(crate) fn search_cmd(cli_conf_path: &str, action: SearchAction) -> CliResult<String> {
     let mut args = vec![

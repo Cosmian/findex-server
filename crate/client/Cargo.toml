@@ -17,7 +17,6 @@ doctest = false
 [dependencies]
 base64 = { workspace = true }
 der = { workspace = true }
-# log = "0.4"
 pem = { workspace = true }
 reqwest = { workspace = true, features = ["default", "json", "native-tls"] }
 serde = { workspace = true }

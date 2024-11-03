@@ -13,7 +13,6 @@ pub enum AccessAction {
     Create(CreateAccess),
     Grant(GrantAccess),
     Revoke(RevokeAccess),
-    // List(ListAccessesGranted),
 }
 
 impl AccessAction {
@@ -31,7 +30,6 @@ impl AccessAction {
             Self::Create(action) => action.run(findex_rest_client).await?,
             Self::Grant(action) => action.run(findex_rest_client).await?,
             Self::Revoke(action) => action.run(findex_rest_client).await?,
-            // Self::List(action) => action.run(findex_rest_client).await?,
         };
 
         Ok(())
@@ -43,21 +41,26 @@ impl AccessAction {
 pub struct CreateAccess;
 
 impl CreateAccess {
-    /// Create a new Index. Default role is admin.
+    /// Create a new Index with a default `admin` role.
+    ///
+    /// Generates an unique index ID which is returned to the owner.
+    /// This ID will be shared between several users that will be able to:
+    ///   * index new keywords with their own datasets
+    ///   * or search keywords in the index
     ///
     /// # Arguments
     ///
-    /// * `findex_rest_client` - A reference to the Findex client used to communicate with the KMS server.
+    /// * `findex_rest_client` - A reference to the Findex client used to
+    ///   communicate with the Findex server.
     ///
     /// # Errors
     ///
-    /// Returns an error if the query execution on the KMS server fails.
-    ///
+    /// Returns an error if the query execution on the Findex server fails.
     pub async fn run(&self, findex_rest_client: FindexClient) -> CliResult<String> {
         let response = findex_rest_client
             .create_access()
             .await
-            .with_context(|| "Can't execute the create access query on the findex server")?; //todo(manu): rephrase error message
+            .with_context(|| "Can't execute the create access query on the findex server")?;
 
         trace!("cli: New access successfully created: {}", response.success);
         console::Stdout::new(&response.success).write()?;
@@ -68,23 +71,22 @@ impl CreateAccess {
 
 /// Grant access.
 ///
-/// This command can only be called by the owner of the object.
-///
-/// The right is granted for one or multiple supported KMIP operations:
-/// `create`, `get`, `encrypt`, `decrypt`, `import`, `revoke`, `locate`, `rekey`, `destroy`.
-///
-/// Multiple operations must be supplied whitespace separated, such as: 'create get rekey'
+/// This command can only be called by the owner of the index. It allows to
+/// grant:
+/// * `reader` access: the user can only read the index
+/// * `writer` access: the user can read and write the index
+/// * `admin` access: the user can read, write and grant access to the index
 #[derive(Parser, Debug)]
 pub struct GrantAccess {
     /// The user identifier to allow
     #[clap(long, required = true)]
     pub user: String,
 
-    /// The object unique identifier stored in the KMS
+    /// The index ID
     #[clap(long, required = true)]
     pub index_id: String,
 
-    /// The role to grant (`read`, `writer`, `admin`)
+    /// The role to grant (`reader`, `writer`, `admin`)
     #[clap(long, required = true)]
     pub role: String,
 }
@@ -94,12 +96,12 @@ impl GrantAccess {
     ///
     /// # Arguments
     ///
-    /// * `findex_rest_client` - A reference to the Findex client used to communicate with the KMS server.
+    /// * `findex_rest_client` - A reference to the Findex client used to
+    ///   communicate with the Findex server.
     ///
     /// # Errors
     ///
-    /// Returns an error if the query execution on the KMS server fails.
-    ///
+    /// Returns an error if the query execution on the Findex server fails.
     pub async fn run(&self, findex_rest_client: FindexClient) -> CliResult<String> {
         let response = findex_rest_client
             .grant_access(&self.user, &self.role, &self.index_id)
@@ -112,14 +114,9 @@ impl GrantAccess {
     }
 }
 
-/// Revoke another user one or multiple access rights to an object. // todo(manu): rephrase
+/// Revoke user access.
 ///
-/// This command can only be called by the owner of the object.
-///
-/// The right is revoked for one or multiple supported KMIP operations:
-/// `create`, `get`, `encrypt`, `decrypt`, `import`, `revoke`, `locate`, `rekey`, `destroy`
-///
-/// Multiple operations must be supplied whitespace separated, such as: 'create get rekey'
+/// This command can only be called by the owner of the index.
 #[derive(Parser, Debug)]
 pub struct RevokeAccess {
     /// The user identifier to revoke
@@ -136,12 +133,12 @@ impl RevokeAccess {
     ///
     /// # Arguments
     ///
-    /// * `findex_rest_client` - A reference to the Findex client used to communicate with the KMS server.
+    /// * `findex_rest_client` - A reference to the Findex client used to
+    ///   communicate with the Findex server.
     ///
     /// # Errors
     ///
-    /// Returns an error if the query execution on the KMS server fails.
-    ///
+    /// Returns an error if the query execution on the Findex server fails.
     pub async fn run(&self, findex_rest_client: FindexClient) -> CliResult<String> {
         let response = findex_rest_client
             .revoke_access(&self.user, &self.index_id)
@@ -153,43 +150,3 @@ impl RevokeAccess {
         Ok(response.success)
     }
 }
-
-// /// List the access rights granted on an object to other users.
-// ///
-// /// This command can only be called by the owner of the object.
-// /// Returns a list of users and the operations they have been granted access to.
-// #[derive(Parser, Debug)]
-// pub struct ListAccessesGranted {
-//     /// The object unique identifier
-//     #[clap(required = true)]
-//     object_uid: String,
-// }
-
-// impl ListAccessesGranted {
-//     /// Runs the `ListAccessesGranted` action.
-//     ///
-//     /// # Arguments
-//     ///
-//     /// * `findex_rest_client` - A reference to the Findex client used to communicate with the KMS server.
-//     ///
-//     /// # Errors
-//     ///
-//     /// Returns an error if the query execution on the KMS server fails.
-//     ///
-//     pub async fn run(&self, findex_rest_client: &FindexClient) -> CliResult<()> {
-//         let accesses = findex_rest_client
-//             .list_access(&self.object_uid)
-//             .await
-//             .with_context(|| "Can't execute the query on the kms server")?;
-
-//         let stdout = format!(
-//             "The access rights granted on object {} are:",
-//             &self.object_uid
-//         );
-//         let mut stdout = console::Stdout::new(&stdout);
-//         stdout.set_accesses(accesses);
-//         stdout.write()?;
-
-//         Ok(())
-//     }
-// }

@@ -49,7 +49,8 @@ pub(crate) async fn grant_access(
     let user_role = findex_server.get_access(&user, &index_id).await?;
     if Role::Admin != user_role {
         return Err(FindexServerError::Unauthorized(format!(
-            "Delegating access to an index requires an admin role. User {user} with role {user_role} does not allow granting access to index {index_id} with role {role}",
+            "Delegating access to an index requires an admin role. User {user} with role \
+             {user_role} does not allow granting access to index {index_id} with role {role}",
         )));
     }
 
@@ -77,7 +78,8 @@ pub(crate) async fn revoke_access(
     let user_role = findex_server.get_access(&user, &index_id).await?;
     if Role::Admin != user_role {
         return Err(FindexServerError::Unauthorized(format!(
-            "Revoking access to an index requires an admin role. User {user} with role {user_role} does not allow revoking access to index {index_id}",
+            "Revoking access to an index requires an admin role. User {user} with role \
+             {user_role} does not allow revoking access to index {index_id}",
         )));
     }
 

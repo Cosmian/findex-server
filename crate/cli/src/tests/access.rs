@@ -1,13 +1,15 @@
+use std::process::Command;
+
+use assert_cmd::prelude::*;
+use cosmian_findex_client::FINDEX_CLI_CONF_ENV;
+use regex::{Regex, RegexBuilder};
+use tracing::{debug, trace};
+
 use crate::{
     actions::access::{GrantAccess, RevokeAccess},
     error::{result::CliResult, CliError},
     tests::{utils::recover_cmd_logs, PROG_NAME},
 };
-use assert_cmd::prelude::*;
-use cosmian_findex_client::FINDEX_CLI_CONF_ENV;
-use regex::{Regex, RegexBuilder};
-use std::process::Command;
-use tracing::{debug, trace};
 
 /// Extract the `key_uid` (prefixed by a pattern) from a text
 #[allow(clippy::unwrap_used)]

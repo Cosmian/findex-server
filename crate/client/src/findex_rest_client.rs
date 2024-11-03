@@ -5,7 +5,6 @@ use std::{
     time::Duration,
 };
 
-// use log::trace;
 use reqwest::{
     header::{HeaderMap, HeaderValue},
     Client, ClientBuilder, Identity, Response, StatusCode,

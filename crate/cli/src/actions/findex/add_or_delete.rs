@@ -29,14 +29,16 @@ pub struct AddOrDeleteAction {
 }
 
 impl AddOrDeleteAction {
-    /// Converts a CSV file to a hashmap where the keys are indexed values and the values are sets of keywords.
+    /// Converts a CSV file to a hashmap where the keys are indexed values and
+    /// the values are sets of keywords.
     ///
     /// # Errors
     ///
     /// This function will return an error if:
     /// - The CSV file cannot be opened.
     /// - There is an error reading the CSV records.
-    /// - There is an error converting the CSV records to the expected data types.
+    /// - There is an error converting the CSV records to the expected data
+    ///   types.
     #[instrument(ret(Display), err, skip(self))]
     pub(crate) fn csv_to_hashmap(&self) -> CliResult<IndexedValueToKeywordsMap> {
         // read the database
@@ -65,7 +67,8 @@ impl AddOrDeleteAction {
     ///
     /// This function will return an error if:
     /// - There is an error instantiating the Findex client.
-    /// - There is an error retrieving the user key or label from the Findex parameters.
+    /// - There is an error retrieving the user key or label from the Findex
+    ///   parameters.
     /// - There is an error converting the CSV file to a hashmap.
     /// - There is an error adding the data to the Findex index.
     /// - There is an error writing the result to the console.
@@ -92,9 +95,10 @@ impl AddOrDeleteAction {
     ///
     /// This function will return an error if:
     /// - There is an error instantiating the Findex client.
-    /// - There is an error retrieving the user key or label from the Findex parameters.
+    /// - There is an error retrieving the user key or label from the Findex
+    ///   parameters.
     /// - There is an error converting the CSV file to a hashmap.
-    /// - There is an error deleting the data from the Findex index.    pub async fn delete(&self, `findex_rest_client`: `FindexClient`) -> `CliResult`<()> {
+    /// - There is an error deleting the data from the Findex index.
     /// - There is an error writing the result to the console.
     pub async fn delete(&self, findex_rest_client: FindexClient) -> CliResult<()> {
         let keywords = instantiate_findex(findex_rest_client, &self.findex_parameters.index_id)
