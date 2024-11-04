@@ -50,8 +50,8 @@ pub(crate) async fn grant_permission(
     if Permission::Admin != user_permission {
         return Err(FindexServerError::Unauthorized(format!(
             "Delegating permission to an index requires an admin permission. User {user} with \
-             permission {user_permission} does not allow granting permission to index {index_id} with \
-             permission {permission}",
+             permission {user_permission} does not allow granting permission to index {index_id} \
+             with permission {permission}",
         )));
     }
 

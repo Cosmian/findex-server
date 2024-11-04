@@ -42,7 +42,6 @@ fn build_key(index_id: &Uuid, table: FindexTable, uid: &[u8]) -> Vec<u8> {
     [index_id.as_bytes().as_ref(), &[0x00, u8::from(table)], uid].concat()
 }
 
-#[allow(dead_code)]
 pub(crate) struct Redis {
     mgr: ConnectionManager,
     upsert_script: Script,
@@ -282,7 +281,6 @@ impl Database for Redis {
         Permissions::deserialize(&serialized_value)
     }
 
-    #[allow(dead_code)]
     #[instrument(ret(Display), err, skip(self))]
     async fn get_permission(&self, user_id: &str, index_id: &Uuid) -> FResult<Permission> {
         let permissions = self.get_permissions(user_id).await?;

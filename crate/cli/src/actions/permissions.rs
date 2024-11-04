@@ -75,7 +75,8 @@ impl CreateIndex {
 /// grant:
 /// * `read` permission: the user can only read the index
 /// * `write` permission: the user can read and write the index
-/// * `admin` permission: the user can read, write and grant permission to the index
+/// * `admin` permission: the user can read, write and grant permission to the
+///   index
 #[derive(Parser, Debug)]
 pub struct GrantPermission {
     /// The user identifier to allow

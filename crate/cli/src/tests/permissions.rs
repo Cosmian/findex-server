@@ -47,7 +47,6 @@ pub(crate) fn create_index_id_cmd(cli_conf_path: &str) -> CliResult<String> {
     ))
 }
 
-#[allow(dead_code)]
 pub(crate) fn grant_permission_cmd(
     cli_conf_path: &str,
     action: GrantPermission,
@@ -76,7 +75,6 @@ pub(crate) fn grant_permission_cmd(
     ))
 }
 
-#[allow(dead_code)]
 pub(crate) fn revoke_permission_cmd(
     cli_conf_path: &str,
     action: RevokePermission,

@@ -133,6 +133,5 @@ pub(crate) trait Database: Sync + Send {
         index_id: &Uuid,
     ) -> FResult<()>;
 
-    #[allow(dead_code)]
     async fn revoke_permission(&self, user_id: &str, index_id: &Uuid) -> FResult<()>;
 }

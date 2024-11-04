@@ -66,7 +66,6 @@ impl FindexServer {
         user
     }
 
-    #[allow(dead_code)]
     #[instrument(ret(Display), err, skip(self))]
     pub(crate) async fn get_permission(
         &self,
