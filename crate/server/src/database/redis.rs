@@ -15,7 +15,7 @@ use cloudproof_findex::{
     },
 };
 use redis::{aio::ConnectionManager, pipe, AsyncCommands, Script};
-use tracing::{instrument, trace};
+use tracing::{info, instrument, trace};
 use uuid::Uuid;
 
 use super::{database_trait::Permissions, Database};
@@ -54,6 +54,7 @@ impl Redis {
         let mgr = ConnectionManager::new(client).await?;
 
         if clear_database {
+            info!("Warning: Irreversible operation: clearing the database");
             Self::clear_database(mgr.clone()).await?;
         }
         Ok(Self {

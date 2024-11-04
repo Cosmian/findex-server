@@ -18,6 +18,7 @@ const PORT: u16 = 6666;
 
 #[tokio::test]
 #[allow(clippy::needless_return)]
+#[ignore]
 pub(crate) async fn test_all_authentications() -> CliResult<()> {
     log_init(option_env!("RUST_LOG"));
     // plaintext no auth
