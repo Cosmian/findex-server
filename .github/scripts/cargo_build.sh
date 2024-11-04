@@ -29,4 +29,4 @@ cargo build --target $TARGET $RELEASE
 export RUST_LOG="cosmian_findex_cli=trace,cosmian_findex_server=trace,test_findex_server=trace"
 
 # shellcheck disable=SC2086
-cargo test --jobs 1 --target $TARGET $RELEASE --workspace -- --nocapture $SKIP_SERVICES_TESTS
+cargo test --target $TARGET $RELEASE --workspace -- --nocapture $SKIP_SERVICES_TESTS

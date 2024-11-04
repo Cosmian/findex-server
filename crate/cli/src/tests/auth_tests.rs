@@ -17,8 +17,8 @@ use crate::{error::result::CliResult, tests::PROG_NAME};
 const PORT: u16 = 6666;
 
 #[tokio::test]
-#[allow(clippy::needless_return)]
 #[ignore]
+#[allow(clippy::needless_return)]
 pub(crate) async fn test_all_authentications() -> CliResult<()> {
     log_init(option_env!("RUST_LOG"));
     // plaintext no auth
