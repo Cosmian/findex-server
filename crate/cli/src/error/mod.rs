@@ -41,7 +41,7 @@ pub enum CliError {
     ServerError(String),
 
     // Any actions of the user which is not allowed
-    #[error("Access denied: {0}")]
+    #[error("Permission denied: {0}")]
     Unauthorized(String),
 
     // A cryptographic error

@@ -19,38 +19,38 @@ struct SuccessResponse {
     pub success: String,
 }
 
-#[post("/access/create")]
-pub(crate) async fn create_access(
+#[post("/create/index")]
+pub(crate) async fn create_index_id(
     req: HttpRequest,
     findex_server: Data<Arc<FindexServer>>,
 ) -> FResult<Json<SuccessResponse>> {
     let user = findex_server.get_user(&req);
-    info!("user {user}: POST /access/create");
+    info!("user {user}: POST /permission/create");
 
-    // Check if the user has the right to grant access: only admins can do that
+    // Check if the user has the right to grant permission: only admins can do that
     let index_id = findex_server.db.create_index_id(&user).await?;
 
     Ok(Json(SuccessResponse {
-        success: format!("[{user}] New admin access successfully created on index: {index_id}"),
+        success: format!("[{user}] New admin permission successfully created on index: {index_id}"),
     }))
 }
 
-#[post("/access/grant/{user_id}/{permission}/{index_id}")]
-pub(crate) async fn grant_access(
+#[post("/permission/grant/{user_id}/{permission}/{index_id}")]
+pub(crate) async fn grant_permission(
     req: HttpRequest,
     params: web::Path<(String, String, String)>,
     findex_server: Data<Arc<FindexServer>>,
 ) -> FResult<Json<SuccessResponse>> {
     let user = findex_server.get_user(&req);
     let (user_id, permission, index_id) = params.into_inner();
-    info!("user {user}: POST /access/grant/{user_id}/{permission}/{index_id}");
+    info!("user {user}: POST /permission/grant/{user_id}/{permission}/{index_id}");
 
-    // Check if the user has the right to grant access: only admins can do that
+    // Check if the user has the right to grant permission: only admins can do that
     let user_permission = findex_server.get_permission(&user, &index_id).await?;
     if Permission::Admin != user_permission {
         return Err(FindexServerError::Unauthorized(format!(
-            "Delegating access to an index requires an admin permission. User {user} with \
-             permission {user_permission} does not allow granting access to index {index_id} with \
+            "Delegating permission to an index requires an admin permission. User {user} with \
+             permission {user_permission} does not allow granting permission to index {index_id} with \
              permission {permission}",
         )));
     }
@@ -65,26 +65,28 @@ pub(crate) async fn grant_access(
         .await?;
 
     Ok(Json(SuccessResponse {
-        success: format!("[{user_id}] Access {permission} on index {index_id} successfully added"),
+        success: format!(
+            "[{user_id}] permission {permission} on index {index_id} successfully added"
+        ),
     }))
 }
 
-#[post("/access/revoke/{user_id}/{index_id}")]
-pub(crate) async fn revoke_access(
+#[post("/permission/revoke/{user_id}/{index_id}")]
+pub(crate) async fn revoke_permission(
     req: HttpRequest,
     params: web::Path<(String, String)>,
     findex_server: Data<Arc<FindexServer>>,
 ) -> FResult<Json<SuccessResponse>> {
     let user = findex_server.get_user(&req);
     let (user_id, index_id) = params.into_inner();
-    info!("user {user}: POST /access/revoke/{user_id}/{index_id}");
+    info!("user {user}: POST /permission/revoke/{user_id}/{index_id}");
 
-    // Check if the user has the right to revoke access: only admins can do that
+    // Check if the user has the right to revoke permission: only admins can do that
     let user_permission = findex_server.get_permission(&user, &index_id).await?;
     if Permission::Admin != user_permission {
         return Err(FindexServerError::Unauthorized(format!(
-            "Revoking access to an index requires an admin permission. User {user} with \
-             permission {user_permission} does not allow revoking access to index {index_id}",
+            "Revoking permission to an index requires an admin permission. User {user} with \
+             permission {user_permission} does not allow revoking permission to index {index_id}",
         )));
     }
 
@@ -94,6 +96,6 @@ pub(crate) async fn revoke_access(
         .await?;
 
     Ok(Json(SuccessResponse {
-        success: format!("Access for {user_id} on index {index_id} successfully added"),
+        success: format!("Permission for {user_id} on index {index_id} successfully added"),
     }))
 }

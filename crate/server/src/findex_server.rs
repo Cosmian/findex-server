@@ -21,8 +21,8 @@ use crate::{
     findex_server_bail,
     middlewares::{extract_peer_certificate, AuthTransformer, JwksManager, JwtConfig, SslAuth},
     routes::{
-        create_access, delete_chains, delete_entries, dump_tokens, fetch_chains, fetch_entries,
-        get_version, grant_access, insert_chains, revoke_access, upsert_entries,
+        create_index_id, delete_chains, delete_entries, dump_tokens, fetch_chains, fetch_entries,
+        get_version, grant_permission, insert_chains, revoke_permission, upsert_entries,
     },
 };
 
@@ -255,10 +255,10 @@ pub(crate) async fn prepare_findex_server(
             .service(delete_entries)
             .service(delete_chains)
             .service(dump_tokens)
-            // Access rights endpoints
-            .service(create_access)
-            .service(grant_access)
-            .service(revoke_access)
+            // Permissions management endpoints
+            .service(create_index_id)
+            .service(grant_permission)
+            .service(revoke_permission)
             // Version endpoint
             .service(get_version);
 

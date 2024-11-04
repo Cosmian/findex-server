@@ -54,11 +54,13 @@ pub use error::ClientError;
 pub use file_utils::{
     read_bytes_from_file, read_from_json_file, write_bytes_to_file, write_json_object_to_file,
 };
+pub use permission::Permission;
 pub use rest_client::RestClient;
 pub use result::{ClientResultHelper, RestClientResult};
 
 mod config;
 mod error;
 mod file_utils;
+mod permission;
 mod rest_client;
 mod result;

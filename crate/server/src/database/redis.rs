@@ -258,7 +258,7 @@ impl Database for Redis {
         let uuid = Uuid::new_v4();
         let key = user_id.as_bytes().to_vec();
         let permissions = (self.get_permissions(user_id).await).map_or_else(
-            |_| Permissions::new(uuid, Permission::Admin),
+            |_error| Permissions::new(uuid, Permission::Admin),
             |mut permissions| {
                 permissions.grant_permission(uuid, Permission::Admin);
                 permissions
@@ -276,7 +276,7 @@ impl Database for Redis {
         trace!("get_permissions: value: {:?}", value);
         let serialized_value = value.ok_or_else(|| {
             FindexServerError::Unauthorized(format!(
-                "No access for {user_id} since unwrapping serialized value failed"
+                "No permission for {user_id} since unwrapping serialized value failed"
             ))
         })?;
         Permissions::deserialize(&serialized_value)
@@ -287,7 +287,9 @@ impl Database for Redis {
     async fn get_permission(&self, user_id: &str, index_id: &Uuid) -> FResult<Permission> {
         let permissions = self.get_permissions(user_id).await?;
         let permission = permissions.get_permission(index_id).ok_or_else(|| {
-            FindexServerError::Unauthorized(format!("No access for {user_id} on index {index_id}"))
+            FindexServerError::Unauthorized(format!(
+                "No permission for {user_id} on index {index_id}"
+            ))
         })?;
 
         Ok(permission)

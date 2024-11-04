@@ -33,7 +33,7 @@ pub enum FindexServerError {
     ClientConnectionError(String),
 
     // Any actions of the user which is not allowed
-    #[error("Access denied: {0}")]
+    #[error("Permission denied: {0}")]
     Unauthorized(String),
 
     // A failure originating from one of the cryptographic algorithms

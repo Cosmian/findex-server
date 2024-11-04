@@ -38,8 +38,8 @@ impl FromStr for Permission {
 
     fn from_str(s: &str) -> FResult<Self> {
         match s {
-            "reader" => Ok(Self::Read),
-            "writer" => Ok(Self::Write),
+            "read" => Ok(Self::Read),
+            "write" => Ok(Self::Write),
             "admin" => Ok(Self::Admin),
             _ => findex_server_bail!("Invalid permission: {}", s),
         }
@@ -49,8 +49,8 @@ impl FromStr for Permission {
 impl Display for Permission {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let s = match self {
-            Self::Read => "reader",
-            Self::Write => "writer",
+            Self::Read => "read",
+            Self::Write => "write",
             Self::Admin => "admin",
         };
         write!(f, "{s}")
