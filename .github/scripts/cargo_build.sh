@@ -3,9 +3,9 @@
 set -ex
 
 # --- Declare the following variables for tests
-export TARGET=x86_64-unknown-linux-gnu
-export DEBUG_OR_RELEASE=debug
-export SKIP_SERVICES_TESTS="--skip test_redis"
+# export TARGET=x86_64-unknown-linux-gnu
+# export DEBUG_OR_RELEASE=debug
+# export SKIP_SERVICES_TESTS="--skip test_redis"
 
 if [ -z "$TARGET" ]; then
   echo "Error: TARGET is not set."
