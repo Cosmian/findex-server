@@ -126,7 +126,6 @@ pub(crate) trait Database: Sync + Send {
 
     async fn get_permission(&self, user_id: &str, index_id: &Uuid) -> FResult<Permission>;
 
-    #[allow(dead_code)] // todo(manu): to remove
     async fn grant_permission(
         &self,
         user_id: &str,

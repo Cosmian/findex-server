@@ -16,12 +16,28 @@ use tracing::{debug, info, trace};
 
 use crate::{
     core::{FindexServer, Permission},
-    error::server::FindexServerError,
+    error::{result::FResult, server::FindexServerError},
     routes::{
         error::{Response, ResponseBytes},
         get_index_id,
     },
 };
+
+async fn check_permission(
+    user: &str,
+    index_id: &str,
+    expected_permission: Permission,
+    findex_server: &FindexServer,
+) -> FResult<()> {
+    let permission = findex_server.get_permission(user, index_id).await?;
+    debug!("check_permission: user {user} has permission {permission} on index {index_id}");
+    if permission < expected_permission {
+        return Err(FindexServerError::Unauthorized(format!(
+            "User {user} with permission {permission} is not allowed to write on index {index_id}",
+        )));
+    }
+    Ok(())
+}
 
 #[post("/indexes/{index_id}/fetch_entries")]
 pub(crate) async fn fetch_entries(
@@ -33,16 +49,9 @@ pub(crate) async fn fetch_entries(
     let user = findex_server.get_user(&req);
     info!("user {user}: POST /indexes/{index_id}/fetch_entries");
 
-    // todo(manu): log permission
-    if findex_server.get_permission(&user, &index_id).await? < Permission::Read {
-        return Err(FindexServerError::Unauthorized(format!(
-            "User {user} is not allowed to read index {index_id} (fetch_entries)",
-        )));
-    }
+    check_permission(&user, &index_id, Permission::Read, &findex_server).await?;
 
-    let bytes = bytes.into_iter().collect::<Vec<_>>();
-
-    let tokens = deserialize_token_set(&bytes)?;
+    let tokens = deserialize_token_set(&bytes.into_iter().collect::<Vec<_>>())?;
     trace!("fetch_entries: number of tokens: {}:", tokens.len());
 
     // Collect into a vector to fix the order.
@@ -73,14 +82,9 @@ pub(crate) async fn fetch_chains(
     let user = findex_server.get_user(&req);
     info!("user {user}: POST /indexes/{index_id}/fetch_chains");
 
-    if findex_server.get_permission(&user, &index_id).await? < Permission::Read {
-        return Err(FindexServerError::Unauthorized(format!(
-            "User {user} is not allowed to read index {index_id} (fetch_chains)",
-        )));
-    }
+    check_permission(&user, &index_id, Permission::Read, &findex_server).await?;
 
-    let bytes = bytes.into_iter().collect::<Vec<_>>();
-    let tokens = deserialize_token_set(&bytes)?;
+    let tokens = deserialize_token_set(&bytes.into_iter().collect::<Vec<_>>())?;
     trace!("fetch_chains: number of tokens: {}:", tokens.len());
 
     let uids_and_values = findex_server
@@ -109,16 +113,9 @@ pub(crate) async fn upsert_entries(
     let user = findex_server.get_user(&req);
     info!("user {user}: POST /indexes/{index_id}/upsert_entries",);
 
-    let user_permission = findex_server.get_permission(&user, &index_id).await?;
-    debug!("user {user} has permission: {user_permission}");
-    if user_permission < Permission::Write {
-        return Err(FindexServerError::Unauthorized(format!(
-            "User {user} is not allowed to write on index {index_id} (upsert_entries)",
-        )));
-    }
+    check_permission(&user, &index_id, Permission::Write, &findex_server).await?;
 
-    let bytes = bytes.into_iter().collect::<Vec<_>>();
-    let upsert_data = UpsertData::deserialize(&bytes)?;
+    let upsert_data = UpsertData::deserialize(&bytes.into_iter().collect::<Vec<_>>())?;
 
     trace!("upsert_entries: num upsert data: {}", upsert_data.len());
 
@@ -143,14 +140,10 @@ pub(crate) async fn insert_chains(
     let user = findex_server.get_user(&req);
     info!("user {user}: POST /indexes/{index_id}/insert_chains",);
 
-    if findex_server.get_permission(&user, &index_id).await? < Permission::Write {
-        return Err(FindexServerError::Unauthorized(format!(
-            "User {user} is not allowed to write on index {index_id} (insert_chains)",
-        )));
-    }
+    check_permission(&user, &index_id, Permission::Write, &findex_server).await?;
 
-    let bytes = bytes.into_iter().collect::<Vec<_>>();
-    let token_to_value_encrypted_value_map = TokenToEncryptedValueMap::deserialize(&bytes)?;
+    let token_to_value_encrypted_value_map =
+        TokenToEncryptedValueMap::deserialize(&bytes.into_iter().collect::<Vec<_>>())?;
 
     findex_server
         .db
@@ -173,14 +166,9 @@ pub(crate) async fn delete_entries(
     let user = findex_server.get_user(&req);
     info!("user {user}: POST /indexes/{index_id}/delete_entries",);
 
-    if findex_server.get_permission(&user, &index_id).await? < Permission::Write {
-        return Err(FindexServerError::Unauthorized(format!(
-            "User {user} is not allowed to write on index {index_id} (delete_entries)",
-        )));
-    }
+    check_permission(&user, &index_id, Permission::Write, &findex_server).await?;
 
-    let bytes = bytes.into_iter().collect::<Vec<_>>();
-    let tokens = deserialize_token_set(&bytes)?;
+    let tokens = deserialize_token_set(&bytes.into_iter().collect::<Vec<_>>())?;
     trace!("delete_entries: number of tokens: {}:", tokens.len());
 
     findex_server
@@ -205,14 +193,9 @@ pub(crate) async fn delete_chains(
     let user = findex_server.get_user(&req);
     info!("user {user}: POST /indexes/{index_id}/delete_chains",);
 
-    if findex_server.get_permission(&user, &index_id).await? < Permission::Write {
-        return Err(FindexServerError::Unauthorized(format!(
-            "User {user} is not allowed to write on index {index_id} (delete_chains)",
-        )));
-    }
+    check_permission(&user, &index_id, Permission::Write, &findex_server).await?;
 
-    let bytes = bytes.into_iter().collect::<Vec<_>>();
-    let tokens = deserialize_token_set(&bytes)?;
+    let tokens = deserialize_token_set(&bytes.into_iter().collect::<Vec<_>>())?;
     trace!("delete_chains: number of tokens: {}:", tokens.len());
 
     findex_server
@@ -236,11 +219,7 @@ pub(crate) async fn dump_tokens(
     let user = findex_server.get_user(&req);
     info!("user {user}: POST /indexes/{index_id}/dump_tokens");
 
-    if findex_server.get_permission(&user, &index_id).await? < Permission::Read {
-        return Err(FindexServerError::Unauthorized(format!(
-            "User {user} is not allowed to read index {index_id} (dump_tokens)",
-        )));
-    }
+    check_permission(&user, &index_id, Permission::Read, &findex_server).await?;
 
     let tokens = findex_server
         .db

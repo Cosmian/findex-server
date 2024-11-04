@@ -16,7 +16,6 @@ pub mod search;
 
 #[derive(Parser, Debug)]
 #[clap(verbatim_doc_comment)]
-// todo(manu): review global struct exposition
 pub(crate) struct FindexParameters {
     /// The user findex key used (to add, search, delete and compact).
     /// The key is a 16 bytes hex string.

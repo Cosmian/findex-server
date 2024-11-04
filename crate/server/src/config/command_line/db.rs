@@ -12,10 +12,6 @@ pub enum DatabaseType {
     Redis,
 }
 
-// todo(manu): convert toml conf in JSON
-// todo(manu): remove all sqlite support and leftovers
-// todo(manu): support other databases?
-
 pub const DEFAULT_SQLITE_PATH: &str = "./sqlite-data";
 
 /// Configuration for the database
