@@ -38,7 +38,7 @@ fn redis_db_config() -> DBConfig {
     trace!("TESTS: using redis on {url}");
     DBConfig {
         database_type: Some(DatabaseType::Redis),
-        clear_database: true,
+        clear_database: false,
         database_url: Some(url),
         sqlite_path: Default::default(),
     }
@@ -101,7 +101,7 @@ impl TestsContext {
         self.server_handle.stop(false).await;
         self.thread_handle
             .join()
-            .map_err(|_e| client_error!("failed joining th stop thread"))?
+            .map_err(|_e| client_error!("failed joining the stop thread"))?
     }
 }
 
