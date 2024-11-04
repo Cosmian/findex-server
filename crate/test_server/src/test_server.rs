@@ -350,7 +350,6 @@ mod test {
     };
 
     #[tokio::test]
-    #[ignore]
     async fn test_server_auth_matrix() -> Result<(), ClientError> {
         let test_cases = vec![
             (false, false, false, "all_disabled"),
