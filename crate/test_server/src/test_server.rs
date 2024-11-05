@@ -38,7 +38,7 @@ fn redis_db_config() -> DBConfig {
     trace!("TESTS: using redis on {url}");
     DBConfig {
         database_type: Some(DatabaseType::Redis),
-        clear_database: false,
+        clear_database: true,
         database_url: Some(url),
         sqlite_path: Default::default(),
     }
@@ -58,7 +58,7 @@ pub async fn start_default_test_findex_server() -> &'static TestsContext {
     ONCE.get_or_try_init(|| {
         start_test_server_with_options(
             get_db_config(),
-            6660,
+            6666,
             AuthenticationOptions {
                 use_jwt_token: false,
                 use_https: false,
@@ -76,7 +76,7 @@ pub async fn start_default_test_findex_server_with_cert_auth() -> &'static Tests
         .get_or_try_init(|| {
             start_test_server_with_options(
                 get_db_config(),
-                6661,
+                6668,
                 AuthenticationOptions {
                     use_jwt_token: false,
                     use_https: true,
@@ -362,7 +362,7 @@ mod test {
             trace!("Running test case: {}", description);
             let context = start_test_server_with_options(
                 redis_db_config(),
-                6662,
+                6667,
                 AuthenticationOptions {
                     use_https,
                     use_jwt_token,

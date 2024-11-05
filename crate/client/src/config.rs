@@ -106,7 +106,7 @@ impl Default for ClientConf {
     fn default() -> Self {
         Self {
             accept_invalid_certs: false,
-            findex_server_url: "http://0.0.0.0:9998".to_owned(),
+            findex_server_url: "http://0.0.0.0:6666".to_owned(),
             verified_cert: None,
             findex_access_token: None,
             ssl_client_pkcs12_path: None,
@@ -124,7 +124,7 @@ impl Default for ClientConf {
 /// ```json
 /// {
 ///     "accept_invalid_certs": false,
-///     "findex_server_url": "http://127.0.0.1:9998",
+///     "findex_server_url": "http://127.0.0.1:6666",
 ///     "findex_access_token": "AA...AAA",
 ///     "ssl_client_pkcs12_path": "/path/to/client.p12",
 ///     "ssl_client_pkcs12_password": "password"

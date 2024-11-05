@@ -10,7 +10,6 @@ echo "Running tests in an infinite loop"
 while true; do
   reset
   # cargo test --workspace -- --nocapture
-  # shellcheck disable=SC2086
-  # cargo nextest run --workspace --nocapture
+  cargo nextest run --workspace --nocapture
   sleep 1
 done
