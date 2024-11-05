@@ -21,11 +21,10 @@ const PORT: u16 = 6667;
 #[ignore]
 pub(crate) async fn test_all_authentications() -> CliResult<()> {
     log_init(option_env!("RUST_LOG"));
-    let url = if let Ok(var_env) = env::var("REDIS_HOST") {
-        format!("redis://{var_env}:6379")
-    } else {
-        "redis://localhost:6379".to_owned()
-    };
+    let url = env::var("REDIS_HOST").map_or_else(
+        |_| "redis://localhost:6379".to_owned(),
+        |var_env| format!("redis://{var_env}:6379"),
+    );
     trace!("TESTS: using redis on {url}");
     // plaintext no auth
     info!("Testing server with no auth");
