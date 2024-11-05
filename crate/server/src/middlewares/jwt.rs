@@ -40,19 +40,6 @@ pub(crate) struct UserClaim {
     pub google_email: Option<String>,
 }
 
-#[derive(Debug, Deserialize)]
-#[allow(dead_code)]
-pub(crate) struct JwtTokenHeaders {
-    typ: Option<String>,
-    cty: Option<String>,
-    alg: Option<String>,
-    kid: Option<String>,
-    x5t: Option<String>,
-    x5u: Option<String>,
-    x5c: Option<Vec<String>>,
-    crit: Option<String>,
-}
-
 #[derive(Debug)]
 pub(crate) struct JwtConfig {
     pub jwt_issuer_uri: String,

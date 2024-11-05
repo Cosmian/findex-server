@@ -30,12 +30,12 @@ pub(crate) static ONCE: OnceCell<TestsContext> = OnceCell::const_new();
 pub(crate) static ONCE_SERVER_WITH_AUTH: OnceCell<TestsContext> = OnceCell::const_new();
 
 fn redis_db_config() -> DBConfig {
-    trace!("TESTS: using redis-findex");
     let url = if let Ok(var_env) = env::var("REDIS_HOST") {
         format!("redis://{var_env}:6379")
     } else {
         "redis://localhost:6379".to_owned()
     };
+    trace!("TESTS: using redis on {url}");
     DBConfig {
         database_type: Some(DatabaseType::Redis),
         clear_database: true,
@@ -58,7 +58,7 @@ pub async fn start_default_test_findex_server() -> &'static TestsContext {
     ONCE.get_or_try_init(|| {
         start_test_server_with_options(
             get_db_config(),
-            6660,
+            6666,
             AuthenticationOptions {
                 use_jwt_token: false,
                 use_https: false,
@@ -76,7 +76,7 @@ pub async fn start_default_test_findex_server_with_cert_auth() -> &'static Tests
         .get_or_try_init(|| {
             start_test_server_with_options(
                 get_db_config(),
-                6661,
+                6668,
                 AuthenticationOptions {
                     use_jwt_token: false,
                     use_https: true,
@@ -101,7 +101,7 @@ impl TestsContext {
         self.server_handle.stop(false).await;
         self.thread_handle
             .join()
-            .map_err(|_e| client_error!("failed joining th stop thread"))?
+            .map_err(|_e| client_error!("failed joining the stop thread"))?
     }
 }
 
@@ -349,7 +349,6 @@ mod test {
         start_test_server_with_options, test_server::redis_db_config, AuthenticationOptions,
     };
 
-    #[allow(clippy::needless_return)]
     #[tokio::test]
     async fn test_server_auth_matrix() -> Result<(), ClientError> {
         let test_cases = vec![
@@ -363,7 +362,7 @@ mod test {
             trace!("Running test case: {}", description);
             let context = start_test_server_with_options(
                 redis_db_config(),
-                6660,
+                6667,
                 AuthenticationOptions {
                     use_https,
                     use_jwt_token,

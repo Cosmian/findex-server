@@ -14,8 +14,8 @@ impl ServerVersionAction {
     ///
     /// # Arguments
     ///
-    /// * `rest_client` - The Findex server client instance used to
-    ///   communicate with the Findex server server.
+    /// * `rest_client` - The Findex server client instance used to communicate
+    ///   with the Findex server server.
     ///
     /// # Errors
     ///

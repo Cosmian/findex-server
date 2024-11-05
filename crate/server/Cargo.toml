@@ -73,6 +73,6 @@ thiserror = { workspace = true }
 tokio = { workspace = true, features = ["full"] }
 toml = "0.8"
 tracing = { workspace = true }
-uuid = { version = "1.10", features = ["v4"] }
 url = { workspace = true }
+uuid = { workspace = true, features = ["v4"] }
 x509-parser = { workspace = true }

@@ -11,10 +11,11 @@ use reqwest::{
 };
 use serde::{Deserialize, Serialize};
 use tracing::{instrument, trace};
+use uuid::Uuid;
 
 use crate::{
     error::{result::ClientResult, ClientError},
-    ClientResultHelper,
+    ClientResultHelper, Permission,
 };
 
 #[derive(Clone)]
@@ -97,10 +98,10 @@ impl RestClient {
     }
 
     #[instrument(ret(Display), err, skip(self))]
-    pub async fn create_access(&self) -> ClientResult<SuccessResponse> {
-        let endpoint = "/access/create".to_owned();
+    pub async fn create_index_id(&self) -> ClientResult<SuccessResponse> {
+        let endpoint = "/create/index".to_owned();
         let server_url = format!("{}{endpoint}", self.server_url);
-        trace!("POST create_access: {server_url}");
+        trace!("POST create_index_id: {server_url}");
         let response = self.client.post(server_url).send().await?;
         trace!("Response: {response:?}");
         let status_code = response.status();
@@ -114,15 +115,15 @@ impl RestClient {
     }
 
     #[instrument(ret(Display), err, skip(self))]
-    pub async fn grant_access(
+    pub async fn grant_permission(
         &self,
         user_id: &str,
-        role: &str,
-        index_id: &str,
+        permission: &Permission,
+        index_id: &Uuid,
     ) -> ClientResult<SuccessResponse> {
-        let endpoint = format!("/access/grant/{user_id}/{role}/{index_id}");
+        let endpoint = format!("/permission/grant/{user_id}/{permission}/{index_id}");
         let server_url = format!("{}{endpoint}", self.server_url);
-        trace!("POST grant_access: {server_url}");
+        trace!("POST grant_permission: {server_url}");
         let response = self.client.post(server_url).send().await?;
         let status_code = response.status();
         if status_code.is_success() {
@@ -135,14 +136,14 @@ impl RestClient {
     }
 
     #[instrument(ret(Display), err, skip(self))]
-    pub async fn revoke_access(
+    pub async fn revoke_permission(
         &self,
         user_id: &str,
-        index_id: &str,
+        index_id: &Uuid,
     ) -> ClientResult<SuccessResponse> {
-        let endpoint = format!("/access/revoke/{user_id}/{index_id}");
+        let endpoint = format!("/permission/revoke/{user_id}/{index_id}");
         let server_url = format!("{}{endpoint}", self.server_url);
-        trace!("POST revoke_access: {server_url}");
+        trace!("POST revoke_permission: {server_url}");
         let response = self.client.post(server_url).send().await?;
         let status_code = response.status();
         if status_code.is_success() {

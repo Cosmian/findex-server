@@ -5,8 +5,6 @@ use std::{
     path::PathBuf,
 };
 
-// #[cfg(target_os = "linux")]
-// use log::info;
 use serde::{Deserialize, Serialize};
 use tracing::info;
 
@@ -84,23 +82,6 @@ pub struct Oauth2Conf {
     pub scopes: Vec<String>,
 }
 
-/// The configuration that is used by the google command
-/// to perform actions over Gmail API.
-#[derive(Serialize, Deserialize, Eq, PartialEq, Debug, Clone)]
-pub struct GmailApiConf {
-    pub account_type: String,
-    pub project_id: String,
-    pub private_key_id: String,
-    pub private_key: String,
-    pub client_email: String,
-    pub client_id: String,
-    pub auth_uri: String,
-    pub token_uri: String,
-    pub auth_provider_x509_cert_url: String,
-    pub client_x509_cert_url: String,
-    pub universe_domain: String,
-}
-
 #[derive(Serialize, Deserialize, Eq, PartialEq, Debug, Clone)]
 pub struct ClientConf {
     // accept_invalid_certs is useful if the cli needs to connect to an HTTPS Findex server
@@ -125,7 +106,7 @@ impl Default for ClientConf {
     fn default() -> Self {
         Self {
             accept_invalid_certs: false,
-            findex_server_url: "http://0.0.0.0:9998".to_owned(),
+            findex_server_url: "http://0.0.0.0:6666".to_owned(),
             verified_cert: None,
             findex_access_token: None,
             ssl_client_pkcs12_path: None,
@@ -143,7 +124,7 @@ impl Default for ClientConf {
 /// ```json
 /// {
 ///     "accept_invalid_certs": false,
-///     "findex_server_url": "http://127.0.0.1:9998",
+///     "findex_server_url": "http://127.0.0.1:6666",
 ///     "findex_access_token": "AA...AAA",
 ///     "ssl_client_pkcs12_path": "/path/to/client.p12",
 ///     "ssl_client_pkcs12_password": "password"
@@ -294,6 +275,11 @@ impl ClientConf {
         let findex_server_url = findex_server_url.unwrap_or(&self.findex_server_url);
         let accept_invalid_certs = accept_invalid_certs.unwrap_or(self.accept_invalid_certs);
 
+        info!(
+            "Initializing Findex REST client with server URL: {findex_server_url}, \
+             accept_invalid_certs: {accept_invalid_certs}"
+        );
+
         // Instantiate a Findex server REST client with the given configuration
         let rest_client = RestClient::instantiate(
             findex_server_url,
@@ -326,18 +312,13 @@ mod tests {
         let conf_path = ClientConf::location(None).unwrap();
         ClientConf::load(&conf_path).unwrap();
 
-        // another valid conf
-        unsafe {
-            env::set_var(FINDEX_CLI_CONF_ENV, "test_data/configs/findex_partial.json");
-        }
-        let conf_path = ClientConf::location(None).unwrap();
-        ClientConf::load(&conf_path).unwrap();
-
         // Default conf file
         unsafe {
             env::remove_var(FINDEX_CLI_CONF_ENV);
         }
-        fs::remove_file(get_default_conf_path().unwrap()).unwrap();
+        if get_default_conf_path().unwrap().exists() {
+            fs::remove_file(get_default_conf_path().unwrap()).unwrap();
+        }
         let conf_path = ClientConf::location(None).unwrap();
         ClientConf::load(&conf_path).unwrap();
         assert!(get_default_conf_path().unwrap().exists());

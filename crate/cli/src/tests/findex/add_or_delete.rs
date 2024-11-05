@@ -23,7 +23,7 @@ pub(crate) fn add_or_delete_cmd(
         "--label".to_owned(),
         action.findex_parameters.label,
         "--index-id".to_owned(),
-        action.findex_parameters.index_id,
+        action.findex_parameters.index_id.to_string(),
         "--csv".to_owned(),
         action.csv.to_str().unwrap().to_owned(),
     ];

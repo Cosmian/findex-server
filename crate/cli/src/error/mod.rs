@@ -41,11 +41,11 @@ pub enum CliError {
     ServerError(String),
 
     // Any actions of the user which is not allowed
-    #[error("Access denied: {0}")]
+    #[error("Permission denied: {0}")]
     Unauthorized(String),
 
     // A cryptographic error
-    #[error("Cryptographic error: {0}")]
+    #[error("CLI Cryptographic error: {0}")]
     Cryptographic(String),
 
     // Conversion errors
@@ -178,6 +178,12 @@ impl From<DbInterfaceError> for CliError {
 
 impl From<csv::Error> for CliError {
     fn from(e: csv::Error) -> Self {
+        Self::Conversion(e.to_string())
+    }
+}
+
+impl From<uuid::Error> for CliError {
+    fn from(e: uuid::Error) -> Self {
         Self::Conversion(e.to_string())
     }
 }

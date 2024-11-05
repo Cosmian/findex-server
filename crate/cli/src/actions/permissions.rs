@@ -1,22 +1,22 @@
 use clap::Parser;
-use cosmian_rest_client::RestClient;
-use tracing::trace;
+use cosmian_rest_client::{Permission, RestClient};
+use uuid::Uuid;
 
 use crate::{
     actions::console,
     error::result::{CliResult, CliResultHelper},
 };
 
-/// Manage the users' access rights to the indexes
+/// Manage the users permissions to the indexes
 #[derive(Parser, Debug)]
-pub enum AccessAction {
-    Create(CreateAccess),
-    Grant(GrantAccess),
-    Revoke(RevokeAccess),
+pub enum PermissionsAction {
+    Create(CreateIndex),
+    Grant(GrantPermission),
+    Revoke(RevokePermission),
 }
 
-impl AccessAction {
-    /// Processes the access action.
+impl PermissionsAction {
+    /// Processes the permissions action.
     ///
     /// # Arguments
     ///
@@ -36,12 +36,14 @@ impl AccessAction {
     }
 }
 
-/// Create a new access right.
+/// Create a new index. It results on an `admin` permission on a new index.
+///
+/// Users can have 1 permission on multiple indexes
 #[derive(Parser, Debug)]
-pub struct CreateAccess;
+pub struct CreateIndex;
 
-impl CreateAccess {
-    /// Create a new Index with a default `admin` role.
+impl CreateIndex {
+    /// Create a new Index with a default `admin` permission.
     ///
     /// Generates an unique index ID which is returned to the owner.
     /// This ID will be shared between several users that will be able to:
@@ -50,63 +52,62 @@ impl CreateAccess {
     ///
     /// # Arguments
     ///
-    /// * `rest_client` - A reference to the Findex client used to
-    ///   communicate with the Findex server.
+    /// * `rest_client` - A reference to the Findex client used to communicate
+    ///   with the Findex server.
     ///
     /// # Errors
     ///
     /// Returns an error if the query execution on the Findex server fails.
     pub async fn run(&self, rest_client: RestClient) -> CliResult<String> {
         let response = rest_client
-            .create_access()
+            .create_index_id()
             .await
-            .with_context(|| "Can't execute the create access query on the findex server")?;
-
-        trace!("cli: New access successfully created: {}", response.success);
+            .with_context(|| "Can't execute the create index id query on the findex server")?;
+        // should replace the user configuration file
         console::Stdout::new(&response.success).write()?;
 
         Ok(response.success)
     }
 }
 
-/// Grant access.
+/// Grant permission on a index.
 ///
 /// This command can only be called by the owner of the index. It allows to
 /// grant:
-/// * `reader` access: the user can only read the index
-/// * `writer` access: the user can read and write the index
-/// * `admin` access: the user can read, write and grant access to the index
+/// * `read` permission: the user can only read the index
+/// * `write` permission: the user can read and write the index
+/// * `admin` permission: the user can read, write and grant permission to the
+///   index
 #[derive(Parser, Debug)]
-pub struct GrantAccess {
+pub struct GrantPermission {
     /// The user identifier to allow
     #[clap(long, required = true)]
     pub user: String,
 
     /// The index ID
     #[clap(long, required = true)]
-    pub index_id: String,
+    pub index_id: Uuid,
 
-    /// The role to grant (`reader`, `writer`, `admin`)
     #[clap(long, required = true)]
-    pub role: String,
+    pub permission: Permission,
 }
 
-impl GrantAccess {
-    /// Runs the `GrantAccess` action.
+impl GrantPermission {
+    /// Runs the `GrantPermission` action.
     ///
     /// # Arguments
     ///
-    /// * `rest_client` - A reference to the Findex client used to
-    ///   communicate with the Findex server.
+    /// * `rest_client` - A reference to the Findex client used to communicate
+    ///   with the Findex server.
     ///
     /// # Errors
     ///
     /// Returns an error if the query execution on the Findex server fails.
     pub async fn run(&self, rest_client: RestClient) -> CliResult<String> {
         let response = rest_client
-            .grant_access(&self.user, &self.role, &self.index_id)
+            .grant_permission(&self.user, &self.permission, &self.index_id)
             .await
-            .with_context(|| "Can't execute the grant access query on the findex server")?;
+            .with_context(|| "Can't execute the grant permission query on the findex server")?;
 
         console::Stdout::new(&response.success).write()?;
 
@@ -114,36 +115,36 @@ impl GrantAccess {
     }
 }
 
-/// Revoke user access.
+/// Revoke user permission.
 ///
 /// This command can only be called by the owner of the index.
 #[derive(Parser, Debug)]
-pub struct RevokeAccess {
+pub struct RevokePermission {
     /// The user identifier to revoke
     #[clap(long, required = true)]
     pub user: String,
 
     /// The index id
     #[clap(long, required = true)]
-    pub index_id: String,
+    pub index_id: Uuid,
 }
 
-impl RevokeAccess {
-    /// Runs the `RevokeAccess` action.
+impl RevokePermission {
+    /// Runs the `RevokePermission` action.
     ///
     /// # Arguments
     ///
-    /// * `rest_client` - A reference to the Findex client used to
-    ///   communicate with the Findex server.
+    /// * `rest_client` - A reference to the Findex client used to communicate
+    ///   with the Findex server.
     ///
     /// # Errors
     ///
     /// Returns an error if the query execution on the Findex server fails.
     pub async fn run(&self, rest_client: RestClient) -> CliResult<String> {
         let response = rest_client
-            .revoke_access(&self.user, &self.index_id)
+            .revoke_permission(&self.user, &self.index_id)
             .await
-            .with_context(|| "Can't execute the revoke access query on the findex server")?;
+            .with_context(|| "Can't execute the revoke permission query on the findex server")?;
 
         console::Stdout::new(&response.success).write()?;
 

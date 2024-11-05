@@ -15,36 +15,49 @@ use cloudproof_findex::{
 use tracing::{debug, info, trace};
 
 use crate::{
-    core::{FindexServer, Role},
-    error::server::FindexServerError,
-    routes::error::{Response, ResponseBytes},
+    core::{FindexServer, Permission},
+    error::{result::FResult, server::FindexServerError},
+    routes::{
+        error::{Response, ResponseBytes},
+        get_index_id,
+    },
 };
 
-#[post("/indexes/{id}/fetch_entries")]
+async fn check_permission(
+    user: &str,
+    index_id: &str,
+    expected_permission: Permission,
+    findex_server: &FindexServer,
+) -> FResult<()> {
+    let permission = findex_server.get_permission(user, index_id).await?;
+    debug!("check_permission: user {user} has permission {permission} on index {index_id}");
+    if permission < expected_permission {
+        return Err(FindexServerError::Unauthorized(format!(
+            "User {user} with permission {permission} is not allowed to write on index {index_id}",
+        )));
+    }
+    Ok(())
+}
+
+#[post("/indexes/{index_id}/fetch_entries")]
 pub(crate) async fn fetch_entries(
     req: HttpRequest,
-    id: web::Path<String>,
+    index_id: web::Path<String>,
     bytes: Bytes,
     findex_server: Data<Arc<FindexServer>>,
 ) -> ResponseBytes {
     let user = findex_server.get_user(&req);
-    info!("user {user}: POST /indexes/{id}/fetch_entries");
+    info!("user {user}: POST /indexes/{index_id}/fetch_entries");
 
-    if findex_server.get_access(&user, &id).await? < Role::Read {
-        return Err(FindexServerError::Unauthorized(format!(
-            "User {user} is not allowed to read index {id} (fetch_entries)",
-        )));
-    }
+    check_permission(&user, &index_id, Permission::Read, &findex_server).await?;
 
-    let bytes = bytes.into_iter().collect::<Vec<_>>();
-
-    let tokens = deserialize_token_set(&bytes)?;
+    let tokens = deserialize_token_set(&bytes.into_iter().collect::<Vec<_>>())?;
     trace!("fetch_entries: number of tokens: {}:", tokens.len());
 
     // Collect into a vector to fix the order.
     let uids_and_values = findex_server
         .db
-        .fetch_entries(&id.into_inner(), tokens)
+        .fetch_entries(&get_index_id(index_id.as_str())?, tokens)
         .await?;
     trace!(
         "fetch_entries: number of uids_and_values: {}:",
@@ -59,29 +72,24 @@ pub(crate) async fn fetch_entries(
         .body(bytes))
 }
 
-#[post("/indexes/{id}/fetch_chains")]
+#[post("/indexes/{index_id}/fetch_chains")]
 pub(crate) async fn fetch_chains(
     req: HttpRequest,
-    id: web::Path<String>,
+    index_id: web::Path<String>,
     bytes: Bytes,
     findex_server: Data<Arc<FindexServer>>,
 ) -> ResponseBytes {
     let user = findex_server.get_user(&req);
-    info!("user {user}: POST /indexes/{id}/fetch_chains");
+    info!("user {user}: POST /indexes/{index_id}/fetch_chains");
 
-    if findex_server.get_access(&user, &id).await? < Role::Read {
-        return Err(FindexServerError::Unauthorized(format!(
-            "User {user} is not allowed to read index {id} (fetch_chains)",
-        )));
-    }
+    check_permission(&user, &index_id, Permission::Read, &findex_server).await?;
 
-    let bytes = bytes.into_iter().collect::<Vec<_>>();
-    let tokens = deserialize_token_set(&bytes)?;
+    let tokens = deserialize_token_set(&bytes.into_iter().collect::<Vec<_>>())?;
     trace!("fetch_chains: number of tokens: {}:", tokens.len());
 
     let uids_and_values = findex_server
         .db
-        .fetch_chains(&id.into_inner(), tokens)
+        .fetch_chains(&get_index_id(index_id.as_str())?, tokens)
         .await?;
     trace!(
         "fetch_chains: number of uids_and_values: {}:",
@@ -95,32 +103,25 @@ pub(crate) async fn fetch_chains(
         .body(bytes))
 }
 
-#[post("/indexes/{id}/upsert_entries")]
+#[post("/indexes/{index_id}/upsert_entries")]
 pub(crate) async fn upsert_entries(
     req: HttpRequest,
-    id: web::Path<String>,
+    index_id: web::Path<String>,
     bytes: Bytes,
     findex_server: Data<Arc<FindexServer>>,
 ) -> ResponseBytes {
     let user = findex_server.get_user(&req);
-    info!("user {user}: POST /indexes/{id}/upsert_entries",);
+    info!("user {user}: POST /indexes/{index_id}/upsert_entries",);
 
-    let user_role = findex_server.get_access(&user, &id).await?;
-    debug!("user {user} has role: {user_role}");
-    if user_role < Role::Write {
-        return Err(FindexServerError::Unauthorized(format!(
-            "User {user} is not allowed to write on index {id} (upsert_entries)",
-        )));
-    }
+    check_permission(&user, &index_id, Permission::Write, &findex_server).await?;
 
-    let bytes = bytes.into_iter().collect::<Vec<_>>();
-    let upsert_data = UpsertData::deserialize(&bytes)?;
+    let upsert_data = UpsertData::deserialize(&bytes.into_iter().collect::<Vec<_>>())?;
 
     trace!("upsert_entries: num upsert data: {}", upsert_data.len());
 
     let rejected = findex_server
         .db
-        .upsert_entries(&id.into_inner(), upsert_data)
+        .upsert_entries(&get_index_id(index_id.as_str())?, upsert_data)
         .await?;
 
     let bytes = rejected.serialize()?.to_vec();
@@ -129,105 +130,101 @@ pub(crate) async fn upsert_entries(
         .body(bytes))
 }
 
-#[post("/indexes/{id}/insert_chains")]
+#[post("/indexes/{index_id}/insert_chains")]
 pub(crate) async fn insert_chains(
     req: HttpRequest,
-    id: web::Path<String>,
+    index_id: web::Path<String>,
     bytes: Bytes,
     findex_server: Data<Arc<FindexServer>>,
 ) -> Response<()> {
     let user = findex_server.get_user(&req);
-    info!("user {user}: POST /indexes/{id}/insert_chains",);
+    info!("user {user}: POST /indexes/{index_id}/insert_chains",);
 
-    if findex_server.get_access(&user, &id).await? < Role::Write {
-        return Err(FindexServerError::Unauthorized(format!(
-            "User {user} is not allowed to write on index {id} (insert_chains)",
-        )));
-    }
+    check_permission(&user, &index_id, Permission::Write, &findex_server).await?;
 
-    let bytes = bytes.into_iter().collect::<Vec<_>>();
-    let token_to_value_encrypted_value_map = TokenToEncryptedValueMap::deserialize(&bytes)?;
+    let token_to_value_encrypted_value_map =
+        TokenToEncryptedValueMap::deserialize(&bytes.into_iter().collect::<Vec<_>>())?;
 
     findex_server
         .db
-        .insert_chains(&id.into_inner(), token_to_value_encrypted_value_map)
+        .insert_chains(
+            &get_index_id(index_id.as_str())?,
+            token_to_value_encrypted_value_map,
+        )
         .await?;
 
     Ok(Json(()))
 }
 
-#[post("/indexes/{id}/delete_entries")]
+#[post("/indexes/{index_id}/delete_entries")]
 pub(crate) async fn delete_entries(
     req: HttpRequest,
-    id: web::Path<String>,
+    index_id: web::Path<String>,
     bytes: Bytes,
     findex_server: Data<Arc<FindexServer>>,
 ) -> Response<()> {
     let user = findex_server.get_user(&req);
-    info!("user {user}: POST /indexes/{id}/delete_entries",);
+    info!("user {user}: POST /indexes/{index_id}/delete_entries",);
 
-    if findex_server.get_access(&user, &id).await? < Role::Write {
-        return Err(FindexServerError::Unauthorized(format!(
-            "User {user} is not allowed to write on index {id} (delete_entries)",
-        )));
-    }
+    check_permission(&user, &index_id, Permission::Write, &findex_server).await?;
 
-    let bytes = bytes.into_iter().collect::<Vec<_>>();
-    let tokens = deserialize_token_set(&bytes)?;
+    let tokens = deserialize_token_set(&bytes.into_iter().collect::<Vec<_>>())?;
     trace!("delete_entries: number of tokens: {}:", tokens.len());
 
     findex_server
         .db
-        .delete(&id.into_inner(), FindexTable::Entry, tokens)
+        .delete(
+            &get_index_id(index_id.as_str())?,
+            FindexTable::Entry,
+            tokens,
+        )
         .await?;
 
     Ok(Json(()))
 }
 
-#[post("/indexes/{id}/delete_chains")]
+#[post("/indexes/{index_id}/delete_chains")]
 pub(crate) async fn delete_chains(
     req: HttpRequest,
-    id: web::Path<String>,
+    index_id: web::Path<String>,
     bytes: Bytes,
     findex_server: Data<Arc<FindexServer>>,
 ) -> Response<()> {
     let user = findex_server.get_user(&req);
-    info!("user {user}: POST /indexes/{id}/delete_chains",);
+    info!("user {user}: POST /indexes/{index_id}/delete_chains",);
 
-    if findex_server.get_access(&user, &id).await? < Role::Write {
-        return Err(FindexServerError::Unauthorized(format!(
-            "User {user} is not allowed to write on index {id} (delete_chains)",
-        )));
-    }
+    check_permission(&user, &index_id, Permission::Write, &findex_server).await?;
 
-    let bytes = bytes.into_iter().collect::<Vec<_>>();
-    let tokens = deserialize_token_set(&bytes)?;
+    let tokens = deserialize_token_set(&bytes.into_iter().collect::<Vec<_>>())?;
     trace!("delete_chains: number of tokens: {}:", tokens.len());
 
     findex_server
         .db
-        .delete(&id.into_inner(), FindexTable::Chain, tokens)
+        .delete(
+            &get_index_id(index_id.as_str())?,
+            FindexTable::Chain,
+            tokens,
+        )
         .await?;
 
     Ok(Json(()))
 }
 
-#[post("/indexes/{id}/dump_tokens")]
+#[post("/indexes/{index_id}/dump_tokens")]
 pub(crate) async fn dump_tokens(
     req: HttpRequest,
-    id: web::Path<String>,
+    index_id: web::Path<String>,
     findex_server: Data<Arc<FindexServer>>,
 ) -> ResponseBytes {
     let user = findex_server.get_user(&req);
-    info!("user {user}: POST /indexes/{id}/dump_tokens");
+    info!("user {user}: POST /indexes/{index_id}/dump_tokens");
 
-    if findex_server.get_access(&user, &id).await? < Role::Read {
-        return Err(FindexServerError::Unauthorized(format!(
-            "User {user} is not allowed to read index {id} (dump_tokens)",
-        )));
-    }
+    check_permission(&user, &index_id, Permission::Read, &findex_server).await?;
 
-    let tokens = findex_server.db.dump_tokens(&id.into_inner()).await?;
+    let tokens = findex_server
+        .db
+        .dump_tokens(&get_index_id(index_id.as_str())?)
+        .await?;
     trace!("dump_tokens: number of tokens: {}:", tokens.len());
 
     let bytes = tokens.serialize()?.to_vec();

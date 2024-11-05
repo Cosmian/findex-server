@@ -3,11 +3,11 @@ use std::{path::PathBuf, process};
 use clap::{CommandFactory, Parser, Subcommand};
 use cosmian_findex_cli::{
     actions::{
-        access::AccessAction,
         findex::{add_or_delete::AddOrDeleteAction, search::SearchAction},
         login::LoginAction,
         logout::LogoutAction,
         markdown::MarkdownAction,
+        permissions::PermissionsAction,
         version::ServerVersionAction,
     },
     error::result::CliResult,
@@ -51,7 +51,7 @@ enum CliCommands {
     Login(LoginAction),
     Logout(LogoutAction),
     #[command(subcommand)]
-    AccessRights(AccessAction),
+    Permissions(PermissionsAction),
 
     /// Action to auto-generate doc in Markdown format
     /// Run `cargo run --bin findex -- markdown
@@ -95,7 +95,7 @@ async fn main_() -> CliResult<()> {
                 CliCommands::Delete(action) => action.delete(rest_client).await?,
                 CliCommands::Search(action) => action.process(rest_client).await?,
                 CliCommands::ServerVersion(action) => action.process(rest_client).await?,
-                CliCommands::AccessRights(action) => action.process(rest_client).await?,
+                CliCommands::Permissions(action) => action.process(rest_client).await?,
                 _ => {
                     tracing::error!("unexpected command");
                 }
