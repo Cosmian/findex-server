@@ -8,6 +8,7 @@ use cloudproof_findex::{
 };
 use cosmian_rest_client::RestClient;
 use tracing::debug;
+use uuid::Uuid;
 
 use crate::error::result::CliResult;
 
@@ -26,7 +27,7 @@ pub(crate) struct FindexParameters {
     pub label: String,
     /// The index ID
     #[clap(long, short = 'i')]
-    pub index_id: String,
+    pub index_id: Uuid,
 }
 
 impl FindexParameters {
@@ -42,13 +43,13 @@ impl FindexParameters {
 #[allow(clippy::future_not_send)]
 pub(crate) async fn instantiate_findex(
     rest_client: RestClient,
-    index_id: &str,
+    index_id: &Uuid,
 ) -> CliResult<InstantiatedFindex> {
     let config = Configuration::Rest(
         rest_client.client,
         rest_client.server_url.clone(),
         rest_client.server_url,
-        index_id.to_owned(),
+        index_id.to_string(),
     );
     let findex = InstantiatedFindex::new(config).await?;
     debug!("Findex instantiated");

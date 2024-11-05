@@ -11,6 +11,7 @@ use reqwest::{
 };
 use serde::{Deserialize, Serialize};
 use tracing::{instrument, trace};
+use uuid::Uuid;
 
 use crate::{
     error::{result::ClientResult, ClientError},
@@ -118,7 +119,7 @@ impl RestClient {
         &self,
         user_id: &str,
         permission: &Permission,
-        index_id: &str,
+        index_id: &Uuid,
     ) -> ClientResult<SuccessResponse> {
         let endpoint = format!("/permission/grant/{user_id}/{permission}/{index_id}");
         let server_url = format!("{}{endpoint}", self.server_url);
@@ -138,7 +139,7 @@ impl RestClient {
     pub async fn revoke_permission(
         &self,
         user_id: &str,
-        index_id: &str,
+        index_id: &Uuid,
     ) -> ClientResult<SuccessResponse> {
         let endpoint = format!("/permission/revoke/{user_id}/{index_id}");
         let server_url = format!("{}{endpoint}", self.server_url);

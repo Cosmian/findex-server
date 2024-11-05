@@ -4,6 +4,7 @@ use assert_cmd::prelude::*;
 use cosmian_rest_client::FINDEX_CLI_CONF_ENV;
 use regex::{Regex, RegexBuilder};
 use tracing::{debug, trace};
+use uuid::Uuid;
 
 use crate::{
     actions::permissions::{GrantPermission, RevokePermission},
@@ -24,7 +25,7 @@ pub(crate) fn extract_uid<'a>(text: &'a str, pattern: &'a str) -> Option<&'a str
         .and_then(|cap| cap.name("uid").map(|uid| uid.as_str()))
 }
 
-pub(crate) fn create_index_id_cmd(cli_conf_path: &str) -> CliResult<String> {
+pub(crate) fn create_index_id_cmd(cli_conf_path: &str) -> CliResult<Uuid> {
     let mut cmd = Command::cargo_bin(PROG_NAME)?;
     let args = vec!["create".to_owned()];
     cmd.env(FINDEX_CLI_CONF_ENV, cli_conf_path);
@@ -40,7 +41,8 @@ pub(crate) fn create_index_id_cmd(cli_conf_path: &str) -> CliResult<String> {
             "New admin permission successfully created on index",
         )
         .ok_or_else(|| CliError::Default("failed extracting the unique identifier".to_owned()))?;
-        return Ok(unique_identifier.to_owned());
+        let uuid = Uuid::parse_str(unique_identifier)?;
+        return Ok(uuid);
     }
     Err(CliError::Default(
         std::str::from_utf8(&output.stderr)?.to_owned(),
@@ -49,7 +51,7 @@ pub(crate) fn create_index_id_cmd(cli_conf_path: &str) -> CliResult<String> {
 
 pub(crate) fn grant_permission_cmd(
     cli_conf_path: &str,
-    action: GrantPermission,
+    action: &GrantPermission,
 ) -> CliResult<String> {
     let mut cmd = Command::cargo_bin(PROG_NAME)?;
     let args = vec![
@@ -57,7 +59,7 @@ pub(crate) fn grant_permission_cmd(
         "--user".to_owned(),
         action.user.clone(),
         "--index-id".to_owned(),
-        action.index_id,
+        action.index_id.to_string(),
         "--permission".to_owned(),
         action.permission.to_string(),
     ];
@@ -77,7 +79,7 @@ pub(crate) fn grant_permission_cmd(
 
 pub(crate) fn revoke_permission_cmd(
     cli_conf_path: &str,
-    action: RevokePermission,
+    action: &RevokePermission,
 ) -> CliResult<String> {
     let mut cmd = Command::cargo_bin(PROG_NAME)?;
     let args = vec![
@@ -85,7 +87,7 @@ pub(crate) fn revoke_permission_cmd(
         "--user".to_owned(),
         action.user.clone(),
         "--index-id".to_owned(),
-        action.index_id,
+        action.index_id.to_string(),
     ];
     cmd.env(FINDEX_CLI_CONF_ENV, cli_conf_path);
 

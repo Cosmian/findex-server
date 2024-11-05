@@ -182,6 +182,12 @@ impl From<csv::Error> for CliError {
     }
 }
 
+impl From<uuid::Error> for CliError {
+    fn from(e: uuid::Error) -> Self {
+        Self::Conversion(e.to_string())
+    }
+}
+
 /// Return early with an error if a condition is not satisfied.
 ///
 /// This macro is equivalent to `if !$cond { return Err(From::from($err)); }`.

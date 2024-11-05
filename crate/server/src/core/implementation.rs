@@ -11,7 +11,6 @@ use crate::{
     routes::get_index_id,
 };
 
-#[allow(dead_code)]
 pub(crate) struct FindexServer {
     pub(crate) params: ServerParams,
     pub(crate) db: Box<dyn Database + Sync + Send>,

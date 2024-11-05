@@ -18,9 +18,9 @@ use redis::{aio::ConnectionManager, pipe, AsyncCommands, Script};
 use tracing::{info, instrument, trace};
 use uuid::Uuid;
 
-use super::{database_trait::Permissions, Database};
+use super::Database;
 use crate::{
-    core::Permission,
+    core::{Permission, Permissions},
     error::{result::FResult, server::FindexServerError},
 };
 
@@ -62,9 +62,10 @@ impl Redis {
         })
     }
 
-    #[allow(dependency_on_unit_never_type_fallback)]
     pub(crate) async fn clear_database(mgr: ConnectionManager) -> FResult<()> {
-        redis::cmd("FLUSHDB").query_async(&mut mgr.clone()).await?;
+        redis::cmd("FLUSHDB")
+            .query_async::<_, ()>(&mut mgr.clone())
+            .await?;
         Ok(())
     }
 }
@@ -251,7 +252,6 @@ impl Database for Redis {
         Ok(Tokens::from(tokens_set))
     }
 
-    #[allow(dependency_on_unit_never_type_fallback)]
     #[instrument(ret(Display), err, skip(self))]
     async fn create_index_id(&self, user_id: &str) -> FResult<Uuid> {
         let uuid = Uuid::new_v4();
@@ -263,7 +263,10 @@ impl Database for Redis {
                 permissions
             },
         );
-        self.mgr.clone().set(key, permissions.serialize()).await?;
+        self.mgr
+            .clone()
+            .set::<_, _, ()>(key, permissions.serialize())
+            .await?;
 
         Ok(uuid)
     }
@@ -271,6 +274,7 @@ impl Database for Redis {
     #[instrument(ret(Display), err, skip(self))]
     async fn get_permissions(&self, user_id: &str) -> FResult<Permissions> {
         let key = user_id.as_bytes().to_vec();
+
         let value: Option<Vec<u8>> = self.mgr.clone().get(key).await?;
         trace!("get_permissions: value: {:?}", value);
         let serialized_value = value.ok_or_else(|| {
@@ -293,7 +297,7 @@ impl Database for Redis {
         Ok(permission)
     }
 
-    #[allow(dependency_on_unit_never_type_fallback)]
+    #[instrument(ret, err, skip(self))]
     async fn grant_permission(
         &self,
         user_id: &str,
@@ -309,17 +313,30 @@ impl Database for Redis {
             Err(_) => Permissions::new(*index_id, permission),
         };
 
-        self.mgr.clone().set(key, permissions.serialize()).await?;
-        Ok(())
+        self.mgr
+            .clone()
+            .set::<_, _, ()>(key, permissions.serialize())
+            .await
+            .map_err(FindexServerError::from)
+
+        // let mut pipe = pipe();
+        // pipe.set(key, permissions.serialize());
+        // pipe.atomic()
+        //     .query_async(&mut self.mgr.clone())
+        //     .await
+        //     .map_err(FindexServerError::from)
     }
 
-    #[allow(dependency_on_unit_never_type_fallback)]
+    #[instrument(ret, err, skip(self))]
     async fn revoke_permission(&self, user_id: &str, index_id: &Uuid) -> FResult<()> {
         let key = user_id.as_bytes().to_vec();
         match self.get_permissions(user_id).await {
             Ok(mut permissions) => {
                 permissions.revoke_permission(index_id);
-                self.mgr.clone().set(key, permissions.serialize()).await?;
+                self.mgr
+                    .clone()
+                    .set::<_, _, ()>(key, permissions.serialize())
+                    .await?;
             }
             Err(_) => {
                 trace!("Nothing to revoke since no permission found for index {index_id}");

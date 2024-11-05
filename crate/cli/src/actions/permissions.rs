@@ -1,5 +1,6 @@
 use clap::Parser;
 use cosmian_rest_client::{Permission, RestClient};
+use uuid::Uuid;
 
 use crate::{
     actions::console,
@@ -85,7 +86,7 @@ pub struct GrantPermission {
 
     /// The index ID
     #[clap(long, required = true)]
-    pub index_id: String,
+    pub index_id: Uuid,
 
     #[clap(long, required = true)]
     pub permission: Permission,
@@ -125,7 +126,7 @@ pub struct RevokePermission {
 
     /// The index id
     #[clap(long, required = true)]
-    pub index_id: String,
+    pub index_id: Uuid,
 }
 
 impl RevokePermission {

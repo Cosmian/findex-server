@@ -17,7 +17,7 @@ pub(crate) fn search_cmd(cli_conf_path: &str, action: SearchAction) -> CliResult
         "--label".to_owned(),
         action.findex_parameters.label,
         "--index-id".to_owned(),
-        action.findex_parameters.index_id,
+        action.findex_parameters.index_id.to_string(),
     ];
 
     for word in action.keyword {
