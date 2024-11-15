@@ -32,7 +32,7 @@ pub(crate) async fn datasets_add_entries(
 ) -> FResult<Json<SuccessResponse>> {
     let user = findex_server.get_user(&req);
     info!("user {user}: POST /datasets/{index_id}/add_entries");
-    check_permission(&user, &index_id, Permission::Read, &findex_server).await?;
+    check_permission(&user, &index_id, Permission::Write, &findex_server).await?;
 
     let encrypted_entries = EncryptedEntries::deserialize(&bytes.into_iter().collect::<Vec<_>>())?;
     trace!(
@@ -63,7 +63,7 @@ pub(crate) async fn datasets_del_entries(
 ) -> FResult<Json<SuccessResponse>> {
     let user = findex_server.get_user(&req);
     info!("user {user}: POST /datasets/{index_id}/delete_entries");
-    check_permission(&user, &index_id, Permission::Read, &findex_server).await?;
+    check_permission(&user, &index_id, Permission::Write, &findex_server).await?;
 
     let uuids = Uuids::deserialize(&bytes.into_iter().collect::<Vec<_>>())?;
     trace!("delete_entries: number of uuids: {}:", uuids.len());
@@ -89,7 +89,7 @@ pub(crate) async fn datasets_get_entries(
 ) -> ResponseBytes {
     let user = findex_server.get_user(&req);
     info!("user {user}: POST /datasets/{index_id}/get_entries",);
-    check_permission(&user, &index_id, Permission::Write, &findex_server).await?;
+    check_permission(&user, &index_id, Permission::Read, &findex_server).await?;
 
     let uuids = Uuids::deserialize(&bytes.into_iter().collect::<Vec<_>>())?;
     trace!("get_entries: number of uuids: {}:", uuids.len());

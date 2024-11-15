@@ -21,9 +21,7 @@ pub struct DBConfig {
     /// The database type of the Findex server
     /// - sqlite: `SQLite`. The data will be stored at the `sqlite_path`
     ///   directory
-    /// - redis-findex: a Redis database with encrypted data and encrypted
-    ///   indexes thanks to Findex. The Redis url must be provided, as well as
-    ///   the redis-master-password and the redis-findex-label
+    /// - redis: Redis database. The Redis url must be provided
     #[clap(long, env("FINDEX_SERVER_DATABASE_TYPE"), verbatim_doc_comment)]
     pub database_type: Option<DatabaseType>,
 
@@ -31,7 +29,7 @@ pub struct DBConfig {
     #[clap(
         long,
         env = "FINDEX_SERVER_DATABASE_URL",
-        required_if_eq_any([("database_type", "redis-findex")]),
+        required_if_eq_any([("database_type", "redis")]),
         default_value = "redis://localhost:6379"
     )]
     pub database_url: Option<String>,

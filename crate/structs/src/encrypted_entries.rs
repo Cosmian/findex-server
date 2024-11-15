@@ -8,7 +8,7 @@ use base64::{engine::general_purpose, Engine};
 use cloudproof_findex::reexport::cosmian_crypto_core::bytes_ser_de::{Deserializer, Serializer};
 use uuid::Uuid;
 
-use crate::error::result::StructsResult;
+use crate::{error::result::StructsResult, Uuids};
 
 pub(crate) const UUID_LENGTH: usize = 16;
 
@@ -82,6 +82,10 @@ impl EncryptedEntries {
         Self {
             entries: HashMap::new(),
         }
+    }
+
+    pub fn get_uuids(&self) -> Uuids {
+        Uuids::from(self.entries.keys().cloned().collect::<Vec<_>>())
     }
 
     pub fn serialize(&self) -> StructsResult<Vec<u8>> {
