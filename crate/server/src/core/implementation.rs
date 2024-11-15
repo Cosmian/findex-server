@@ -1,7 +1,7 @@
 use actix_web::{HttpMessage, HttpRequest};
+use cosmian_findex_structs::Permission;
 use tracing::{debug, instrument, trace};
 
-use super::Permission;
 use crate::{
     config::{DbParams, ServerParams},
     database::{Database, Redis},

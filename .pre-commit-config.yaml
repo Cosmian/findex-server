@@ -121,7 +121,7 @@ repos:
         args: [--skip-string-normalization]
 
   - repo: https://github.com/Cosmian/git-hooks.git
-    rev: v1.0.31
+    rev: v1.0.32
     hooks:
       # - id: nightly-cargo-format
       - id: cargo-format
@@ -130,7 +130,7 @@ repos:
       # - id: cargo-update
       - id: cargo-machete
       - id: docker-compose-up
-      - id: cargo-build-kms
+      - id: cargo-build-all
       - id: cargo-test
       - id: clippy-autofix-unreachable-pub
       - id: clippy-autofix-all-targets-all-features

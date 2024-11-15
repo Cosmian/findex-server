@@ -5,18 +5,29 @@ use actix_web::{
     web::{self, Data, Json},
     HttpRequest,
 };
-use serde::{Deserialize, Serialize};
-use tracing::info;
+use cosmian_findex_structs::Permission;
+use tracing::{debug, info};
 
 use crate::{
-    core::{FindexServer, Permission},
+    core::FindexServer,
     error::{result::FResult, server::FindexServerError},
-    routes::get_index_id,
+    routes::{error::SuccessResponse, get_index_id},
 };
 
-#[derive(Deserialize, Serialize, Debug)] // Debug is required by ok_json()
-struct SuccessResponse {
-    pub success: String,
+pub(crate) async fn check_permission(
+    user: &str,
+    index_id: &str,
+    expected_permission: Permission,
+    findex_server: &FindexServer,
+) -> FResult<()> {
+    let permission = findex_server.get_permission(user, index_id).await?;
+    debug!("check_permission: user {user} has permission {permission} on index {index_id}");
+    if permission < expected_permission {
+        return Err(FindexServerError::Unauthorized(format!(
+            "User {user} with permission {permission} is not allowed to write on index {index_id}",
+        )));
+    }
+    Ok(())
 }
 
 #[post("/create/index")]

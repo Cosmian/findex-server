@@ -1,7 +1,7 @@
 use std::process::Command;
 
 use assert_cmd::prelude::*;
-use cosmian_rest_client::FINDEX_CLI_CONF_ENV;
+use cosmian_findex_client::reexport::cosmian_findex_config::FINDEX_CLI_CONF_ENV;
 use tracing::debug;
 
 use crate::{

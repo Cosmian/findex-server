@@ -1,11 +1,12 @@
 use std::io;
 
+use cosmian_findex_structs::StructsError;
 use thiserror::Error;
 
 pub(crate) mod result;
 
 #[derive(Error, Debug)]
-pub enum ClientError {
+pub enum FindexClientError {
     #[error(transparent)]
     Base64DecodeError(#[from] base64::DecodeError),
 
@@ -38,56 +39,47 @@ pub enum ClientError {
 
     #[error(transparent)]
     UrlError(#[from] url::ParseError),
-}
 
-impl From<reqwest::Error> for ClientError {
-    fn from(e: reqwest::Error) -> Self {
-        Self::Default(format!("{e}: Details: {e:?}"))
-    }
-}
+    #[error(transparent)]
+    StructsError(#[from] StructsError),
 
-impl From<reqwest::header::InvalidHeaderValue> for ClientError {
-    fn from(e: reqwest::header::InvalidHeaderValue) -> Self {
-        Self::Default(e.to_string())
-    }
-}
+    #[error(transparent)]
+    ReqwestError(#[from] reqwest::Error),
 
-impl From<io::Error> for ClientError {
-    fn from(e: io::Error) -> Self {
-        Self::Default(e.to_string())
-    }
-}
+    #[error(transparent)]
+    ReqwestHeaderError(#[from] reqwest::header::InvalidHeaderValue),
 
-impl From<der::Error> for ClientError {
-    fn from(e: der::Error) -> Self {
-        Self::Default(e.to_string())
-    }
+    #[error(transparent)]
+    IoError(#[from] io::Error),
+
+    #[error(transparent)]
+    DerError(#[from] der::Error),
 }
 
 /// Construct a server error from a string.
 #[macro_export]
-macro_rules! client_error {
+macro_rules! findex_client_error {
     ($msg:literal) => {
-        $crate::ClientError::Default(::core::format_args!($msg).to_string())
+        $crate::FindexClientError::Default(::core::format_args!($msg).to_string())
     };
     ($err:expr $(,)?) => ({
-        $crate::ClientError::Default($err.to_string())
+        $crate::FindexClientError::Default($err.to_string())
     });
     ($fmt:expr, $($arg:tt)*) => {
-        $crate::ClientError::Default(::core::format_args!($fmt, $($arg)*).to_string())
+        $crate::FindexClientError::Default(::core::format_args!($fmt, $($arg)*).to_string())
     };
 }
 
 /// Return early with an error if a condition is not satisfied.
 #[macro_export]
-macro_rules! client_bail {
+macro_rules! findex_client_bail {
     ($msg:literal) => {
-        return ::core::result::Result::Err($crate::client_error!($msg))
+        return ::core::result::Result::Err($crate::findex_client_error!($msg))
     };
     ($err:expr $(,)?) => {
         return ::core::result::Result::Err($err)
     };
     ($fmt:expr, $($arg:tt)*) => {
-        return ::core::result::Result::Err($crate::client_error!($fmt, $($arg)*))
+        return ::core::result::Result::Err($crate::findex_client_error!($fmt, $($arg)*))
     };
 }

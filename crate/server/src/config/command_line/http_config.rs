@@ -3,7 +3,7 @@ use std::{fmt::Display, path::PathBuf};
 use clap::Args;
 use serde::{Deserialize, Serialize};
 
-const DEFAULT_PORT: u16 = 6666;
+const DEFAULT_PORT: u16 = 6668;
 const DEFAULT_HOSTNAME: &str = "0.0.0.0";
 
 #[derive(Args, Clone, Deserialize, Serialize)]

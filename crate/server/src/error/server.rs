@@ -5,6 +5,7 @@ use cloudproof_findex::{
     db_interfaces::DbInterfaceError, reexport::cosmian_findex::CoreError,
     ser_de::SerializationError,
 };
+use cosmian_findex_structs::StructsError;
 use redis::ErrorKind;
 use thiserror::Error;
 use x509_parser::prelude::{PEMError, X509Error};
@@ -50,11 +51,14 @@ pub enum FindexServerError {
     #[error("Findex Error: {0}")]
     Findex(String),
 
-    #[error("Invalid URL: {0}")]
-    UrlError(String),
+    #[error(transparent)]
+    StructsError(#[from] StructsError),
 
-    #[error("Serialization: {0}")]
-    Deserialization(String),
+    #[error(transparent)]
+    SendError(#[from] SendError<ServerHandle>),
+
+    #[error(transparent)]
+    UrlParseError(#[from] url::ParseError),
 }
 
 impl From<x509_parser::nom::Err<X509Error>> for FindexServerError {
@@ -137,12 +141,6 @@ impl From<reqwest::Error> for FindexServerError {
     }
 }
 
-impl From<SendError<ServerHandle>> for FindexServerError {
-    fn from(e: SendError<ServerHandle>) -> Self {
-        Self::ServerError(format!("Failed to send the server handle: {e}"))
-    }
-}
-
 impl From<redis::RedisError> for FindexServerError {
     fn from(err: redis::RedisError) -> Self {
         Self::Redis(err.to_string())
@@ -156,12 +154,6 @@ impl From<FindexServerError> for redis::RedisError {
             "Findex Server Error",
             val.to_string(),
         ))
-    }
-}
-
-impl From<url::ParseError> for FindexServerError {
-    fn from(e: url::ParseError) -> Self {
-        Self::UrlError(e.to_string())
     }
 }
 
@@ -192,6 +184,12 @@ impl From<DbInterfaceError> for FindexServerError {
 impl From<CoreError> for FindexServerError {
     fn from(e: CoreError) -> Self {
         Self::Findex(e.to_string())
+    }
+}
+
+impl From<uuid::Error> for FindexServerError {
+    fn from(e: uuid::Error) -> Self {
+        Self::ConversionError(e.to_string())
     }
 }
 

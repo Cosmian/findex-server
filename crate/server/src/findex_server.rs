@@ -21,8 +21,10 @@ use crate::{
     findex_server_bail,
     middlewares::{extract_peer_certificate, AuthTransformer, JwksManager, JwtConfig, SslAuth},
     routes::{
-        create_index_id, delete_chains, delete_entries, dump_tokens, fetch_chains, fetch_entries,
-        get_version, grant_permission, insert_chains, revoke_permission, upsert_entries,
+        create_index_id, datasets_add_entries, datasets_del_entries, datasets_get_entries,
+        findex_delete_chains, findex_delete_entries, findex_dump_tokens, findex_fetch_chains,
+        findex_fetch_entries, findex_insert_chains, findex_upsert_entries, get_version,
+        grant_permission, revoke_permission,
     },
 };
 
@@ -248,17 +250,21 @@ pub(crate) async fn prepare_findex_server(
             // preflight (OPTION) requests.
             .wrap(Cors::permissive())
             // Findex endpoints
-            .service(fetch_entries)
-            .service(fetch_chains)
-            .service(upsert_entries)
-            .service(insert_chains)
-            .service(delete_entries)
-            .service(delete_chains)
-            .service(dump_tokens)
+            .service(findex_fetch_entries)
+            .service(findex_fetch_chains)
+            .service(findex_upsert_entries)
+            .service(findex_insert_chains)
+            .service(findex_delete_entries)
+            .service(findex_delete_chains)
+            .service(findex_dump_tokens)
             // Permissions management endpoints
             .service(create_index_id)
             .service(grant_permission)
             .service(revoke_permission)
+            // Dataset management
+            .service(datasets_add_entries)
+            .service(datasets_del_entries)
+            .service(datasets_get_entries)
             // Version endpoint
             .service(get_version);
 

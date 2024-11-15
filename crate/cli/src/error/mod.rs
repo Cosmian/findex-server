@@ -6,7 +6,10 @@ use cloudproof_findex::{
     db_interfaces::DbInterfaceError,
     reexport::{cosmian_crypto_core::CryptoCoreError, cosmian_findex},
 };
-use cosmian_rest_client::ClientError;
+use cosmian_findex_client::{
+    reexport::{cosmian_findex_config::FindexConfigError, cosmian_http_client::HttpClientError},
+    FindexClientError,
+};
 use hex::FromHexError;
 use pem::PemError;
 use thiserror::Error;
@@ -54,7 +57,7 @@ pub enum CliError {
 
     // When the Findex server client returns an error
     #[error("{0}")]
-    KmsClientError(String),
+    FindexClientError(String),
 
     // Other errors
     #[error("invalid options: {0}")]
@@ -71,6 +74,9 @@ pub enum CliError {
     // When an error occurs fetching Gmail API
     #[error("Error interacting with Gmail API: {0}")]
     GmailApiError(String),
+
+    #[error(transparent)]
+    ConfigError(#[from] FindexConfigError),
 }
 
 impl From<der::Error> for CliError {
@@ -140,9 +146,9 @@ impl From<FromHexError> for CliError {
     }
 }
 
-impl From<ClientError> for CliError {
-    fn from(e: ClientError) -> Self {
-        Self::KmsClientError(e.to_string())
+impl From<FindexClientError> for CliError {
+    fn from(e: FindexClientError) -> Self {
+        Self::FindexClientError(e.to_string())
     }
 }
 
@@ -185,6 +191,12 @@ impl From<csv::Error> for CliError {
 impl From<uuid::Error> for CliError {
     fn from(e: uuid::Error) -> Self {
         Self::Conversion(e.to_string())
+    }
+}
+
+impl From<HttpClientError> for CliError {
+    fn from(e: HttpClientError) -> Self {
+        Self::FindexClientError(e.to_string())
     }
 }
 

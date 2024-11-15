@@ -12,35 +12,20 @@ use cloudproof_findex::{
     },
     ser_de::ffi_ser_de::deserialize_token_set,
 };
-use tracing::{debug, info, trace};
+use cosmian_findex_structs::Permission;
+use tracing::{info, trace};
 
 use crate::{
-    core::{FindexServer, Permission},
-    error::{result::FResult, server::FindexServerError},
+    core::FindexServer,
     routes::{
+        check_permission,
         error::{Response, ResponseBytes},
         get_index_id,
     },
 };
 
-async fn check_permission(
-    user: &str,
-    index_id: &str,
-    expected_permission: Permission,
-    findex_server: &FindexServer,
-) -> FResult<()> {
-    let permission = findex_server.get_permission(user, index_id).await?;
-    debug!("check_permission: user {user} has permission {permission} on index {index_id}");
-    if permission < expected_permission {
-        return Err(FindexServerError::Unauthorized(format!(
-            "User {user} with permission {permission} is not allowed to write on index {index_id}",
-        )));
-    }
-    Ok(())
-}
-
 #[post("/indexes/{index_id}/fetch_entries")]
-pub(crate) async fn fetch_entries(
+pub(crate) async fn findex_fetch_entries(
     req: HttpRequest,
     index_id: web::Path<String>,
     bytes: Bytes,
@@ -57,7 +42,7 @@ pub(crate) async fn fetch_entries(
     // Collect into a vector to fix the order.
     let uids_and_values = findex_server
         .db
-        .fetch_entries(&get_index_id(index_id.as_str())?, tokens)
+        .findex_fetch_entries(&get_index_id(index_id.as_str())?, tokens)
         .await?;
     trace!(
         "fetch_entries: number of uids_and_values: {}:",
@@ -73,7 +58,7 @@ pub(crate) async fn fetch_entries(
 }
 
 #[post("/indexes/{index_id}/fetch_chains")]
-pub(crate) async fn fetch_chains(
+pub(crate) async fn findex_fetch_chains(
     req: HttpRequest,
     index_id: web::Path<String>,
     bytes: Bytes,
@@ -89,7 +74,7 @@ pub(crate) async fn fetch_chains(
 
     let uids_and_values = findex_server
         .db
-        .fetch_chains(&get_index_id(index_id.as_str())?, tokens)
+        .findex_fetch_chains(&get_index_id(index_id.as_str())?, tokens)
         .await?;
     trace!(
         "fetch_chains: number of uids_and_values: {}:",
@@ -104,7 +89,7 @@ pub(crate) async fn fetch_chains(
 }
 
 #[post("/indexes/{index_id}/upsert_entries")]
-pub(crate) async fn upsert_entries(
+pub(crate) async fn findex_upsert_entries(
     req: HttpRequest,
     index_id: web::Path<String>,
     bytes: Bytes,
@@ -121,7 +106,7 @@ pub(crate) async fn upsert_entries(
 
     let rejected = findex_server
         .db
-        .upsert_entries(&get_index_id(index_id.as_str())?, upsert_data)
+        .findex_upsert_entries(&get_index_id(index_id.as_str())?, upsert_data)
         .await?;
 
     let bytes = rejected.serialize()?.to_vec();
@@ -131,7 +116,7 @@ pub(crate) async fn upsert_entries(
 }
 
 #[post("/indexes/{index_id}/insert_chains")]
-pub(crate) async fn insert_chains(
+pub(crate) async fn findex_insert_chains(
     req: HttpRequest,
     index_id: web::Path<String>,
     bytes: Bytes,
@@ -147,7 +132,7 @@ pub(crate) async fn insert_chains(
 
     findex_server
         .db
-        .insert_chains(
+        .findex_insert_chains(
             &get_index_id(index_id.as_str())?,
             token_to_value_encrypted_value_map,
         )
@@ -157,7 +142,7 @@ pub(crate) async fn insert_chains(
 }
 
 #[post("/indexes/{index_id}/delete_entries")]
-pub(crate) async fn delete_entries(
+pub(crate) async fn findex_delete_entries(
     req: HttpRequest,
     index_id: web::Path<String>,
     bytes: Bytes,
@@ -173,7 +158,7 @@ pub(crate) async fn delete_entries(
 
     findex_server
         .db
-        .delete(
+        .findex_delete(
             &get_index_id(index_id.as_str())?,
             FindexTable::Entry,
             tokens,
@@ -184,7 +169,7 @@ pub(crate) async fn delete_entries(
 }
 
 #[post("/indexes/{index_id}/delete_chains")]
-pub(crate) async fn delete_chains(
+pub(crate) async fn findex_delete_chains(
     req: HttpRequest,
     index_id: web::Path<String>,
     bytes: Bytes,
@@ -200,7 +185,7 @@ pub(crate) async fn delete_chains(
 
     findex_server
         .db
-        .delete(
+        .findex_delete(
             &get_index_id(index_id.as_str())?,
             FindexTable::Chain,
             tokens,
@@ -211,7 +196,7 @@ pub(crate) async fn delete_chains(
 }
 
 #[post("/indexes/{index_id}/dump_tokens")]
-pub(crate) async fn dump_tokens(
+pub(crate) async fn findex_dump_tokens(
     req: HttpRequest,
     index_id: web::Path<String>,
     findex_server: Data<Arc<FindexServer>>,
@@ -223,7 +208,7 @@ pub(crate) async fn dump_tokens(
 
     let tokens = findex_server
         .db
-        .dump_tokens(&get_index_id(index_id.as_str())?)
+        .findex_dump_tokens(&get_index_id(index_id.as_str())?)
         .await?;
     trace!("dump_tokens: number of tokens: {}:", tokens.len());
 

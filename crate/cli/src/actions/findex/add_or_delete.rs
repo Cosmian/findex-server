@@ -8,7 +8,7 @@ use clap::Parser;
 use cloudproof_findex::reexport::cosmian_findex::{
     Data, IndexedValue, IndexedValueToKeywordsMap, Keyword,
 };
-use cosmian_rest_client::RestClient;
+use cosmian_findex_client::FindexClient;
 use tracing::{instrument, trace};
 
 use super::FindexParameters;
@@ -72,7 +72,7 @@ impl AddOrDeleteAction {
     /// - There is an error converting the CSV file to a hashmap.
     /// - There is an error adding the data to the Findex index.
     /// - There is an error writing the result to the console.
-    pub async fn add(&self, rest_client: RestClient) -> CliResult<()> {
+    pub async fn add(&self, rest_client: FindexClient) -> CliResult<()> {
         let keywords = instantiate_findex(rest_client, &self.findex_parameters.index_id)
             .await?
             .add(
@@ -100,7 +100,7 @@ impl AddOrDeleteAction {
     /// - There is an error converting the CSV file to a hashmap.
     /// - There is an error deleting the data from the Findex index.
     /// - There is an error writing the result to the console.
-    pub async fn delete(&self, rest_client: RestClient) -> CliResult<()> {
+    pub async fn delete(&self, rest_client: FindexClient) -> CliResult<()> {
         let keywords = instantiate_findex(rest_client, &self.findex_parameters.index_id)
             .await?
             .delete(

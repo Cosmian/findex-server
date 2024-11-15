@@ -1,3 +1,5 @@
+#![allow(clippy::blocks_in_conditions)] //todo(manu): fix it
+
 use std::{
     collections::{HashMap, HashSet},
     convert::TryFrom,
@@ -14,15 +16,13 @@ use cloudproof_findex::{
         Tokens, ENTRY_LENGTH, LINK_LENGTH,
     },
 };
+use cosmian_findex_structs::{EncryptedEntries, Permission, Permissions, Uuids};
 use redis::{aio::ConnectionManager, pipe, AsyncCommands, Script};
 use tracing::{info, instrument, trace};
 use uuid::Uuid;
 
 use super::Database;
-use crate::{
-    core::{Permission, Permissions},
-    error::{result::FResult, server::FindexServerError},
-};
+use crate::error::{result::FResult, server::FindexServerError};
 
 /// The conditional upsert script used to only update a table if the
 /// indexed value matches ARGV[2]. When the value does not match, the
@@ -41,12 +41,17 @@ const CONDITIONAL_UPSERT_SCRIPT: &str = r"
 fn build_key(index_id: &Uuid, table: FindexTable, uid: &[u8]) -> Vec<u8> {
     [index_id.as_bytes().as_ref(), &[0x00, u8::from(table)], uid].concat()
 }
+/// Generate a key for the dataset table
+fn build_dataset_key(index_id: &Uuid, uid: &Uuid) -> Vec<u8> {
+    [index_id.as_bytes().as_ref(), uid.as_bytes().as_ref()].concat()
+}
 
 pub(crate) struct Redis {
     mgr: ConnectionManager,
     upsert_script: Script,
 }
 
+//todo(manu):  move all test_data in root folder
 impl Redis {
     pub(crate) async fn instantiate(redis_url: &str, clear_database: bool) -> FResult<Self> {
         let client = redis::Client::open(redis_url)?;
@@ -74,7 +79,7 @@ impl Redis {
 impl Database for Redis {
     // todo(manu): merge the 2 fetch
     #[instrument(ret(Display), err, skip_all)]
-    async fn fetch_entries(
+    async fn findex_fetch_entries(
         &self,
         index_id: &Uuid,
         tokens: Tokens,
@@ -104,13 +109,11 @@ impl Database for Redis {
             .collect::<Result<Vec<_>, CoreError>>()?;
         trace!("fetch_entries: non empty tuples len: {}", res.len());
 
-        let result: TokenWithEncryptedValueList<ENTRY_LENGTH> = res.into();
-
-        Ok(result)
+        Ok(res.into())
     }
 
     #[instrument(ret(Display), err, skip_all)]
-    async fn fetch_chains(
+    async fn findex_fetch_chains(
         &self,
         index_id: &Uuid,
         tokens: Tokens,
@@ -146,7 +149,7 @@ impl Database for Redis {
     }
 
     #[instrument(ret(Display), err, skip_all)]
-    async fn upsert_entries(
+    async fn findex_upsert_entries(
         &self,
         index_id: &Uuid,
         upsert_data: UpsertData<ENTRY_LENGTH>,
@@ -197,7 +200,7 @@ impl Database for Redis {
     }
 
     #[instrument(ret, err, skip_all)]
-    async fn insert_chains(
+    async fn findex_insert_chains(
         &self,
         index_id: &Uuid,
         items: TokenToEncryptedValueMap<LINK_LENGTH>,
@@ -213,7 +216,7 @@ impl Database for Redis {
     }
 
     #[instrument(ret, err, skip_all)]
-    async fn delete(
+    async fn findex_delete(
         &self,
         index_id: &Uuid,
         findex_table: FindexTable,
@@ -232,7 +235,7 @@ impl Database for Redis {
 
     #[instrument(ret(Display), err, skip_all)]
     #[allow(clippy::indexing_slicing)]
-    async fn dump_tokens(&self, index_id: &Uuid) -> FResult<Tokens> {
+    async fn findex_dump_tokens(&self, index_id: &Uuid) -> FResult<Tokens> {
         let keys: Vec<Vec<u8>> = self
             .mgr
             .clone()
@@ -282,7 +285,7 @@ impl Database for Redis {
                 "No permission for {user_id} since unwrapping serialized value failed"
             ))
         })?;
-        Permissions::deserialize(&serialized_value)
+        Permissions::deserialize(&serialized_value).map_err(FindexServerError::from)
     }
 
     #[instrument(ret(Display), err, skip(self))]
@@ -344,5 +347,62 @@ impl Database for Redis {
         };
 
         Ok(())
+    }
+
+    //
+    // Dataset management
+    //
+    #[instrument(ret, err, skip(self))]
+    async fn dataset_add_entries(
+        &self,
+        index_id: &Uuid,
+        entries: &EncryptedEntries,
+    ) -> FResult<()> {
+        let mut pipe = pipe();
+        for (entry_id, data) in entries.iter() {
+            let key = build_dataset_key(index_id, entry_id);
+            pipe.set(key, data);
+        }
+        pipe.atomic()
+            .query_async(&mut self.mgr.clone())
+            .await
+            .map_err(FindexServerError::from)
+    }
+
+    #[instrument(ret, err, skip(self))]
+    async fn dataset_delete_entries(&self, index_id: &Uuid, uuids: &Uuids) -> FResult<()> {
+        let mut pipe = pipe();
+        for entry_id in uuids.iter() {
+            let key = build_dataset_key(index_id, entry_id);
+            pipe.del(key);
+        }
+        pipe.atomic()
+            .query_async(&mut self.mgr.clone())
+            .await
+            .map_err(FindexServerError::from)
+    }
+
+    #[instrument(ret(Display), err, skip(self))]
+    async fn dataset_get_entries(
+        &self,
+        index_id: &Uuid,
+        uuids: &Uuids,
+    ) -> FResult<EncryptedEntries> {
+        let redis_keys = uuids
+            .iter()
+            .map(|uid| build_dataset_key(index_id, uid))
+            .collect::<Vec<_>>();
+        trace!("dataset_get_entries: redis_keys len: {}", redis_keys.len());
+
+        let values: Vec<Vec<u8>> = self.mgr.clone().mget(redis_keys).await?;
+
+        // Zip and filter empty values out.
+        let entries = uuids
+            .iter()
+            .zip(values)
+            .filter_map(|(k, v)| if v.is_empty() { None } else { Some((k, v)) })
+            .collect::<HashMap<_, _>>();
+
+        Ok(entries.into())
     }
 }

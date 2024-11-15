@@ -1,0 +1,22 @@
+[package]
+name = "cosmian_findex_structs" # todo(manu): remove prefix `cosmian_findex_` on all crates?
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[lib]
+# doc test linking as a separate binary is extremely slow
+# and is not needed for internal lib
+doctest = false
+
+[features]
+
+[dependencies]
+cloudproof_findex = { workspace = true }
+base64 = { workspace = true }
+thiserror = { workspace = true }
+url = { workspace = true }
+uuid = { workspace = true }

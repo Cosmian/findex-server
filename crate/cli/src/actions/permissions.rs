@@ -1,5 +1,6 @@
 use clap::Parser;
-use cosmian_rest_client::{Permission, RestClient};
+use cosmian_findex_client::FindexClient;
+use cosmian_findex_structs::Permission;
 use uuid::Uuid;
 
 use crate::{
@@ -25,7 +26,7 @@ impl PermissionsAction {
     /// # Errors
     ///
     /// Returns an error if there was a problem running the action.
-    pub async fn process(&self, rest_client: RestClient) -> CliResult<()> {
+    pub async fn process(&self, rest_client: FindexClient) -> CliResult<()> {
         match self {
             Self::Create(action) => action.run(rest_client).await?,
             Self::Grant(action) => action.run(rest_client).await?,
@@ -58,7 +59,7 @@ impl CreateIndex {
     /// # Errors
     ///
     /// Returns an error if the query execution on the Findex server fails.
-    pub async fn run(&self, rest_client: RestClient) -> CliResult<String> {
+    pub async fn run(&self, rest_client: FindexClient) -> CliResult<String> {
         let response = rest_client
             .create_index_id()
             .await
@@ -103,7 +104,7 @@ impl GrantPermission {
     /// # Errors
     ///
     /// Returns an error if the query execution on the Findex server fails.
-    pub async fn run(&self, rest_client: RestClient) -> CliResult<String> {
+    pub async fn run(&self, rest_client: FindexClient) -> CliResult<String> {
         let response = rest_client
             .grant_permission(&self.user, &self.permission, &self.index_id)
             .await
@@ -140,7 +141,7 @@ impl RevokePermission {
     /// # Errors
     ///
     /// Returns an error if the query execution on the Findex server fails.
-    pub async fn run(&self, rest_client: RestClient) -> CliResult<String> {
+    pub async fn run(&self, rest_client: FindexClient) -> CliResult<String> {
         let response = rest_client
             .revoke_permission(&self.user, &self.index_id)
             .await

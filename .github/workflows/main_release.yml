@@ -22,11 +22,11 @@ jobs:
   cargo-lint:
     uses: ./.github/workflows/clippy.yml
     with:
-      toolchain: stable-2024-10-17
+      toolchain: nightly-2024-06-09
 
   build:
     uses: ./.github/workflows/build_all.yml
     secrets: inherit
     with:
-      toolchain: stable-2024-10-17
+      toolchain: nightly-2024-06-09
       debug_or_release: release

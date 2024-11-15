@@ -1,21 +1,24 @@
 use std::{
-    env,
-    path::PathBuf,
+    env, fs,
+    path::{Path, PathBuf},
     sync::mpsc,
     thread::{self, JoinHandle},
     time::Duration,
 };
 
 use actix_server::ServerHandle;
+use cosmian_findex_client::{
+    findex_client_bail, findex_client_error,
+    reexport::{cosmian_findex_config::FindexClientConfig, cosmian_http_client::HttpClientConfig},
+    FindexClient, FindexClientError,
+};
 use cosmian_findex_server::{
     config::{
         ClapConfig, DBConfig, DatabaseType, HttpConfig, HttpParams, JwtAuthConfig, ServerParams,
     },
     findex_server::start_findex_server,
 };
-use cosmian_rest_client::{
-    client_bail, client_error, write_json_object_to_file, ClientConf, ClientError, RestClient,
-};
+use serde::Serialize;
 use tokio::sync::OnceCell;
 use tracing::{info, trace};
 
@@ -28,6 +31,28 @@ use crate::test_jwt::{get_auth0_jwt_config, AUTH0_TOKEN};
 /// for N-1 tests.
 pub(crate) static ONCE: OnceCell<TestsContext> = OnceCell::const_new();
 pub(crate) static ONCE_SERVER_WITH_AUTH: OnceCell<TestsContext> = OnceCell::const_new();
+
+/// Write all bytes to a file
+pub(crate) fn write_bytes_to_file(
+    bytes: &[u8],
+    file: &impl AsRef<Path>,
+) -> Result<(), FindexClientError> {
+    fs::write(file, bytes)
+        .map_err(|e| findex_client_error!(format!("failed writing the bytes to the file: {e}")))
+}
+
+/// Write a JSON object to a file
+pub(crate) fn write_json_object_to_file<T>(
+    json_object: &T,
+    file: &impl AsRef<Path>,
+) -> Result<(), FindexClientError>
+where
+    T: Serialize,
+{
+    let bytes = serde_json::to_vec::<T>(json_object)
+        .map_err(|e| findex_client_error!("failed serializing the JSON object to bytes: {e}"))?;
+    write_bytes_to_file(&bytes, file)
+}
 
 fn redis_db_config() -> DBConfig {
     let url = if let Ok(var_env) = env::var("REDIS_HOST") {
@@ -58,7 +83,7 @@ pub async fn start_default_test_findex_server() -> &'static TestsContext {
     ONCE.get_or_try_init(|| {
         start_test_server_with_options(
             get_db_config(),
-            6666,
+            6668,
             AuthenticationOptions {
                 use_jwt_token: false,
                 use_https: false,
@@ -76,7 +101,7 @@ pub async fn start_default_test_findex_server_with_cert_auth() -> &'static Tests
         .get_or_try_init(|| {
             start_test_server_with_options(
                 get_db_config(),
-                6668,
+                6660,
                 AuthenticationOptions {
                     use_jwt_token: false,
                     use_https: true,
@@ -91,17 +116,17 @@ pub async fn start_default_test_findex_server_with_cert_auth() -> &'static Tests
 pub struct TestsContext {
     pub owner_client_conf_path: String,
     pub user_client_conf_path: String,
-    pub owner_client_conf: ClientConf,
+    pub owner_client_conf: FindexClientConfig,
     pub server_handle: ServerHandle,
-    pub thread_handle: JoinHandle<Result<(), ClientError>>,
+    pub thread_handle: JoinHandle<Result<(), FindexClientError>>,
 }
 
 impl TestsContext {
-    pub async fn stop_server(self) -> Result<(), ClientError> {
+    pub async fn stop_server(self) -> Result<(), FindexClientError> {
         self.server_handle.stop(false).await;
         self.thread_handle
             .join()
-            .map_err(|_e| client_error!("failed joining the stop thread"))?
+            .map_err(|_e| findex_client_error!("failed joining the stop thread"))?
     }
 }
 
@@ -116,17 +141,17 @@ pub async fn start_test_server_with_options(
     db_config: DBConfig,
     port: u16,
     authentication_options: AuthenticationOptions,
-) -> Result<TestsContext, ClientError> {
-    cosmian_logger::log_utils::log_init(None);
+) -> Result<TestsContext, FindexClientError> {
+    cosmian_logger::log_init(None);
     let server_params = generate_server_params(db_config.clone(), port, &authentication_options)?;
 
     // Create a (object owner) conf
     let (owner_client_conf_path, owner_client_conf) = generate_owner_conf(&server_params)?;
-    let findex_client = owner_client_conf.initialize_findex_client(None, None)?;
+    let findex_client = FindexClient::new(owner_client_conf.clone())?;
 
     info!(
         "Starting Findex test server at URL: {} with server params {:?}",
-        owner_client_conf.findex_server_url, &server_params
+        owner_client_conf.http_config.server_url, &server_params
     );
 
     let (server_handle, thread_handle) = start_test_findex_server(server_params);
@@ -152,7 +177,7 @@ pub async fn start_test_server_with_options(
 /// Start a test Findex server with the given config in a separate thread
 fn start_test_findex_server(
     server_params: ServerParams,
-) -> (ServerHandle, JoinHandle<Result<(), ClientError>>) {
+) -> (ServerHandle, JoinHandle<Result<(), FindexClientError>>) {
     let (tx, rx) = mpsc::channel::<ServerHandle>();
 
     let thread_handle = thread::spawn(move || {
@@ -161,7 +186,7 @@ fn start_test_findex_server(
             .enable_all()
             .build()?
             .block_on(start_findex_server(server_params, Some(tx)))
-            .map_err(|e| ClientError::UnexpectedError(e.to_string()))
+            .map_err(|e| FindexClientError::UnexpectedError(e.to_string()))
     });
     trace!("Waiting for test Findex server to start...");
     let server_handle = rx
@@ -172,7 +197,7 @@ fn start_test_findex_server(
 }
 
 /// Wait for the server to start by reading the version
-async fn wait_for_server_to_start(findex_client: &RestClient) -> Result<(), ClientError> {
+async fn wait_for_server_to_start(findex_client: &FindexClient) -> Result<(), FindexClientError> {
     // Depending on the running environment, the server could take a bit of time to
     // start We try to query it with a dummy request until be sure it is
     // started.
@@ -191,7 +216,7 @@ async fn wait_for_server_to_start(findex_client: &RestClient) -> Result<(), Clie
                 waiting *= 2;
             } else {
                 info!("The server is still not up, stop trying");
-                client_bail!("Can't start the Findex server to run tests");
+                findex_client_bail!("Can't start the Findex server to run tests");
             }
         } else {
             info!("UP!");
@@ -238,7 +263,7 @@ fn generate_server_params(
     db_config: DBConfig,
     port: u16,
     authentication_options: &AuthenticationOptions,
-) -> Result<ServerParams, ClientError> {
+) -> Result<ServerParams, FindexClientError> {
     // Configure the server
     let clap_config = ClapConfig {
         auth: if authentication_options.use_jwt_token {
@@ -254,8 +279,9 @@ fn generate_server_params(
         ),
         ..ClapConfig::default()
     };
-    ServerParams::try_from(clap_config)
-        .map_err(|e| ClientError::Default(format!("failed initializing the server config: {e}")))
+    ServerParams::try_from(clap_config).map_err(|e| {
+        FindexClientError::Default(format!("failed initializing the server config: {e}"))
+    })
 }
 
 fn set_access_token(server_params: &ServerParams) -> Option<String> {
@@ -267,43 +293,50 @@ fn set_access_token(server_params: &ServerParams) -> Option<String> {
     }
 }
 
-fn generate_owner_conf(server_params: &ServerParams) -> Result<(String, ClientConf), ClientError> {
+fn generate_owner_conf(
+    server_params: &ServerParams,
+) -> Result<(String, FindexClientConfig), FindexClientError> {
     // This create root dir
     let root_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
 
     // Create a conf
     let owner_client_conf_path = format!("/tmp/owner_findex_{}.json", server_params.port);
 
-    let owner_client_conf = ClientConf {
-        findex_server_url: if matches!(server_params.http_params, HttpParams::Https(_)) {
-            format!("https://0.0.0.0:{}", server_params.port)
-        } else {
-            format!("http://0.0.0.0:{}", server_params.port)
-        },
-        accept_invalid_certs: true,
-        findex_access_token: set_access_token(server_params),
-        ssl_client_pkcs12_path: if server_params.authority_cert_file.is_some() {
-            #[cfg(not(target_os = "macos"))]
-            let p = root_dir.join("certificates/owner/owner.client.acme.com.p12");
-            #[cfg(target_os = "macos")]
-            let p = root_dir.join("certificates/owner/owner.client.acme.com.old.format.p12");
-            Some(
-                p.to_str()
-                    .ok_or_else(|| ClientError::Default("Can't convert path to string".to_owned()))?
-                    .to_string(),
-            )
-        } else {
-            None
-        },
-        ssl_client_pkcs12_password: if server_params.authority_cert_file.is_some() {
-            Some("password".to_owned())
-        } else {
-            None
+    let owner_client_conf = FindexClientConfig {
+        http_config: HttpClientConfig {
+            server_url: if matches!(server_params.http_params, HttpParams::Https(_)) {
+                format!("https://0.0.0.0:{}", server_params.port)
+            } else {
+                format!("http://0.0.0.0:{}", server_params.port)
+            },
+            accept_invalid_certs: true,
+            access_token: set_access_token(server_params),
+            ssl_client_pkcs12_path: if server_params.authority_cert_file.is_some() {
+                #[cfg(not(target_os = "macos"))]
+                let p = root_dir.join("certificates/owner/owner.client.acme.com.p12");
+                #[cfg(target_os = "macos")]
+                let p = root_dir.join("certificates/owner/owner.client.acme.com.old.format.p12");
+                Some(
+                    p.to_str()
+                        .ok_or_else(|| {
+                            FindexClientError::Default("Can't convert path to string".to_owned())
+                        })?
+                        .to_string(),
+                )
+            } else {
+                None
+            },
+            ssl_client_pkcs12_password: if server_params.authority_cert_file.is_some() {
+                Some("password".to_owned())
+            } else {
+                None
+            },
+            ..Default::default()
         },
 
         // We use the private key since the private key is the public key with additional
         // information.
-        ..ClientConf::default()
+        ..FindexClientConfig::default()
     };
     // write the conf to a file
     write_json_object_to_file(&owner_client_conf, &owner_client_conf_path)
@@ -314,23 +347,28 @@ fn generate_owner_conf(server_params: &ServerParams) -> Result<(String, ClientCo
 
 /// Generate a user configuration for user.client@acme.com and return the file
 /// path
-fn generate_user_conf(port: u16, owner_client_conf: &ClientConf) -> Result<String, ClientError> {
+fn generate_user_conf(
+    port: u16,
+    owner_client_conf: &FindexClientConfig,
+) -> Result<String, FindexClientError> {
     // This create root dir
     let root_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
 
     let mut user_conf = owner_client_conf.clone();
-    user_conf.ssl_client_pkcs12_path = {
+    user_conf.http_config.ssl_client_pkcs12_path = {
         #[cfg(not(target_os = "macos"))]
         let p = root_dir.join("certificates/user/user.client.acme.com.p12");
         #[cfg(target_os = "macos")]
         let p = root_dir.join("certificates/user/user.client.acme.com.old.format.p12");
         Some(
             p.to_str()
-                .ok_or_else(|| ClientError::Default("Can't convert path to string".to_owned()))?
+                .ok_or_else(|| {
+                    FindexClientError::Default("Can't convert path to string".to_owned())
+                })?
                 .to_string(),
         )
     };
-    user_conf.ssl_client_pkcs12_password = Some("password".to_owned());
+    user_conf.http_config.ssl_client_pkcs12_password = Some("password".to_owned());
 
     // write the user conf
     let user_conf_path = format!("/tmp/user_findex_{port}.json");
@@ -342,7 +380,7 @@ fn generate_user_conf(port: u16, owner_client_conf: &ClientConf) -> Result<Strin
 
 #[cfg(test)]
 mod test {
-    use cosmian_rest_client::ClientError;
+    use cosmian_findex_client::FindexClientError;
     use tracing::trace;
 
     use crate::{
@@ -350,7 +388,7 @@ mod test {
     };
 
     #[tokio::test]
-    async fn test_server_auth_matrix() -> Result<(), ClientError> {
+    async fn test_server_auth_matrix() -> Result<(), FindexClientError> {
         let test_cases = vec![
             (false, false, false, "all_disabled"),
             (true, false, false, "https_no_auth"),

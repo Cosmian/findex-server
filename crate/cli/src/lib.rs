@@ -46,7 +46,10 @@
     clippy::redundant_pub_crate
 )]
 pub mod actions;
+pub mod commands;
 pub mod error;
+
+pub use commands::{findex_cli_main, CoreFindexActions};
 
 #[cfg(test)]
 mod tests;

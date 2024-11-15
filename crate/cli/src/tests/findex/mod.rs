@@ -1,6 +1,6 @@
 use add_or_delete::add_or_delete_cmd;
-use cosmian_logger::log_utils::log_init;
-use cosmian_rest_client::Permission;
+use cosmian_findex_structs::Permission;
+use cosmian_logger::log_init;
 use search::search_cmd;
 use test_findex_server::{
     start_default_test_findex_server, start_default_test_findex_server_with_cert_auth,
