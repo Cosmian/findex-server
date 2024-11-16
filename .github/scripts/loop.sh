@@ -2,7 +2,7 @@
 
 set -ex
 
-cargo build
+cargo build --workspace --all-targets
 
 # export RUST_LOG="cosmian_findex_cli=trace,cosmian_findex_server=trace,test_findex_server=trace"
 

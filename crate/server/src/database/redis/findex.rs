@@ -1,5 +1,3 @@
-#![allow(clippy::blocks_in_conditions)] //todo(manu): fix it
-
 use std::{
     collections::{HashMap, HashSet},
     convert::TryFrom,
@@ -16,13 +14,14 @@ use cloudproof_findex::{
         Tokens, ENTRY_LENGTH, LINK_LENGTH,
     },
 };
-use cosmian_findex_structs::{EncryptedEntries, Permission, Permissions, Uuids};
 use redis::{aio::ConnectionManager, pipe, AsyncCommands, Script};
 use tracing::{info, instrument, trace};
 use uuid::Uuid;
 
-use super::Database;
-use crate::error::{result::FResult, server::FindexServerError};
+use crate::{
+    database::database_traits::FindexTrait,
+    error::{result::FResult, server::FindexServerError},
+};
 
 /// The conditional upsert script used to only update a table if the
 /// indexed value matches ARGV[2]. When the value does not match, the
@@ -41,13 +40,9 @@ const CONDITIONAL_UPSERT_SCRIPT: &str = r"
 fn build_key(index_id: &Uuid, table: FindexTable, uid: &[u8]) -> Vec<u8> {
     [index_id.as_bytes().as_ref(), &[0x00, u8::from(table)], uid].concat()
 }
-/// Generate a key for the dataset table
-fn build_dataset_key(index_id: &Uuid, uid: &Uuid) -> Vec<u8> {
-    [index_id.as_bytes().as_ref(), uid.as_bytes().as_ref()].concat()
-}
 
 pub(crate) struct Redis {
-    mgr: ConnectionManager,
+    pub(crate) mgr: ConnectionManager,
     upsert_script: Script,
 }
 
@@ -76,7 +71,7 @@ impl Redis {
 }
 
 #[async_trait]
-impl Database for Redis {
+impl FindexTrait for Redis {
     // todo(manu): merge the 2 fetch
     #[instrument(ret(Display), err, skip_all)]
     async fn findex_fetch_entries(
@@ -253,156 +248,5 @@ impl Database for Redis {
             }
         }
         Ok(Tokens::from(tokens_set))
-    }
-
-    #[instrument(ret(Display), err, skip(self))]
-    async fn create_index_id(&self, user_id: &str) -> FResult<Uuid> {
-        let uuid = Uuid::new_v4();
-        let key = user_id.as_bytes().to_vec();
-        let permissions = (self.get_permissions(user_id).await).map_or_else(
-            |_error| Permissions::new(uuid, Permission::Admin),
-            |mut permissions| {
-                permissions.grant_permission(uuid, Permission::Admin);
-                permissions
-            },
-        );
-        self.mgr
-            .clone()
-            .set::<_, _, ()>(key, permissions.serialize())
-            .await?;
-
-        Ok(uuid)
-    }
-
-    #[instrument(ret(Display), err, skip(self))]
-    async fn get_permissions(&self, user_id: &str) -> FResult<Permissions> {
-        let key = user_id.as_bytes().to_vec();
-
-        let value: Option<Vec<u8>> = self.mgr.clone().get(key).await?;
-        trace!("get_permissions: value: {:?}", value);
-        let serialized_value = value.ok_or_else(|| {
-            FindexServerError::Unauthorized(format!(
-                "No permission for {user_id} since unwrapping serialized value failed"
-            ))
-        })?;
-        Permissions::deserialize(&serialized_value).map_err(FindexServerError::from)
-    }
-
-    #[instrument(ret(Display), err, skip(self))]
-    async fn get_permission(&self, user_id: &str, index_id: &Uuid) -> FResult<Permission> {
-        let permissions = self.get_permissions(user_id).await?;
-        let permission = permissions.get_permission(index_id).ok_or_else(|| {
-            FindexServerError::Unauthorized(format!(
-                "No permission for {user_id} on index {index_id}"
-            ))
-        })?;
-
-        Ok(permission)
-    }
-
-    #[instrument(ret, err, skip(self))]
-    async fn grant_permission(
-        &self,
-        user_id: &str,
-        permission: Permission,
-        index_id: &Uuid,
-    ) -> FResult<()> {
-        let key = user_id.as_bytes().to_vec();
-        let permissions = match self.get_permissions(user_id).await {
-            Ok(mut permissions) => {
-                permissions.grant_permission(*index_id, permission);
-                permissions
-            }
-            Err(_) => Permissions::new(*index_id, permission),
-        };
-
-        self.mgr
-            .clone()
-            .set::<_, _, ()>(key, permissions.serialize())
-            .await
-            .map_err(FindexServerError::from)
-
-        // let mut pipe = pipe();
-        // pipe.set(key, permissions.serialize());
-        // pipe.atomic()
-        //     .query_async(&mut self.mgr.clone())
-        //     .await
-        //     .map_err(FindexServerError::from)
-    }
-
-    #[instrument(ret, err, skip(self))]
-    async fn revoke_permission(&self, user_id: &str, index_id: &Uuid) -> FResult<()> {
-        let key = user_id.as_bytes().to_vec();
-        match self.get_permissions(user_id).await {
-            Ok(mut permissions) => {
-                permissions.revoke_permission(index_id);
-                self.mgr
-                    .clone()
-                    .set::<_, _, ()>(key, permissions.serialize())
-                    .await?;
-            }
-            Err(_) => {
-                trace!("Nothing to revoke since no permission found for index {index_id}");
-            }
-        };
-
-        Ok(())
-    }
-
-    //
-    // Dataset management
-    //
-    #[instrument(ret, err, skip(self))]
-    async fn dataset_add_entries(
-        &self,
-        index_id: &Uuid,
-        entries: &EncryptedEntries,
-    ) -> FResult<()> {
-        let mut pipe = pipe();
-        for (entry_id, data) in entries.iter() {
-            let key = build_dataset_key(index_id, entry_id);
-            pipe.set(key, data);
-        }
-        pipe.atomic()
-            .query_async(&mut self.mgr.clone())
-            .await
-            .map_err(FindexServerError::from)
-    }
-
-    #[instrument(ret, err, skip(self))]
-    async fn dataset_delete_entries(&self, index_id: &Uuid, uuids: &Uuids) -> FResult<()> {
-        let mut pipe = pipe();
-        for entry_id in uuids.iter() {
-            let key = build_dataset_key(index_id, entry_id);
-            pipe.del(key);
-        }
-        pipe.atomic()
-            .query_async(&mut self.mgr.clone())
-            .await
-            .map_err(FindexServerError::from)
-    }
-
-    #[instrument(ret(Display), err, skip(self))]
-    async fn dataset_get_entries(
-        &self,
-        index_id: &Uuid,
-        uuids: &Uuids,
-    ) -> FResult<EncryptedEntries> {
-        let redis_keys = uuids
-            .iter()
-            .map(|uid| build_dataset_key(index_id, uid))
-            .collect::<Vec<_>>();
-        trace!("dataset_get_entries: redis_keys len: {}", redis_keys.len());
-
-        let values: Vec<Vec<u8>> = self.mgr.clone().mget(redis_keys).await?;
-
-        // Zip and filter empty values out.
-        let entries = uuids
-            .iter()
-            .zip(values)
-            .filter_map(|(k, v)| if v.is_empty() { None } else { Some((k, v)) })
-            .collect::<HashMap<_, _>>();
-
-        Ok(entries.into())
     }
 }

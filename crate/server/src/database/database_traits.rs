@@ -11,7 +11,7 @@ use uuid::Uuid;
 use crate::error::result::FResult;
 
 #[async_trait]
-pub(crate) trait Database: Sync + Send {
+pub(crate) trait FindexTrait: Sync + Send {
     //
     // Findex v6
     //
@@ -42,7 +42,10 @@ pub(crate) trait Database: Sync + Send {
         tokens: Tokens,
     ) -> FResult<()>;
     async fn findex_dump_tokens(&self, index_id: &Uuid) -> FResult<Tokens>;
+}
 
+#[async_trait]
+pub(crate) trait PermissionsTrait: Sync + Send {
     //
     // Permissions
     //
@@ -56,7 +59,10 @@ pub(crate) trait Database: Sync + Send {
         index_id: &Uuid,
     ) -> FResult<()>;
     async fn revoke_permission(&self, user_id: &str, index_id: &Uuid) -> FResult<()>;
+}
 
+#[async_trait]
+pub(crate) trait DatasetsTrait: Sync + Send {
     //
     // Dataset management
     //
@@ -69,3 +75,6 @@ pub(crate) trait Database: Sync + Send {
         uuids: &Uuids,
     ) -> FResult<EncryptedEntries>;
 }
+
+#[async_trait]
+pub(crate) trait DatabaseTraits: FindexTrait + PermissionsTrait + DatasetsTrait {}
