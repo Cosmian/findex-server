@@ -820,6 +820,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "773648b94d0e5d620f64f280777445740e61fe701025087ec8b57f45c791888b"
 
 [[package]]
+name = "cosmian_config_utils"
+version = "0.1.0"
+source = "git+https://www.github.com/Cosmian/http_client_server?branch=add_http_client#cd098c83ff5f6aefe369bc8ad4242e0f4418891e"
+dependencies = [
+ "base64 0.21.7",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "tracing",
+ "url",
+]
+
+[[package]]
 name = "cosmian_crypto_core"
 version = "9.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -860,6 +873,7 @@ dependencies = [
  "clap",
  "cloudproof_findex",
  "const-oid",
+ "cosmian_config_utils",
  "cosmian_findex_client",
  "cosmian_findex_structs",
  "cosmian_logger",
@@ -906,12 +920,11 @@ name = "cosmian_findex_config"
 version = "0.1.0"
 dependencies = [
  "base64 0.21.7",
+ "cosmian_config_utils",
  "cosmian_http_client",
  "cosmian_logger",
  "serde",
- "serde_json",
  "thiserror",
- "tracing",
  "url",
 ]
 
@@ -963,7 +976,7 @@ dependencies = [
 [[package]]
 name = "cosmian_http_client"
 version = "0.1.0"
-source = "git+https://www.github.com/Cosmian/http_client_server?branch=add_http_client#49d4de89865f23d14bc1948d6db48fd690239eec"
+source = "git+https://www.github.com/Cosmian/http_client_server?branch=add_http_client#cd098c83ff5f6aefe369bc8ad4242e0f4418891e"
 dependencies = [
  "actix-web",
  "oauth2",
@@ -981,7 +994,7 @@ dependencies = [
 [[package]]
 name = "cosmian_logger"
 version = "0.1.0"
-source = "git+https://www.github.com/Cosmian/http_client_server?branch=add_http_client#49d4de89865f23d14bc1948d6db48fd690239eec"
+source = "git+https://www.github.com/Cosmian/http_client_server?branch=add_http_client#cd098c83ff5f6aefe369bc8ad4242e0f4418891e"
 dependencies = [
  "tracing",
  "tracing-subscriber",

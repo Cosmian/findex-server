@@ -235,17 +235,19 @@ fn generate_http_config(port: u16, use_https: bool, use_client_cert: bool) -> Ht
             HttpConfig {
                 port,
                 https_p12_file: Some(
-                    root_dir.join("certificates/server/findex.server.acme.com.p12"),
+                    root_dir.join("../../test_data/certificates/server/findex.server.acme.com.p12"),
                 ),
                 https_p12_password: Some("password".to_owned()),
-                authority_cert_file: Some(root_dir.join("certificates/server/ca.crt")),
+                authority_cert_file: Some(
+                    root_dir.join("../../test_data/certificates/server/ca.crt"),
+                ),
                 ..HttpConfig::default()
             }
         } else {
             HttpConfig {
                 port,
                 https_p12_file: Some(
-                    root_dir.join("certificates/server/findex.server.acme.com.p12"),
+                    root_dir.join("../../test_data/certificates/server/findex.server.acme.com.p12"),
                 ),
                 https_p12_password: Some("password".to_owned()),
                 ..HttpConfig::default()
@@ -313,9 +315,12 @@ fn generate_owner_conf(
             access_token: set_access_token(server_params),
             ssl_client_pkcs12_path: if server_params.authority_cert_file.is_some() {
                 #[cfg(not(target_os = "macos"))]
-                let p = root_dir.join("certificates/owner/owner.client.acme.com.p12");
+                let p =
+                    root_dir.join("../../test_data/certificates/owner/owner.client.acme.com.p12");
                 #[cfg(target_os = "macos")]
-                let p = root_dir.join("certificates/owner/owner.client.acme.com.old.format.p12");
+                let p = root_dir.join(
+                    "../../test_data/certificates/owner/owner.client.acme.com.old.format.p12",
+                );
                 Some(
                     p.to_str()
                         .ok_or_else(|| {
@@ -357,9 +362,10 @@ fn generate_user_conf(
     let mut user_conf = owner_client_conf.clone();
     user_conf.http_config.ssl_client_pkcs12_path = {
         #[cfg(not(target_os = "macos"))]
-        let p = root_dir.join("certificates/user/user.client.acme.com.p12");
+        let p = root_dir.join("../../test_data/certificates/user/user.client.acme.com.p12");
         #[cfg(target_os = "macos")]
-        let p = root_dir.join("certificates/user/user.client.acme.com.old.format.p12");
+        let p =
+            root_dir.join("../../test_data/certificates/user/user.client.acme.com.old.format.p12");
         Some(
             p.to_str()
                 .ok_or_else(|| {

@@ -1,4 +1,5 @@
 use clap::Parser;
+use cosmian_config_utils::ConfigUtils;
 use cosmian_findex_client::reexport::{
     cosmian_findex_config::{FindexClientConfig, FindexConfigError},
     cosmian_http_client::LoginState,

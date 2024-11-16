@@ -1,5 +1,4 @@
-use std::io;
-
+use cosmian_config_utils::ConfigUtilsError;
 use thiserror::Error;
 
 pub(crate) mod result;
@@ -23,12 +22,9 @@ pub enum FindexConfigError {
 
     #[error(transparent)]
     UrlError(#[from] url::ParseError),
-}
 
-impl From<io::Error> for FindexConfigError {
-    fn from(e: io::Error) -> Self {
-        Self::Default(e.to_string())
-    }
+    #[error(transparent)]
+    ConfigUtilsError(#[from] ConfigUtilsError),
 }
 
 /// Construct a server error from a string.

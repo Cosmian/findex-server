@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
 use clap::{Parser, Subcommand};
+use cosmian_config_utils::ConfigUtils;
 use cosmian_findex_client::{reexport::cosmian_findex_config::FindexClientConfig, FindexClient};
 use cosmian_logger::log_init;
 use tracing::info;

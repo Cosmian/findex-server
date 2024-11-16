@@ -21,7 +21,7 @@
 # ```
 # - If docker-compose-up fails to install, try installing docker-compose and installing the latest docker version.
 # If you get an error related to unavailable ports, you might have an instance of redis-server running on the same port. If so, stop the redis-server with the following command: `sudo systemctl stop redis-server.service` and relaunch the pre-commit hooks.
-exclude: crate/client/datasets/users.json
+exclude: test_data
 repos:
   - repo: https://github.com/compilerla/conventional-pre-commit
     rev: v3.4.0
