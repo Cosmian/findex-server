@@ -24,17 +24,17 @@ impl Display for SuccessResponse {
 }
 
 #[derive(Clone)]
-pub struct FindexClient {
+pub struct FindexRestClient {
     pub client: HttpClient,
     pub conf: FindexClientConfig,
 }
 
-impl FindexClient {
+impl FindexRestClient {
     /// Initialize a Findex REST client.
     ///
     /// Parameters `server_url` and `accept_invalid_certs` from the command line
     /// will override the ones from the configuration file.
-    pub fn new(conf: FindexClientConfig) -> Result<FindexClient, FindexClientError> {
+    pub fn new(conf: FindexClientConfig) -> Result<FindexRestClient, FindexClientError> {
         // Instantiate a Findex server REST client with the given configuration
         let client = HttpClient::instantiate(&conf.http_config).with_context(|| {
             format!(

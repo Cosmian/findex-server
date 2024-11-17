@@ -11,7 +11,7 @@ pub(crate) use findex::{
     findex_fetch_entries, findex_insert_chains, findex_upsert_entries,
 };
 pub(crate) use permissions::{
-    check_permission, create_index_id, grant_permission, revoke_permission,
+    check_permission, create_index_id, grant_permission, list_permission, revoke_permission,
 };
 pub(crate) use utils::get_index_id;
 pub(crate) use version::get_version;

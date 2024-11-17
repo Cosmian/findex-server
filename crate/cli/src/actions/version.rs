@@ -1,5 +1,5 @@
 use clap::Parser;
-use cosmian_findex_client::FindexClient;
+use cosmian_findex_client::FindexRestClient;
 
 use super::console;
 use crate::error::result::{CliResult, CliResultHelper};
@@ -21,7 +21,7 @@ impl ServerVersionAction {
     ///
     /// Returns an error if the version query fails or if there is an issue
     /// writing to the console.
-    pub async fn process(&self, rest_client: FindexClient) -> CliResult<()> {
+    pub async fn process(&self, rest_client: FindexRestClient) -> CliResult<()> {
         let version = rest_client
             .version()
             .await

@@ -31,7 +31,6 @@ use crate::error::result::FindexConfigResult;
 /// This function returns a FINDEX client configured according to the settings
 /// specified in the configuration file.
 pub const FINDEX_CLI_CONF_ENV: &str = "FINDEX_CLI_CONF";
-#[cfg(target_os = "linux")]
 pub(crate) const FINDEX_CLI_CONF_DEFAULT_SYSTEM_PATH: &str = "/etc/cosmian/findex.json";
 pub(crate) const FINDEX_CLI_CONF_PATH: &str = ".cosmian/findex.json";
 

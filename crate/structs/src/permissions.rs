@@ -80,6 +80,7 @@ impl Display for Permission {
 const PERMISSION_LENGTH: usize = 1;
 const INDEX_ID_LENGTH: usize = 16;
 
+#[derive(Debug)]
 pub struct Permissions {
     pub permissions: HashMap<Uuid, Permission>,
 }

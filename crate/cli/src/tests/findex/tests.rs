@@ -10,10 +10,12 @@ use super::{add_or_delete::add_or_delete_cmd, search::search_cmd};
 use crate::{
     actions::{
         findex::{add_or_delete::AddOrDeleteAction, search::SearchAction, FindexParameters},
-        permissions::{GrantPermission, RevokePermission},
+        permissions::{GrantPermission, ListPermissions, RevokePermission},
     },
     error::result::CliResult,
-    tests::permissions::{create_index_id_cmd, grant_permission_cmd, revoke_permission_cmd},
+    tests::permissions::{
+        create_index_id_cmd, grant_permission_cmd, list_permission_cmd, revoke_permission_cmd,
+    },
 };
 
 fn add(cli_conf_path: &str, index_id: &Uuid) -> CliResult<()> {
@@ -137,6 +139,13 @@ pub(crate) async fn test_findex_grant_and_revoke_permission() -> CliResult<()> {
             user: "user.client@acme.com".to_owned(),
             index_id,
             permission: Permission::Write,
+        },
+    )?;
+
+    list_permission_cmd(
+        &ctx.owner_client_conf_path,
+        &ListPermissions {
+            user: "user.client@acme.com".to_owned(),
         },
     )?;
 

@@ -1,14 +1,15 @@
-use cosmian_findex_structs::Permission;
+use cosmian_findex_structs::{Permission, Permissions};
 use tracing::{instrument, trace};
 use uuid::Uuid;
 
 use crate::{
     error::{result::FindexClientResult, FindexClientError},
-    findex_rest_client::SuccessResponse,
-    handle_error, FindexClient,
+    handle_error,
+    rest_client::SuccessResponse,
+    FindexRestClient,
 };
 
-impl FindexClient {
+impl FindexRestClient {
     #[instrument(ret(Display), err, skip(self))]
     pub async fn create_index_id(&self) -> FindexClientResult<SuccessResponse> {
         let endpoint = "/create/index".to_owned();
@@ -40,6 +41,24 @@ impl FindexClient {
         let status_code = response.status();
         if status_code.is_success() {
             return Ok(response.json::<SuccessResponse>().await?);
+        }
+
+        // process error
+        let p = handle_error(&endpoint, response).await?;
+        Err(FindexClientError::RequestFailed(p))
+    }
+
+    #[instrument(ret(Display), err, skip(self))]
+    pub async fn list_permission(&self, user_id: &str) -> FindexClientResult<Permissions> {
+        let endpoint = format!("/permission/list/{user_id}");
+        let server_url = format!("{}{endpoint}", self.client.server_url);
+        trace!("POST: {server_url}");
+        let response = self.client.client.post(server_url).send().await?;
+        let status_code = response.status();
+        if status_code.is_success() {
+            let response_bytes = response.bytes().await.map(|r| r.to_vec())?;
+            let permissions = Permissions::deserialize(&response_bytes)?;
+            return Ok(permissions);
         }
 
         // process error

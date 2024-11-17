@@ -24,7 +24,7 @@ use crate::{
         create_index_id, datasets_add_entries, datasets_del_entries, datasets_get_entries,
         findex_delete_chains, findex_delete_entries, findex_dump_tokens, findex_fetch_chains,
         findex_fetch_entries, findex_insert_chains, findex_upsert_entries, get_version,
-        grant_permission, revoke_permission,
+        grant_permission, list_permission, revoke_permission,
     },
 };
 
@@ -259,6 +259,7 @@ pub(crate) async fn prepare_findex_server(
             .service(findex_dump_tokens)
             // Permissions management endpoints
             .service(create_index_id)
+            .service(list_permission)
             .service(grant_permission)
             .service(revoke_permission)
             // Dataset management

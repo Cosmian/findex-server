@@ -3,7 +3,7 @@ use std::{str::FromStr, sync::Arc};
 use actix_web::{
     post,
     web::{self, Data, Json},
-    HttpRequest,
+    HttpRequest, HttpResponse,
 };
 use cosmian_findex_structs::Permission;
 use tracing::{debug, info};
@@ -11,7 +11,10 @@ use tracing::{debug, info};
 use crate::{
     core::FindexServer,
     error::{result::FResult, server::FindexServerError},
-    routes::{error::SuccessResponse, get_index_id},
+    routes::{
+        error::{ResponseBytes, SuccessResponse},
+        get_index_id,
+    },
 };
 
 pub(crate) async fn check_permission(
@@ -80,6 +83,24 @@ pub(crate) async fn grant_permission(
             "[{user_id}] permission {permission} on index {index_id} successfully added"
         ),
     }))
+}
+
+#[post("/permission/list/{user_id}")]
+pub(crate) async fn list_permission(
+    req: HttpRequest,
+    params: web::Path<String>,
+    findex_server: Data<Arc<FindexServer>>,
+) -> ResponseBytes {
+    let user = findex_server.get_user(&req);
+    let user_id = params.into_inner();
+    info!("user {user}: POST /permission/list/{user_id}");
+
+    let permissions = findex_server.db.get_permissions(&user_id).await?;
+
+    let bytes = permissions.serialize();
+    Ok(HttpResponse::Ok()
+        .content_type("application/octet-stream")
+        .body(bytes))
 }
 
 #[post("/permission/revoke/{user_id}/{index_id}")]

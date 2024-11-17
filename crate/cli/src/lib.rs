@@ -49,7 +49,11 @@ pub mod actions;
 pub mod commands;
 pub mod error;
 
-pub use commands::{findex_cli_main, CoreFindexActions};
+pub use commands::{findex_cli_main, CoreFindexActions, FindexCli};
 
+pub mod reexports {
+    pub use cosmian_findex_client;
+    pub use cosmian_findex_structs;
+}
 #[cfg(test)]
 mod tests;

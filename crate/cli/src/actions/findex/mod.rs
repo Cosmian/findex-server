@@ -6,7 +6,7 @@ use cloudproof_findex::{
     },
     Configuration, InstantiatedFindex,
 };
-use cosmian_findex_client::FindexClient;
+use cosmian_findex_client::FindexRestClient;
 use tracing::debug;
 use uuid::Uuid;
 
@@ -50,7 +50,7 @@ impl FindexParameters {
 /// This function will return an error if there is an error instantiating the
 /// Findex client.
 pub async fn instantiate_findex(
-    rest_client: FindexClient,
+    rest_client: FindexRestClient,
     index_id: &Uuid,
 ) -> CliResult<InstantiatedFindex> {
     let config = Configuration::Rest(

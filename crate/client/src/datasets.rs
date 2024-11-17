@@ -4,12 +4,13 @@ use uuid::Uuid;
 
 use crate::{
     error::{result::FindexClientResult, FindexClientError},
-    findex_rest_client::SuccessResponse,
-    handle_error, FindexClient,
+    handle_error,
+    rest_client::SuccessResponse,
+    FindexRestClient,
 };
 
-impl FindexClient {
-    // #[instrument(ret(Display), err, skip(self))]
+impl FindexRestClient {
+    #[instrument(ret(Display), err, skip(self))]
     pub async fn add_entries(
         // todo(manu): revisit function names (prefix with dataset_, findex_, permissions)
         &self,

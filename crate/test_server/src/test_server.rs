@@ -10,7 +10,7 @@ use actix_server::ServerHandle;
 use cosmian_findex_client::{
     findex_client_bail, findex_client_error,
     reexport::{cosmian_findex_config::FindexClientConfig, cosmian_http_client::HttpClientConfig},
-    FindexClient, FindexClientError,
+    FindexClientError, FindexRestClient,
 };
 use cosmian_findex_server::{
     config::{
@@ -147,7 +147,7 @@ pub async fn start_test_server_with_options(
 
     // Create a (object owner) conf
     let (owner_client_conf_path, owner_client_conf) = generate_owner_conf(&server_params)?;
-    let findex_client = FindexClient::new(owner_client_conf.clone())?;
+    let findex_client = FindexRestClient::new(owner_client_conf.clone())?;
 
     info!(
         "Starting Findex test server at URL: {} with server params {:?}",
@@ -197,7 +197,9 @@ fn start_test_findex_server(
 }
 
 /// Wait for the server to start by reading the version
-async fn wait_for_server_to_start(findex_client: &FindexClient) -> Result<(), FindexClientError> {
+async fn wait_for_server_to_start(
+    findex_client: &FindexRestClient,
+) -> Result<(), FindexClientError> {
     // Depending on the running environment, the server could take a bit of time to
     // start We try to query it with a dummy request until be sure it is
     // started.

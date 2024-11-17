@@ -2,7 +2,9 @@ use std::path::PathBuf;
 
 use clap::{Parser, Subcommand};
 use cosmian_config_utils::ConfigUtils;
-use cosmian_findex_client::{reexport::cosmian_findex_config::FindexClientConfig, FindexClient};
+use cosmian_findex_client::{
+    reexport::cosmian_findex_config::FindexClientConfig, FindexRestClient,
+};
 use cosmian_logger::log_init;
 use tracing::info;
 
@@ -19,7 +21,7 @@ use crate::{
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
-struct Cli {
+pub struct FindexCli {
     #[command(subcommand)]
     command: CoreFindexActions,
 
@@ -42,6 +44,30 @@ struct Cli {
     pub(crate) accept_invalid_certs: Option<bool>,
 }
 
+impl FindexCli {
+    /// Prepare the configuration
+    /// # Errors
+    /// - If the configuration file is not found or invalid
+    /// - If the command line arguments are invalid
+    pub fn prepare_config(&self) -> CliResult<FindexClientConfig> {
+        // Load configuration file and override with command line options
+        let conf_path = FindexClientConfig::location(self.conf.clone())?;
+        let mut conf = FindexClientConfig::load(&conf_path)?;
+        if self.url.is_some() {
+            info!("Override URL from configuration file with: {:?}", self.url);
+            conf.http_config.server_url = self.url.clone().unwrap_or_default();
+        }
+        if self.accept_invalid_certs.is_some() {
+            info!(
+                "Override accept_invalid_certs from configuration file with: {:?}",
+                self.accept_invalid_certs
+            );
+            conf.http_config.accept_invalid_certs = self.accept_invalid_certs.unwrap_or_default();
+        }
+
+        Ok(conf)
+    }
+}
 #[derive(Subcommand)]
 pub enum CoreFindexActions {
     /// Index new keywords.
@@ -61,7 +87,7 @@ impl CoreFindexActions {
     /// # Errors
     /// - If the configuration file is not found or invalid
     #[allow(clippy::future_not_send)]
-    pub async fn run(&self, findex_client: FindexClient) -> CliResult<()> {
+    pub async fn run(&self, findex_client: FindexRestClient) -> CliResult<()> {
         match self {
             Self::Login(action) => action.process(&findex_client.conf).await,
             Self::Logout(action) => action.process(&findex_client.conf),
@@ -81,25 +107,11 @@ impl CoreFindexActions {
 #[allow(clippy::future_not_send)]
 pub async fn findex_cli_main() -> CliResult<()> {
     log_init(None);
-    let opts = Cli::parse();
-
-    // Load configuration file and override with command line options
-    let conf_path = FindexClientConfig::location(opts.conf)?;
-    let mut conf = FindexClientConfig::load(&conf_path)?;
-    if opts.url.is_some() {
-        info!("Override URL from configuration file with: {:?}", opts.url);
-        conf.http_config.server_url = opts.url.unwrap_or_default();
-    }
-    if opts.accept_invalid_certs.is_some() {
-        info!(
-            "Override accept_invalid_certs from configuration file with: {:?}",
-            opts.accept_invalid_certs
-        );
-        conf.http_config.accept_invalid_certs = opts.accept_invalid_certs.unwrap_or_default();
-    }
+    let opts = FindexCli::parse();
+    let conf = opts.prepare_config()?;
 
     // Instantiate the Findex REST client
-    let rest_client = FindexClient::new(conf)?;
+    let rest_client = FindexRestClient::new(conf)?;
 
     // Process the command
     opts.command.run(rest_client).await?;
