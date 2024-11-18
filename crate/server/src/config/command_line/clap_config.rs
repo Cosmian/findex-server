@@ -19,7 +19,7 @@ impl Default for ClapConfig {
     }
 }
 
-#[derive(Parser, Serialize, Deserialize)]
+#[derive(Parser, Serialize, Deserialize, PartialEq, Eq)]
 #[clap(version, about, long_about = None)]
 #[serde(default)]
 pub struct ClapConfig {

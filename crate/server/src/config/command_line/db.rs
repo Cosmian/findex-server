@@ -6,7 +6,7 @@ use url::Url;
 
 use crate::{config::params::DbParams, error::result::FResult, findex_server_error};
 
-#[derive(ValueEnum, Clone, Deserialize, Serialize)]
+#[derive(ValueEnum, Clone, Deserialize, Serialize, PartialEq, Eq)]
 pub enum DatabaseType {
     // Sqlite,
     Redis,
@@ -15,7 +15,7 @@ pub enum DatabaseType {
 pub const DEFAULT_SQLITE_PATH: &str = "./sqlite-data";
 
 /// Configuration for the database
-#[derive(Args, Clone, Deserialize, Serialize)]
+#[derive(Args, Clone, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(default)]
 pub struct DBConfig {
     /// The database type of the Findex server
@@ -41,7 +41,7 @@ pub struct DBConfig {
         default_value = DEFAULT_SQLITE_PATH,
         required_if_eq_any([("database_type", "sqlite")])
     )]
-    pub sqlite_path: PathBuf,
+    pub sqlite_path: Option<PathBuf>,
 
     /// Clear the database on start.
     /// WARNING: This will delete ALL the data in the database
@@ -52,7 +52,7 @@ pub struct DBConfig {
 impl Default for DBConfig {
     fn default() -> Self {
         Self {
-            sqlite_path: PathBuf::from(DEFAULT_SQLITE_PATH),
+            sqlite_path: None,
             database_type: None,
             database_url: Some("redis://localhost:6379".to_owned()),
             clear_database: false,

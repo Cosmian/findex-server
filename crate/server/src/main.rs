@@ -11,7 +11,7 @@ use cosmian_logger::log_init;
 use dotenvy::dotenv;
 use tracing::{debug, info};
 
-const FINDEX_SERVER_CONF: &str = "/etc/cosmian_findex_server/server.toml";
+const FINDEX_SERVER_CONF: &str = "/etc/cosmian/findex_server.toml";
 
 /// The main entrypoint of the program.
 ///

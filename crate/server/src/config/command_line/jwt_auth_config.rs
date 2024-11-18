@@ -6,7 +6,7 @@ use crate::{config::IdpConfig, error::server::FindexServerError, findex_server_e
 // Support for JWT token inspired by the doc at : https://cloud.google.com/api-gateway/docs/authenticating-users-jwt
 // and following pages
 
-#[derive(Debug, Default, Args, Deserialize, Serialize)]
+#[derive(Debug, Default, Args, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(default)]
 pub struct JwtAuthConfig {
     /// The issuer URI of the JWT token
