@@ -6,9 +6,6 @@ pub(crate) mod result;
 #[derive(Error, Clone, Debug)]
 pub enum StructsError {
     #[error(transparent)]
-    Base64DecodeError(#[from] base64::DecodeError),
-
-    #[error(transparent)]
     Uuid(#[from] uuid::Error),
 
     #[error("{0}")]
@@ -16,9 +13,6 @@ pub enum StructsError {
 
     #[error("Indexing slicing: {0}")]
     IndexingSlicing(String),
-
-    #[error(transparent)]
-    UrlError(#[from] url::ParseError),
 
     #[error(transparent)]
     TryFromIntError(#[from] std::num::TryFromIntError),

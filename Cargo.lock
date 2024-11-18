@@ -878,13 +878,10 @@ dependencies = [
  "cosmian_findex_structs",
  "cosmian_logger",
  "csv",
- "der",
  "hex",
  "openssl",
- "pem",
  "predicates",
  "regex",
- "reqwest",
  "serde",
  "serde_json",
  "tempfile",
@@ -892,7 +889,6 @@ dependencies = [
  "thiserror",
  "tokio",
  "tracing",
- "url",
  "uuid",
  "x509-parser",
 ]
@@ -901,17 +897,13 @@ dependencies = [
 name = "cosmian_findex_client"
 version = "0.1.0"
 dependencies = [
- "base64 0.21.7",
  "cosmian_findex_config",
  "cosmian_findex_structs",
  "cosmian_http_client",
- "der",
- "pem",
  "reqwest",
  "serde",
  "thiserror",
  "tracing",
- "url",
  "uuid",
 ]
 
@@ -919,13 +911,11 @@ dependencies = [
 name = "cosmian_findex_config"
 version = "0.1.0"
 dependencies = [
- "base64 0.21.7",
  "cosmian_config_utils",
  "cosmian_http_client",
  "cosmian_logger",
  "serde",
  "thiserror",
- "url",
 ]
 
 [[package]]
@@ -939,7 +929,6 @@ dependencies = [
  "actix-web",
  "alcoholic_jwt",
  "async-trait",
- "base64 0.21.7",
  "chrono",
  "clap",
  "cloudproof_findex",
@@ -959,7 +948,6 @@ dependencies = [
  "tracing",
  "url",
  "uuid",
- "x509-parser",
 ]
 
 [[package]]
@@ -969,7 +957,6 @@ dependencies = [
  "base64 0.21.7",
  "cloudproof_findex",
  "thiserror",
- "url",
  "uuid",
 ]
 
@@ -2332,16 +2319,6 @@ name = "paste"
 version = "1.0.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "57c0d7b74b563b49d38dae00a0c37d4d6de9b432382b2892f0574ddcae73fd0a"
-
-[[package]]
-name = "pem"
-version = "3.0.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8e459365e590736a54c3fa561947c84837534b8e9af6fc5bf781307e82658fae"
-dependencies = [
- "base64 0.22.1",
- "serde",
-]
 
 [[package]]
 name = "pem-rfc7468"

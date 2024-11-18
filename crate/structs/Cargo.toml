@@ -18,5 +18,4 @@ doctest = false
 cloudproof_findex = { workspace = true }
 base64 = { workspace = true }
 thiserror = { workspace = true }
-url = { workspace = true }
 uuid = { workspace = true }

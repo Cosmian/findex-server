@@ -5,24 +5,8 @@ pub(crate) mod result;
 
 #[derive(Error, Debug)]
 pub enum FindexConfigError {
-    #[error(transparent)]
-    Base64DecodeError(#[from] base64::DecodeError),
-
-    #[error("Invalid conversion: {0}")]
-    Conversion(String),
-
     #[error("{0}")]
     Default(String),
-
-    #[error("Not Supported: {0}")]
-    NotSupported(String),
-
-    #[error("Unexpected Error: {0}")]
-    UnexpectedError(String),
-
-    #[error(transparent)]
-    UrlError(#[from] url::ParseError),
-
     #[error(transparent)]
     ConfigUtilsError(#[from] ConfigUtilsError),
 }

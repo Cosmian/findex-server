@@ -1,4 +1,4 @@
-use std::{array::TryFromSliceError, num::TryFromIntError, str::Utf8Error};
+use std::str::Utf8Error;
 
 #[cfg(test)]
 use assert_cmd::cargo::CargoError;
@@ -12,7 +12,6 @@ use cosmian_findex_client::{
     FindexClientError,
 };
 use hex::FromHexError;
-use pem::PemError;
 use thiserror::Error;
 
 pub mod result;
@@ -20,188 +19,38 @@ pub mod result;
 // Each error type must have a corresponding HTTP status code
 #[derive(Error, Debug)]
 pub enum CliError {
-    // When a user requests an endpoint which does not exist
-    #[error("Not Supported route: {0}")]
-    RouteNotFound(String),
-
-    // When a user requests something not supported by the server
-    #[error("Not Supported: {0}")]
-    NotSupported(String),
-
-    // When a user requests something which is a non-sense
-    #[error("Inconsistent operation: {0}")]
-    InconsistentOperation(String),
-
-    // When a user requests an id which does not exist
-    #[error("Item not found: {0}")]
-    ItemNotFound(String),
-
-    // Missing arguments in the request
-    #[error("Invalid Request: {0}")]
-    InvalidRequest(String),
-
-    // Any errors related to a bad behavior of the server but not related to the user input
-    #[error("Server error: {0}")]
-    ServerError(String),
-
-    // Any actions of the user which is not allowed
-    #[error("Permission denied: {0}")]
-    Unauthorized(String),
-
-    // A cryptographic error
-    #[error("CLI Cryptographic error: {0}")]
-    Cryptographic(String),
-
-    // Conversion errors
-    #[error("Conversion error: {0}")]
-    Conversion(String),
-
-    // When the Findex server client returns an error
-    #[error("{0}")]
-    FindexClientError(String),
-
-    // Other errors
-    #[error("invalid options: {0}")]
-    UserError(String),
-
+    #[error(transparent)]
+    ConfigError(#[from] FindexConfigError),
+    #[error(transparent)]
+    ConfigUtilsError(#[from] ConfigUtilsError),
+    #[error(transparent)]
+    SerdeJsonError(#[from] serde_json::Error),
+    #[error(transparent)]
+    CsvError(#[from] csv::Error),
+    #[error(transparent)]
+    HttpClientError(#[from] HttpClientError),
+    #[error(transparent)]
+    CryptoCoreError(#[from] CryptoCoreError),
+    #[error(transparent)]
+    FindexClientError(#[from] FindexClientError),
+    #[error(transparent)]
+    DbInterfaceError(#[from] DbInterfaceError),
+    #[error(transparent)]
+    FromHexError(#[from] FromHexError),
+    #[error(transparent)]
+    Utf8Error(#[from] Utf8Error),
+    #[error(transparent)]
+    IoError(#[from] std::io::Error),
+    #[cfg(test)]
+    #[error(transparent)]
+    CargoError(#[from] CargoError),
+    #[error(transparent)]
+    ErrorDbInterfaceError(#[from] cosmian_findex::Error<DbInterfaceError>),
+    #[error(transparent)]
+    UuidError(#[from] uuid::Error),
     // Other errors
     #[error("{0}")]
     Default(String),
-
-    // Url parsing errors
-    #[error(transparent)]
-    UrlParsing(#[from] url::ParseError),
-
-    // When an error occurs fetching Gmail API
-    #[error("Error interacting with Gmail API: {0}")]
-    GmailApiError(String),
-
-    #[error(transparent)]
-    ConfigError(#[from] FindexConfigError),
-
-    #[error(transparent)]
-    ConfigUtilsError(#[from] ConfigUtilsError),
-}
-
-impl From<der::Error> for CliError {
-    fn from(e: der::Error) -> Self {
-        Self::Conversion(e.to_string())
-    }
-}
-
-impl From<TryFromSliceError> for CliError {
-    fn from(e: TryFromSliceError) -> Self {
-        Self::Conversion(e.to_string())
-    }
-}
-
-impl From<std::io::Error> for CliError {
-    fn from(e: std::io::Error) -> Self {
-        Self::ServerError(e.to_string())
-    }
-}
-
-impl From<serde_json::Error> for CliError {
-    fn from(e: serde_json::Error) -> Self {
-        Self::Conversion(e.to_string())
-    }
-}
-
-impl From<Utf8Error> for CliError {
-    fn from(e: Utf8Error) -> Self {
-        Self::Default(e.to_string())
-    }
-}
-
-impl From<std::string::FromUtf8Error> for CliError {
-    fn from(e: std::string::FromUtf8Error) -> Self {
-        Self::Default(e.to_string())
-    }
-}
-
-impl From<reqwest::Error> for CliError {
-    fn from(e: reqwest::Error) -> Self {
-        Self::Default(format!("{e}: Details: {e:?}"))
-    }
-}
-
-impl From<TryFromIntError> for CliError {
-    fn from(e: TryFromIntError) -> Self {
-        Self::Default(format!("{e}: Details: {e:?}"))
-    }
-}
-
-#[cfg(test)]
-impl From<CargoError> for CliError {
-    fn from(e: CargoError) -> Self {
-        Self::Default(e.to_string())
-    }
-}
-
-impl From<base64::DecodeError> for CliError {
-    fn from(e: base64::DecodeError) -> Self {
-        Self::Conversion(e.to_string())
-    }
-}
-
-impl From<FromHexError> for CliError {
-    fn from(e: FromHexError) -> Self {
-        Self::Conversion(e.to_string())
-    }
-}
-
-impl From<FindexClientError> for CliError {
-    fn from(e: FindexClientError) -> Self {
-        Self::FindexClientError(e.to_string())
-    }
-}
-
-impl From<PemError> for CliError {
-    fn from(e: PemError) -> Self {
-        Self::Conversion(format!("PEM error: {e}"))
-    }
-}
-
-impl From<std::fmt::Error> for CliError {
-    fn from(e: std::fmt::Error) -> Self {
-        Self::Default(e.to_string())
-    }
-}
-
-impl From<CryptoCoreError> for CliError {
-    fn from(e: CryptoCoreError) -> Self {
-        Self::Cryptographic(e.to_string())
-    }
-}
-
-impl From<cosmian_findex::Error<DbInterfaceError>> for CliError {
-    fn from(e: cosmian_findex::Error<DbInterfaceError>) -> Self {
-        Self::Cryptographic(e.to_string())
-    }
-}
-
-impl From<DbInterfaceError> for CliError {
-    fn from(e: DbInterfaceError) -> Self {
-        Self::Cryptographic(e.to_string())
-    }
-}
-
-impl From<csv::Error> for CliError {
-    fn from(e: csv::Error) -> Self {
-        Self::Conversion(e.to_string())
-    }
-}
-
-impl From<uuid::Error> for CliError {
-    fn from(e: uuid::Error) -> Self {
-        Self::Conversion(e.to_string())
-    }
-}
-
-impl From<HttpClientError> for CliError {
-    fn from(e: HttpClientError) -> Self {
-        Self::FindexClientError(e.to_string())
-    }
 }
 
 /// Return early with an error if a condition is not satisfied.

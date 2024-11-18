@@ -15,10 +15,8 @@ doctest = false
 [features]
 
 [dependencies]
-base64 = { workspace = true }
 cosmian_logger = { workspace = true }
 cosmian_http_client = { workspace = true }
 cosmian_config_utils = { workspace = true }
 serde = { workspace = true }
 thiserror = { workspace = true }
-url = { workspace = true }
