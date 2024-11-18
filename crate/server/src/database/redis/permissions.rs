@@ -36,7 +36,6 @@ impl PermissionsTrait for Redis {
         let key = user_id.as_bytes().to_vec();
 
         let value: Option<Vec<u8>> = self.mgr.clone().get(key).await?;
-        trace!("get_permissions: value: {:?}", value);
         let serialized_value = value.ok_or_else(|| {
             FindexServerError::Unauthorized(format!(
                 "No permission for {user_id} since unwrapping serialized value failed"

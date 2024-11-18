@@ -1,33 +1,12 @@
 ---
-name: CI checks
+name: CI debug
 
 on:
   push:
 
 jobs:
-  cargo-audit:
-    name: Security Audit
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: EmbarkStudios/cargo-deny-action@v1
-
-  docker-image:
-    name: Build docker image
-    uses: ./.github/workflows/build_docker_image.yml
-    with:
-      prefix: ''
-      dockerfile: Dockerfile
-      registry-image: ghcr.io/cosmian/findex-server
-
-  cargo-lint:
-    uses: ./.github/workflows/clippy.yml
-    with:
-      toolchain: nightly-2024-06-09
-
-  build_tests:
-    uses: ./.github/workflows/build_all.yml
-    secrets: inherit
+  main:
+    uses: ./.github/workflows/main_base.yml
     with:
       toolchain: nightly-2024-06-09
       debug_or_release: debug

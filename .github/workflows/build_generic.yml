@@ -52,7 +52,41 @@ jobs:
         with:
           name: ${{ inputs.archive-name }}-${{ inputs.debug_or_release }}
           path: |
+            target/${{ inputs.target }}/${{ inputs.debug_or_release }}/cosmian_findex_cli
             target/${{ inputs.target }}/${{ inputs.debug_or_release }}/cosmian_findex_server
-            target/${{ inputs.target }}/${{ inputs.debug_or_release }}/findex
           retention-days: 1
           if-no-files-found: error
+
+  test:
+    needs: cargo-build
+    name: Clean env. ${{ inputs.archive-name }}
+    runs-on: ${{ inputs.distribution }}
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: ${{ inputs.archive-name }}-${{ inputs.debug_or_release }}
+
+      - run: find .
+        if: contains(runner.os, 'linux')
+
+      - name: Linux launch cli and server
+        if: contains(runner.os, 'Linux')
+        run: |
+          set -ex
+          pwd
+          find . -type f
+          chmod u+x ./cosmian_findex_cli
+          chmod u+x ./cosmian_findex_server
+
+          ./cosmian_findex_cli -V
+          ./cosmian_findex_server -V
+
+      - name: MacOS launch cli and server
+        if: contains(runner.os, 'macos')
+        run: |
+          set -ex
+          chmod u+x ./cosmian_findex_cli
+          chmod u+x ./cosmian_findex_server
+
+          ./cosmian_findex_cli -V
+          ./cosmian_findex_server -V
