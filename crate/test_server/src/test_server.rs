@@ -181,7 +181,7 @@ fn start_test_findex_server(
     let (tx, rx) = mpsc::channel::<ServerHandle>();
 
     let thread_handle = thread::spawn(move || {
-        // allow others `spawn` to happen within the Findex Server future
+        // allow others `spawn` to happen within the Findex server future
         tokio::runtime::Builder::new_multi_thread()
             .enable_all()
             .build()?

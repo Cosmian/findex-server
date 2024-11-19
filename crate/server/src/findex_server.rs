@@ -53,7 +53,7 @@ pub async fn start_findex_server(
     findex_server_handle_tx: Option<mpsc::Sender<ServerHandle>>,
 ) -> FResult<()> {
     // Log the server configuration
-    info!("Findex Server configuration: {:#?}", server_params);
+    info!("Findex server configuration: {:#?}", server_params);
     match &server_params.http_params {
         config::HttpParams::Https(_) => {
             start_https_findex_server(server_params, findex_server_handle_tx).await

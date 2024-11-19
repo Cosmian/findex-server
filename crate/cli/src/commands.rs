@@ -10,7 +10,7 @@ use tracing::info;
 
 use crate::{
     actions::{
-        findex::{add_or_delete::AddOrDeleteAction, search::SearchAction},
+        findex::{index_or_delete::IndexOrDeleteAction, search::SearchAction},
         login::LoginAction,
         logout::LogoutAction,
         permissions::PermissionsAction,
@@ -71,9 +71,9 @@ impl FindexCli {
 #[derive(Subcommand)]
 pub enum CoreFindexActions {
     /// Index new keywords.
-    Add(AddOrDeleteAction),
+    Index(IndexOrDeleteAction),
     /// Delete indexed keywords
-    Delete(AddOrDeleteAction),
+    Delete(IndexOrDeleteAction),
     Search(SearchAction),
     ServerVersion(ServerVersionAction),
     Login(LoginAction),
@@ -91,7 +91,7 @@ impl CoreFindexActions {
         match self {
             Self::Login(action) => action.process(&findex_client.conf).await,
             Self::Logout(action) => action.process(&findex_client.conf),
-            Self::Add(action) => action.add(findex_client).await,
+            Self::Index(action) => action.add(findex_client).await,
             Self::Delete(action) => action.delete(findex_client).await,
             Self::Search(action) => action.process(findex_client).await,
             Self::ServerVersion(action) => action.process(findex_client).await,

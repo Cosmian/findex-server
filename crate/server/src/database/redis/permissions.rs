@@ -44,7 +44,6 @@ impl PermissionsTrait for Redis {
         Permissions::deserialize(&serialized_value).map_err(FindexServerError::from)
     }
 
-    #[instrument(ret(Display), err, skip(self))]
     async fn get_permission(&self, user_id: &str, index_id: &Uuid) -> FResult<Permission> {
         let permissions = self.get_permissions(user_id).await?;
         let permission = permissions.get_permission(index_id).ok_or_else(|| {

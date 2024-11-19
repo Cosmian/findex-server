@@ -12,7 +12,7 @@ use uuid::Uuid;
 
 use crate::error::result::CliResult;
 
-pub mod add_or_delete;
+pub mod index_or_delete;
 pub mod search;
 
 #[derive(Parser, Debug)]

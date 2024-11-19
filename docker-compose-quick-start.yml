@@ -7,7 +7,7 @@ services:
       - 6379:6379
   findex-server:
     container_name: findex-server
-    image: ghcr.io/cosmian/findex-server:reuse_cli
+    image: ghcr.io/cosmian/findex-server:0.1.0
     ports:
       - 6668:6668
     environment:

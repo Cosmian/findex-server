@@ -1,18 +1,21 @@
-# Cosmian Findex Server
+# Cosmian Findex server
 
 ![Build status](https://github.com/Cosmian/findex-server/actions/workflows/main_release.yml/badge.svg?branch=main)
 ![Build status](https://github.com/Cosmian/findex-server/actions/workflows/build_generic.yml/badge.svg?branch=main)
 ![Build status](https://github.com/Cosmian/findex-server/actions/workflows/build_windows.yml/badge.svg?branch=main)
 ![Build status](https://github.com/Cosmian/findex-server/actions/workflows/build_rhel9.yml/badge.svg?branch=main)
 
-- [Cosmian Findex Server](#cosmian-findex-server)
+- [Cosmian Findex server](#cosmian-findex-server)
   - [What is Findex?](#what-is-findex)
     - [Attacking Model](#attacking-model)
   - [Quick Start](#quick-start)
     - [Docker](#docker)
     - [Pre-built binaries](#pre-built-binaries)
     - [From source](#from-source)
-  - [Findex Server](#findex-server)
+  - [Findex server](#findex-server)
+    - [Client-Side Encryption](#client-side-encryption)
+      - [How It Works](#how-it-works)
+      - [Benefits](#benefits)
     - [Features](#features)
     - [User Authentication](#user-authentication)
       - [OpenID with JWT Access Token](#openid-with-jwt-access-token)
@@ -21,8 +24,11 @@
       - [What is an Index ID?](#what-is-an-index-id)
       - [Permissions](#permissions)
       - [Endpoints](#endpoints)
-    - [Store and retrieve encrypted indexes as Findex requirements](#store-and-retrieve-encrypted-indexes-as-findex-requirements)
-    - [Store and retrieve the encrypted version of the data that has been indexed](#store-and-retrieve-the-encrypted-version-of-the-data-that-has-been-indexed)
+    - [Encrypted database](#encrypted-database)
+      - [How to securely index new data?](#how-to-securely-index-new-data)
+      - [How to securely search indexed data?](#how-to-securely-search-indexed-data)
+        - [Store and retrieve encrypted indexes as Findex requirements](#store-and-retrieve-encrypted-indexes-as-findex-requirements)
+        - [Store and retrieve the encrypted version of the data that has been indexed](#store-and-retrieve-the-encrypted-version-of-the-data-that-has-been-indexed)
     - [Configuration file](#configuration-file)
       - [Example without authentication](#example-without-authentication)
       - [Example with X509 authentication](#example-with-x509-authentication)
@@ -47,18 +53,18 @@ Findex has been published as a scientific paper in the IACR ePrint archive: <htt
 The attacking model for Findex assumes that the cloud server is untrusted and may attempt to infer information from the encrypted indexes and search queries. However, the server is considered honest-but-curious, meaning it will follow the protocol correctly but will try to learn as much as possible from the data it processes. Findex is designed to protect against such adversaries by ensuring that no useful information about the plaintext data or search queries is leaked.
 
 > [!IMPORTANT]
-> Basically, the server does not know how the encrypted indexes are built nor the datasets they contain. It can only perform search queries on the encrypted indexes and return the results to the client.
+> Basically, the server does not know how are encrypted the indexes nor the datasets they contain. It can only perform search queries on the encrypted indexes and return the results to the client.
 
 ## Quick Start
 
-Multiple options are available to run the Findex Server, including using Docker, pre-built binaries, or building from source.
+Multiple options are available to run the Findex server, including using Docker, pre-built binaries, or building from source.
 
 > [!WARNING]
 > No authentication is configured for quick start. This is not recommended for production use.
 
 ### Docker
 
-The quickest way to get started with Findex Server is to use the Docker image To run the server binary on `http://localhost:6668` that stores its data
+The quickest way to get started with Findex server is to use the Docker image. To run the server binary on `http://localhost:6668` that stores its data
 in a Redis server, run the following command:
 
 ```sh
@@ -76,7 +82,7 @@ services:
       - 6379:6379
   findex-server:
     container_name: findex-server
-    image: ghcr.io/cosmian/findex-server:reuse_cli
+    image: ghcr.io/cosmian/findex-server:0.1.0
     ports:
       - 6668:6668
     environment:
@@ -128,9 +134,48 @@ Then, run the server:
 cargo run --bin cosmian_findex_server -- --database-url redis://localhost:6379 --database-type redis
 ```
 
-## Findex Server
+## Findex server
 
-The Findex Server, written in Rust and using the Actix-web framework, is used to store encrypted indexes and perform search queries on them. It is designed to be used in conjunction with the Findex CLI, which is a command-line interface that allows users to interact with the server.
+### Client-Side Encryption
+
+Client-side encryption is a crucial aspect of the Findex protocol, ensuring that data remains secure even when stored on an untrusted server. In this model, all encryption and decryption operations are performed on the client side, meaning that the server only ever sees encrypted data and cannot infer any useful information from it.
+
+#### How It Works
+
+1. **Data Encryption**: Before sending any data to the Findex server, the client encrypts the data using a secure encryption algorithm. This ensures that the plaintext data is never exposed to the server.
+
+2. **Index Encryption**: Similarly, the indexes used for search queries are also encrypted on the client side. This prevents the server from learning anything about the content of the indexes.
+
+3. **Search Queries**: When performing a search query, the client encrypts the search keyword and sends the encrypted query to the server. The server processes the query on the encrypted indexes and returns the encrypted results to the client.
+
+4. **Data Decryption**: Upon receiving the encrypted results from the server, the client decrypts the data to obtain the plaintext results.
+
+#### Benefits
+
+- **Data Privacy**: Since the server only handles encrypted data, it cannot access the plaintext information, ensuring data privacy.
+- **Security**: Client-side encryption protects against potential data breaches on the server, as the encrypted data would be useless to an attacker without the decryption keys.
+- **Control**: Users retain full control over their encryption keys and can manage their own security policies.
+
+By leveraging client-side encryption, Findex ensures that sensitive data remains secure and private, even when stored and processed on an untrusted server.
+
+The Findex server, written in Rust and using the Actix-web framework, is a REST-API server used to store encrypted indexes and perform search queries on them. It is designed to be used in conjunction with the Findex CLI, which is a command-line interface that allows users to interact with the server.
+
+```mermaid
+architecture-beta
+    service user(disk)[Client side encryption]
+
+    group untrusted(cloud)[Cloud]
+
+    service server(server)[Findex Server] in untrusted
+    service db(database)[Database] in untrusted
+    service kms(server)[KMS] in untrusted
+    service db2(database)[Keys] in untrusted
+
+    user:R -- L:server
+    server:R <--> L:db
+    user:R -- L:kms
+    kms:R <--> L:db2
+```
 
 ### Features
 
@@ -150,10 +195,10 @@ The application supports two methods of user authentication:
 
 #### OpenID with JWT Access Token
 
-In that case, the Findex Server delegates the authentication process to an external OAuth2 server. In fine, the server issues a JWT Access Token that is used to authenticate the user with the Findex Server.
+In that case, the Findex server delegates the authentication process to an external OAuth2 server. In fine, the server issues a JWT Access Token that is used to authenticate the user with the Findex server.
 
 > [!WARNING]
-> The Findex Server must be run with the following arguments:
+> The Findex server must be run with the following arguments:
 >
 > For example with Google OAuth2:
 >
@@ -200,10 +245,25 @@ The Resource Server validates the JWT by:
 
 If the JWT is valid, the Resource Server allows access to the requested resources based on the user's claims. If invalid (e.g., expired, tampered), the request is denied with an HTTP 401 Unauthorized error.
 
+```mermaid
+sequenceDiagram
+  actor User
+  participant AuthServer as Authorization Server
+  participant ResourceServer as Resource Server
+
+  User->>AuthServer: Authorization Request
+  AuthServer->>User: Redirect to Login
+  User->>AuthServer: User Credentials
+  AuthServer->>User: JWT Access Token
+  User->>ResourceServer: Request with JWT
+  ResourceServer->>ResourceServer: Validate JWT
+  ResourceServer->>User: Access Granted/Denied
+```
+
 > [!NOTE]
 > JWT is a compact, URL-safe means of representing claims to be transferred between two parties. The claims in a JWT are encoded as a JSON object that is used as the payload of a JSON Web Signature (JWS) structure or as the plaintext of a JSON Web Encryption (JWE) structure. This enables the claims to be digitally signed or integrity protected with a Message Authentication Code (MAC) and/or encrypted.
 
-Cosmian CLI is helpful to authenticate with the Findex Server using OpenID Connect.
+Cosmian CLI is helpful to authenticate with the Findex server using OpenID Connect.
 
 > [!TIP]
 > The Cosmian CLI realizes this authentication flow using this simple command:
@@ -214,10 +274,10 @@ Cosmian CLI is helpful to authenticate with the Findex Server using OpenID Conne
 
 #### X509 certificates authentication
 
-In that case, the Findex Server uses PKCS12 certificates to authenticate the user. The server requires the client to present a certificate signed by a trusted authority known by itself. The server also presents its own certificate to the client, which the client must verify.
+In that case, the Findex server uses PKCS12 certificates to authenticate the user. The server requires the client to present a certificate signed by a trusted authority known by itself. The server also presents its own certificate to the client, which the client must verify.
 
 > [!WARNING]
-> The Findex Server must be run with the following arguments:
+> The Findex server must be run with the following arguments:
 >
 > For example with Google OAuth2:
 >
@@ -245,6 +305,18 @@ For each server's endpoint, the server checks the user's permissions before allo
 
 #### Permissions
 
+```mermaid
+sequenceDiagram
+  autonumber
+  actor User
+  participant F as Findex server
+
+  User->>F: User authentication
+  User->>F: User create an Index ID
+  F->>User: Index ID with admin permission
+  User->>F: User grant/revoke permission to another user
+```
+
 There are 3 permissions:
 
 - `reader`
@@ -266,7 +338,78 @@ Every server endpoint is protected by this authorization mechanism: the server c
 | `/permission/list/{user_id}`                          | List permissions of a user                        |
 | `/permission/revoke/{user_id}/{index_id}`             | Revoke a user's permission for a specific index   |
 
-### Store and retrieve encrypted indexes as Findex requirements
+### Encrypted database
+
+From the server's perspective, only encrypted data is received and stored as-is. The server does not know how the data is encrypted and cannot decrypt it.
+
+The requirements database is a key-value store where the keys are unique identifiers (UIDs) and the values are the encrypted indexes or datasets.
+
+In this scenario, the user is responsible for encrypting the data before sending it to the server. A hybrid encryption scheme is used, where the data is encrypted with a Data Encryption Key (DEK) and the DEK is encrypted with a Key Encryption Key (KEK).
+
+User requires a Key Management System to encrypt the Data Encryption Key (DEK).
+
+#### How to securely index new data?
+
+> [!NOTE]
+> The user is already authenticated and has the `write` permission to a given index.
+
+```mermaid
+sequenceDiagram
+  autonumber
+  actor U as User
+  participant K as Key Management System
+  participant F as Findex server
+
+  U->>K: User requests a Key Encryption Key (KEK)
+  K->>U: Send an ID of the KEK
+  U->>U: Generate an ephemeral Data Encryption Key (DEK)
+  U->>K: Encrypt the DEK with the KEK (RFC5649)
+  K->>U: Send the encrypted DEK (encapsulation)
+
+  loop Read and encrypt locally the dataset
+    U-->U: Read line by line the dataset
+    U-->U: For each line, an unique identifier (UID) is generated
+    U-->U: Each line is encrypted with the DEK (AES-256-GCM)
+  end
+
+  U->>F: Send all encrypted lines (and encapsulation) and corresponding UIDs to a given Index ID
+
+  loop Index and encrypt locally the dataset
+    U->>U: Index plaintext line by keywords resulting encrypted indexes
+  end
+
+  U->>F: Send encrypted indexes
+```
+
+> [!WARNING]
+> For now, only Redis database is supported.
+
+#### How to securely search indexed data?
+
+> [!NOTE]
+> The user is already authenticated and has the `write` permission to a given index.
+
+```mermaid
+sequenceDiagram
+  autonumber
+  actor U as User
+  participant F as Findex server
+  participant K as Key Management System
+
+  U->>F: User does a search query by keywords
+  F->>U: If data has been indexed with the given keywords, sends dataset UIDs
+  U->>F: User requests the values of the dataset UIDs
+  F->>U: Sends the encrypted values of the dataset UIDs
+
+  loop Read the encrypted values
+    U->>U: For each value, get the encrypted DEK (encapsulation)
+    U->>K: Decrypt the DEK with the KEK
+    K->>U: Send the decrypted DEK
+    U->>U: Decrypt each value with the DEK
+  end
+```
+
+##### Store and retrieve encrypted indexes as Findex requirements
 
 According the Findex REST client implementation found in [cloudproof_rust](https://github.com/Cosmian/cloudproof_rust), the server presents the following endpoints:
 
@@ -282,7 +425,7 @@ According the Findex REST client implementation found in [cloudproof_rust](https
 
 The encryption is done by the client before sending the data to the server.
 
-### Store and retrieve the encrypted version of the data that has been indexed
+##### Store and retrieve the encrypted version of the data that has been indexed
 
 Findex server stores as it is the encrypted version of the data that has been indexed. The server presents the following endpoints:
 

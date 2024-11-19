@@ -6,10 +6,10 @@ use test_findex_server::{
 use tracing::trace;
 use uuid::Uuid;
 
-use super::{add_or_delete::add_or_delete_cmd, search::search_cmd};
+use super::{index_or_delete::index_or_delete_cmd, search::search_cmd};
 use crate::{
     actions::{
-        findex::{add_or_delete::AddOrDeleteAction, search::SearchAction, FindexParameters},
+        findex::{index_or_delete::IndexOrDeleteAction, search::SearchAction, FindexParameters},
         permissions::{GrantPermission, ListPermissions, RevokePermission},
     },
     error::result::CliResult,
@@ -19,10 +19,10 @@ use crate::{
 };
 
 fn add(cli_conf_path: &str, index_id: &Uuid) -> CliResult<()> {
-    add_or_delete_cmd(
+    index_or_delete_cmd(
         cli_conf_path,
-        "add",
-        AddOrDeleteAction {
+        "index",
+        IndexOrDeleteAction {
             findex_parameters: FindexParameters {
                 key: "11223344556677889900AABBCCDDEEFF".to_owned(),
                 label: "My Findex label".to_owned(),
@@ -35,10 +35,10 @@ fn add(cli_conf_path: &str, index_id: &Uuid) -> CliResult<()> {
 }
 
 fn delete(cli_conf_path: &str, index_id: &Uuid) -> CliResult<()> {
-    add_or_delete_cmd(
+    index_or_delete_cmd(
         cli_conf_path,
         "delete",
-        AddOrDeleteAction {
+        IndexOrDeleteAction {
             findex_parameters: FindexParameters {
                 key: "11223344556677889900AABBCCDDEEFF".to_owned(),
                 label: "My Findex label".to_owned(),
