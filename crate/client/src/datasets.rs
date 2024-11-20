@@ -10,7 +10,7 @@ use crate::{
 };
 
 impl FindexRestClient {
-    #[instrument(ret(Display), err, skip(self))]
+    #[instrument(ret(Display), err, skip_all)]
     pub async fn add_entries(
         // todo(manu): revisit function names (prefix with dataset_, findex_, permissions)
         &self,

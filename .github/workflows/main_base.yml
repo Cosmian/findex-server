@@ -20,7 +20,7 @@ jobs:
       - uses: EmbarkStudios/cargo-deny-action@v1
 
   docker-image:
-    if: inputs.debug_or_release == 'release'
+    # if: inputs.debug_or_release == 'release'
     name: Build docker image
     uses: ./.github/workflows/build_docker_image.yml
     with:
