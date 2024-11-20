@@ -25,37 +25,39 @@ The authentication Flow can be summarized as follows:
 
 1. Client Requests Authorization:
 
-The client application initiates an authorization request. This is done via an OAuth 2.0 Authorization Code Flow. The client redirects the user to the Authorization Server (e.g., Google, GitHub, or a custom server) that has to be owned by the client.
+    The client application initiates an authorization request. This is done via an OAuth 2.0 Authorization Code Flow. The client redirects the user to the Authorization Server (e.g., Google, GitHub, or a custom server) that has to be owned by the client.
 
 2. User Authenticates:
 
-The user authenticates with their credentials (e.g., username/password, social login). The Authorization Server verifies the user's identity.
+    The user authenticates with their credentials (e.g., username/password, social login). The Authorization Server verifies the user's identity.
 
 3. Access Token Issuance (JWT)
 
-The Authorization Server issues an Access Token in the form of a JWT. The token contains:
+    The Authorization Server issues an Access Token in the form of a JWT. The token contains:
 
-- Header: Token type (JWT) and signing algorithm (e.g., RS256).
-- Payload (Claims): User information, permissions, expiration time (exp), issuer (iss), audience (aud), etc.
-- Signature: Ensures the integrity and authenticity of the token.
+    - Header: Token type (JWT) and signing algorithm (e.g., RS256).
+    - Payload (Claims): User information, permissions, expiration time (exp), issuer (iss), audience (aud), etc.
+    - Signature: Ensures the integrity and authenticity of the token.
 
 4. Client Accesses Protected Resources
-The client includes the JWT in the Authorization header of HTTP requests to the Resource Server:
 
-```html
-Authorization: Bearer <JWT Access Token>
-```
+    The client includes the JWT in the Authorization header of HTTP requests to the Resource Server:
+
+    ```html
+    Authorization: Bearer <JWT Access Token>
+    ```
 
 5. Token Validation
-The Resource Server validates the JWT by:
 
-- Verifying the signature (using a public key if signed with RS256).
-- Checking standard claims (e.g., exp, iss, aud) for validity.
-- Decoding the payload to extract user information and permissions.
+    The Resource Server validates the JWT by:
+
+    - Verifying the signature (using a public key if signed with RS256).
+    - Checking standard claims (e.g., exp, iss, aud) for validity.
+    - Decoding the payload to extract user information and permissions.
 
 6. Access Granted or Denied
 
-If the JWT is valid, the Resource Server allows access to the requested resources based on the user's claims. If invalid (e.g., expired, tampered), the request is denied with an HTTP 401 Unauthorized error.
+    If the JWT is valid, the Resource Server allows access to the requested resources based on the user's claims. If invalid (e.g., expired, tampered), the request is denied with an HTTP 401 Unauthorized error.
 
 ```mermaid
 sequenceDiagram

@@ -51,7 +51,7 @@ plugins:
   - kroki
   - meta-descriptions
 nav:
-  - Getting started with Findex server: index.md
+  - Getting started: index.md
   - User authentication: authentication.md
   - User authorization: authorization.md
   - Database: database.md

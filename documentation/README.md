@@ -1,4 +1,4 @@
-## TL;DR
+# TL;DR
 
 The main documentation of the Findex server is in [docs/index.md](./docs/index.md)
 

@@ -15,10 +15,6 @@ written in [**Rust**](https://www.rust-lang.org/) that provides a REST API.
       - [How It Works](#how-it-works)
       - [Benefits](#benefits)
     - [Features](#features)
-    - [Configuration file](#configuration-file)
-      - [Example without authentication](#example-without-authentication)
-      - [Example with X509 authentication](#example-with-x509-authentication)
-      - [Example with OpenID authentication](#example-with-openid-authentication)
 
 ## What is Findex?
 
