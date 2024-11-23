@@ -3,3 +3,7 @@ pub use error::FindexConfigError;
 
 mod config;
 mod error;
+
+pub mod reexport {
+    pub use cosmian_config_utils;
+}

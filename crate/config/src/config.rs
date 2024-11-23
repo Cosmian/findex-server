@@ -31,8 +31,8 @@ use crate::error::result::FindexConfigResult;
 /// This function returns a FINDEX client configured according to the settings
 /// specified in the configuration file.
 pub const FINDEX_CLI_CONF_ENV: &str = "FINDEX_CLI_CONF";
-pub(crate) const FINDEX_CLI_CONF_DEFAULT_SYSTEM_PATH: &str = "/etc/cosmian/findex.json";
-pub(crate) const FINDEX_CLI_CONF_PATH: &str = ".cosmian/findex.json";
+pub(crate) const FINDEX_CLI_CONF_DEFAULT_SYSTEM_PATH: &str = "/etc/cosmian/findex.toml";
+pub(crate) const FINDEX_CLI_CONF_PATH: &str = ".cosmian/findex.toml";
 
 #[derive(Serialize, Deserialize, Eq, PartialEq, Debug, Clone)]
 pub struct FindexClientConfig {
@@ -81,20 +81,20 @@ mod tests {
         log_init(None);
         // valid conf
         unsafe {
-            env::set_var(FINDEX_CLI_CONF_ENV, "../../test_data/configs/findex.json");
+            env::set_var(FINDEX_CLI_CONF_ENV, "../../test_data/configs/findex.toml");
         }
         let conf_path = FindexClientConfig::location(None).unwrap();
-        assert!(FindexClientConfig::load(&conf_path).is_ok());
+        assert!(FindexClientConfig::from_toml(&conf_path).is_ok());
 
         // another valid conf
         unsafe {
             env::set_var(
                 FINDEX_CLI_CONF_ENV,
-                "../../test_data/configs/findex_partial.json",
+                "../../test_data/configs/findex_partial.toml",
             );
         }
         let conf_path = FindexClientConfig::location(None).unwrap();
-        assert!(FindexClientConfig::load(&conf_path).is_ok());
+        assert!(FindexClientConfig::from_toml(&conf_path).is_ok());
 
         // Default conf file
         unsafe {
@@ -102,7 +102,7 @@ mod tests {
         }
         let _ = fs::remove_file(get_default_conf_path(FINDEX_CLI_CONF_PATH).unwrap());
         let conf_path = FindexClientConfig::location(None).unwrap();
-        assert!(FindexClientConfig::load(&conf_path).is_ok());
+        assert!(FindexClientConfig::from_toml(&conf_path).is_ok());
         assert!(
             get_default_conf_path(FINDEX_CLI_CONF_PATH)
                 .unwrap()
@@ -113,11 +113,11 @@ mod tests {
         unsafe {
             env::set_var(
                 FINDEX_CLI_CONF_ENV,
-                "../../test_data/configs/findex.bad.json",
+                "../../test_data/configs/findex.bad.toml",
             );
         }
         let conf_path = FindexClientConfig::location(None).unwrap();
-        let e = FindexClientConfig::load(&conf_path)
+        let e = FindexClientConfig::from_toml(&conf_path)
             .err()
             .unwrap()
             .to_string();
@@ -128,9 +128,9 @@ mod tests {
             env::remove_var(FINDEX_CLI_CONF_ENV);
         }
         let conf_path = FindexClientConfig::location(Some(PathBuf::from(
-            "../../test_data/configs/findex.json",
+            "../../test_data/configs/findex.toml",
         )))
         .unwrap();
-        assert!(FindexClientConfig::load(&conf_path).is_ok());
+        assert!(FindexClientConfig::from_toml(&conf_path).is_ok());
     }
 }

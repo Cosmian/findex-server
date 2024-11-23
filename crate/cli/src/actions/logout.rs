@@ -33,7 +33,7 @@ impl LogoutAction {
                 "Configuration path `conf_path` must be filled".to_owned(),
             ))
         })?;
-        conf.save(&conf_path)?;
+        conf.to_toml(&conf_path)?;
 
         println!(
             "\nThe access token was removed from the Findex CLI configuration file: {:?}",

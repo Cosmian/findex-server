@@ -52,7 +52,7 @@ impl FindexCli {
     pub fn prepare_config(&self) -> CliResult<FindexClientConfig> {
         // Load configuration file and override with command line options
         let conf_path = FindexClientConfig::location(self.conf.clone())?;
-        let mut conf = FindexClientConfig::load(&conf_path)?;
+        let mut conf = FindexClientConfig::from_toml(&conf_path)?;
         if self.url.is_some() {
             info!("Override URL from configuration file with: {:?}", self.url);
             conf.http_config.server_url = self.url.clone().unwrap_or_default();

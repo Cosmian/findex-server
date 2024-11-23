@@ -1,5 +1,6 @@
 use std::io;
 
+use cosmian_findex_config::reexport::cosmian_config_utils::ConfigUtilsError;
 use cosmian_findex_structs::StructsError;
 use thiserror::Error;
 
@@ -19,6 +20,8 @@ pub enum FindexClientError {
     ReqwestError(#[from] reqwest::Error),
     #[error(transparent)]
     IoError(#[from] io::Error),
+    #[error(transparent)]
+    ConfigUtilsError(#[from] ConfigUtilsError),
 }
 
 /// Construct a server error from a string.

@@ -1,5 +1,5 @@
 use std::{
-    env, fs,
+    env,
     path::{Path, PathBuf},
     sync::mpsc,
     thread::{self, JoinHandle},
@@ -9,7 +9,10 @@ use std::{
 use actix_server::ServerHandle;
 use cosmian_findex_client::{
     findex_client_bail, findex_client_error,
-    reexport::{cosmian_findex_config::FindexClientConfig, cosmian_http_client::HttpClientConfig},
+    reexport::{
+        cosmian_findex_config::{reexport::cosmian_config_utils::ConfigUtils, FindexClientConfig},
+        cosmian_http_client::HttpClientConfig,
+    },
     FindexClientError, FindexRestClient,
 };
 use cosmian_findex_server::{
@@ -18,7 +21,6 @@ use cosmian_findex_server::{
     },
     findex_server::start_findex_server,
 };
-use serde::Serialize;
 use tokio::sync::OnceCell;
 use tracing::{info, trace};
 
@@ -31,28 +33,6 @@ use crate::test_jwt::{get_auth0_jwt_config, AUTH0_TOKEN};
 /// for N-1 tests.
 pub(crate) static ONCE: OnceCell<TestsContext> = OnceCell::const_new();
 pub(crate) static ONCE_SERVER_WITH_AUTH: OnceCell<TestsContext> = OnceCell::const_new();
-
-/// Write all bytes to a file
-pub(crate) fn write_bytes_to_file(
-    bytes: &[u8],
-    file: &impl AsRef<Path>,
-) -> Result<(), FindexClientError> {
-    fs::write(file, bytes)
-        .map_err(|e| findex_client_error!(format!("failed writing the bytes to the file: {e}")))
-}
-
-/// Write a JSON object to a file
-pub(crate) fn write_json_object_to_file<T>(
-    json_object: &T,
-    file: &impl AsRef<Path>,
-) -> Result<(), FindexClientError>
-where
-    T: Serialize,
-{
-    let bytes = serde_json::to_vec::<T>(json_object)
-        .map_err(|e| findex_client_error!("failed serializing the JSON object to bytes: {e}"))?;
-    write_bytes_to_file(&bytes, file)
-}
 
 fn redis_db_config() -> DBConfig {
     let url = if let Ok(var_env) = env::var("REDIS_HOST") {
@@ -304,7 +284,7 @@ fn generate_owner_conf(
     let root_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
 
     // Create a conf
-    let owner_client_conf_path = format!("/tmp/owner_findex_{}.json", server_params.port);
+    let owner_client_conf_path = format!("/tmp/owner_findex_{}.toml", server_params.port);
 
     let owner_client_conf = FindexClientConfig {
         http_config: HttpClientConfig {
@@ -346,8 +326,10 @@ fn generate_owner_conf(
         ..FindexClientConfig::default()
     };
     // write the conf to a file
-    write_json_object_to_file(&owner_client_conf, &owner_client_conf_path)
-        .expect("Can't write owner CLI conf path");
+    FindexClientConfig::to_toml(
+        &owner_client_conf,
+        &Path::new(&owner_client_conf_path).to_path_buf(),
+    )?;
 
     Ok((owner_client_conf_path, owner_client_conf))
 }
@@ -379,8 +361,8 @@ fn generate_user_conf(
     user_conf.http_config.ssl_client_pkcs12_password = Some("password".to_owned());
 
     // write the user conf
-    let user_conf_path = format!("/tmp/user_findex_{port}.json");
-    write_json_object_to_file(&user_conf, &user_conf_path)?;
+    let user_conf_path = format!("/tmp/user_findex_{port}.toml");
+    FindexClientConfig::to_toml(&user_conf, &Path::new(&user_conf_path).to_path_buf())?;
 
     // return the path
     Ok(user_conf_path)
