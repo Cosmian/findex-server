@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use async_trait::async_trait;
 use cosmian_findex_structs::{EncryptedEntries, Uuids};
-use redis::{pipe, AsyncCommands};
+use redis::pipe;
 use tracing::{instrument, trace};
 use uuid::Uuid;
 
@@ -64,7 +64,17 @@ impl DatasetsTrait for Redis {
             .collect::<Vec<_>>();
         trace!("dataset_get_entries: redis_keys len: {}", redis_keys.len());
 
-        let values: Vec<Vec<u8>> = self.mgr.clone().mget(redis_keys).await?;
+        let mut pipe = pipe();
+        for key in redis_keys {
+            pipe.get(key);
+        }
+        let values: Vec<Vec<u8>> = pipe
+            .atomic()
+            .query_async(&mut self.mgr.clone())
+            .await
+            .map_err(FindexServerError::from)?;
+
+        trace!("dataset_get_entries: values len: {}", values.len());
 
         // Zip and filter empty values out.
         let entries = uuids

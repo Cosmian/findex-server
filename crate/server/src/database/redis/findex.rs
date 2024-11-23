@@ -89,7 +89,19 @@ impl FindexTrait for Redis {
             .collect::<Vec<_>>();
         trace!("fetch_entries: redis_keys len: {}", redis_keys.len());
 
-        let values: Vec<Vec<u8>> = self.mgr.clone().mget(redis_keys).await?;
+        // Fetch all the values in an atomic operation.
+        let mut pipe = pipe();
+        for key in redis_keys {
+            pipe.get(key);
+        }
+        let values: Vec<Vec<u8>> = pipe
+            .atomic()
+            .query_async(&mut self.mgr.clone())
+            .await
+            .map_err(FindexServerError::from)?;
+
+        trace!("findex_fetch_entries: values len: {}", values.len());
+
         // Zip and filter empty values out.
         let res = uids
             .into_iter()
@@ -123,7 +135,17 @@ impl FindexTrait for Redis {
             .collect::<Vec<_>>();
         trace!("fetch_chains: redis_keys len: {}", redis_keys.len());
 
-        let values: Vec<Vec<u8>> = self.mgr.clone().mget(redis_keys).await?;
+        // Fetch all the values in an atomic operation.
+        let mut pipe = pipe();
+        for key in redis_keys {
+            pipe.get(key);
+        }
+        let values: Vec<Vec<u8>> = pipe
+            .atomic()
+            .query_async(&mut self.mgr.clone())
+            .await
+            .map_err(FindexServerError::from)?;
+
         // Zip and filter empty values out.
         let res = uids
             .into_iter()
