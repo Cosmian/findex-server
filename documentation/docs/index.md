@@ -5,6 +5,7 @@ written in [**Rust**](https://www.rust-lang.org/) that provides a REST API.
 
 - [Cosmian Findex server](#cosmian-findex-server)
   - [What is Findex?](#what-is-findex)
+  - [What is Findex server?](#what-is-findex-server)
     - [Attacking Model](#attacking-model)
   - [Quick Start](#quick-start)
     - [Docker](#docker)
@@ -26,6 +27,12 @@ Findex aims to solve the following problem:
 > How to securely recover the _location_ of an encrypted data matching a given _keyword_?
 
 Findex has been published as a scientific paper in the IACR ePrint archive: <https://eprint.iacr.org/2024/1541>.
+
+## What is Findex server?
+
+![Architecture client server](../images/Findex.svg)
+
+Findex server is a high-performance, open-source server application written in Rust that implements the Findex protocol and offers a REST API to store encrypted indexes and perform search queries on them. The server is designed to be used in conjunction with the Findex CLI, a command-line interface that allows users to interact with the server.
 
 ### Attacking Model
 
