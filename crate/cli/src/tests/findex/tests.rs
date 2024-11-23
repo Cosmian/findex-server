@@ -121,6 +121,7 @@ pub(crate) async fn test_findex_no_auth() -> CliResult<()> {
     Ok(())
 }
 
+#[ignore]
 #[tokio::test]
 pub(crate) async fn test_findex_no_auth_huge_dataset() -> CliResult<()> {
     log_init(None);

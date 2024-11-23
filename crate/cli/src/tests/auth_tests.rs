@@ -19,7 +19,7 @@ const PORT: u16 = 6667;
 #[allow(clippy::needless_return)]
 #[ignore]
 pub(crate) async fn test_all_authentications() -> CliResult<()> {
-    log_init(option_env!("RUST_LOG"));
+    log_init(None);
     let url = env::var("REDIS_HOST").map_or_else(
         |_| "redis://localhost:6379".to_owned(),
         |var_env| format!("redis://{var_env}:6379"),

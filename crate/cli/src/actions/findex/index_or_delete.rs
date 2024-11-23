@@ -39,7 +39,7 @@ impl IndexOrDeleteAction {
     /// - There is an error reading the CSV records.
     /// - There is an error converting the CSV records to the expected data
     ///   types.
-    #[instrument(ret(Display), err, skip(self))]
+    #[instrument(err, skip(self))]
     pub(crate) fn to_indexed_value_keywords_map(&self) -> CliResult<IndexedValueToKeywordsMap> {
         // read the database
         let mut csv_in_memory = Vec::new();

@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use cosmian_findex_structs::{Permission, Permissions};
-use redis::{pipe, AsyncCommands};
+use redis::pipe;
 use tracing::{instrument, trace};
 use uuid::Uuid;
 
@@ -23,10 +23,12 @@ impl PermissionsTrait for Redis {
                 permissions
             },
         );
-        self.mgr
-            .clone()
-            .set::<_, _, ()>(key, permissions.serialize())
-            .await?;
+        let mut pipe = pipe();
+        pipe.set::<_, _>(key, permissions.serialize());
+        pipe.atomic()
+            .query_async(&mut self.mgr.clone())
+            .await
+            .map_err(FindexServerError::from)?;
 
         Ok(uuid)
     }
@@ -35,13 +37,20 @@ impl PermissionsTrait for Redis {
     async fn get_permissions(&self, user_id: &str) -> FResult<Permissions> {
         let key = user_id.as_bytes().to_vec();
 
-        let value: Option<Vec<u8>> = self.mgr.clone().get(key).await?;
-        let serialized_value = value.ok_or_else(|| {
-            FindexServerError::Unauthorized(format!(
-                "No permission for {user_id} since unwrapping serialized value failed"
-            ))
+        let mut pipe = pipe();
+        pipe.get(key);
+
+        let mut values: Vec<Vec<u8>> = pipe
+            .atomic()
+            .query_async(&mut self.mgr.clone())
+            .await
+            .map_err(FindexServerError::from)?;
+
+        let serialized_value = &values.pop().ok_or_else(|| {
+            FindexServerError::Unauthorized(format!("No permission found for {user_id}"))
         })?;
-        Permissions::deserialize(&serialized_value).map_err(FindexServerError::from)
+
+        Permissions::deserialize(serialized_value).map_err(FindexServerError::from)
     }
 
     async fn get_permission(&self, user_id: &str, index_id: &Uuid) -> FResult<Permission> {
@@ -71,14 +80,8 @@ impl PermissionsTrait for Redis {
             Err(_) => Permissions::new(*index_id, permission),
         };
 
-        // self.mgr
-        //     .clone()
-        //     .set::<_, _, ()>(key, permissions.serialize())
-        //     .await
-        //     .map_err(FindexServerError::from)
-
         let mut pipe = pipe();
-        pipe.set(key, permissions.serialize());
+        pipe.set::<_, _>(key, permissions.serialize());
         pipe.atomic()
             .query_async(&mut self.mgr.clone())
             .await
@@ -91,10 +94,13 @@ impl PermissionsTrait for Redis {
         match self.get_permissions(user_id).await {
             Ok(mut permissions) => {
                 permissions.revoke_permission(index_id);
-                self.mgr
-                    .clone()
-                    .set::<_, _, ()>(key, permissions.serialize())
-                    .await?;
+                let mut pipe = pipe();
+                pipe.set::<_, _>(key, permissions.serialize());
+
+                pipe.atomic()
+                    .query_async(&mut self.mgr.clone())
+                    .await
+                    .map_err(FindexServerError::from)?;
             }
             Err(_) => {
                 trace!("Nothing to revoke since no permission found for index {index_id}");
