@@ -10,8 +10,8 @@ User requires a Key Management System to encrypt the Data Encryption Key (DEK).
 
 ## How to securely index new data?
 
-> [!NOTE]
-> The user is already authenticated and has the `write` permission to a given index.
+!!! info
+    The user is already authenticated and has the `write` permission to a given index.
 
 ```mermaid
 sequenceDiagram
@@ -41,13 +41,13 @@ sequenceDiagram
   U->>F: Send encrypted indexes
 ```
 
-> [!WARNING]
-> For now, only Redis database is supported.
+!!! warning
+    For now, only Redis database is supported.
 
 ## How to securely search indexed data?
 
-> [!NOTE]
-> The user is already authenticated and has the `write` permission to a given index.
+!!! info
+    The user is already authenticated and has the `write` permission to a given index.
 
 ```mermaid
 sequenceDiagram

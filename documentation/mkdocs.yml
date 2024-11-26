@@ -29,7 +29,7 @@ markdown_extensions:
         - name: mermaid
           class: mermaid
           # uncomment this only to test locally the mermaid rendering
-          # format: !!python/name:mermaid2.fence_mermaid_custom
+          # format: !%21python/name:mermaid2.fence_mermaid_custom
   - pymdownx.tabbed:
       alternate_style: true
   - pymdownx.emoji
@@ -53,6 +53,9 @@ plugins:
 
 nav:
   - Getting started: index.md
+  - Quick start:
+      - Server: quick_start.md
+      - Client: quick_start_client.md
   - User authentication: authentication.md
   - User authorization: authorization.md
   - Database: database.md

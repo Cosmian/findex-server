@@ -9,17 +9,15 @@ The application supports two methods of user authentication:
 
 In that case, the Findex server delegates the authentication process to an external OAuth2 server. In fine, the server issues a JWT Access Token that is used to authenticate the user with the Findex server.
 
-> [!WARNING]
-> The Findex server must be run with the following arguments:
->
-> For example with Google OAuth2:
->
-> ```sh
-> docker run -p 66688:6668 --name findex-server ghcr.io/cosmian/findex-server:0.1.0 \
->            --jwt-issuer-uri=https://accounts.google.com \
->            --jwks-uri=https://www.googleapis.com/oauth2/v3/certs \
->            --jwt-audience=cosmian_kms
-> ```
+!!! warning
+    The Findex server must be run with the following arguments:
+    For example with Google OAuth2:
+    ```sh
+    docker run -p 6668:6668 --name findex-server ghcr.io/cosmian/findex-server:0.1.0 \
+               --jwt-issuer-uri=https://accounts.google.com \
+               --jwks-uri=https://www.googleapis.com/oauth2/v3/certs \
+               --jwt-audience=cosmian_findex_server
+    ```
 
 The authentication Flow can be summarized as follows:
 
@@ -74,30 +72,27 @@ sequenceDiagram
   ResourceServer->>User: Access Granted/Denied
 ```
 
-> [!NOTE]
-> JWT is a compact, URL-safe means of representing claims to be transferred between two parties. The claims in a JWT are encoded as a JSON object that is used as the payload of a JSON Web Signature (JWS) structure or as the plaintext of a JSON Web Encryption (JWE) structure. This enables the claims to be digitally signed or integrity protected with a Message Authentication Code (MAC) and/or encrypted.
+!!! info
+    JWT is a compact, URL-safe means of representing claims to be transferred between two parties. The claims in a JWT are encoded as a JSON object that is used as the payload of a JSON Web Signature (JWS) structure or as the plaintext of a JSON Web Encryption (JWE) structure. This enables the claims to be digitally signed or integrity protected with a Message Authentication Code (MAC) and/or encrypted.
 
 Cosmian CLI is helpful to authenticate with the Findex server using OpenID Connect.
 
-> [!TIP]
-> The Cosmian CLI realizes this authentication flow using this simple command:
->
-> ```sh
-> cosmian findex login
-> ```
+!!! info
+    The Cosmian CLI realizes this authentication flow using this simple command:
+    ```sh
+    cosmian findex login
+    ```
 
 ## X509 certificates authentication
 
 In that case, the Findex server uses PKCS12 certificates to authenticate the user. The server requires the client to present a certificate signed by a trusted authority known by itself. The server also presents its own certificate to the client, which the client must verify.
 
-> [!WARNING]
-> The Findex server must be run with the following arguments:
->
-> For example with Google OAuth2:
->
-> ```sh
-> docker run -p 66688:6668 --name findex-server ghcr.io/cosmian/findex-server:0.1.0 \
->            --https-p12-file=server/certificate.p12 \
->            --https-p12-password=complex_password \
->            --authority-cert-file=server/ca.crt
-> ```
+!!! warning
+    The Findex server must be run with the following arguments:
+    For example with Google OAuth2:
+    ```sh
+    docker run -p 6668:6668 --name findex-server ghcr.io/cosmian/findex-server:0.1.0 \
+               --https-p12-file=server/certificate.p12 \
+               --https-p12-password=complex_password \
+               --authority-cert-file=server/ca.crt
+    ```
