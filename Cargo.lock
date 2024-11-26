@@ -822,7 +822,7 @@ checksum = "773648b94d0e5d620f64f280777445740e61fe701025087ec8b57f45c791888b"
 [[package]]
 name = "cosmian_config_utils"
 version = "0.1.0"
-source = "git+https://www.github.com/Cosmian/http_client_server?branch=add_http_client#1ad13732e23cce59712b5df0729439b7d4458d8e"
+source = "git+https://www.github.com/Cosmian/http_client_server?branch=develop#c7ea728c89415a443868cbdf83b0cc7fa7dbefab"
 dependencies = [
  "base64 0.21.7",
  "serde",
@@ -964,7 +964,7 @@ dependencies = [
 [[package]]
 name = "cosmian_http_client"
 version = "0.1.0"
-source = "git+https://www.github.com/Cosmian/http_client_server?branch=add_http_client#1ad13732e23cce59712b5df0729439b7d4458d8e"
+source = "git+https://www.github.com/Cosmian/http_client_server?branch=develop#c7ea728c89415a443868cbdf83b0cc7fa7dbefab"
 dependencies = [
  "actix-web",
  "oauth2",
@@ -982,7 +982,7 @@ dependencies = [
 [[package]]
 name = "cosmian_logger"
 version = "0.1.0"
-source = "git+https://www.github.com/Cosmian/http_client_server?branch=add_http_client#1ad13732e23cce59712b5df0729439b7d4458d8e"
+source = "git+https://www.github.com/Cosmian/http_client_server?branch=develop#c7ea728c89415a443868cbdf83b0cc7fa7dbefab"
 dependencies = [
  "tracing",
  "tracing-subscriber",

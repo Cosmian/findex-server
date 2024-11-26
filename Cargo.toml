@@ -50,9 +50,9 @@ clap = { version = "4.5", default-features = false }
 cloudproof_findex = { git = "https://www.github.com/Cosmian/cloudproof_rust", branch = "feat/add_basic_findex_rest_client" }
 # cosmian_config_utils = { path ="../../core/client_server/crate/config_utils" }
 # cosmian_http_client = { path ="../../core/client_server/crate/http_client" }
-cosmian_http_client = { git = "https://www.github.com/Cosmian/http_client_server", branch = "add_http_client" }
-cosmian_config_utils = { git = "https://www.github.com/Cosmian/http_client_server", branch = "add_http_client" }
-cosmian_logger = { git = "https://www.github.com/Cosmian/http_client_server", branch = "add_http_client" }
+cosmian_http_client = { git = "https://www.github.com/Cosmian/http_client_server", branch = "develop" }
+cosmian_config_utils = { git = "https://www.github.com/Cosmian/http_client_server", branch = "develop" }
+cosmian_logger = { git = "https://www.github.com/Cosmian/http_client_server", branch = "develop" }
 der = { version = "0.7", default-features = false }
 openssl = { version = "0.10", default-features = false }
 pem = "3.0"
