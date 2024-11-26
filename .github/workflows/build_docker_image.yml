@@ -4,9 +4,6 @@ name: Docker build
 on:
   workflow_call:
     inputs:
-      prefix:
-        required: true
-        type: string
       dockerfile:
         required: true
         type: string
@@ -22,7 +19,7 @@ env:
 
 jobs:
   build-and-push-image:
-    name: ${{ inputs.prefix }} Image
+    name: Image
     runs-on: ubuntu-22.04
     container: docker:19.03.15
 

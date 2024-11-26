@@ -24,7 +24,6 @@ jobs:
     name: Build docker image
     uses: ./.github/workflows/build_docker_image.yml
     with:
-      prefix: ''
       dockerfile: Dockerfile
       registry-image: ghcr.io/cosmian/findex-server
       platforms: linux/amd64,linux/arm64
@@ -34,7 +33,6 @@ jobs:
     name: Build docker image
     uses: ./.github/workflows/build_docker_image.yml
     with:
-      prefix: ''
       dockerfile: Dockerfile
       registry-image: ghcr.io/cosmian/findex-server
       platforms: linux/amd64
