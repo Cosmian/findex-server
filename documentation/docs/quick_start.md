@@ -76,3 +76,7 @@ Then, run the server:
 ```sh
 cargo run --bin cosmian_findex_server -- --database-url redis://localhost:6379 --database-type redis
 ```
+
+## Configuration
+
+Please refer to the [configuration documentation](./configuration.md) for more information on how to configure the Findex server.

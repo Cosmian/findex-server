@@ -4,7 +4,7 @@ From the server's perspective, only encrypted data is received and stored as-is.
 
 The requirements database is a key-value store where the keys are unique identifiers (UIDs) and the values are the encrypted indexes or datasets.
 
-In this scenario, the user is responsible for encrypting the data before sending it to the server. A hybrid encryption scheme is used, where the data is encrypted with a Data Encryption Key (DEK) and the DEK is encrypted with a Key Encryption Key (KEK).
+In this scenario, the user is responsible for encrypting the data before sending it to the server. For example, a KEM/DEM encryption scheme can be used. KEM stands for Key Encapsulation Mechanism and DEM for Data Encapsulation Mechanism. A few words, the data is encrypted with a Data Encryption Key (DEK) and the DEK is encrypted with a Key Encryption Key (KEK) and sent along with the encrypted data.
 
 User requires a Key Management System to encrypt the Data Encryption Key (DEK).
 
@@ -12,6 +12,8 @@ User requires a Key Management System to encrypt the Data Encryption Key (DEK).
 
 !!! info
     The user is already authenticated and has the `write` permission to a given index.
+
+An example of KEM-DEM encryption scheme is the crypto-system RFC-5649 + AES-256-GCM.
 
 ```mermaid
 sequenceDiagram
@@ -85,6 +87,16 @@ According the Findex REST client implementation found in [cloudproof_rust](https
 
 The encryption is done by the client before sending the data to the server.
 
+#### Database structure
+
+In a key-value database (like Redis), indexes are stored as follows:
+
+| Key            | Value                  |
+| -------------- | ---------------------- |
+| index_id \|\| id | Findex encrypted index |
+
+Concerning the format of encrypted indexes, please read the [Findex github](https://github.com/Cosmian/findex).
+
 ### Store and retrieve the encrypted version of the data that has been indexed
 
 Findex server stores as it is the encrypted version of the data that has been indexed. The server presents the following endpoints:
@@ -96,3 +108,11 @@ Findex server stores as it is the encrypted version of the data that has been in
 | `/datasets/{index_id}/datasets_get_entries` | get encrypted entries        |
 
 The encryption is done by the client before sending the data to the server.
+
+#### Database structure
+
+In a key-value database (like Redis), dataset entries are stored as follows:
+
+| Key              | Value                   |
+| ---------------- | ----------------------- |
+| dataset entry id | encrypted dataset entry |

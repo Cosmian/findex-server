@@ -67,3 +67,7 @@ cosmian findex-server search-and-decrypt --key "11223344556677889900AABBCCDDEEFF
 
 Decrypted record: SouthboroughMAUnited States9686
 ```
+
+## Configuration
+
+Please refer to the [configuration documentation](/cosmian_cli/configuration.md) for more information on how to configure the Cosmian CLI.

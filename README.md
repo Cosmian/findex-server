@@ -15,11 +15,6 @@
       - [How It Works](#how-it-works)
       - [Benefits](#benefits)
     - [Features](#features)
-    - [User Authentication](#user-authentication)
-    - [User access authorization](#user-access-authorization)
-    - [Encrypted database and indexes](#encrypted-database-and-indexes)
-    - [Configuration file](#configuration-file)
-      - [Usage](#usage)
 
 ## What is Findex?
 
@@ -36,7 +31,9 @@ Findex has been published as a scientific paper in the IACR ePrint archive: <htt
 
 ## What is Findex server?
 
-Findex server is a high-performance, open-source server application written in Rust that implements the Findex protocol and offers a REST API to store encrypted indexes and perform search queries on them. The server is designed to be used in conjunction with the Findex CLI, a command-line interface that allows users to interact with the server.
+Findex server is a high-performance, open-source server application written in Rust that implements the Findex protocol and offers a REST API to store encrypted indexes and perform search queries on them.  Findex Server mainly is an authentication layer and therefore all data-critical manipulations are performed by a database.
+
+The server is designed to be used in conjunction with the [Cosmian CLI](/cosmian_cli), a command-line interface that allows users to interact with the server.
 
 ### Threat Model
 
@@ -52,6 +49,8 @@ For [Findex server](./documentation/docs/quick_start.md).
 For [Cosmian CLI](./documentation/docs/quick_start_client.md).
 
 ## Findex server
+
+**Findex server** cannot be described without mentioning the principle of **client-side encryption**, since client is responsible of encrypting the data before sending it to the server.
 
 ### Client-Side Encryption
 
@@ -89,26 +88,16 @@ architecture-beta
 - **Data Privacy**: Since the server only handles encrypted data, it cannot access the plaintext information, ensuring data privacy.
 - **Security**: Client-side encryption protects against potential data breaches on the server, as the encrypted data would be useless to an attacker without the decryption keys.
 - **Control**: Users retain full control over their encryption keys and can manage their own security policies.
+- **Database Independence**: Findex server is designed to work with any database, as the encryption and decryption operations are performed independently of the underlying storage mechanism. It relies on state-of-the-art solutions like Redis and can therefore provide a strong data-persistence insurance. An identified issue in the existing SSE literature is that all schemes rely on ad-hoc server implementations, which increases the probability of bugs, crashes and data-loss. In comparison, Findex Server is "just" a glorified Redis, which is good.
 
 By leveraging client-side encryption, Findex ensures that sensitive data remains secure and private, even when stored and processed on an untrusted server.
 
-The Findex server, written in Rust and using the Actix-web framework, is a REST-API server used to store encrypted indexes and perform search queries on them. It is designed to be used in conjunction with the Findex CLI, which is a command-line interface that allows users to interact with the server.
+The Findex server, written in Rust and using the Actix-web framework, is a REST-API server used to store encrypted indexes and perform search queries on them. It is designed to be used in conjunction with the [Cosmian CLI](/cosmian_cli), which is a command-line interface that allows users to interact with the server.
 
 ### Features
 
 The server offers a REST API with the following functionalities:
 
-- **User authentication**
-- **User access authorization**
-- **Store and retrieve encrypted indexes as Findex requirements**
-- **Store and retrieve the encrypted version of the data that has been indexed**
-
-### [User Authentication](./documentation/docs/authentication.md)
-
-### [User access authorization](./documentation/docs/authorization.md)
-
-### [Encrypted database and indexes](./documentation/docs/database.md)
-
-### [Configuration file](./documentation/docs/configuration.md)
-
-#### [Usage](./documentation/docs/usage.md)
+- [User Authentication](./documentation/docs/authentication.md)
+- [User access authorization](./documentation/docs/authorization.md)
+- [Encrypted database and indexes](./documentation/docs/database.md)
