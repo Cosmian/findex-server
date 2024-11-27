@@ -5,7 +5,7 @@ use uuid::Uuid;
 use crate::{
     error::{result::FindexClientResult, FindexClientError},
     handle_error,
-    rest_client::SuccessResponse,
+    rest_client::{handle_status_code, SuccessResponse},
     FindexRestClient,
 };
 
@@ -16,15 +16,8 @@ impl FindexRestClient {
         let server_url = format!("{}{endpoint}", self.client.server_url);
         trace!("POST: {server_url}");
         let response = self.client.client.post(server_url).send().await?;
-        trace!("Response: {response:?}");
-        let status_code = response.status();
-        if status_code.is_success() {
-            return Ok(response.json::<SuccessResponse>().await?);
-        }
 
-        // process error
-        let p = handle_error(&endpoint, response).await?;
-        Err(FindexClientError::RequestFailed(p))
+        handle_status_code(response, &endpoint).await
     }
 
     #[instrument(ret(Display), err, skip(self))]
@@ -38,14 +31,8 @@ impl FindexRestClient {
         let server_url = format!("{}{endpoint}", self.client.server_url);
         trace!("POST: {server_url}");
         let response = self.client.client.post(server_url).send().await?;
-        let status_code = response.status();
-        if status_code.is_success() {
-            return Ok(response.json::<SuccessResponse>().await?);
-        }
 
-        // process error
-        let p = handle_error(&endpoint, response).await?;
-        Err(FindexClientError::RequestFailed(p))
+        handle_status_code(response, &endpoint).await
     }
 
     #[instrument(ret(Display), err, skip(self))]
@@ -59,11 +46,11 @@ impl FindexRestClient {
             let response_bytes = response.bytes().await.map(|r| r.to_vec())?;
             let permissions = Permissions::deserialize(&response_bytes)?;
             return Ok(permissions);
+        } else {
+            // process error
+            let p = handle_error(&endpoint, response).await?;
+            Err(FindexClientError::RequestFailed(p))
         }
-
-        // process error
-        let p = handle_error(&endpoint, response).await?;
-        Err(FindexClientError::RequestFailed(p))
     }
 
     #[instrument(ret(Display), err, skip(self))]
@@ -76,13 +63,7 @@ impl FindexRestClient {
         let server_url = format!("{}{endpoint}", self.client.server_url);
         trace!("POST: {server_url}");
         let response = self.client.client.post(server_url).send().await?;
-        let status_code = response.status();
-        if status_code.is_success() {
-            return Ok(response.json::<SuccessResponse>().await?);
-        }
 
-        // process error
-        let p = handle_error(&endpoint, response).await?;
-        Err(FindexClientError::RequestFailed(p))
+        handle_status_code(response, &endpoint).await
     }
 }

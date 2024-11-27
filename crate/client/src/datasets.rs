@@ -5,7 +5,7 @@ use uuid::Uuid;
 use crate::{
     error::{result::FindexClientResult, FindexClientError},
     handle_error,
-    rest_client::SuccessResponse,
+    rest_client::{handle_status_code, SuccessResponse},
     FindexRestClient,
 };
 
@@ -29,15 +29,7 @@ impl FindexRestClient {
             .send()
             .await?;
 
-        trace!("Response: {response:?}");
-        let status_code = response.status();
-        if status_code.is_success() {
-            return Ok(response.json::<SuccessResponse>().await?);
-        }
-
-        // process error
-        let p = handle_error(&endpoint, response).await?;
-        Err(FindexClientError::RequestFailed(p))
+        handle_status_code(response, &endpoint).await
     }
 
     #[instrument(ret(Display), err, skip(self))]
@@ -58,14 +50,8 @@ impl FindexRestClient {
             .body(uuids)
             .send()
             .await?;
-        let status_code = response.status();
-        if status_code.is_success() {
-            return Ok(response.json::<SuccessResponse>().await?);
-        }
 
-        // process error
-        let p = handle_error(&endpoint, response).await?;
-        Err(FindexClientError::RequestFailed(p))
+        handle_status_code(response, &endpoint).await
     }
 
     #[instrument(ret(Display), err, skip(self))]
@@ -91,10 +77,10 @@ impl FindexRestClient {
             let response_bytes = response.bytes().await.map(|r| r.to_vec())?;
             let encrypted_entries = EncryptedEntries::deserialize(&response_bytes)?;
             return Ok(encrypted_entries);
+        } else {
+            // process error
+            let p = handle_error(&endpoint, response).await?;
+            Err(FindexClientError::RequestFailed(p))
         }
-
-        // process error
-        let p = handle_error(&endpoint, response).await?;
-        Err(FindexClientError::RequestFailed(p))
     }
 }

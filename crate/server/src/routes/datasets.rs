@@ -40,7 +40,6 @@ pub(crate) async fn datasets_add_entries(
         encrypted_entries.len()
     );
 
-    // Collect into a vector to fix the order.
     findex_server
         .db
         .dataset_add_entries(&get_index_id(index_id.as_str())?, &encrypted_entries)

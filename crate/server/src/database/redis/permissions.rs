@@ -26,7 +26,7 @@ impl PermissionsTrait for Redis {
         let mut pipe = pipe();
         pipe.set::<_, _>(key, permissions.serialize());
         pipe.atomic()
-            .query_async(&mut self.mgr.clone())
+            .query_async::<()>(&mut self.mgr.clone())
             .await
             .map_err(FindexServerError::from)?;
 
@@ -98,7 +98,7 @@ impl PermissionsTrait for Redis {
                 pipe.set::<_, _>(key, permissions.serialize());
 
                 pipe.atomic()
-                    .query_async(&mut self.mgr.clone())
+                    .query_async::<()>(&mut self.mgr.clone())
                     .await
                     .map_err(FindexServerError::from)?;
             }

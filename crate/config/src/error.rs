@@ -1,7 +1,7 @@
 use cosmian_config_utils::ConfigUtilsError;
 use thiserror::Error;
 
-pub(crate) mod result;
+pub(crate) type FindexConfigResult<R> = Result<R, FindexConfigError>;
 
 #[derive(Error, Debug)]
 pub enum FindexConfigError {

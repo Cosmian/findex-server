@@ -62,6 +62,21 @@ impl FindexRestClient {
     }
 }
 
+/// Handle the status code of the response.
+pub(crate) async fn handle_status_code(
+    response: Response,
+    endpoint: &str,
+) -> FindexClientResult<SuccessResponse> {
+    trace!("Response: {response:?}");
+    let status_code = response.status();
+    if status_code.is_success() {
+        Ok(response.json::<SuccessResponse>().await?)
+    } else {
+        let p = handle_error(endpoint, response).await?;
+        Err(FindexClientError::RequestFailed(p))
+    }
+}
+
 /// Some errors are returned by the Middleware without going through our own
 /// error manager. In that case, we make the error clearer here for the client.
 pub async fn handle_error(endpoint: &str, response: Response) -> Result<String, FindexClientError> {

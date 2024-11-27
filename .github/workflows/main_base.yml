@@ -46,7 +46,7 @@ jobs:
     uses: ./.github/workflows/build_all.yml
     secrets: inherit
     with:
-      toolchain: nightly-2024-06-09
+      toolchain: ${{ inputs.toolchain }}
       debug_or_release: ${{ inputs.debug_or_release }}
 
   ##############################################################################

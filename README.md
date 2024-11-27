@@ -7,7 +7,8 @@
 
 - [Cosmian Findex server](#cosmian-findex-server)
   - [What is Findex?](#what-is-findex)
-    - [Attacking Model](#attacking-model)
+  - [What is Findex server?](#what-is-findex-server)
+    - [Threat Model](#threat-model)
   - [Quick Start](#quick-start)
   - [Findex server](#findex-server)
     - [Client-Side Encryption](#client-side-encryption)
@@ -24,6 +25,8 @@
 
 Findex is a cryptographic protocol designed to make search queries on an untrusted cloud server securely. Findex is concurrent and database-independent, allowing large database indexes to be outsourced securely without compromising usability.
 
+![Architecture client server](./documentation/docs/images/Findex.svg)
+
 Findex aims to solve the following problem:
 
 > [!IMPORTANT]
@@ -31,9 +34,13 @@ Findex aims to solve the following problem:
 
 Findex has been published as a scientific paper in the IACR ePrint archive: <https://eprint.iacr.org/2024/1541>.
 
-### Attacking Model
+## What is Findex server?
 
-The attacking model for Findex assumes that the cloud server is untrusted and may attempt to infer information from the encrypted indexes and search queries. However, the server is considered honest-but-curious, meaning it will follow the protocol correctly but will try to learn as much as possible from the data it processes. Findex is designed to protect against such adversaries by ensuring that no useful information about the plaintext data or search queries is leaked.
+Findex server is a high-performance, open-source server application written in Rust that implements the Findex protocol and offers a REST API to store encrypted indexes and perform search queries on them. The server is designed to be used in conjunction with the Findex CLI, a command-line interface that allows users to interact with the server.
+
+### Threat Model
+
+The threat model for Findex assumes that the cloud server is untrusted and may attempt to infer information from the encrypted indexes and search queries. However, the server is considered honest-but-curious, meaning it will follow the protocol correctly but will try to learn as much as possible from the data it processes. Findex is designed to protect against such adversaries by ensuring that no useful information about the plaintext data and the minimum of information is leaked during search queries.
 
 > [!IMPORTANT]
 > Basically, the server does not know how are encrypted the indexes nor the datasets they contain. It can only perform search queries on the encrypted indexes and return the results to the client.

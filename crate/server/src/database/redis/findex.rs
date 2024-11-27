@@ -64,7 +64,7 @@ impl Redis {
 
     pub(crate) async fn clear_database(mgr: ConnectionManager) -> FResult<()> {
         redis::cmd("FLUSHDB")
-            .query_async::<_, ()>(&mut mgr.clone())
+            .query_async::<()>(&mut mgr.clone())
             .await?;
         Ok(())
     }
