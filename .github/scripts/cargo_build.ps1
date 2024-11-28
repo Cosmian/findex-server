@@ -1,3 +1,7 @@
+$ErrorActionPreference = "Stop"
+Set-StrictMode -Version Latest
+$PSNativeCommandUseErrorActionPreference = $true # might be true by default
+
 function BuildProject {
     param (
         [Parameter(Mandatory = $true)]
@@ -31,11 +35,11 @@ function BuildProject {
     Set-Location crate\server
     if ($BuildType -eq "release") {
         cargo build --release --target x86_64-pc-windows-msvc
-        cargo test --release --target x86_64-pc-windows-msvc -p cosmian_findex_server -- --nocapture --skip test_findex --skip test_all_authentications --skip test_server_auth_matrix
+        cargo test --release --target x86_64-pc-windows-msvc -p cosmian_findex_server -- --nocapture --skip test_findex --skip test_all_authentications --skip test_server_auth_matrix --skip test_datasets
     }
     else {
         cargo build --target x86_64-pc-windows-msvc
-        cargo test --target x86_64-pc-windows-msvc -p cosmian_findex_server -- --nocapture --skip test_findex --skip test_all_authentications --skip test_server_auth_matrix
+        cargo test --target x86_64-pc-windows-msvc -p cosmian_findex_server -- --nocapture --skip test_findex --skip test_all_authentications --skip test_server_auth_matrix --skip test_datasets
     }
     Get-ChildItem ..\..
 

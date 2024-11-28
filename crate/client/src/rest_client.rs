@@ -67,9 +67,7 @@ pub(crate) async fn handle_status_code(
     response: Response,
     endpoint: &str,
 ) -> FindexClientResult<SuccessResponse> {
-    trace!("Response: {response:?}");
-    let status_code = response.status();
-    if status_code.is_success() {
+    if response.status().is_success() {
         Ok(response.json::<SuccessResponse>().await?)
     } else {
         let p = handle_error(endpoint, response).await?;

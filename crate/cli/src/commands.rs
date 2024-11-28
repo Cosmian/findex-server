@@ -10,6 +10,7 @@ use tracing::info;
 
 use crate::{
     actions::{
+        datasets::DatasetsAction,
         findex::{index_or_delete::IndexOrDeleteAction, search::SearchAction},
         login::LoginAction,
         logout::LogoutAction,
@@ -80,6 +81,8 @@ pub enum CoreFindexActions {
     Logout(LogoutAction),
     #[command(subcommand)]
     Permissions(PermissionsAction),
+    #[command(subcommand)]
+    Datasets(DatasetsAction),
 }
 
 impl CoreFindexActions {
@@ -96,6 +99,7 @@ impl CoreFindexActions {
             Self::Search(action) => action.process(findex_client).await,
             Self::ServerVersion(action) => action.process(findex_client).await,
             Self::Permissions(action) => action.process(findex_client).await,
+            Self::Datasets(action) => action.process(findex_client).await,
         }
     }
 }

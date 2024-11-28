@@ -65,7 +65,7 @@ impl Display for EncryptedEntries {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         for (index_id, entry) in &self.entries {
             let entry_b64 = general_purpose::STANDARD.encode(entry);
-            writeln!(f, "Index ID: {index_id}, Entry: {entry_b64}")?;
+            writeln!(f, "Entry ID: {index_id}, Entry Value: {entry_b64}")?;
         }
         Ok(())
     }

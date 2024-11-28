@@ -22,7 +22,7 @@ impl DatasetsTrait for Redis {
     //
     // Dataset management
     //
-    #[instrument(ret, err, skip(self))]
+    #[instrument(ret, err, skip_all)]
     async fn dataset_add_entries(
         &self,
         index_id: &Uuid,

@@ -48,6 +48,8 @@ pub enum CliError {
     ErrorDbInterfaceError(#[from] cosmian_findex::Error<DbInterfaceError>),
     #[error(transparent)]
     UuidError(#[from] uuid::Error),
+    #[error(transparent)]
+    Base64(#[from] base64::DecodeError),
     // Other errors
     #[error("{0}")]
     Default(String),
