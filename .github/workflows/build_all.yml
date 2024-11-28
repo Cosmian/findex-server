@@ -61,7 +61,7 @@ jobs:
       skip_services_tests: --skip test_findex --skip test_all_authentications --skip test_server_auth_matrix --skip test_datasets
 
   windows-2022:
-    # if: inputs.debug_or_release == 'release'
+    if: inputs.debug_or_release == 'release'
     uses: ./.github/workflows/build_windows.yml
     with:
       toolchain: ${{ inputs.toolchain }}

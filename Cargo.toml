@@ -57,12 +57,13 @@ der = { version = "0.7", default-features = false }
 openssl = { version = "0.10", default-features = false }
 pem = "3.0"
 reqwest = { version = "0.11", default-features = false }
-serde = "1.0.213"
-serde_json = "1.0.132"
-thiserror = "1.0.65"
+serde = "1.0.215"
+serde_json = "1.0.133"
+thiserror = "2.0.3"
 tokio = { version = "1.41", default-features = false }
-tracing = "0.1"
-url = "2.5"
+tempfile = "3.14"
+tracing = "0.1.41"
+url = "2.5.4"
 x509-parser = "0.16"
 zeroize = { version = "1.8", default-features = false }
-uuid = { version = "1.10", features = ["v4"] }
+uuid = { version = "1.11", features = ["v4"] }

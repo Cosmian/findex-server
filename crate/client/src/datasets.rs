@@ -10,7 +10,7 @@ use crate::{
 };
 
 impl FindexRestClient {
-    #[instrument(ret(Display), err, skip_all)]
+    #[instrument(ret(Display), err, skip_all, level = "trace")]
     pub async fn add_entries(
         // todo(manu): revisit function names (prefix with dataset_, findex_, permissions)
         &self,
@@ -32,7 +32,7 @@ impl FindexRestClient {
         handle_status_code(response, &endpoint).await
     }
 
-    #[instrument(ret(Display), err, skip(self))]
+    #[instrument(ret(Display), err, skip(self), level = "trace")]
     pub async fn delete_entries(
         &self,
         index_id: &Uuid,
@@ -54,7 +54,7 @@ impl FindexRestClient {
         handle_status_code(response, &endpoint).await
     }
 
-    #[instrument(ret(Display), err, skip(self))]
+    #[instrument(ret(Display), err, skip(self), level = "trace")]
     pub async fn get_entries(
         &self,
         index_id: &Uuid,

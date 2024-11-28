@@ -114,7 +114,7 @@ fn parse_entries(s: &str) -> CliResult<EncryptedEntries> {
 }
 
 #[tokio::test]
-#[allow(clippy::panic_in_result_fn)]
+#[allow(clippy::panic_in_result_fn, clippy::print_stdout)]
 pub(crate) async fn test_datasets() -> CliResult<()> {
     log_init(None);
     let ctx = start_default_test_findex_server().await;
@@ -150,7 +150,7 @@ pub(crate) async fn test_datasets() -> CliResult<()> {
             uuids: uuids.clone(),
         },
     )?;
-    // println!("added_entries: {}", added_entries);
+    // println!("added_entries: {added_entries}");
     assert_eq!(added_entries.len(), entries_number);
 
     dataset_delete_entries_cmd(
@@ -162,10 +162,10 @@ pub(crate) async fn test_datasets() -> CliResult<()> {
     )?;
 
     // Get the added entries from the dataset
-    let added_entries =
+    let deleted_entries =
         datasets_get_entries_cmd(&ctx.owner_client_conf_path, &GetEntries { index_id, uuids })?;
-    // println!("added_entries: {}", added_entries);
-    assert_eq!(added_entries.len(), 0);
+    // println!("added_entries: {added_entries}");
+    assert_eq!(deleted_entries.len(), 0);
 
     Ok(())
 }
