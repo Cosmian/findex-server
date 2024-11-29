@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use cosmian_findex_structs::{Permission, Permissions};
 use redis::{pipe, transaction, Commands, RedisError};
-use tracing::{instrument, trace};
+use tracing::{debug, instrument, trace};
 use uuid::Uuid;
 
 use super::Redis;
@@ -21,50 +21,45 @@ impl PermissionsTrait for Redis {
         let uuid = Uuid::new_v4();
 
         // run the transaction block.
-        let (new_val,): (Vec<Vec<u8>>,) = transaction(&mut con, &[key], |con, pipe| {
-            // load the old value, so we know what to increment.
-            let mut values: Vec<Vec<u8>> = con.get(key)?;
-            trace!("values: {values:?}");
+        let (mut returned_permissions_by_redis,): (Vec<Vec<u8>>,) =
+            transaction(&mut con, &[key], |con, pipe| {
+                // load the old value, so we know what to increment.
+                let mut values: Vec<Vec<u8>> = con.get(key)?;
+                trace!("values: {values:?}");
 
-            let permissions = if values.is_empty() {
-                // if there is no value, we create a new one
-                Permissions::new(uuid, Permission::Admin)
-            } else {
-                // Deserialize permissions
-                let serialized_value = &values.pop().ok_or_else(|| {
-                    RedisError::from((redis::ErrorKind::TypeError, "No permission found"))
-                })?;
-                let mut permissions = Permissions::deserialize(serialized_value).map_err(|_e| {
-                    RedisError::from((redis::ErrorKind::TypeError, "Failed to deserialize"))
-                })?;
+                let permissions = if values.is_empty() {
+                    // if there is no value, we create a new one
+                    Permissions::new(uuid, Permission::Admin)
+                } else {
+                    // Deserialize permissions
+                    let serialized_value = &values.pop().ok_or_else(|| {
+                        RedisError::from((redis::ErrorKind::TypeError, "No permission found"))
+                    })?;
+                    let mut permissions =
+                        Permissions::deserialize(serialized_value).map_err(|_e| {
+                            RedisError::from((redis::ErrorKind::TypeError, "Failed to deserialize"))
+                        })?;
 
-                permissions.grant_permission(uuid, Permission::Admin);
-                permissions
-            };
+                    permissions.grant_permission(uuid, Permission::Admin);
+                    permissions
+                };
 
-            // increment
-            pipe.set(key, permissions.serialize())
-                .ignore()
-                .get(key)
-                .query(con)
+                // increment
+                pipe.set(key, permissions.serialize())
+                    .ignore()
+                    .get(key)
+                    .query(con)
+            })?;
+
+        // Deserialize permissions
+        let serialized_value = returned_permissions_by_redis.pop().ok_or_else(|| {
+            FindexServerError::Unauthorized(format!(
+                "No permission found written for user {user_id}"
+            ))
         })?;
-        trace!("new_val: {:?}", new_val);
+        let returned_permissions = Permissions::deserialize(&serialized_value)?;
 
-        // let uuid = Uuid::new_v4();
-        // let permissions = (self.get_permissions(user_id).await).map_or_else(
-        //     |_error| Permissions::new(uuid, Permission::Admin),
-        //     |mut permissions| {
-        //         permissions.grant_permission(uuid, Permission::Admin);
-        //         permissions
-        //     },
-        // );
-        // let mut con = self.client.get_multiplexed_async_connection().await?;
-        // let mut pipe = pipe();
-        // pipe.set::<_, _>(key, permissions.serialize());
-        // pipe.atomic()
-        //     .query_async::<()>(&mut con)
-        //     .await
-        //     .map_err(FindexServerError::from)?;
+        debug!("new permissions for user {user_id}: {returned_permissions:?}",);
 
         Ok(uuid)
     }
