@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use async_trait::async_trait;
 use cosmian_findex_structs::{EncryptedEntries, Uuids};
-use redis::pipe;
+use redis::{pipe, transaction, RedisError};
 use tracing::{instrument, trace};
 use uuid::Uuid;
 
@@ -43,14 +43,19 @@ impl DatasetsTrait for Redis {
     #[instrument(ret, err, skip(self), level = "trace")]
     async fn dataset_delete_entries(&self, index_id: &Uuid, uuids: &Uuids) -> FResult<()> {
         let mut con = self.client.get_connection()?;
-        let mut pipe = pipe();
-        for entry_id in uuids.iter() {
-            let key = build_dataset_key(index_id, entry_id);
-            pipe.del(key);
-        }
-        pipe.atomic()
-            .query(&mut con)
-            .map_err(FindexServerError::from)
+        let keys = uuids
+            .iter()
+            .map(|uid| build_dataset_key(index_id, uid))
+            .collect::<Vec<_>>();
+        let result: Result<(), RedisError> = transaction(&mut con, &[&keys], |con, pipe| {
+            for key in &keys {
+                pipe.del(key);
+            }
+            pipe.query(con).map_err(|_e| {
+                RedisError::from((redis::ErrorKind::TypeError, "Failed to delete entries"))
+            })
+        });
+        Ok(result?)
     }
 
     #[instrument(ret(Display), err, skip(self), level = "trace")]
