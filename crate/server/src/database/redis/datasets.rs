@@ -28,7 +28,7 @@ impl DatasetsTrait for Redis {
         index_id: &Uuid,
         entries: &EncryptedEntries,
     ) -> FResult<()> {
-        let mut con = self.client.get_multiplexed_async_connection().await?;
+        let mut con = self.client.get_connection()?;
 
         let mut pipe = pipe();
         for (entry_id, data) in entries.iter() {
@@ -36,22 +36,20 @@ impl DatasetsTrait for Redis {
             pipe.set(key, data);
         }
         pipe.atomic()
-            .query_async(&mut con)
-            .await
+            .query(&mut con)
             .map_err(FindexServerError::from)
     }
 
     #[instrument(ret, err, skip(self), level = "trace")]
     async fn dataset_delete_entries(&self, index_id: &Uuid, uuids: &Uuids) -> FResult<()> {
-        let mut con = self.client.get_multiplexed_async_connection().await?;
+        let mut con = self.client.get_connection()?;
         let mut pipe = pipe();
         for entry_id in uuids.iter() {
             let key = build_dataset_key(index_id, entry_id);
             pipe.del(key);
         }
         pipe.atomic()
-            .query_async(&mut con)
-            .await
+            .query(&mut con)
             .map_err(FindexServerError::from)
     }
 
@@ -67,15 +65,14 @@ impl DatasetsTrait for Redis {
             .collect::<Vec<_>>();
         trace!("dataset_get_entries: redis_keys len: {}", redis_keys.len());
 
-        let mut con = self.client.get_multiplexed_async_connection().await?;
+        let mut con = self.client.get_connection()?;
         let mut pipe = pipe();
         for key in redis_keys {
             pipe.get(key);
         }
         let values: Vec<Vec<u8>> = pipe
             .atomic()
-            .query_async(&mut con)
-            .await
+            .query(&mut con)
             .map_err(FindexServerError::from)?;
 
         trace!("dataset_get_entries: values len: {}", values.len());
