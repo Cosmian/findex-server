@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use async_trait::async_trait;
 use cosmian_findex_structs::{EncryptedEntries, Uuids};
-use redis::{pipe, transaction, RedisError};
+use redis::pipe;
 use tracing::{instrument, trace};
 use uuid::Uuid;
 
@@ -28,34 +28,28 @@ impl DatasetsTrait for Redis {
         index_id: &Uuid,
         entries: &EncryptedEntries,
     ) -> FResult<()> {
-        let mut con = self.client.get_connection()?;
-
         let mut pipe = pipe();
         for (entry_id, data) in entries.iter() {
             let key = build_dataset_key(index_id, entry_id);
             pipe.set(key, data);
         }
         pipe.atomic()
-            .query(&mut con)
+            .query_async(&mut self.mgr.clone())
+            .await
             .map_err(FindexServerError::from)
     }
 
     #[instrument(ret, err, skip(self), level = "trace")]
     async fn dataset_delete_entries(&self, index_id: &Uuid, uuids: &Uuids) -> FResult<()> {
-        let mut con = self.client.get_connection()?;
-        let keys = uuids
-            .iter()
-            .map(|uid| build_dataset_key(index_id, uid))
-            .collect::<Vec<_>>();
-        let result: Result<(), RedisError> = transaction(&mut con, &[&keys], |con, pipe| {
-            for key in &keys {
-                pipe.del(key);
-            }
-            pipe.query(con).map_err(|_e| {
-                RedisError::from((redis::ErrorKind::TypeError, "Failed to delete entries"))
-            })
-        });
-        Ok(result?)
+        let mut pipe = pipe();
+        for entry_id in uuids.iter() {
+            let key = build_dataset_key(index_id, entry_id);
+            pipe.del(key);
+        }
+        pipe.atomic()
+            .query_async(&mut self.mgr.clone())
+            .await
+            .map_err(FindexServerError::from)
     }
 
     #[instrument(ret(Display), err, skip(self), level = "trace")]
@@ -70,14 +64,14 @@ impl DatasetsTrait for Redis {
             .collect::<Vec<_>>();
         trace!("dataset_get_entries: redis_keys len: {}", redis_keys.len());
 
-        let mut con = self.client.get_connection()?;
         let mut pipe = pipe();
         for key in redis_keys {
             pipe.get(key);
         }
         let values: Vec<Vec<u8>> = pipe
             .atomic()
-            .query(&mut con)
+            .query_async(&mut self.mgr.clone())
+            .await
             .map_err(FindexServerError::from)?;
 
         trace!("dataset_get_entries: values len: {}", values.len());

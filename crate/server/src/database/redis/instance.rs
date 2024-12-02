@@ -1,4 +1,4 @@
-use redis::{Client, Script};
+use redis::{aio::ConnectionManager, Client, Script};
 use tracing::info;
 
 use crate::error::result::FResult;
@@ -18,6 +18,7 @@ const CONDITIONAL_UPSERT_SCRIPT: &str = r"
 
 pub(crate) struct Redis {
     pub(crate) client: Client,
+    pub(crate) mgr: ConnectionManager,
     pub(crate) upsert_script: Script,
 }
 
@@ -26,19 +27,22 @@ impl Redis {
     pub(crate) async fn instantiate(redis_url: &str, clear_database: bool) -> FResult<Self> {
         let client = redis::Client::open(redis_url)?;
 
+        let mgr = ConnectionManager::new(client.clone()).await?;
         if clear_database {
             info!("Warning: Irreversible operation: clearing the database");
-            Self::clear_database(&client).await?;
+            Self::clear_database(mgr.clone()).await?;
         }
         Ok(Self {
             client,
+            mgr,
             upsert_script: Script::new(CONDITIONAL_UPSERT_SCRIPT),
         })
     }
 
-    pub(crate) async fn clear_database(client: &Client) -> FResult<()> {
-        let mut con = client.get_multiplexed_async_connection().await?;
-        redis::cmd("FLUSHDB").query_async::<()>(&mut con).await?;
+    pub(crate) async fn clear_database(mgr: ConnectionManager) -> FResult<()> {
+        redis::cmd("FLUSHDB")
+            .query_async::<()>(&mut mgr.clone())
+            .await?;
         Ok(())
     }
 }

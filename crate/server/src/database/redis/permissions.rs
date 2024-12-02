@@ -68,14 +68,13 @@ impl PermissionsTrait for Redis {
     async fn get_permissions(&self, user_id: &str) -> FResult<Permissions> {
         let key = user_id.as_bytes().to_vec();
 
-        let mut con = self.client.get_connection()?;
-
         let mut pipe = pipe();
         pipe.get(key);
 
         let mut values: Vec<Vec<u8>> = pipe
             .atomic()
-            .query(&mut con)
+            .query_async(&mut self.mgr.clone())
+            .await
             .map_err(FindexServerError::from)?;
 
         let serialized_value = &values.pop().ok_or_else(|| {
@@ -112,11 +111,10 @@ impl PermissionsTrait for Redis {
             Err(_) => Permissions::new(*index_id, permission),
         };
 
-        let mut con = self.client.get_multiplexed_async_connection().await?;
         let mut pipe = pipe();
         pipe.set::<_, _>(key, permissions.serialize());
         pipe.atomic()
-            .query_async(&mut con)
+            .query_async(&mut self.mgr.clone())
             .await
             .map_err(FindexServerError::from)
     }
@@ -128,13 +126,11 @@ impl PermissionsTrait for Redis {
             Ok(mut permissions) => {
                 permissions.revoke_permission(index_id);
 
-                let mut con = self.client.get_multiplexed_async_connection().await?;
-
                 let mut pipe = pipe();
                 pipe.set::<_, _>(key, permissions.serialize());
 
                 pipe.atomic()
-                    .query_async::<()>(&mut con)
+                    .query_async::<()>(&mut self.mgr.clone())
                     .await
                     .map_err(FindexServerError::from)?;
             }

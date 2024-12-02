@@ -50,14 +50,13 @@ impl FindexTrait for Redis {
         trace!("fetch_entries: redis_keys len: {}", redis_keys.len());
 
         // Fetch all the values in an atomic operation.
-        let mut con = self.client.get_multiplexed_async_connection().await?;
         let mut pipe = pipe();
         for key in redis_keys {
             pipe.get(key);
         }
         let values: Vec<Vec<u8>> = pipe
             .atomic()
-            .query_async(&mut con)
+            .query_async(&mut self.mgr.clone())
             .await
             .map_err(FindexServerError::from)?;
 
@@ -97,15 +96,13 @@ impl FindexTrait for Redis {
         trace!("fetch_chains: redis_keys len: {}", redis_keys.len());
 
         // Fetch all the values in an atomic operation.
-        let mut con = self.client.get_multiplexed_async_connection().await?;
-
         let mut pipe = pipe();
         for key in redis_keys {
             pipe.get(key);
         }
         let values: Vec<Vec<u8>> = pipe
             .atomic()
-            .query_async(&mut con)
+            .query_async(&mut self.mgr.clone())
             .await
             .map_err(FindexServerError::from)?;
 
@@ -155,7 +152,6 @@ impl FindexTrait for Redis {
         );
 
         let mut rejected = HashMap::with_capacity(new_values.len());
-        let mut con = self.client.get_multiplexed_async_connection().await?;
         for (uid, new_value) in new_values {
             let new_value = Vec::from(&new_value);
             let old_value = old_values.get(&uid).map(Vec::from).unwrap_or_default();
@@ -166,7 +162,7 @@ impl FindexTrait for Redis {
                 .arg(key)
                 .arg(old_value)
                 .arg(new_value)
-                .invoke_async(&mut con)
+                .invoke_async(&mut self.mgr.clone())
                 .await?;
 
             if !indexed_value.is_empty() {
@@ -186,13 +182,12 @@ impl FindexTrait for Redis {
         index_id: &Uuid,
         items: TokenToEncryptedValueMap<LINK_LENGTH>,
     ) -> FResult<()> {
-        let mut con = self.client.get_multiplexed_async_connection().await?;
         let mut pipe = pipe();
         for (k, v) in &*items {
             pipe.set(build_key(index_id, FindexTable::Chain, k), Vec::from(v));
         }
         pipe.atomic()
-            .query_async(&mut con)
+            .query_async(&mut self.mgr.clone())
             .await
             .map_err(FindexServerError::from)
     }
@@ -204,14 +199,13 @@ impl FindexTrait for Redis {
         findex_table: FindexTable,
         entry_uids: Tokens,
     ) -> FResult<()> {
-        let mut con = self.client.get_multiplexed_async_connection().await?;
         let mut pipeline = pipe();
         for uid in entry_uids {
             pipeline.del(build_key(index_id, findex_table, &uid));
         }
         pipeline
             .atomic()
-            .query_async(&mut con)
+            .query_async(&mut self.mgr.clone())
             .await
             .map_err(FindexServerError::from)
     }
@@ -219,9 +213,9 @@ impl FindexTrait for Redis {
     #[instrument(ret(Display), err, skip_all, level = "trace")]
     #[allow(clippy::indexing_slicing)]
     async fn findex_dump_tokens(&self, index_id: &Uuid) -> FResult<Tokens> {
-        let mut con = self.client.get_multiplexed_async_connection().await?;
-
-        let keys: Vec<Vec<u8>> = con
+        let keys: Vec<Vec<u8>> = self
+            .mgr
+            .clone()
             .keys(build_key(index_id, FindexTable::Entry, b"*"))
             .await?;
 
