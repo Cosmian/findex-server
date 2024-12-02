@@ -742,7 +742,7 @@ dependencies = [
  "async-trait",
  "base64 0.21.7",
  "cosmian_crypto_core",
- "cosmian_findex",
+ "cosmian_findex 6.0.1",
  "redis 0.23.3",
  "reqwest",
  "serde",
@@ -864,6 +864,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "cosmian_findex"
+version = "7.0.0"
+source = "git+https://github.com/Cosmian/findex?branch=feat/prepare_findex_server_v7#25ea96bbc29ddb39961a0de13d6f467545f4b9bc"
+dependencies = [
+ "aes",
+ "rand",
+ "rand_chacha",
+ "rand_core",
+ "redis 0.27.5",
+ "tiny-keccak",
+ "xts-mode",
+ "zeroize",
+]
+
+[[package]]
 name = "cosmian_findex_cli"
 version = "0.1.0"
 dependencies = [
@@ -933,6 +948,7 @@ dependencies = [
  "chrono",
  "clap",
  "cloudproof_findex",
+ "cosmian_findex 7.0.0",
  "cosmian_findex_structs",
  "cosmian_logger",
  "dotenvy",
@@ -1649,7 +1665,7 @@ dependencies = [
  "httpdate",
  "itoa",
  "pin-project-lite",
- "socket2 0.5.7",
+ "socket2 0.4.10",
  "tokio",
  "tower-service",
  "tracing",
@@ -4163,6 +4179,16 @@ dependencies = [
  "rusticata-macros",
  "thiserror",
  "time",
+]
+
+[[package]]
+name = "xts-mode"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "09cbddb7545ca0b9ffa7bdc653e8743303e1712687a6918ced25f2cdbed42520"
+dependencies = [
+ "byteorder",
+ "cipher",
 ]
 
 [[package]]

@@ -1,13 +1,11 @@
 use std::sync::mpsc::SendError;
 
 use actix_web::dev::ServerHandle;
-use cloudproof_findex::{
-    db_interfaces::DbInterfaceError, reexport::cosmian_findex::CoreError,
-    ser_de::SerializationError,
-};
+use cloudproof_findex::db_interfaces::DbInterfaceError;
 use cosmian_findex_structs::StructsError;
+use findex::Error as CoreError;
+use std::fmt::Debug;
 use thiserror::Error;
-
 // Each error type must have a corresponding HTTP status code
 #[derive(Error, Debug, Clone)]
 pub enum FindexServerError {
@@ -63,20 +61,18 @@ impl From<redis::RedisError> for FindexServerError {
     }
 }
 
-impl From<SerializationError> for FindexServerError {
-    fn from(e: SerializationError) -> Self {
-        Self::Findex(e.to_string())
-    }
-}
-
 impl From<DbInterfaceError> for FindexServerError {
     fn from(e: DbInterfaceError) -> Self {
         Self::DatabaseError(e.to_string())
     }
 }
 
-impl From<CoreError> for FindexServerError {
-    fn from(e: CoreError) -> Self {
+impl<Address, MemoryError> From<CoreError<Address, MemoryError>> for FindexServerError
+where
+    Address: Debug,
+    MemoryError: std::error::Error,
+{
+    fn from(e: CoreError<Address, MemoryError>) -> Self {
         Self::Findex(e.to_string())
     }
 }
