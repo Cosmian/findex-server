@@ -1,4 +1,7 @@
-use redis::{aio::ConnectionManager, Client, Script};
+use redis::{
+    aio::{ConnectionManager, ConnectionManagerConfig},
+    Client, Script,
+};
 use tracing::info;
 
 use crate::error::result::FResult;
@@ -27,7 +30,11 @@ impl Redis {
     pub(crate) async fn instantiate(redis_url: &str, clear_database: bool) -> FResult<Self> {
         let client = redis::Client::open(redis_url)?;
 
-        let mgr = ConnectionManager::new(client.clone()).await?;
+        let mgr = ConnectionManager::new_with_config(
+            client.clone(),
+            ConnectionManagerConfig::new().set_number_of_retries(18),
+        )
+        .await?;
         if clear_database {
             info!("Warning: Irreversible operation: clearing the database");
             Self::clear_database(mgr.clone()).await?;
