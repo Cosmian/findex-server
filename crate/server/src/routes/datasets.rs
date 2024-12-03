@@ -5,6 +5,7 @@ use actix_web::{
     web::{self, Bytes, Data, Json},
     HttpRequest, HttpResponse,
 };
+use cloudproof_findex::reexport::cosmian_crypto_core::bytes_ser_de::Serializable;
 use cosmian_findex_structs::{EncryptedEntries, Permission, Uuids};
 use tracing::{info, trace};
 
@@ -101,5 +102,5 @@ pub(crate) async fn datasets_get_entries(
     let bytes = encrypted_entries.serialize()?;
     Ok(HttpResponse::Ok()
         .content_type("application/octet-stream")
-        .body(bytes))
+        .body(bytes.to_vec()))
 }

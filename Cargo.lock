@@ -898,6 +898,7 @@ dependencies = [
 name = "cosmian_findex_client"
 version = "0.1.0"
 dependencies = [
+ "cloudproof_findex",
  "cosmian_config_utils",
  "cosmian_findex_structs",
  "cosmian_http_client",
@@ -3776,6 +3777,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f8c5f0a0af699448548ad1a2fbf920fb4bee257eae39953ba95cb84891a0446a"
 dependencies = [
  "getrandom",
+ "serde",
 ]
 
 [[package]]

@@ -1,3 +1,4 @@
+use cloudproof_findex::reexport::cosmian_crypto_core::bytes_ser_de::Serializable;
 use std::{str::FromStr, sync::Arc};
 
 use actix_web::{
@@ -97,10 +98,10 @@ pub(crate) async fn list_permission(
 
     let permissions = findex_server.db.get_permissions(&user_id).await?;
 
-    let bytes = permissions.serialize();
+    let bytes = permissions.serialize()?;
     Ok(HttpResponse::Ok()
         .content_type("application/octet-stream")
-        .body(bytes))
+        .body(bytes.to_vec()))
 }
 
 #[post("/permission/revoke/{user_id}/{index_id}")]

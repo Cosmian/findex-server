@@ -1,3 +1,4 @@
+use cloudproof_findex::reexport::cosmian_crypto_core::bytes_ser_de::Serializable;
 use cosmian_findex_structs::{Permission, Permissions};
 use tracing::{instrument, trace};
 use uuid::Uuid;
@@ -46,11 +47,10 @@ impl FindexRestClient {
             let response_bytes = response.bytes().await.map(|r| r.to_vec())?;
             let permissions = Permissions::deserialize(&response_bytes)?;
             return Ok(permissions);
-        } else {
-            // process error
-            let p = handle_error(&endpoint, response).await?;
-            Err(FindexClientError::RequestFailed(p))
         }
+        // process error
+        let p = handle_error(&endpoint, response).await?;
+        Err(FindexClientError::RequestFailed(p))
     }
 
     #[instrument(ret(Display), err, skip(self), level = "trace")]

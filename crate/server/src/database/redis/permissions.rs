@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use cloudproof_findex::reexport::cosmian_crypto_core::bytes_ser_de::Serializable;
 use cosmian_findex_structs::{Permission, Permissions};
 use redis::{pipe, transaction, Commands, RedisError};
 use tracing::{debug, instrument, trace};
@@ -43,9 +44,12 @@ impl PermissionsTrait for Redis {
                     permissions.grant_permission(uuid, Permission::Admin);
                     permissions
                 };
+                let permissions_bytes = permissions.serialize().map_err(|_e| {
+                    RedisError::from((redis::ErrorKind::TypeError, "Failed to serialize"))
+                })?;
 
                 // increment
-                pipe.set(key, permissions.serialize())
+                pipe.set(key, permissions_bytes.as_slice())
                     .ignore()
                     .get(key)
                     .query(con)
@@ -112,7 +116,7 @@ impl PermissionsTrait for Redis {
         };
 
         let mut pipe = pipe();
-        pipe.set::<_, _>(key, permissions.serialize());
+        pipe.set::<_, _>(key, permissions.serialize()?.as_slice());
         pipe.atomic()
             .query_async(&mut self.mgr.clone())
             .await
@@ -127,7 +131,7 @@ impl PermissionsTrait for Redis {
                 permissions.revoke_permission(index_id);
 
                 let mut pipe = pipe();
-                pipe.set::<_, _>(key, permissions.serialize());
+                pipe.set::<_, _>(key, permissions.serialize()?.as_slice());
 
                 pipe.atomic()
                     .query_async::<()>(&mut self.mgr.clone())

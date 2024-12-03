@@ -1,5 +1,8 @@
 use std::{collections::HashMap, fmt::Display, str::FromStr};
 
+use cloudproof_findex::reexport::cosmian_crypto_core::bytes_ser_de::{
+    self, to_leb128_len, Serializable,
+};
 use uuid::Uuid;
 
 use crate::{
@@ -76,7 +79,40 @@ impl Display for Permissions {
     }
 }
 
+impl Serializable for Permissions {
+    type Error = StructsError;
+
+    fn length(&self) -> usize {
+        let permissions_len = self.permissions.len() * (PERMISSION_LENGTH + INDEX_ID_LENGTH);
+        to_leb128_len(permissions_len) + permissions_len
+    }
+
+    fn write(&self, ser: &mut bytes_ser_de::Serializer) -> Result<usize, Self::Error> {
+        let mut n = ser.write_leb128_u64(u64::try_from(self.permissions.len())?)?;
+        for (index_id, permission) in &self.permissions {
+            n += ser.write_leb128_u64(u64::from(u8::from(permission.clone())))?;
+            n += ser.write_array(index_id.as_bytes())?;
+        }
+        Ok(n)
+    }
+
+    fn read(de: &mut bytes_ser_de::Deserializer) -> Result<Self, Self::Error> {
+        let nb = de.read_leb128_u64()?;
+        let mut permissions =
+            HashMap::with_capacity(usize::try_from(nb)? * PERMISSION_LENGTH + INDEX_ID_LENGTH);
+        for _ in 0..nb {
+            let permission_u8 = u8::try_from(de.read_leb128_u64()?)?;
+            let permission = Permission::try_from(permission_u8)?;
+            let uuid = de.read_array::<INDEX_ID_LENGTH>()?;
+            let index_id = Uuid::from_slice(&uuid)?;
+            permissions.insert(index_id, permission);
+        }
+        Ok(Self { permissions })
+    }
+}
+
 impl Permissions {
+    #[must_use]
     pub fn new(index_id: Uuid, permission: Permission) -> Self {
         let mut permissions = HashMap::new();
         permissions.insert(index_id, permission);
@@ -91,39 +127,7 @@ impl Permissions {
         self.permissions.remove(index_id);
     }
 
-    pub fn serialize(&self) -> Vec<u8> {
-        let mut bytes =
-            Vec::with_capacity(self.permissions.len() * (PERMISSION_LENGTH + INDEX_ID_LENGTH));
-        for (index_id, permission) in &self.permissions {
-            bytes.extend_from_slice(&[u8::from(permission.clone())]);
-            bytes.extend_from_slice(index_id.as_bytes().as_ref());
-        }
-        bytes
-    }
-
-    pub fn deserialize(bytes: &[u8]) -> StructsResult<Self> {
-        let mut permissions = HashMap::new();
-        let mut i = 0;
-        while i < bytes.len() {
-            let permission_u8 = bytes.get(i).ok_or_else(|| {
-                StructsError::IndexingSlicing("Failed to deserialize Permission".to_owned())
-            })?;
-            let permission = Permission::try_from(*permission_u8)?;
-            i += PERMISSION_LENGTH;
-            let uuid_slice = bytes.get(i..i + INDEX_ID_LENGTH).ok_or_else(|| {
-                StructsError::IndexingSlicing(
-                    "Failed to extract {INDEX_ID_LENGTH} bytes from Uuid".to_owned(),
-                )
-            })?;
-            let index_id = Uuid::from_slice(uuid_slice).map_err(|e| {
-                StructsError::IndexingSlicing(format!("Failed to deserialize Uuid. Error: {e}"))
-            })?;
-            i += INDEX_ID_LENGTH;
-            permissions.insert(index_id, permission);
-        }
-        Ok(Self { permissions })
-    }
-
+    #[must_use]
     pub fn get_permission(&self, index_id: &Uuid) -> Option<Permission> {
         self.permissions.get(index_id).cloned()
     }

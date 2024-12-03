@@ -32,7 +32,7 @@ where
 
 impl<T> FindexRestClientResultHelper<T> for Option<T> {
     fn context(self, context: &str) -> FindexClientResult<T> {
-        self.ok_or_else(|| FindexClientError::Default(context.to_string()))
+        self.ok_or_else(|| FindexClientError::Default(context.to_owned()))
     }
 
     fn with_context<D, O>(self, op: O) -> FindexClientResult<T>

@@ -36,7 +36,10 @@ impl FindexRestClient {
     ///
     /// Parameters `server_url` and `accept_invalid_certs` from the command line
     /// will override the ones from the configuration file.
-    pub fn new(conf: FindexClientConfig) -> Result<FindexRestClient, FindexClientError> {
+    /// # Errors
+    /// Return an error if the configuration file is not found or if the configuration is invalid
+    /// or if the client cannot be instantiated.
+    pub fn new(conf: FindexClientConfig) -> Result<Self, FindexClientError> {
         // Instantiate a Findex server REST client with the given configuration
         let client = HttpClient::instantiate(&conf.http_config).with_context(|| {
             format!(
@@ -79,6 +82,9 @@ pub(crate) async fn handle_status_code(
 
 /// Some errors are returned by the Middleware without going through our own
 /// error manager. In that case, we make the error clearer here for the client.
+/// # Errors
+/// Return an error if the response cannot be read.
+/// Return an error if the response is not a success.
 pub async fn handle_error(endpoint: &str, response: Response) -> Result<String, FindexClientError> {
     trace!("Error response received on {endpoint}: Response: {response:?}");
     let status = response.status();

@@ -36,7 +36,6 @@
     clippy::map_err_ignore,
     clippy::redundant_clone,
     clippy::todo
-
 )]
 #![allow(
     clippy::module_name_repetitions,

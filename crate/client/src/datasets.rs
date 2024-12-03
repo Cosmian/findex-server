@@ -1,3 +1,4 @@
+use cloudproof_findex::reexport::cosmian_crypto_core::bytes_ser_de::Serializable;
 use cosmian_findex_structs::{EncryptedEntries, Uuids};
 use tracing::{instrument, trace};
 use uuid::Uuid;
@@ -25,7 +26,7 @@ impl FindexRestClient {
             .client
             .client
             .post(server_url)
-            .body(encrypted_entries)
+            .body(encrypted_entries.to_vec())
             .send()
             .await?;
 
@@ -42,12 +43,12 @@ impl FindexRestClient {
         let server_url = format!("{}{endpoint}", self.client.server_url);
         trace!("POST: {server_url}");
 
-        let uuids = uuids.serialize();
+        let uuids = uuids.serialize()?;
         let response = self
             .client
             .client
             .post(server_url)
-            .body(uuids)
+            .body(uuids.to_vec())
             .send()
             .await?;
 
@@ -64,12 +65,12 @@ impl FindexRestClient {
         let server_url = format!("{}{endpoint}", self.client.server_url);
         trace!("POST: {server_url}");
 
-        let uuids = uuids.serialize();
+        let uuids = uuids.serialize()?;
         let response = self
             .client
             .client
             .post(server_url)
-            .body(uuids)
+            .body(uuids.to_vec())
             .send()
             .await?;
         let status_code = response.status();
@@ -77,10 +78,9 @@ impl FindexRestClient {
             let response_bytes = response.bytes().await.map(|r| r.to_vec())?;
             let encrypted_entries = EncryptedEntries::deserialize(&response_bytes)?;
             return Ok(encrypted_entries);
-        } else {
-            // process error
-            let p = handle_error(&endpoint, response).await?;
-            Err(FindexClientError::RequestFailed(p))
         }
+        // process error
+        let p = handle_error(&endpoint, response).await?;
+        Err(FindexClientError::RequestFailed(p))
     }
 }

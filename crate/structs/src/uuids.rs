@@ -1,8 +1,11 @@
 use std::{fmt::Display, ops::Deref};
 
+use cloudproof_findex::reexport::cosmian_crypto_core::bytes_ser_de::{
+    self, to_leb128_len, Serializable,
+};
 use uuid::Uuid;
 
-use crate::{encrypted_entries::UUID_LENGTH, error::result::StructsResult, StructsError};
+use crate::{encrypted_entries::UUID_LENGTH, StructsError};
 
 #[derive(Debug)]
 pub struct Uuids {
@@ -32,25 +35,28 @@ impl From<Vec<Uuid>> for Uuids {
     }
 }
 
-impl Uuids {
-    pub fn serialize(&self) -> Vec<u8> {
-        let mut bytes = Vec::new();
-        for uuid in &self.uuids {
-            bytes.extend_from_slice(uuid.as_bytes().as_ref());
-        }
-        bytes
+impl Serializable for Uuids {
+    type Error = StructsError;
+
+    fn length(&self) -> usize {
+        let uuids_len = self.uuids.len() * UUID_LENGTH;
+        to_leb128_len(uuids_len) + uuids_len
     }
 
-    pub fn deserialize(bytes: &[u8]) -> StructsResult<Self> {
-        let mut uuids = Vec::new();
-        let mut i = 0;
-        while i < bytes.len() {
-            let uuid_slice = bytes.get(i..i + UUID_LENGTH).ok_or_else(|| {
-                StructsError::IndexingSlicing("UUID indexing slicing failed".to_string())
-            })?;
-            let uuid = Uuid::from_slice(uuid_slice)?;
-            i += UUID_LENGTH;
-            uuids.push(uuid);
+    fn write(&self, ser: &mut bytes_ser_de::Serializer) -> Result<usize, Self::Error> {
+        let mut n = ser.write_leb128_u64(u64::try_from(self.uuids.len())?)?;
+        for uuid in &self.uuids {
+            n += ser.write_array(uuid.as_bytes())?;
+        }
+        Ok(n)
+    }
+
+    fn read(de: &mut bytes_ser_de::Deserializer) -> Result<Self, Self::Error> {
+        let nb = de.read_leb128_u64()?;
+        let mut uuids = Vec::with_capacity(usize::try_from(nb)? * UUID_LENGTH);
+        for _ in 0..nb {
+            let uuid = de.read_array::<UUID_LENGTH>()?;
+            uuids.push(Uuid::from_slice(&uuid)?);
         }
         Ok(Self { uuids })
     }
@@ -58,12 +64,16 @@ impl Uuids {
 
 #[cfg(test)]
 mod tests {
+    use cloudproof_findex::reexport::cosmian_crypto_core::bytes_ser_de::Serializable;
     use uuid::Uuid;
+
+    use crate::error::result::StructsResult;
 
     use super::Uuids;
 
     #[test]
-    fn test_uuids() {
+    #[allow(clippy::panic_in_result_fn)]
+    fn test_uuids() -> StructsResult<()> {
         let uuids = Uuids {
             uuids: vec![
                 Uuid::new_v4(),
@@ -72,8 +82,9 @@ mod tests {
                 Uuid::new_v4(),
             ],
         };
-        let bytes = uuids.serialize();
-        let deserialized_uuids = Uuids::deserialize(&bytes).unwrap();
+        let bytes = uuids.serialize()?;
+        let deserialized_uuids = Uuids::deserialize(bytes.as_ref())?;
         assert_eq!(uuids.uuids, deserialized_uuids.uuids);
+        Ok(())
     }
 }

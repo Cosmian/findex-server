@@ -5,10 +5,12 @@ use std::{
 };
 
 use base64::{engine::general_purpose, Engine};
-use cloudproof_findex::reexport::cosmian_crypto_core::bytes_ser_de::{Deserializer, Serializer};
+use cloudproof_findex::reexport::cosmian_crypto_core::bytes_ser_de::{
+    to_leb128_len, Deserializer, Serializable, Serializer,
+};
 use uuid::Uuid;
 
-use crate::{error::result::StructsResult, Uuids};
+use crate::{StructsError, Uuids};
 
 pub(crate) const UUID_LENGTH: usize = 16;
 
@@ -77,29 +79,42 @@ impl Default for EncryptedEntries {
     }
 }
 
-impl EncryptedEntries {
-    pub fn new() -> Self {
-        Self {
-            entries: HashMap::new(),
-        }
+impl Serializable for EncryptedEntries {
+    type Error = StructsError;
+
+    fn length(&self) -> usize {
+        let entries_len = self
+            .entries
+            .iter()
+            .map(|(k, v)| k.as_bytes().len() + v.len())
+            .sum::<usize>();
+        to_leb128_len(self.entries.len()) + entries_len
     }
 
-    pub fn get_uuids(&self) -> Uuids {
-        Uuids::from(self.entries.keys().cloned().collect::<Vec<_>>())
-    }
+    /// Serialize the `EncryptedEntries` struct
+    ///
+    /// Serialization format:
+    ///
+    /// +----------------------+----------------------+----------------------+
+    /// | Number of Entries    | Entry 1 (UUID + Vec) | Entry 2 (UUID + Vec) |
+    /// +----------------------+----------------------+----------------------+
+    /// |  LEB128 encoded      | UUID (16 bytes)      | UUID (16 bytes)      |
+    /// |  number of entries   | Vec length (LEB128)  | Vec length (LEB128)  |
+    /// |                      | Vec data (bytes)     | Vec data (bytes)     |
+    /// +----------------------+----------------------+----------------------+
+    ///
+    fn write(&self, ser: &mut Serializer) -> Result<usize, Self::Error> {
+        let mut n = ser.write_leb128_u64(u64::try_from(self.len())?)?;
 
-    pub fn serialize(&self) -> StructsResult<Vec<u8>> {
-        let mut ser = Serializer::with_capacity(self.len());
-        ser.write_leb128_u64(self.len() as u64)?;
         for (uid, value) in self.iter() {
-            ser.write_array(uid.as_bytes())?;
-            ser.write_vec(value)?;
+            n += ser.write_array(uid.as_bytes())?;
+            n += ser.write_vec(value)?;
         }
-        Ok(ser.finalize().to_vec())
+        Ok(n)
     }
 
-    pub fn deserialize(bytes: &[u8]) -> StructsResult<Self> {
-        let mut de = Deserializer::new(bytes);
+    /// Deserialize the `EncryptedEntries` struct
+    fn read(de: &mut Deserializer) -> Result<Self, Self::Error> {
         let length = <usize>::try_from(de.read_leb128_u64()?)?;
         let mut items = HashMap::with_capacity(length);
         for _ in 0..length {
@@ -111,24 +126,43 @@ impl EncryptedEntries {
     }
 }
 
+impl EncryptedEntries {
+    #[must_use]
+    pub fn new() -> Self {
+        Self {
+            entries: HashMap::new(),
+        }
+    }
+
+    #[must_use]
+    pub fn get_uuids(&self) -> Uuids {
+        Uuids::from(self.entries.keys().copied().collect::<Vec<_>>())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::collections::HashMap;
 
+    use cloudproof_findex::reexport::cosmian_crypto_core::bytes_ser_de::Serializable;
     use uuid::Uuid;
+
+    use crate::error::result::StructsResult;
 
     use super::EncryptedEntries;
 
     #[test]
-    fn test_encrypted_entries() {
+    #[allow(clippy::panic_in_result_fn)]
+    fn test_encrypted_entries() -> StructsResult<()> {
         let mut entries = HashMap::new();
         entries.insert(Uuid::new_v4(), vec![1_u8, 2, 3]);
         entries.insert(Uuid::new_v4(), vec![4, 5, 6, 7]);
         let encrypted_entries = EncryptedEntries::from(entries);
 
-        let serialized = encrypted_entries.serialize().unwrap();
-        let deserialized = EncryptedEntries::deserialize(&serialized).unwrap();
+        let serialized = encrypted_entries.serialize()?;
+        let deserialized = EncryptedEntries::deserialize(&serialized)?;
 
         assert_eq!(encrypted_entries, deserialized);
+        Ok(())
     }
 }

@@ -32,7 +32,7 @@ where
 
 impl<T> StructsResultHelper<T> for Option<T> {
     fn context(self, context: &str) -> StructsResult<T> {
-        self.ok_or_else(|| StructsError::Default(context.to_string()))
+        self.ok_or_else(|| StructsError::Default(context.to_owned()))
     }
 
     fn with_context<D, O>(self, op: O) -> StructsResult<T>
