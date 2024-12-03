@@ -1,48 +1,26 @@
 use async_trait::async_trait;
-use cloudproof_findex::{
-    db_interfaces::{redis::FindexTable, rest::UpsertData},
-    reexport::cosmian_findex::{
-        TokenToEncryptedValueMap, TokenWithEncryptedValueList, Tokens, ENTRY_LENGTH, LINK_LENGTH,
-    },
-};
+
+use cosmian_findex::{Address, MemoryADT, ADDRESS_LENGTH};
 use cosmian_findex_structs::{EncryptedEntries, Permission, Permissions, Uuids};
 use uuid::Uuid;
 
 use crate::error::result::FResult;
 
-#[async_trait]
-pub(crate) trait FindexTrait: Sync + Send {
+use super::redis::WORD_LENGTH;
+
+pub(crate) trait FindexMemoryTrait:
+    Send + Sync + Clone + MemoryADT<Address = Address<ADDRESS_LENGTH>, Word = [u8; WORD_LENGTH]>
+{
     //
-    // Findex v6
+    // Findex
     //
-    async fn findex_fetch_entries(
-        &self,
-        index_id: &Uuid,
-        tokens: Tokens,
-    ) -> FResult<TokenWithEncryptedValueList<ENTRY_LENGTH>>;
-    async fn findex_fetch_chains(
-        &self,
-        index_id: &Uuid,
-        tokens: Tokens,
-    ) -> FResult<TokenWithEncryptedValueList<LINK_LENGTH>>;
-    async fn findex_upsert_entries(
-        &self,
-        index_id: &Uuid,
-        upsert_data: UpsertData<ENTRY_LENGTH>,
-    ) -> FResult<TokenToEncryptedValueMap<ENTRY_LENGTH>>;
-    async fn findex_insert_chains(
-        &self,
-        index_id: &Uuid,
-        items: TokenToEncryptedValueMap<LINK_LENGTH>,
-    ) -> FResult<()>;
-    async fn findex_delete(
-        &self,
-        index_id: &Uuid,
-        findex_table: FindexTable,
-        tokens: Tokens,
-    ) -> FResult<()>;
-    async fn findex_dump_tokens(&self, index_id: &Uuid) -> FResult<Tokens>;
 }
+
+pub(crate) type findextype = dyn FindexMemoryTrait<
+    Word = [u8; WORD_LENGTH],
+    Address = Address<ADDRESS_LENGTH>,
+    Error = dyn Send + Sync + std::error::Error,
+>;
 
 #[async_trait]
 pub(crate) trait PermissionsTrait: Sync + Send {
@@ -77,4 +55,4 @@ pub(crate) trait DatasetsTrait: Sync + Send {
 }
 
 #[async_trait]
-pub(crate) trait DatabaseTraits: FindexTrait + PermissionsTrait + DatasetsTrait {}
+pub(crate) trait DatabaseTraits: PermissionsTrait + DatasetsTrait {}

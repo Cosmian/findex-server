@@ -1,3 +1,4 @@
+mod database_struct;
 mod database_traits;
 mod redis;
 

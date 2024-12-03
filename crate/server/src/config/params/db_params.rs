@@ -3,7 +3,7 @@ use std::fmt::{self, Display};
 use url::Url;
 
 pub enum DbParams {
-    Redis(Url),
+    Redis(Url, usize),
 }
 
 impl DbParams {
@@ -11,7 +11,7 @@ impl DbParams {
     #[must_use]
     pub const fn db_name(&self) -> &str {
         match &self {
-            Self::Redis(_) => "Redis",
+            Self::Redis(_, _) => "Redis",
         }
     }
 }
@@ -19,8 +19,8 @@ impl DbParams {
 impl Display for DbParams {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Redis(url) => {
-                write!(f, "redis: {}", redact_url(url),)
+            Self::Redis(url, w) => {
+                write!(f, "redis : {} | Word length = {}", redact_url(url), w)
             }
         }
     }

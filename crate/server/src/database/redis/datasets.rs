@@ -6,7 +6,7 @@ use redis::pipe;
 use tracing::{instrument, trace};
 use uuid::Uuid;
 
-use super::Redis;
+use super::{ServerRedis, WORD_LENGTH};
 use crate::{
     database::database_traits::DatasetsTrait,
     error::{result::FResult, server::FindexServerError},
@@ -18,7 +18,7 @@ fn build_dataset_key(index_id: &Uuid, uid: &Uuid) -> Vec<u8> {
 }
 
 #[async_trait]
-impl DatasetsTrait for Redis {
+impl DatasetsTrait for ServerRedis<WORD_LENGTH> {
     //
     // Dataset management
     //
@@ -34,7 +34,7 @@ impl DatasetsTrait for Redis {
             pipe.set(key, data);
         }
         pipe.atomic()
-            .query_async(&mut self.mgr.clone())
+            .query_async(&mut self.memory.manager.clone())
             .await
             .map_err(FindexServerError::from)
     }
@@ -47,7 +47,7 @@ impl DatasetsTrait for Redis {
             pipe.del(key);
         }
         pipe.atomic()
-            .query_async(&mut self.mgr.clone())
+            .query_async(&mut self.memory.manager.clone())
             .await
             .map_err(FindexServerError::from)
     }
@@ -70,7 +70,7 @@ impl DatasetsTrait for Redis {
         }
         let values: Vec<Vec<u8>> = pipe
             .atomic()
-            .query_async(&mut self.mgr.clone())
+            .query_async(&mut self.memory.manager.clone())
             .await
             .map_err(FindexServerError::from)?;
 

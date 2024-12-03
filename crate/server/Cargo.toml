@@ -42,6 +42,7 @@ clap = { workspace = true, features = [
   "derive",
   "cargo",
 ] }
+# TODO(hatem) : DELET THE PACKAGE BELOW, PURGE IT
 cloudproof_findex = { workspace = true, features = ["redis-interface"] }
 cosmian_findex = { workspace = true, features = ["redis-mem"] }
 cosmian_findex_structs = { path = "../structs" }
