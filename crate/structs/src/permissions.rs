@@ -66,6 +66,13 @@ const PERMISSION_LENGTH: usize = 1;
 const INDEX_ID_LENGTH: usize = 16;
 
 #[derive(Debug)]
+/// Map of index id <--> permission for a user
+/// The key is the index id and the value is the permission
+/// Each entry has a length of 17 bytes
+///
+/// | Index ID (UUID) | Permission |
+/// |-----------------|------------|
+/// | 16 bytes        | 1 byte     |
 pub struct Permissions {
     pub permissions: HashMap<Uuid, Permission>,
 }
@@ -87,6 +94,13 @@ impl Serializable for Permissions {
         to_leb128_len(permissions_len) + permissions_len
     }
 
+    /// Serialize the permissions
+    ///
+    /// | Field        | Type   | Length (bytes) | Description                |
+    /// |--------------|--------|----------------|----------------------------|
+    /// | Permissions  | u64    | variable       | Number of permissions      |
+    /// | Index ID     | [u8; 16] | 16           | UUID of the index          |
+    /// | Permission   | u8     | 1              | Permission value (0, 1, 2) |
     fn write(&self, ser: &mut bytes_ser_de::Serializer) -> Result<usize, Self::Error> {
         let mut n = ser.write_leb128_u64(u64::try_from(self.permissions.len())?)?;
         for (index_id, permission) in &self.permissions {

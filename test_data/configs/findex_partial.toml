@@ -1,4 +1,3 @@
-
 conf_path = "test_data/configs/findex_partial.toml"
 
 [http_config]

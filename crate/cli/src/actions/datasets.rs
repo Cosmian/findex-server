@@ -1,9 +1,9 @@
+use std::{collections::HashMap, error::Error};
+
 use base64::{engine::general_purpose, Engine};
 use clap::Parser;
 use cosmian_findex_client::FindexRestClient;
 use cosmian_findex_structs::{EncryptedEntries, Uuids};
-use std::collections::HashMap;
-use std::error::Error;
 use uuid::Uuid;
 
 use crate::{
@@ -75,7 +75,7 @@ impl AddEntries {
     ///
     /// # Arguments
     /// * `rest_client` - A reference to the Findex client used to communicate
-    ///     with the Findex server.
+    ///   with the Findex server.
     ///
     /// # Errors
     /// Returns an error if the query execution on the Findex server fails.
@@ -152,7 +152,7 @@ impl GetEntries {
     /// # Arguments
     ///
     /// * `rest_client` - A reference to the Findex client used to communicate
-    ///     with the Findex server.
+    ///   with the Findex server.
     ///
     /// # Errors
     ///

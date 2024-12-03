@@ -1,4 +1,3 @@
-use cloudproof_findex::reexport::cosmian_crypto_core::bytes_ser_de::Serializable;
 use std::{str::FromStr, sync::Arc};
 
 use actix_web::{
@@ -6,6 +5,7 @@ use actix_web::{
     web::{self, Data, Json},
     HttpRequest, HttpResponse,
 };
+use cloudproof_findex::reexport::cosmian_crypto_core::bytes_ser_de::Serializable;
 use cosmian_findex_structs::Permission;
 use tracing::{debug, info};
 

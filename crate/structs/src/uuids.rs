@@ -43,6 +43,15 @@ impl Serializable for Uuids {
         to_leb128_len(uuids_len) + uuids_len
     }
 
+    /// Serialize the Uuids struct
+    ///
+    /// | Field       | Type   | Description                          |
+    /// |-------------|--------|--------------------------------------|
+    /// | uuids       | Vec<Uuid> | A vector of UUIDs to be serialized |
+    ///
+    /// The serialization format is as follows:
+    /// 1. The number of UUIDs (encoded as LEB128).
+    /// 2. The UUIDs themselves, each serialized as a 16-byte array.
     fn write(&self, ser: &mut bytes_ser_de::Serializer) -> Result<usize, Self::Error> {
         let mut n = ser.write_leb128_u64(u64::try_from(self.uuids.len())?)?;
         for uuid in &self.uuids {
@@ -67,9 +76,8 @@ mod tests {
     use cloudproof_findex::reexport::cosmian_crypto_core::bytes_ser_de::Serializable;
     use uuid::Uuid;
 
-    use crate::error::result::StructsResult;
-
     use super::Uuids;
+    use crate::error::result::StructsResult;
 
     #[test]
     #[allow(clippy::panic_in_result_fn)]

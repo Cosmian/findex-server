@@ -36,7 +36,8 @@ impl FindexClientConfig {
     /// # Arguments
     /// * `conf_path` - The path to the configuration file
     /// # Errors
-    /// Return an error if the configuration file is not found or if the configuration is invalid
+    /// Return an error if the configuration file is not found or if the
+    /// configuration is invalid
     pub fn location(conf: Option<PathBuf>) -> FindexClientResult<PathBuf> {
         Ok(location(
             conf,

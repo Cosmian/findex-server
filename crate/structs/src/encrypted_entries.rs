@@ -102,7 +102,6 @@ impl Serializable for EncryptedEntries {
     /// |  number of entries   | Vec length (LEB128)  | Vec length (LEB128)  |
     /// |                      | Vec data (bytes)     | Vec data (bytes)     |
     /// +----------------------+----------------------+----------------------+
-    ///
     fn write(&self, ser: &mut Serializer) -> Result<usize, Self::Error> {
         let mut n = ser.write_leb128_u64(u64::try_from(self.len())?)?;
 
@@ -147,9 +146,8 @@ mod tests {
     use cloudproof_findex::reexport::cosmian_crypto_core::bytes_ser_de::Serializable;
     use uuid::Uuid;
 
-    use crate::error::result::StructsResult;
-
     use super::EncryptedEntries;
+    use crate::error::result::StructsResult;
 
     #[test]
     #[allow(clippy::panic_in_result_fn)]

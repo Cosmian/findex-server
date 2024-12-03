@@ -33,9 +33,9 @@ clap = { workspace = true, features = [
 ] }
 cloudproof_findex = { workspace = true, features = ["rest-interface"] }
 cosmian_config_utils = { workspace = true }
-cosmian_logger = { workspace = true }
 cosmian_findex_client = { path = "../client" }
 cosmian_findex_structs = { path = "../structs" }
+cosmian_logger = { workspace = true }
 csv = "1.3.1"
 hex = "0.4"
 serde = { workspace = true }
@@ -53,6 +53,6 @@ const-oid = { version = "0.9", features = ["db"] }
 openssl = { workspace = true }
 predicates = "3.1"
 regex = { version = "1.11", default-features = false }
-tempfile = { workspace = true}
+tempfile = { workspace = true }
 test_findex_server = { path = "../test_server" }
 x509-parser = { workspace = true, features = ["verify"] }

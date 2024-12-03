@@ -15,7 +15,7 @@ doctest = false
 [features]
 
 [dependencies]
-cloudproof_findex = { workspace = true }
 base64 = { workspace = true }
+cloudproof_findex = { workspace = true }
 thiserror = { workspace = true }
 uuid = { workspace = true }

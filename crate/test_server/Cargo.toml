@@ -14,11 +14,11 @@ doctest = false
 
 [dependencies]
 actix-server = { workspace = true }
+cosmian_findex_client = { path = "../client" }
 cosmian_findex_server = { path = "../server", features = [
   "insecure",
 ], default-features = false }
 cosmian_logger = { workspace = true }
-cosmian_findex_client = { path = "../client" }
 tokio = { workspace = true, features = ["rt-multi-thread"] }
 tracing = { workspace = true }
 

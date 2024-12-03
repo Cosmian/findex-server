@@ -46,29 +46,33 @@ pub(crate) trait FindexTrait: Sync + Send {
 
 #[async_trait]
 pub(crate) trait PermissionsTrait: Sync + Send {
-    //
-    // Permissions
-    //
+    /// Create a new index id and return it
     async fn create_index_id(&self, user_id: &str) -> FResult<Uuid>;
+    /// Get the list of permissions for each index IDs
     async fn get_permissions(&self, user_id: &str) -> FResult<Permissions>;
+    /// Get the permission for a specific index ID
     async fn get_permission(&self, user_id: &str, index_id: &Uuid) -> FResult<Permission>;
+    /// Grant a permission to a user for a specific index ID. Granting a
+    /// permission requires an Admin role
     async fn grant_permission(
         &self,
         user_id: &str,
         permission: Permission,
         index_id: &Uuid,
     ) -> FResult<()>;
+    /// Revoke a permission to a user for a specific index ID. Revoking a
+    /// permission requires an Admin role
     async fn revoke_permission(&self, user_id: &str, index_id: &Uuid) -> FResult<()>;
 }
 
 #[async_trait]
 pub(crate) trait DatasetsTrait: Sync + Send {
-    //
-    // Dataset management
-    //
+    /// Add entries to a dataset. By design, the entries are stored such as
     async fn dataset_add_entries(&self, index_id: &Uuid, entries: &EncryptedEntries)
         -> FResult<()>;
+    /// Delete entries from a dataset given their UUIDs
     async fn dataset_delete_entries(&self, index_id: &Uuid, uuids: &Uuids) -> FResult<()>;
+    /// Get entries from a dataset given their UUIDs
     async fn dataset_get_entries(
         &self,
         index_id: &Uuid,

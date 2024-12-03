@@ -18,12 +18,11 @@ use redis::{pipe, AsyncCommands};
 use tracing::{instrument, trace};
 use uuid::Uuid;
 
+use super::instance::Redis;
 use crate::{
     database::database_traits::FindexTrait,
     error::{result::FResult, server::FindexServerError},
 };
-
-use super::instance::Redis;
 
 /// Generate a key for the entry table or chain table
 fn build_key(index_id: &Uuid, table: FindexTable, uid: &[u8]) -> Vec<u8> {

@@ -37,8 +37,8 @@ impl FindexRestClient {
     /// Parameters `server_url` and `accept_invalid_certs` from the command line
     /// will override the ones from the configuration file.
     /// # Errors
-    /// Return an error if the configuration file is not found or if the configuration is invalid
-    /// or if the client cannot be instantiated.
+    /// Return an error if the configuration file is not found or if the
+    /// configuration is invalid or if the client cannot be instantiated.
     pub fn new(conf: FindexClientConfig) -> Result<Self, FindexClientError> {
         // Instantiate a Findex server REST client with the given configuration
         let client = HttpClient::instantiate(&conf.http_config).with_context(|| {

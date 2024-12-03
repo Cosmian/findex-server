@@ -21,7 +21,7 @@ jobs:
 
   docker-image-release:
     if: inputs.debug_or_release == 'release'
-    name: Build docker image
+    name: Build docker image for AMD64 and ARM64
     uses: ./.github/workflows/build_docker_image.yml
     with:
       dockerfile: Dockerfile
@@ -30,7 +30,7 @@ jobs:
 
   docker-image:
     if: inputs.debug_or_release == 'debug'
-    name: Build docker image
+    name: Build docker image for AMD64
     uses: ./.github/workflows/build_docker_image.yml
     with:
       dockerfile: Dockerfile
