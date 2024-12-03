@@ -2,7 +2,7 @@ use std::{ops::Deref, process::Command};
 
 use assert_cmd::prelude::*;
 use base64::{engine::general_purpose, Engine};
-use cosmian_findex_client::reexport::cosmian_findex_config::FINDEX_CLI_CONF_ENV;
+use cosmian_findex_client::FINDEX_CLI_CONF_ENV;
 use cosmian_findex_structs::EncryptedEntries;
 use cosmian_logger::log_init;
 use std::collections::HashMap;

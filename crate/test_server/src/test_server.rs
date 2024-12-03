@@ -9,11 +9,8 @@ use std::{
 use actix_server::ServerHandle;
 use cosmian_findex_client::{
     findex_client_bail, findex_client_error,
-    reexport::{
-        cosmian_findex_config::{reexport::cosmian_config_utils::ConfigUtils, FindexClientConfig},
-        cosmian_http_client::HttpClientConfig,
-    },
-    FindexClientError, FindexRestClient,
+    reexport::{cosmian_config_utils::ConfigUtils, cosmian_http_client::HttpClientConfig},
+    FindexClientConfig, FindexClientError, FindexRestClient,
 };
 use cosmian_findex_server::{
     config::{

@@ -3,7 +3,6 @@ default-members = ["crate/server", "crate/cli"]
 members = [
   "crate/structs",
   "crate/server",
-  "crate/config",
   "crate/client",
   "crate/cli",
   "crate/test_server",

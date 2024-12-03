@@ -4,7 +4,7 @@ use cosmian_config_utils::{location, ConfigUtils};
 use cosmian_http_client::HttpClientConfig;
 use serde::{Deserialize, Serialize};
 
-use crate::error::FindexConfigResult;
+use crate::FindexClientResult;
 
 pub const FINDEX_CLI_CONF_ENV: &str = "FINDEX_CLI_CONF";
 pub(crate) const FINDEX_CLI_CONF_DEFAULT_SYSTEM_PATH: &str = "/etc/cosmian/findex.toml";
@@ -32,7 +32,7 @@ impl Default for FindexClientConfig {
 impl ConfigUtils for FindexClientConfig {}
 
 impl FindexClientConfig {
-    pub fn location(conf: Option<PathBuf>) -> FindexConfigResult<PathBuf> {
+    pub fn location(conf: Option<PathBuf>) -> FindexClientResult<PathBuf> {
         Ok(location(
             conf,
             FINDEX_CLI_CONF_ENV,

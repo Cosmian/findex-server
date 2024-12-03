@@ -16,7 +16,8 @@ doctest = false
 
 [dependencies]
 cosmian_http_client = { workspace = true }
-cosmian_findex_config = { path = "../config" }
+cosmian_config_utils = { workspace = true }
+cosmian_logger = { workspace = true }
 cosmian_findex_structs = { path = "../structs" }
 reqwest = { workspace = true, features = ["default", "json", "native-tls"] }
 serde = { workspace = true }

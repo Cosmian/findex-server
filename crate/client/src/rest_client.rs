@@ -1,14 +1,16 @@
 use std::fmt::Display;
 
-use cosmian_findex_config::FindexClientConfig;
 use cosmian_http_client::HttpClient;
 use reqwest::{Response, StatusCode};
 use serde::{Deserialize, Serialize};
 use tracing::{instrument, trace};
 
-use crate::error::{
-    result::{FindexClientResult, FindexRestClientResultHelper},
-    FindexClientError,
+use crate::{
+    error::{
+        result::{FindexClientResult, FindexRestClientResultHelper},
+        FindexClientError,
+    },
+    FindexClientConfig,
 };
 
 // Response for success
