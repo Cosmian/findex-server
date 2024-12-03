@@ -1,6 +1,6 @@
 use std::io;
 
-use cosmian_findex_config::reexport::cosmian_config_utils::ConfigUtilsError;
+use cosmian_config_utils::ConfigUtilsError;
 use cosmian_findex_structs::StructsError;
 use thiserror::Error;
 

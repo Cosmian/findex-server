@@ -54,6 +54,7 @@ redis = { version = "0.27", features = [
   "script",
   "connection-manager",
   "tokio-comp",
+  "r2d2"
 ] }
 # Important: align the rustls version with reqwest rustls dependency
 # When using client certificate authentication, reqwest will use the
@@ -75,3 +76,6 @@ toml = "0.8"
 tracing = { workspace = true }
 url = { workspace = true }
 uuid = { workspace = true, features = ["v4"] }
+
+[dev-dependencies]
+tempfile = { workspace = true}

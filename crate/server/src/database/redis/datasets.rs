@@ -22,7 +22,7 @@ impl DatasetsTrait for Redis {
     //
     // Dataset management
     //
-    #[instrument(ret, err, skip_all)]
+    #[instrument(ret, err, skip_all, level = "trace")]
     async fn dataset_add_entries(
         &self,
         index_id: &Uuid,
@@ -39,7 +39,7 @@ impl DatasetsTrait for Redis {
             .map_err(FindexServerError::from)
     }
 
-    #[instrument(ret, err, skip(self))]
+    #[instrument(ret, err, skip(self), level = "trace")]
     async fn dataset_delete_entries(&self, index_id: &Uuid, uuids: &Uuids) -> FResult<()> {
         let mut pipe = pipe();
         for entry_id in uuids.iter() {
@@ -52,7 +52,7 @@ impl DatasetsTrait for Redis {
             .map_err(FindexServerError::from)
     }
 
-    #[instrument(ret(Display), err, skip(self))]
+    #[instrument(ret(Display), err, skip(self), level = "trace")]
     async fn dataset_get_entries(
         &self,
         index_id: &Uuid,

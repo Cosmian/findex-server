@@ -65,8 +65,7 @@ jobs:
         - /home/cosmian/.ssh/id_rsa:/root/.ssh/id_rsa
 
     env:
-      ARCHIVE_NAMES: rhel9-${{ inputs.debug_or_release }} ubuntu_24_04-${{ inputs.debug_or_release }} macos_arm-${{ inputs.debug_or_release }} windows-${{
-        inputs.debug_or_release }}
+      ARCHIVE_NAMES: rhel9-${{ inputs.debug_or_release }} ubuntu_24_04-${{ inputs.debug_or_release }} macos_arm-${{ inputs.debug_or_release }}
 
     steps:
       - run: rm -rf windows* ubuntu* macos* rhel9*
@@ -81,6 +80,10 @@ jobs:
           for archive_name in $ARCHIVE_NAMES; do
             zip -r "$archive_name".zip "$archive_name"
           done
+          # Warning, no windows binaries in debug
+          if [ "${{ inputs.debug_or_release }}" == "release" ]; then
+            zip -r "$archive_name".zip windows-release
+          fi
 
       - name: Push to package.cosmian.com
         shell: bash

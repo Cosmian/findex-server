@@ -10,7 +10,7 @@ use crate::{
 };
 
 impl FindexRestClient {
-    #[instrument(ret(Display), err, skip(self))]
+    #[instrument(ret(Display), err, skip(self), level = "trace")]
     pub async fn create_index_id(&self) -> FindexClientResult<SuccessResponse> {
         let endpoint = "/create/index".to_owned();
         let server_url = format!("{}{endpoint}", self.client.server_url);
@@ -20,7 +20,7 @@ impl FindexRestClient {
         handle_status_code(response, &endpoint).await
     }
 
-    #[instrument(ret(Display), err, skip(self))]
+    #[instrument(ret(Display), err, skip(self), level = "trace")]
     pub async fn grant_permission(
         &self,
         user_id: &str,
@@ -35,7 +35,7 @@ impl FindexRestClient {
         handle_status_code(response, &endpoint).await
     }
 
-    #[instrument(ret(Display), err, skip(self))]
+    #[instrument(ret(Display), err, skip(self), level = "trace")]
     pub async fn list_permission(&self, user_id: &str) -> FindexClientResult<Permissions> {
         let endpoint = format!("/permission/list/{user_id}");
         let server_url = format!("{}{endpoint}", self.client.server_url);
@@ -53,7 +53,7 @@ impl FindexRestClient {
         }
     }
 
-    #[instrument(ret(Display), err, skip(self))]
+    #[instrument(ret(Display), err, skip(self), level = "trace")]
     pub async fn revoke_permission(
         &self,
         user_id: &str,

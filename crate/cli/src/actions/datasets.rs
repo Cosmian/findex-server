@@ -166,6 +166,6 @@ impl GetEntries {
 
         console::Stdout::new(&format!("{encrypted_entries}")).write()?;
 
-        Ok(String::new())
+        Ok(encrypted_entries.to_string())
     }
 }

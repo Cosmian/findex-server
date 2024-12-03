@@ -1,8 +1,6 @@
 use clap::Parser;
 use cosmian_config_utils::ConfigUtils;
-use cosmian_findex_client::reexport::cosmian_findex_config::{
-    FindexClientConfig, FindexConfigError,
-};
+use cosmian_findex_client::FindexClientConfig;
 
 use crate::error::{result::CliResult, CliError};
 
@@ -29,9 +27,7 @@ impl LogoutAction {
         let mut conf = conf.clone();
         conf.http_config.access_token = None;
         let conf_path = conf.conf_path.clone().ok_or_else(|| {
-            CliError::ConfigError(FindexConfigError::Default(
-                "Configuration path `conf_path` must be filled".to_owned(),
-            ))
+            CliError::Default("Configuration path `conf_path` must be filled".to_owned())
         })?;
         conf.to_toml(&conf_path)?;
 

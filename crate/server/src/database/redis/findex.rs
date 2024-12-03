@@ -14,8 +14,8 @@ use cloudproof_findex::{
         Tokens, ENTRY_LENGTH, LINK_LENGTH,
     },
 };
-use redis::{aio::ConnectionManager, pipe, AsyncCommands, Script};
-use tracing::{info, instrument, trace};
+use redis::{pipe, AsyncCommands};
+use tracing::{instrument, trace};
 use uuid::Uuid;
 
 use crate::{
@@ -23,57 +23,17 @@ use crate::{
     error::{result::FResult, server::FindexServerError},
 };
 
-/// The conditional upsert script used to only update a table if the
-/// indexed value matches ARGV[2]. When the value does not match, the
-/// indexed value is returned.
-const CONDITIONAL_UPSERT_SCRIPT: &str = r"
-        local value=redis.call('GET',ARGV[1])
-        if ((value==false) or (ARGV[2] == value)) then
-            redis.call('SET', ARGV[1], ARGV[3])
-            return
-        else
-            return value
-        end;
-    ";
+use super::instance::Redis;
 
 /// Generate a key for the entry table or chain table
 fn build_key(index_id: &Uuid, table: FindexTable, uid: &[u8]) -> Vec<u8> {
     [index_id.as_bytes().as_ref(), &[0x00, u8::from(table)], uid].concat()
 }
 
-pub(crate) struct Redis {
-    pub(crate) mgr: ConnectionManager,
-    upsert_script: Script,
-}
-
-//todo(manu):  move all test_data in root folder
-impl Redis {
-    pub(crate) async fn instantiate(redis_url: &str, clear_database: bool) -> FResult<Self> {
-        let client = redis::Client::open(redis_url)?;
-        let mgr = ConnectionManager::new(client).await?;
-
-        if clear_database {
-            info!("Warning: Irreversible operation: clearing the database");
-            Self::clear_database(mgr.clone()).await?;
-        }
-        Ok(Self {
-            mgr,
-            upsert_script: Script::new(CONDITIONAL_UPSERT_SCRIPT),
-        })
-    }
-
-    pub(crate) async fn clear_database(mgr: ConnectionManager) -> FResult<()> {
-        redis::cmd("FLUSHDB")
-            .query_async::<()>(&mut mgr.clone())
-            .await?;
-        Ok(())
-    }
-}
-
 #[async_trait]
 impl FindexTrait for Redis {
     // todo(manu): merge the 2 fetch
-    #[instrument(ret(Display), err, skip_all)]
+    #[instrument(ret(Display), err, skip_all, level = "trace")]
     async fn findex_fetch_entries(
         &self,
         index_id: &Uuid,
@@ -119,7 +79,7 @@ impl FindexTrait for Redis {
         Ok(res.into())
     }
 
-    #[instrument(ret(Display), err, skip_all)]
+    #[instrument(ret(Display), err, skip_all, level = "trace")]
     async fn findex_fetch_chains(
         &self,
         index_id: &Uuid,
@@ -165,7 +125,7 @@ impl FindexTrait for Redis {
         Ok(result)
     }
 
-    #[instrument(ret(Display), err, skip_all)]
+    #[instrument(ret(Display), err, skip_all, level = "trace")]
     async fn findex_upsert_entries(
         &self,
         index_id: &Uuid,
@@ -216,7 +176,7 @@ impl FindexTrait for Redis {
         Ok(rejected.into())
     }
 
-    #[instrument(ret, err, skip_all)]
+    #[instrument(ret, err, skip_all, level = "trace")]
     async fn findex_insert_chains(
         &self,
         index_id: &Uuid,
@@ -232,7 +192,7 @@ impl FindexTrait for Redis {
             .map_err(FindexServerError::from)
     }
 
-    #[instrument(ret, err, skip_all)]
+    #[instrument(ret, err, skip_all, level = "trace")]
     async fn findex_delete(
         &self,
         index_id: &Uuid,
@@ -250,7 +210,7 @@ impl FindexTrait for Redis {
             .map_err(FindexServerError::from)
     }
 
-    #[instrument(ret(Display), err, skip_all)]
+    #[instrument(ret(Display), err, skip_all, level = "trace")]
     #[allow(clippy::indexing_slicing)]
     async fn findex_dump_tokens(&self, index_id: &Uuid) -> FResult<Tokens> {
         let keys: Vec<Vec<u8>> = self

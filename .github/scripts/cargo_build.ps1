@@ -16,14 +16,12 @@ function BuildProject {
     Get-ChildItem -Recurse $env:OPENSSL_DIR
 
     # Build `cosmian_findex_cli`
-    Get-ChildItem crate\cli
     if ($BuildType -eq "release") {
-        cargo build --release --target x86_64-pc-windows-msvc
+        cargo build -p cosmian_findex_cli --release --target x86_64-pc-windows-msvc
     }
     else {
-        cargo build --target x86_64-pc-windows-msvc
+        cargo build -p cosmian_findex_cli --target x86_64-pc-windows-msvc
     }
-    Get-ChildItem ..\..
 
     # Check dynamic links
     $output = & "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.29.30133\bin\HostX64\x64\dumpbin.exe" /dependents target\x86_64-pc-windows-msvc\$BuildType\cosmian_findex_cli.exe | Select-String "libcrypto"
@@ -32,16 +30,14 @@ function BuildProject {
     }
 
     # Build `server`
-    Set-Location crate\server
     if ($BuildType -eq "release") {
-        cargo build --release --target x86_64-pc-windows-msvc
-        cargo test --release --target x86_64-pc-windows-msvc -p cosmian_findex_server -- --nocapture --skip test_findex --skip test_all_authentications --skip test_server_auth_matrix --skip test_datasets
+        cargo build -p cosmian_findex_server --release --target x86_64-pc-windows-msvc
+        cargo test  -p cosmian_findex_server --release --target x86_64-pc-windows-msvc -- --nocapture --skip test_findex --skip test_all_authentications --skip test_server_auth_matrix --skip test_datasets
     }
     else {
-        cargo build --target x86_64-pc-windows-msvc
-        cargo test --target x86_64-pc-windows-msvc -p cosmian_findex_server -- --nocapture --skip test_findex --skip test_all_authentications --skip test_server_auth_matrix --skip test_datasets
+        cargo build -p cosmian_findex_server --target x86_64-pc-windows-msvc
+        cargo test  -p cosmian_findex_server --target x86_64-pc-windows-msvc -- --nocapture --skip test_findex --skip test_all_authentications --skip test_server_auth_matrix --skip test_datasets
     }
-    Get-ChildItem ..\..
 
     # Check dynamic links
     $output = & "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.29.30133\bin\HostX64\x64\dumpbin.exe" /dependents target\x86_64-pc-windows-msvc\$BuildType\cosmian_findex_server.exe | Select-String "libcrypto"

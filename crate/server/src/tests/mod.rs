@@ -1,5 +1,7 @@
 use std::{io::Write, path::PathBuf};
 
+use tempfile::TempDir;
+
 use crate::config::{ClapConfig, DBConfig, DatabaseType, HttpConfig, JwtAuthConfig};
 
 #[test]
@@ -90,12 +92,16 @@ fn test_read_write_toml() {
         force_default_username: false,
     };
 
+    // create a temp dir
+    let tmp_dir = TempDir::new().unwrap();
+    let tmp_path = tmp_dir.path();
+    let tmp_path = tmp_path.join("config.toml");
+
     let toml_string = toml::to_string(&config).unwrap();
-    let mut file = std::fs::File::create("/tmp/config.toml").unwrap();
+    let mut file = std::fs::File::create(&tmp_path).unwrap();
     file.write_all(toml_string.as_bytes()).unwrap();
 
-    let path = PathBuf::from("/tmp/config.toml");
-    let loaded_conf = std::fs::read_to_string(&path).unwrap();
+    let loaded_conf = std::fs::read_to_string(&tmp_path).unwrap();
     let read_config: ClapConfig = toml::from_str(&loaded_conf).unwrap();
 
     assert_eq!(config, read_config);
