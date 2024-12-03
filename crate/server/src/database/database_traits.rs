@@ -16,7 +16,7 @@ pub(crate) trait FindexMemoryTrait:
     //
 }
 
-pub(crate) type findextype = dyn FindexMemoryTrait<
+pub(crate) type FindexMemoryType = dyn FindexMemoryTrait<
     Word = [u8; WORD_LENGTH],
     Address = Address<ADDRESS_LENGTH>,
     Error = dyn Send + Sync + std::error::Error,
