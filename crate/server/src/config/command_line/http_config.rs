@@ -3,10 +3,10 @@ use std::{fmt::Display, path::PathBuf};
 use clap::Args;
 use serde::{Deserialize, Serialize};
 
-const DEFAULT_PORT: u16 = 6666;
+const DEFAULT_PORT: u16 = 6668;
 const DEFAULT_HOSTNAME: &str = "0.0.0.0";
 
-#[derive(Args, Clone, Deserialize, Serialize)]
+#[derive(Args, Clone, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(default)]
 pub struct HttpConfig {
     /// The Findex server port
@@ -17,7 +17,8 @@ pub struct HttpConfig {
     #[clap(long, env = "FINDEX_SERVER_HOSTNAME", default_value = DEFAULT_HOSTNAME)]
     pub hostname: String,
 
-    /// The Findex server optional PKCS#12 Certificates and Key file. If provided, this will start the server in HTTPS mode.
+    /// The Findex server optional PKCS#12 Certificates and Key file. If
+    /// provided, this will start the server in HTTPS mode.
     #[clap(long, env = "FINDEX_SERVER_HTTPS_P12_FILE")]
     pub https_p12_file: Option<PathBuf>,
 
@@ -25,9 +26,11 @@ pub struct HttpConfig {
     #[clap(long, env = "FINDEX_SERVER_HTTPS_P12_PASSWORD")]
     pub https_p12_password: Option<String>,
 
-    /// The server optional authority X509 certificate in PEM format used to validate the client certificate presented for authentication.
-    /// If provided, this will require clients to present a certificate signed by this authority for authentication.
-    /// The server must run in TLS mode for this to be used.
+    /// The server optional authority X509 certificate in PEM format used to
+    /// validate the client certificate presented for authentication.
+    /// If provided, this will require clients to present a certificate signed
+    /// by this authority for authentication. The server must run in TLS
+    /// mode for this to be used.
     #[clap(long, env = "FINDEX_SERVER_AUTHORITY_CERT_FILE")]
     pub authority_cert_file: Option<PathBuf>,
 }

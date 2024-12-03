@@ -1,5 +1,7 @@
 mod auth_tests;
-mod new_database;
+mod datasets;
+mod findex;
+mod permissions;
 mod utils;
 
-const PROG_NAME: &str = "findex";
+const PROG_NAME: &str = "cosmian_findex_cli";

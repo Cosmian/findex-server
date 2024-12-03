@@ -2,7 +2,7 @@ use serde::Serialize;
 
 use crate::error::result::CliResult;
 
-pub const KMS_CLI_FORMAT: &str = "KMS_CLI_FORMAT";
+pub const FINDEX_CLI_FORMAT: &str = "FINDEX_CLI_FORMAT";
 pub const CLI_DEFAULT_FORMAT: &str = "text";
 pub const CLI_JSON_FORMAT: &str = "json";
 
@@ -15,7 +15,7 @@ impl Stdout {
     #[must_use]
     pub fn new(stdout: &str) -> Self {
         Self {
-            stdout: stdout.to_string(),
+            stdout: stdout.to_owned(),
         }
     }
 
@@ -27,8 +27,8 @@ impl Stdout {
     #[allow(clippy::print_stdout)]
     pub fn write(&self) -> CliResult<()> {
         // Check if the output format should be JSON
-        let json_format_from_env = std::env::var(KMS_CLI_FORMAT)
-            .unwrap_or_else(|_| CLI_DEFAULT_FORMAT.to_string())
+        let json_format_from_env = std::env::var(FINDEX_CLI_FORMAT)
+            .unwrap_or_else(|_| CLI_DEFAULT_FORMAT.to_owned())
             .to_lowercase()
             == CLI_JSON_FORMAT;
 

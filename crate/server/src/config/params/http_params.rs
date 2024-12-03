@@ -4,7 +4,7 @@ use openssl::pkcs12::{ParsedPkcs12_2, Pkcs12};
 
 use crate::{
     config::HttpConfig,
-    result::{FResult, FResultHelper},
+    error::result::{FResult, FResultHelper},
 };
 
 /// The HTTP parameters of the API server
@@ -19,15 +19,18 @@ impl HttpParams {
     ///
     /// # Arguments
     ///
-    /// * `config` - The `HttpConfig` object containing the configuration parameters.
+    /// * `config` - The `HttpConfig` object containing the configuration
+    ///   parameters.
     ///
     /// # Returns
     ///
-    /// Returns a `FResult` containing the created `HttpParams` instance on success.
+    /// Returns a `FResult` containing the created `HttpParams` instance on
+    /// success.
     ///
     /// # Errors
     ///
-    /// This function can return an error if there is an issue reading the PKCS#12 file or parsing it.
+    /// This function can return an error if there is an issue reading the
+    /// PKCS#12 file or parsing it.
     pub(crate) fn try_from(config: &HttpConfig) -> FResult<Self> {
         // start in HTTPS mode if a PKCS#12 file is provided
         if let (Some(p12_file), Some(p12_password)) =
@@ -51,7 +54,8 @@ impl HttpParams {
     ///
     /// # Returns
     ///
-    /// Returns `true` if the server is running in HTTPS mode, `false` otherwise.
+    /// Returns `true` if the server is running in HTTPS mode, `false`
+    /// otherwise.
     #[must_use]
     pub const fn is_running_https(&self) -> bool {
         matches!(self, Self::Https(_))

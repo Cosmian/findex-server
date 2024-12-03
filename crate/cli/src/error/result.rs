@@ -43,7 +43,7 @@ where
 
 impl<T> CliResultHelper<T> for Option<T> {
     fn context(self, context: &str) -> CliResult<T> {
-        self.ok_or_else(|| CliError::Default(context.to_string()))
+        self.ok_or_else(|| CliError::Default(context.to_owned()))
     }
 
     fn with_context<D, O>(self, op: O) -> CliResult<T>
