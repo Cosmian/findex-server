@@ -10,3 +10,7 @@ pub(crate) type FindexMemoryType<const WORD_LENGTH: usize> = dyn FindexMemoryTra
     Word = [u8; WORD_LENGTH],
     Error = dyn Send + Sync + std::error::Error,
 >;
+
+// pub struct FindexDatabase<const WORD_LENGTH: usize> {
+//     pub memory: Box<FindexMemoryType<8>>,
+// }

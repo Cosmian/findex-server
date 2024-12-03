@@ -8,20 +8,6 @@ use crate::error::result::FResult;
 
 use super::redis::WORD_LENGTH;
 
-pub(crate) trait FindexMemoryTrait:
-    Send + Sync + Clone + MemoryADT<Address = Address<ADDRESS_LENGTH>, Word = [u8; WORD_LENGTH]>
-{
-    //
-    // Findex
-    //
-}
-
-pub(crate) type FindexMemoryType = dyn FindexMemoryTrait<
-    Word = [u8; WORD_LENGTH],
-    Address = Address<ADDRESS_LENGTH>,
-    Error = dyn Send + Sync + std::error::Error,
->;
-
 #[async_trait]
 pub(crate) trait PermissionsTrait: Sync + Send {
     //
@@ -52,6 +38,16 @@ pub(crate) trait DatasetsTrait: Sync + Send {
         index_id: &Uuid,
         uuids: &Uuids,
     ) -> FResult<EncryptedEntries>;
+}
+
+pub(crate) trait FindexMemoryTrait {
+    type Memory: Send
+        + Sync
+        + Clone
+        + MemoryADT<Address = Address<ADDRESS_LENGTH>, Word = [u8; WORD_LENGTH]>;
+
+    // Getter method to access the memory field
+    fn get_memory(&self) -> &Self::Memory;
 }
 
 #[async_trait]
