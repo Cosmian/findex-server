@@ -65,7 +65,6 @@ impl Display for Permission {
 const PERMISSION_LENGTH: usize = 1;
 const INDEX_ID_LENGTH: usize = 16;
 
-#[derive(Debug)]
 /// Map of index id <--> permission for a user
 /// The key is the index id and the value is the permission
 /// Each entry has a length of 17 bytes
@@ -73,6 +72,7 @@ const INDEX_ID_LENGTH: usize = 16;
 /// | Index ID (UUID) | Permission |
 /// |-----------------|------------|
 /// | 16 bytes        | 1 byte     |
+#[derive(Debug, PartialEq, Eq)]
 pub struct Permissions {
     pub permissions: HashMap<Uuid, Permission>,
 }
@@ -144,5 +144,116 @@ impl Permissions {
     #[must_use]
     pub fn get_permission(&self, index_id: &Uuid) -> Option<Permission> {
         self.permissions.get(index_id).cloned()
+    }
+
+    #[must_use]
+    pub fn min(&self, other_permissions: &Self) -> Self {
+        let mut permissions = HashMap::new();
+        for (index_id, permission) in &self.permissions {
+            if let Some(other_permission) = other_permissions.permissions.get(index_id) {
+                permissions.insert(
+                    *index_id,
+                    std::cmp::min(permission.clone(), other_permission.clone()),
+                );
+            }
+        }
+        Self { permissions }
+    }
+}
+
+#[cfg(test)]
+#[allow(clippy::unwrap_used)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_permissions_ser_de() {
+        let permissions = Permissions {
+            permissions: vec![
+                (Uuid::new_v4(), Permission::Read),
+                (Uuid::new_v4(), Permission::Write),
+                (Uuid::new_v4(), Permission::Admin),
+            ]
+            .into_iter()
+            .collect(),
+        };
+
+        let serialized_permissions = permissions.serialize().unwrap();
+        let deserialized_permissions = Permissions::deserialize(&serialized_permissions).unwrap();
+        assert_eq!(permissions, deserialized_permissions);
+    }
+
+    #[test]
+    fn test_permissions_min() {
+        let permissions = Permissions {
+            permissions: vec![
+                (
+                    Uuid::parse_str("11111111-1111-1111-1111-111111111111").unwrap(),
+                    Permission::Read,
+                ),
+                (
+                    Uuid::parse_str("22222222-2222-2222-2222-222222222222").unwrap(),
+                    Permission::Write,
+                ),
+                (
+                    Uuid::parse_str("33333333-3333-3333-3333-333333333333").unwrap(),
+                    Permission::Admin,
+                ),
+            ]
+            .into_iter()
+            .collect(),
+        };
+
+        let other_permissions = Permissions {
+            permissions: vec![
+                (
+                    Uuid::parse_str("11111111-1111-1111-1111-111111111111").unwrap(),
+                    Permission::Read,
+                ),
+                (
+                    Uuid::parse_str("22222222-2222-2222-2222-222222222222").unwrap(),
+                    Permission::Write,
+                ),
+                (
+                    Uuid::parse_str("33333333-3333-3333-3333-333333333333").unwrap(),
+                    Permission::Admin,
+                ),
+            ]
+            .into_iter()
+            .collect(),
+        };
+
+        let min_permissions = permissions.min(&other_permissions);
+        assert_eq!(permissions, min_permissions);
+
+        let other_permissions = Permissions {
+            permissions: vec![
+                (
+                    Uuid::parse_str("11111111-1111-1111-1111-111111111111").unwrap(),
+                    Permission::Admin,
+                ),
+                (
+                    Uuid::parse_str("22222222-2222-2222-2222-222222222222").unwrap(),
+                    Permission::Admin,
+                ),
+            ]
+            .into_iter()
+            .collect(),
+        };
+        let min_permissions = permissions.min(&other_permissions);
+        assert_ne!(permissions, min_permissions);
+        assert_eq!(min_permissions.permissions.len(), 2);
+        assert_eq!(
+            min_permissions
+                .permissions
+                .get(&Uuid::parse_str("11111111-1111-1111-1111-111111111111").unwrap()),
+            Some(&Permission::Read)
+        );
+        assert_eq!(
+            min_permissions
+                .permissions
+                .get(&Uuid::parse_str("22222222-2222-2222-2222-222222222222").unwrap()),
+            Some(&Permission::Write)
+        );
     }
 }

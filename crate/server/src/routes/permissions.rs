@@ -92,13 +92,17 @@ pub(crate) async fn list_permission(
     params: web::Path<String>,
     findex_server: Data<Arc<FindexServer>>,
 ) -> ResponseBytes {
-    let user = findex_server.get_user(&req);
-    let user_id = params.into_inner();
-    info!("user {user}: POST /permission/list/{user_id}");
+    let request_user = findex_server.get_user(&req);
+    let requested_user_id = params.into_inner();
+    info!("user {request_user}: POST /permission/list/{requested_user_id}");
 
-    let permissions = findex_server.db.get_permissions(&user_id).await?;
+    let request_user_permissions = findex_server.db.get_permissions(&request_user).await?;
+    let requested_user_permissions = findex_server.db.get_permissions(&requested_user_id).await?;
 
-    let bytes = permissions.serialize()?;
+    // To avoid a user to lookup who are the more powerful users only display the minimum permission between the two users
+    let min_permissions = requested_user_permissions.min(&request_user_permissions);
+
+    let bytes = min_permissions.serialize()?;
     Ok(HttpResponse::Ok()
         .content_type("application/octet-stream")
         .body(bytes.to_vec()))
