@@ -2,8 +2,8 @@ use std::sync::mpsc::SendError;
 
 use actix_web::dev::ServerHandle;
 use cloudproof_findex::db_interfaces::DbInterfaceError;
+use cosmian_findex::Error as CoreError;
 use cosmian_findex_structs::StructsError;
-use findex::Error as CoreError;
 use std::fmt::Debug;
 use thiserror::Error;
 // Each error type must have a corresponding HTTP status code

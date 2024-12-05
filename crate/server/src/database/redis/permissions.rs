@@ -5,7 +5,7 @@ use tracing::{instrument, trace};
 use uuid::Uuid;
 
 use crate::{
-    database::database_traits::{FindexMemoryTrait, PermissionsTrait},
+    database::database_traits::PermissionsTrait,
     error::{result::FResult, server::FindexServerError},
 };
 
@@ -27,7 +27,7 @@ impl PermissionsTrait for ServerRedis<WORD_LENGTH> {
         let mut pipe = pipe();
         pipe.set::<_, _>(key, permissions.serialize());
         pipe.atomic()
-            .query_async::<()>(&mut self.get_memory().manager.clone())
+            .query_async::<()>(&mut self.memory.manager.clone())
             .await
             .map_err(FindexServerError::from)?;
 
@@ -43,7 +43,7 @@ impl PermissionsTrait for ServerRedis<WORD_LENGTH> {
 
         let mut values: Vec<Vec<u8>> = pipe
             .atomic()
-            .query_async(&mut self.get_memory().manager.clone())
+            .query_async(&mut self.memory.manager.clone())
             .await
             .map_err(FindexServerError::from)?;
 
@@ -84,7 +84,7 @@ impl PermissionsTrait for ServerRedis<WORD_LENGTH> {
         let mut pipe = pipe();
         pipe.set::<_, _>(key, permissions.serialize());
         pipe.atomic()
-            .query_async(&mut self.get_memory().manager.clone())
+            .query_async(&mut self.memory.manager.clone())
             .await
             .map_err(FindexServerError::from)
     }
@@ -99,7 +99,7 @@ impl PermissionsTrait for ServerRedis<WORD_LENGTH> {
                 pipe.set::<_, _>(key, permissions.serialize());
 
                 pipe.atomic()
-                    .query_async::<()>(&mut self.get_memory().manager.clone())
+                    .query_async::<()>(&mut self.memory.manager.clone())
                     .await
                     .map_err(FindexServerError::from)?;
             }

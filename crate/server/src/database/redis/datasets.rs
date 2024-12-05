@@ -8,7 +8,7 @@ use uuid::Uuid;
 
 use super::{ServerRedis, WORD_LENGTH};
 use crate::{
-    database::database_traits::{DatasetsTrait, FindexMemoryTrait},
+    database::database_traits::DatasetsTrait,
     error::{result::FResult, server::FindexServerError},
 };
 
@@ -34,7 +34,7 @@ impl DatasetsTrait for ServerRedis<WORD_LENGTH> {
             pipe.set(key, data);
         }
         pipe.atomic()
-            .query_async(&mut self.get_memory().manager.clone())
+            .query_async(&mut self.memory.manager.clone())
             .await
             .map_err(FindexServerError::from)
     }
@@ -47,7 +47,7 @@ impl DatasetsTrait for ServerRedis<WORD_LENGTH> {
             pipe.del(key);
         }
         pipe.atomic()
-            .query_async(&mut self.get_memory().manager.clone())
+            .query_async(&mut self.memory.manager.clone())
             .await
             .map_err(FindexServerError::from)
     }
@@ -70,7 +70,7 @@ impl DatasetsTrait for ServerRedis<WORD_LENGTH> {
         }
         let values: Vec<Vec<u8>> = pipe
             .atomic()
-            .query_async(&mut self.get_memory().manager.clone())
+            .query_async(&mut self.memory.manager.clone())
             .await
             .map_err(FindexServerError::from)?;
 

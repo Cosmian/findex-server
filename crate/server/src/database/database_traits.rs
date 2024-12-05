@@ -46,9 +46,13 @@ pub(crate) trait FindexMemoryTrait {
         + Clone
         + MemoryADT<Address = Address<ADDRESS_LENGTH>, Word = [u8; WORD_LENGTH]>;
 
-    // Getter method to access the memory field
+    // Getter method to access the memory field. Beyond its getter role, this method is actually used to have a trait object that can constrain structures
+    // that implement it to have an attribute that satisfies the specific traits that findex expects out of a MemoryADT structure. Rust compiler doesn't natively support this.
     fn get_memory(&self) -> &Self::Memory;
 }
 
 #[async_trait]
-pub(crate) trait DatabaseTraits: PermissionsTrait + DatasetsTrait {}
+pub(crate) trait DatabaseTraits:
+    PermissionsTrait + DatasetsTrait + FindexMemoryTrait
+{
+}

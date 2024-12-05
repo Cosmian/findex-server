@@ -24,6 +24,39 @@ use crate::{
     },
 };
 
+#[post("/indexes/{index_id}/batch_read")]
+pub(crate) async fn findex_batch_read(
+    req: HttpRequest,
+    index_id: web::Path<String>,
+    bytes: Bytes,
+    findex_server: Data<Arc<FindexServer>>,
+) -> ResponseBytes {
+    let user = findex_server.get_user(&req);
+    info!("user {user}: POST /indexes/{index_id}/fetch_entries");
+
+    check_permission(&user, &index_id, Permission::Read, &findex_server).await?;
+
+    let tokens = deserialize_token_set(&bytes.into_iter().collect::<Vec<_>>())?;
+    trace!("fetch_entries: number of tokens: {}:", tokens.len());
+
+    // Collect into a vector to fix the order.
+    let uids_and_values = findex_server
+        .db
+        .findex_fetch_entries(&get_index_id(index_id.as_str())?, tokens)
+        .await?;
+    trace!(
+        "fetch_entries: number of uids_and_values: {}:",
+        uids_and_values.len()
+    );
+
+    let bytes = uids_and_values.serialize()?.to_vec();
+    trace!("fetch_entries: number of bytes: {}:", bytes.len());
+
+    Ok(HttpResponse::Ok()
+        .content_type("application/octet-stream")
+        .body(bytes))
+}
+
 #[post("/indexes/{index_id}/fetch_entries")]
 pub(crate) async fn findex_fetch_entries(
     req: HttpRequest,
