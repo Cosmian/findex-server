@@ -4,9 +4,7 @@ use super::FindexClientError;
 
 pub type FindexClientResult<R> = Result<R, FindexClientError>;
 
-#[allow(dead_code)]
 pub(crate) trait FindexRestClientResultHelper<T> {
-    fn context(self, context: &str) -> FindexClientResult<T>;
     fn with_context<D, O>(self, op: O) -> FindexClientResult<T>
     where
         D: Display + Send + Sync + 'static,
@@ -17,10 +15,6 @@ impl<T, E> FindexRestClientResultHelper<T> for Result<T, E>
 where
     E: std::error::Error,
 {
-    fn context(self, context: &str) -> FindexClientResult<T> {
-        self.map_err(|e| FindexClientError::Default(format!("{context}: {e}")))
-    }
-
     fn with_context<D, O>(self, op: O) -> FindexClientResult<T>
     where
         D: Display + Send + Sync + 'static,
@@ -31,10 +25,6 @@ where
 }
 
 impl<T> FindexRestClientResultHelper<T> for Option<T> {
-    fn context(self, context: &str) -> FindexClientResult<T> {
-        self.ok_or_else(|| FindexClientError::Default(context.to_owned()))
-    }
-
     fn with_context<D, O>(self, op: O) -> FindexClientResult<T>
     where
         D: Display + Send + Sync + 'static,

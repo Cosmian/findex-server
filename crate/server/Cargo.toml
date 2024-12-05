@@ -54,7 +54,6 @@ redis = { version = "0.27", features = [
   "script",
   "connection-manager",
   "tokio-comp",
-  "r2d2",
 ] }
 # Important: align the rustls version with reqwest rustls dependency
 # When using client certificate authentication, reqwest will use the
