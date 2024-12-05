@@ -62,7 +62,7 @@ jobs:
     name: Clean env. ${{ inputs.archive-name }}
     runs-on: ${{ inputs.distribution }}
     steps:
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: ${{ inputs.archive-name }}-${{ inputs.debug_or_release }}
 

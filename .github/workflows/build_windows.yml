@@ -78,7 +78,7 @@ jobs:
     name: Clean env. ${{ inputs.archive-name }}
     runs-on: windows-2022
     steps:
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: ${{ inputs.archive-name }}-${{ inputs.debug_or_release }}
 
