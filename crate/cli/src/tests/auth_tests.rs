@@ -12,8 +12,6 @@ use crate::error::result::CliResult;
 const PORT: u16 = 6667;
 
 #[tokio::test]
-#[allow(clippy::needless_return)]
-#[ignore]
 pub(crate) async fn test_all_authentications() -> CliResult<()> {
     log_init(None);
     let url = env::var("REDIS_HOST").map_or_else(
