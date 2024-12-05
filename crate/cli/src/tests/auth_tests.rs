@@ -25,10 +25,9 @@ pub(crate) async fn test_all_authentications() -> CliResult<()> {
     info!("Testing server with no auth");
     let ctx = start_test_server_with_options(
         DBConfig {
-            database_type: Some(DatabaseType::Redis),
+            database_type: DatabaseType::Redis,
             clear_database: false,
-            database_url: Some(url.clone()),
-            ..DBConfig::default()
+            database_url: url.clone(),
         },
         PORT,
         AuthenticationOptions {
@@ -41,10 +40,9 @@ pub(crate) async fn test_all_authentications() -> CliResult<()> {
     ctx.stop_server().await?;
 
     let default_db_config = DBConfig {
-        database_type: Some(DatabaseType::Redis),
+        database_type: DatabaseType::Redis,
         clear_database: false,
-        database_url: Some(url),
-        ..DBConfig::default()
+        database_url: url,
     };
 
     // plaintext JWT token auth

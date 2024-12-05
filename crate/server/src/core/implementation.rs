@@ -6,7 +6,6 @@ use crate::{
     config::{DbParams, ServerParams},
     database::{DatabaseTraits, Redis},
     error::result::FResult,
-    findex_server_bail,
     middlewares::{JwtAuthClaim, PeerCommonName},
     routes::get_index_id,
 };
@@ -18,16 +17,11 @@ pub(crate) struct FindexServer {
 
 impl FindexServer {
     pub(crate) async fn instantiate(mut shared_config: ServerParams) -> FResult<Self> {
-        let db: Box<dyn DatabaseTraits + Sync + Send> =
-            if let Some(mut db_params) = shared_config.db_params.as_mut() {
-                match &mut db_params {
-                    DbParams::Redis(url) => Box::new(
-                        Redis::instantiate(url.as_str(), shared_config.clear_db_on_start).await?,
-                    ),
-                }
-            } else {
-                findex_server_bail!("Fatal: no database configuration provided. Stopping.")
-            };
+        let db: Box<dyn DatabaseTraits + Sync + Send> = match &mut shared_config.db_params {
+            DbParams::Redis(url) => {
+                Box::new(Redis::instantiate(url.as_str(), shared_config.clear_db_on_start).await?)
+            }
+        };
 
         Ok(Self {
             params: shared_config,

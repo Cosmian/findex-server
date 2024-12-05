@@ -15,6 +15,12 @@ impl DbParams {
         }
     }
 }
+impl Default for DbParams {
+    #[allow(clippy::expect_used)]
+    fn default() -> Self {
+        Self::Redis(Url::parse("redis://localhost:6379").expect("Invalid default URL"))
+    }
+}
 
 impl Display for DbParams {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

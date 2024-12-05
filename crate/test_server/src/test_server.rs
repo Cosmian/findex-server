@@ -39,10 +39,9 @@ fn redis_db_config() -> DBConfig {
     };
     trace!("TESTS: using redis on {url}");
     DBConfig {
-        database_type: Some(DatabaseType::Redis),
+        database_type: DatabaseType::Redis,
         clear_database: false,
-        database_url: Some(url),
-        sqlite_path: Default::default(),
+        database_url: url,
     }
 }
 

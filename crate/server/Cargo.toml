@@ -68,7 +68,6 @@ serde_json = { workspace = true }
 sqlx = { version = "0.8.2", default-features = false, features = [
   "json",
   "runtime-tokio-native-tls",
-  "sqlite",
 ] }
 thiserror = { workspace = true }
 tokio = { workspace = true, features = ["full"] }

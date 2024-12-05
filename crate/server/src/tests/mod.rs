@@ -8,9 +8,8 @@ use crate::config::{ClapConfig, DBConfig, DatabaseType, HttpConfig, JwtAuthConfi
 fn test_toml() {
     let config = ClapConfig {
         db: DBConfig {
-            database_type: Some(DatabaseType::Redis),
-            database_url: Some("[redis urls]".to_owned()),
-            sqlite_path: None,
+            database_type: DatabaseType::Redis,
+            database_url: "[redis urls]".to_owned(),
             clear_database: false,
         },
         http: HttpConfig {
@@ -65,9 +64,8 @@ jwt_audience = ["[jwt audience 1]", "[jwt audience 2]"]
 fn test_read_write_toml() {
     let config = ClapConfig {
         db: DBConfig {
-            database_type: Some(DatabaseType::Redis),
-            database_url: Some("redis://localhost:6379".to_owned()),
-            sqlite_path: None,
+            database_type: DatabaseType::Redis,
+            database_url: "redis://localhost:6379".to_owned(),
             clear_database: false,
         },
         http: HttpConfig {

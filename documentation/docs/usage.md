@@ -8,13 +8,9 @@ Usage: cosmian_findex_server [OPTIONS]
 Options:
       --database-type <DATABASE_TYPE>
           The database type of the Findex server
-          - sqlite: `SQLite`. The data will be stored at the `sqlite_path`
-            directory
-          - redis: Redis database. The Redis url must be provided [env: FINDEX_SERVER_DATABASE_TYPE=] [possible values: redis]
+          - redis: Redis database. The Redis url must be provided [env: FINDEX_SERVER_DATABASE_TYPE=] [default: redis] [possible values: redis]
       --database-url <DATABASE_URL>
-          The url of the database for findex-redis [env: FINDEX_SERVER_DATABASE_URL=] [default: redis://localhost:6379]
-      --sqlite-path <SQLITE_PATH>
-          The directory path of the sqlite or sqlite-enc [env: FINDEX_SERVER_SQLITE_PATH=] [default: ./sqlite-data]
+          The url of the database [env: FINDEX_SERVER_DATABASE_URL=] [default: redis://localhost:6379]
       --clear-database
           Clear the database on start.
           WARNING: This will delete ALL the data in the database [env: FINDEX_SERVER_CLEAR_DATABASE=]
