@@ -1,5 +1,5 @@
 [package]
-name = "cosmian_findex_structs" # todo(manu): remove prefix `cosmian_findex_` on all crates?
+name = "cosmian_findex_structs"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true

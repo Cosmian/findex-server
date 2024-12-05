@@ -25,7 +25,6 @@ pub(crate) struct Redis {
     pub(crate) upsert_script: Script,
 }
 
-//todo(manu):  move all test_data in root folder
 impl Redis {
     pub(crate) async fn instantiate(redis_url: &str, clear_database: bool) -> FResult<Self> {
         let client = redis::Client::open(redis_url)?;
