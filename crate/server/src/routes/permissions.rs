@@ -99,7 +99,8 @@ pub(crate) async fn list_permission(
     let request_user_permissions = findex_server.db.get_permissions(&request_user).await?;
     let requested_user_permissions = findex_server.db.get_permissions(&requested_user_id).await?;
 
-    // To avoid a user to lookup who are the more powerful users only display the minimum permission between the two users
+    // To avoid a user to lookup who are the more powerful users only display the
+    // minimum permission between the two users
     let min_permissions = requested_user_permissions.min(&request_user_permissions);
 
     let bytes = min_permissions.serialize()?;

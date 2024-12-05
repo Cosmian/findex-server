@@ -89,8 +89,7 @@ fn ensure_url(database_url: &str, alternate_env_variable: &str) -> FResult<Url> 
         std::env::var(alternate_env_variable).map_err(|_e| {
             findex_server_error!(
                 "No database URL supplied either using the 'database-url' option, or the \
-                 FINDEX_SERVER_DATABASE_URL or the {alternate_env_variable} environment \
-                 variables",
+                 FINDEX_SERVER_DATABASE_URL or the {alternate_env_variable} environment variables",
             )
         })?
     } else {

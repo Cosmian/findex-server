@@ -123,7 +123,7 @@ repos:
   - repo: https://github.com/Cosmian/git-hooks.git
     rev: v1.0.32
     hooks:
-      # - id: nightly-cargo-format
+      - id: nightly-cargo-format
       - id: cargo-format
       # - id: dprint-toml-fix
       # - id: cargo-upgrade
