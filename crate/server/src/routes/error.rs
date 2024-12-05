@@ -3,6 +3,7 @@ use actix_web::{
     web::Json,
     HttpResponse, HttpResponseBuilder,
 };
+use serde::{Deserialize, Serialize};
 use tracing::{error, warn};
 
 use crate::error::server::FindexServerError;
@@ -20,11 +21,14 @@ impl actix_web::error::ResponseError for FindexServerError {
             | Self::CryptographicError(_)
             | Self::Redis(_)
             | Self::Findex(_)
+            | Self::SendError(_)
             | Self::Certificate(_)
-            | Self::Deserialization(_)
+            | Self::StructsError(_)
+            | Self::OpenSslError(_)
+            | Self::UuidError(_)
             | Self::ServerError(_) => StatusCode::INTERNAL_SERVER_ERROR,
 
-            Self::InvalidRequest(_) | Self::ClientConnectionError(_) | Self::UrlError(_) => {
+            Self::InvalidRequest(_) | Self::ClientConnectionError(_) | Self::UrlParseError(_) => {
                 StatusCode::UNPROCESSABLE_ENTITY
             }
         }
@@ -44,4 +48,9 @@ impl actix_web::error::ResponseError for FindexServerError {
             .insert_header((header::CONTENT_TYPE, "text/html; charset=utf-8"))
             .body(message)
     }
+}
+
+#[derive(Deserialize, Serialize, Debug)] // Debug is required by ok_json()
+pub(crate) struct SuccessResponse {
+    pub success: String,
 }

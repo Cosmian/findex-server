@@ -1,26 +1,19 @@
-#![allow(unused)]
-use std::{env, path::PathBuf, process::Command};
+use std::env;
 
-use assert_cmd::prelude::*;
-use base64::Engine;
-use cosmian_logger::log_utils::log_init;
-use cosmian_rest_client::FINDEX_CLI_CONF_ENV;
-use tempfile::TempDir;
+use cosmian_logger::log_init;
 use test_findex_server::{
-    start_test_server_with_options, AuthenticationOptions, DBConfig, DatabaseType, TestsContext,
+    start_test_server_with_options, AuthenticationOptions, DBConfig, DatabaseType,
 };
 use tracing::{info, trace};
 
-use crate::{error::result::CliResult, tests::PROG_NAME};
+use crate::error::result::CliResult;
 
 // let us not make other test cases fail
 const PORT: u16 = 6667;
 
 #[tokio::test]
-#[allow(clippy::needless_return)]
-#[ignore]
 pub(crate) async fn test_all_authentications() -> CliResult<()> {
-    log_init(option_env!("RUST_LOG"));
+    log_init(None);
     let url = env::var("REDIS_HOST").map_or_else(
         |_| "redis://localhost:6379".to_owned(),
         |var_env| format!("redis://{var_env}:6379"),
@@ -30,10 +23,9 @@ pub(crate) async fn test_all_authentications() -> CliResult<()> {
     info!("Testing server with no auth");
     let ctx = start_test_server_with_options(
         DBConfig {
-            database_type: Some(DatabaseType::Redis),
+            database_type: DatabaseType::Redis,
             clear_database: false,
-            database_url: Some(url.clone()),
-            ..DBConfig::default()
+            database_url: url.clone(),
         },
         PORT,
         AuthenticationOptions {
@@ -46,10 +38,9 @@ pub(crate) async fn test_all_authentications() -> CliResult<()> {
     ctx.stop_server().await?;
 
     let default_db_config = DBConfig {
-        database_type: Some(DatabaseType::Redis),
+        database_type: DatabaseType::Redis,
         clear_database: false,
-        database_url: Some(url),
-        ..DBConfig::default()
+        database_url: url,
     };
 
     // plaintext JWT token auth

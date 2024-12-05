@@ -32,7 +32,6 @@ actix-tls = "3.4"
 actix-web = { workspace = true, features = ["macros", "openssl"] }
 alcoholic_jwt = "4091"
 async-trait = "0.1.83"
-base64 = { workspace = true }
 chrono = "0.4"
 clap = { workspace = true, features = [
   "help",
@@ -44,13 +43,13 @@ clap = { workspace = true, features = [
   "cargo",
 ] }
 cloudproof_findex = { workspace = true, features = ["redis-interface"] }
-cosmian_logger = { path = "../logger" }
+cosmian_findex_structs = { path = "../structs" }
+cosmian_logger = { workspace = true }
 dotenvy = "0.15"
 futures = "0.3"
 openssl = { workspace = true, default-features = false }
-redis = { version = "0.23", features = [
+redis = { version = "0.27", features = [
   "aio",
-  "ahash",
   "script",
   "connection-manager",
   "tokio-comp",
@@ -67,7 +66,6 @@ serde_json = { workspace = true }
 sqlx = { version = "0.8.2", default-features = false, features = [
   "json",
   "runtime-tokio-native-tls",
-  "sqlite",
 ] }
 thiserror = { workspace = true }
 tokio = { workspace = true, features = ["full"] }
@@ -75,4 +73,6 @@ toml = "0.8"
 tracing = { workspace = true }
 url = { workspace = true }
 uuid = { workspace = true, features = ["v4"] }
-x509-parser = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }

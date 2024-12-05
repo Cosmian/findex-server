@@ -4,10 +4,8 @@
     future_incompatible,
     keyword_idents,
     let_underscore,
-    // rust_2024_compatibility,
     unreachable_pub,
     unused,
-    unsafe_code,
     clippy::all,
     clippy::suspicious,
     clippy::complexity,
@@ -38,29 +36,27 @@
     clippy::map_err_ignore,
     clippy::redundant_clone,
     clippy::todo
+
 )]
 #![allow(
     clippy::module_name_repetitions,
-    clippy::similar_names,
+    clippy::too_many_lines,
     clippy::cargo_common_metadata,
     clippy::multiple_crate_versions,
-    clippy::redundant_pub_crate,
-    clippy::future_not_send,
-    clippy::significant_drop_tightening
+    clippy::redundant_pub_crate
 )]
 
-pub use config::{ClientConf, FINDEX_CLI_CONF_ENV};
-pub use error::ClientError;
-pub use file_utils::{
-    read_bytes_from_file, read_from_json_file, write_bytes_to_file, write_json_object_to_file,
-};
-pub use permission::Permission;
-pub use rest_client::RestClient;
-pub use result::{ClientResultHelper, RestClientResult};
+pub use config::{FindexClientConfig, FINDEX_CLI_CONF_ENV};
+pub use error::{result::FindexClientResult, FindexClientError};
+pub use rest_client::{handle_error, FindexRestClient};
 
 mod config;
+mod datasets;
 mod error;
-mod file_utils;
-mod permission;
+mod permissions;
 mod rest_client;
-mod result;
+
+pub mod reexport {
+    pub use cosmian_config_utils;
+    pub use cosmian_http_client;
+}

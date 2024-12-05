@@ -1,13 +1,12 @@
-use std::{array::TryFromSliceError, sync::mpsc::SendError};
+use std::sync::mpsc::SendError;
 
-use actix_web::{dev::ServerHandle, error::QueryPayloadError};
+use actix_web::dev::ServerHandle;
 use cloudproof_findex::{
     db_interfaces::DbInterfaceError, reexport::cosmian_findex::CoreError,
     ser_de::SerializationError,
 };
-use redis::ErrorKind;
+use cosmian_findex_structs::StructsError;
 use thiserror::Error;
-use x509_parser::prelude::{PEMError, X509Error};
 
 // Each error type must have a corresponding HTTP status code
 #[derive(Error, Debug, Clone)]
@@ -15,131 +14,46 @@ pub enum FindexServerError {
     // When a conversion from/to bytes
     #[error("Conversion Error: {0}")]
     ConversionError(String),
-
     // Missing arguments in the request
     #[error("Invalid Request: {0}")]
     InvalidRequest(String),
-
     // Any errors related to a bad behavior of the DB but not related to the user input
     #[error("Database Error: {0}")]
     DatabaseError(String),
-
     // Any errors related to a bad behavior of the server but not related to the user input
     #[error("Unexpected server error: {0}")]
     ServerError(String),
-
     // Any actions of the user which is not allowed
     #[error("REST client connection error: {0}")]
     ClientConnectionError(String),
-
     // Any actions of the user which is not allowed
     #[error("Permission denied: {0}")]
     Unauthorized(String),
-
     // A failure originating from one of the cryptographic algorithms
     #[error("Cryptographic error: {0}")]
     CryptographicError(String),
-
     // Error related to X509 Certificate
     #[error("Certificate error: {0}")]
     Certificate(String),
-
     #[error("Redis Error: {0}")]
     Redis(String),
-
     #[error("Findex Error: {0}")]
     Findex(String),
-
-    #[error("Invalid URL: {0}")]
-    UrlError(String),
-
-    #[error("Serialization: {0}")]
-    Deserialization(String),
+    #[error(transparent)]
+    StructsError(#[from] StructsError),
+    #[error(transparent)]
+    SendError(#[from] SendError<ServerHandle>),
+    #[error(transparent)]
+    UrlParseError(#[from] url::ParseError),
+    #[error(transparent)]
+    OpenSslError(#[from] openssl::error::ErrorStack),
+    #[error(transparent)]
+    UuidError(#[from] uuid::Error),
 }
-
-impl From<x509_parser::nom::Err<X509Error>> for FindexServerError {
-    fn from(e: x509_parser::nom::Err<X509Error>) -> Self {
-        Self::Certificate(e.to_string())
-    }
-}
-
-impl From<X509Error> for FindexServerError {
-    fn from(e: X509Error) -> Self {
-        Self::Certificate(e.to_string())
-    }
-}
-
-impl From<&X509Error> for FindexServerError {
-    fn from(e: &X509Error) -> Self {
-        Self::Certificate(e.to_string())
-    }
-}
-
-impl From<x509_parser::nom::Err<PEMError>> for FindexServerError {
-    fn from(e: x509_parser::nom::Err<PEMError>) -> Self {
-        Self::Certificate(e.to_string())
-    }
-}
-
-impl From<std::string::FromUtf8Error> for FindexServerError {
-    fn from(e: std::string::FromUtf8Error) -> Self {
-        Self::ConversionError(e.to_string())
-    }
-}
-
-impl From<std::num::TryFromIntError> for FindexServerError {
-    fn from(e: std::num::TryFromIntError) -> Self {
-        Self::ConversionError(e.to_string())
-    }
-}
-
-impl From<sqlx::Error> for FindexServerError {
-    fn from(e: sqlx::Error) -> Self {
-        Self::DatabaseError(e.to_string())
-    }
-}
-
-// todo(manu): remove useless convert
 
 impl From<std::io::Error> for FindexServerError {
     fn from(e: std::io::Error) -> Self {
         Self::ServerError(e.to_string())
-    }
-}
-
-impl From<openssl::error::ErrorStack> for FindexServerError {
-    fn from(e: openssl::error::ErrorStack) -> Self {
-        Self::ServerError(format!("{e}. Details: {e:?}"))
-    }
-}
-
-impl From<serde_json::Error> for FindexServerError {
-    fn from(e: serde_json::Error) -> Self {
-        Self::InvalidRequest(e.to_string())
-    }
-}
-
-impl From<QueryPayloadError> for FindexServerError {
-    fn from(e: QueryPayloadError) -> Self {
-        Self::InvalidRequest(e.to_string())
-    }
-}
-
-impl From<TryFromSliceError> for FindexServerError {
-    fn from(e: TryFromSliceError) -> Self {
-        Self::ConversionError(e.to_string())
-    }
-}
-
-impl From<reqwest::Error> for FindexServerError {
-    fn from(e: reqwest::Error) -> Self {
-        Self::ClientConnectionError(format!("{e}: details: {e:?}"))
-    }
-}
-
-impl From<SendError<ServerHandle>> for FindexServerError {
-    fn from(e: SendError<ServerHandle>) -> Self {
-        Self::ServerError(format!("Failed to send the server handle: {e}"))
     }
 }
 
@@ -149,37 +63,9 @@ impl From<redis::RedisError> for FindexServerError {
     }
 }
 
-impl From<FindexServerError> for redis::RedisError {
-    fn from(val: FindexServerError) -> Self {
-        Self::from((
-            ErrorKind::ClientError,
-            "Findex Server Error",
-            val.to_string(),
-        ))
-    }
-}
-
-impl From<url::ParseError> for FindexServerError {
-    fn from(e: url::ParseError) -> Self {
-        Self::UrlError(e.to_string())
-    }
-}
-
 impl From<SerializationError> for FindexServerError {
     fn from(e: SerializationError) -> Self {
         Self::Findex(e.to_string())
-    }
-}
-
-impl From<base64::DecodeError> for FindexServerError {
-    fn from(e: base64::DecodeError) -> Self {
-        Self::ConversionError(e.to_string())
-    }
-}
-
-impl From<tracing::dispatcher::SetGlobalDefaultError> for FindexServerError {
-    fn from(e: tracing::dispatcher::SetGlobalDefaultError) -> Self {
-        Self::ServerError(e.to_string())
     }
 }
 

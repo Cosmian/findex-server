@@ -1,5 +1,5 @@
 [package]
-name = "cosmian_rest_client"
+name = "cosmian_findex_client"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
@@ -15,18 +15,13 @@ doctest = false
 [features]
 
 [dependencies]
-base64 = { workspace = true }
-clap = { workspace = true }
-der = { workspace = true }
-pem = { workspace = true }
+cloudproof_findex = { git = "https://www.github.com/Cosmian/cloudproof_rust", branch = "feat/add_basic_findex_rest_client" }
+cosmian_config_utils = { workspace = true }
+cosmian_findex_structs = { path = "../structs" }
+cosmian_http_client = { workspace = true }
+cosmian_logger = { workspace = true }
 reqwest = { workspace = true, features = ["default", "json", "native-tls"] }
 serde = { workspace = true }
-serde_json = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }
-url = { workspace = true }
-uuid = { workspace = true, features = ["v4"] }
-
-[dev-dependencies]
-faker_rand = "0.1"
-rand = "0.8"
+uuid = { workspace = true }

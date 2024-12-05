@@ -1,5 +1,6 @@
 use clap::Parser;
-use cosmian_rest_client::{Permission, RestClient};
+use cosmian_findex_client::FindexRestClient;
+use cosmian_findex_structs::Permission;
 use uuid::Uuid;
 
 use crate::{
@@ -11,6 +12,7 @@ use crate::{
 #[derive(Parser, Debug)]
 pub enum PermissionsAction {
     Create(CreateIndex),
+    List(ListPermissions),
     Grant(GrantPermission),
     Revoke(RevokePermission),
 }
@@ -25,9 +27,10 @@ impl PermissionsAction {
     /// # Errors
     ///
     /// Returns an error if there was a problem running the action.
-    pub async fn process(&self, rest_client: RestClient) -> CliResult<()> {
+    pub async fn process(&self, rest_client: FindexRestClient) -> CliResult<()> {
         match self {
             Self::Create(action) => action.run(rest_client).await?,
+            Self::List(action) => action.run(rest_client).await?,
             Self::Grant(action) => action.run(rest_client).await?,
             Self::Revoke(action) => action.run(rest_client).await?,
         };
@@ -58,7 +61,7 @@ impl CreateIndex {
     /// # Errors
     ///
     /// Returns an error if the query execution on the Findex server fails.
-    pub async fn run(&self, rest_client: RestClient) -> CliResult<String> {
+    pub async fn run(&self, rest_client: FindexRestClient) -> CliResult<String> {
         let response = rest_client
             .create_index_id()
             .await
@@ -67,6 +70,37 @@ impl CreateIndex {
         console::Stdout::new(&response.success).write()?;
 
         Ok(response.success)
+    }
+}
+
+/// List user's permission. Returns a list of indexes with their permissions.
+#[derive(Parser, Debug)]
+pub struct ListPermissions {
+    /// The user identifier to allow
+    #[clap(long, required = true)]
+    pub user: String,
+}
+
+impl ListPermissions {
+    /// Runs the `ListPermissions` action.
+    ///
+    /// # Arguments
+    ///
+    /// * `rest_client` - A reference to the Findex client used to communicate
+    ///   with the Findex server.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the query execution on the Findex server fails.
+    pub async fn run(&self, rest_client: FindexRestClient) -> CliResult<String> {
+        let response = rest_client
+            .list_permission(&self.user)
+            .await
+            .with_context(|| "Can't execute the list permission query on the findex server")?;
+
+        console::Stdout::new(&format!("{response}")).write()?;
+
+        Ok(response.to_string())
     }
 }
 
@@ -103,7 +137,7 @@ impl GrantPermission {
     /// # Errors
     ///
     /// Returns an error if the query execution on the Findex server fails.
-    pub async fn run(&self, rest_client: RestClient) -> CliResult<String> {
+    pub async fn run(&self, rest_client: FindexRestClient) -> CliResult<String> {
         let response = rest_client
             .grant_permission(&self.user, &self.permission, &self.index_id)
             .await
@@ -140,7 +174,7 @@ impl RevokePermission {
     /// # Errors
     ///
     /// Returns an error if the query execution on the Findex server fails.
-    pub async fn run(&self, rest_client: RestClient) -> CliResult<String> {
+    pub async fn run(&self, rest_client: FindexRestClient) -> CliResult<String> {
         let response = rest_client
             .revoke_permission(&self.user, &self.index_id)
             .await

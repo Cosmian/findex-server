@@ -1,13 +1,13 @@
 use std::process::Command;
 
 use assert_cmd::prelude::*;
-use cosmian_rest_client::FINDEX_CLI_CONF_ENV;
+use cosmian_findex_client::FINDEX_CLI_CONF_ENV;
 use regex::{Regex, RegexBuilder};
 use tracing::{debug, trace};
 use uuid::Uuid;
 
 use crate::{
-    actions::permissions::{GrantPermission, RevokePermission},
+    actions::permissions::{GrantPermission, ListPermissions, RevokePermission},
     error::{result::CliResult, CliError},
     tests::{utils::recover_cmd_logs, PROG_NAME},
 };
@@ -43,6 +43,26 @@ pub(crate) fn create_index_id_cmd(cli_conf_path: &str) -> CliResult<Uuid> {
         .ok_or_else(|| CliError::Default("failed extracting the unique identifier".to_owned()))?;
         let uuid = Uuid::parse_str(unique_identifier)?;
         return Ok(uuid);
+    }
+    Err(CliError::Default(
+        std::str::from_utf8(&output.stderr)?.to_owned(),
+    ))
+}
+
+pub(crate) fn list_permission_cmd(
+    cli_conf_path: &str,
+    action: &ListPermissions,
+) -> CliResult<String> {
+    let mut cmd = Command::cargo_bin(PROG_NAME)?;
+    let args = vec!["list".to_owned(), "--user".to_owned(), action.user.clone()];
+    cmd.env(FINDEX_CLI_CONF_ENV, cli_conf_path);
+
+    cmd.arg("permissions").args(args);
+    debug!("cmd: {:?}", cmd);
+    let output = recover_cmd_logs(&mut cmd);
+    if output.status.success() {
+        let findex_output = std::str::from_utf8(&output.stdout)?;
+        return Ok(findex_output.to_owned());
     }
     Err(CliError::Default(
         std::str::from_utf8(&output.stderr)?.to_owned(),

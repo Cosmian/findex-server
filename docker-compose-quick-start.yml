@@ -1,0 +1,16 @@
+---
+services:
+  redis:
+    container_name: redis
+    image: redis:latest
+    ports:
+      - 6379:6379
+  findex-server:
+    container_name: findex-server
+    image: ghcr.io/cosmian/findex-server:0.1.0
+    ports:
+      - 6668:6668
+    environment:
+      FINDEX_SERVER_DATABASE_TYPE: redis
+      FINDEX_SERVER_DATABASE_URL: redis://redis:6379
+      FINDEX_SERVER_CLEAR_DATABASE: true

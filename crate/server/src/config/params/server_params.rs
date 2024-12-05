@@ -25,7 +25,7 @@ pub struct ServerParams {
     pub force_default_username: bool,
 
     /// The DB parameters may be supplied on the command line
-    pub db_params: Option<DbParams>,
+    pub db_params: DbParams,
 
     /// Whether to clear the database on start
     pub clear_db_on_start: bool,
@@ -167,7 +167,7 @@ impl Clone for ServerParams {
             identity_provider_configurations: self.identity_provider_configurations.clone(),
             default_username: self.default_username.clone(),
             force_default_username: self.force_default_username,
-            db_params: None,
+            db_params: DbParams::default(),
             clear_db_on_start: self.clear_db_on_start,
             hostname: self.hostname.clone(),
             port: self.port,
