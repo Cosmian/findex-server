@@ -60,7 +60,6 @@ impl IndexOrDeleteAction {
         Ok(IndexedValueToKeywordsMap::from(result))
     }
 
-    #[allow(clippy::future_not_send)]
     /// Adds the data from the CSV file to the Findex index.
     ///
     /// # Errors
@@ -72,6 +71,7 @@ impl IndexOrDeleteAction {
     /// - There is an error converting the CSV file to a hashmap.
     /// - There is an error adding the data to the Findex index.
     /// - There is an error writing the result to the console.
+    #[allow(clippy::future_not_send)]
     pub async fn add(&self, rest_client: FindexRestClient) -> CliResult<()> {
         let keywords = instantiate_findex(rest_client, &self.findex_parameters.index_id)
             .await?
@@ -88,7 +88,6 @@ impl IndexOrDeleteAction {
         Ok(())
     }
 
-    #[allow(clippy::future_not_send)]
     /// Deletes the data from the CSV file from the Findex index.
     ///
     /// # Errors
@@ -100,6 +99,7 @@ impl IndexOrDeleteAction {
     /// - There is an error converting the CSV file to a hashmap.
     /// - There is an error deleting the data from the Findex index.
     /// - There is an error writing the result to the console.
+    #[allow(clippy::future_not_send)]
     pub async fn delete(&self, rest_client: FindexRestClient) -> CliResult<()> {
         let keywords = instantiate_findex(rest_client, &self.findex_parameters.index_id)
             .await?

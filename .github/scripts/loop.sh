@@ -9,7 +9,6 @@ cargo build --workspace --all-targets
 echo "Running tests in an infinite loop"
 while true; do
   reset
-  # cargo test --workspace -- --nocapture
-  cargo nextest run --workspace --nocapture
+  cargo test --workspace -- --nocapture
   sleep 1
 done
