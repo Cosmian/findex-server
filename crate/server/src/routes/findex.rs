@@ -2,26 +2,19 @@ use std::sync::Arc;
 
 use actix_web::{
     post,
-    web::{self, Bytes, Data, Json},
+    web::{self, Bytes, Data},
     HttpRequest, HttpResponse,
 };
-use cloudproof_findex::{
-    db_interfaces::{redis::FindexTable, rest::UpsertData},
-    reexport::{
-        cosmian_crypto_core::bytes_ser_de::Serializable, cosmian_findex::TokenToEncryptedValueMap,
-    },
-    ser_de::ffi_ser_de::deserialize_token_set,
-};
+use cosmian_findex::{MemoryADT, ADDRESS_LENGTH};
 use cosmian_findex_structs::Permission;
 use tracing::{info, trace};
 
 use crate::{
     core::FindexServer,
-    routes::{
-        check_permission,
-        error::{Response, ResponseBytes},
-        get_index_id,
-    },
+    database::redis::WORD_LENGTH,
+    database::FindexMemoryTrait,
+    database::ServerRedis,
+    routes::{check_permission, error::ResponseBytes},
 };
 
 #[post("/indexes/{index_id}/batch_read")]
@@ -32,223 +25,157 @@ pub(crate) async fn findex_batch_read(
     findex_server: Data<Arc<FindexServer>>,
 ) -> ResponseBytes {
     let user = findex_server.get_user(&req);
-    info!("user {user}: POST /indexes/{index_id}/fetch_entries");
+    info!("user {user}: POST /indexes/{index_id}/batch_read");
 
     check_permission(&user, &index_id, Permission::Read, &findex_server).await?;
 
-    let tokens = deserialize_token_set(&bytes.into_iter().collect::<Vec<_>>())?;
-    trace!("fetch_entries: number of tokens: {}:", tokens.len());
+    let db = findex_server.db.get_memory();
+    type AddressType =
+        <<ServerRedis<WORD_LENGTH> as FindexMemoryTrait>::Memory as MemoryADT>::Address; // verbose but keeps a SSOT for types
 
-    // Collect into a vector to fix the order.
-    let uids_and_values = findex_server
-        .db
-        .findex_fetch_entries(&get_index_id(index_id.as_str())?, tokens)
-        .await?;
-    trace!(
-        "fetch_entries: number of uids_and_values: {}:",
-        uids_and_values.len()
+    let bytes_slice = bytes.as_ref();
+    assert!(
+        bytes_slice.len() % ADDRESS_LENGTH == 0,
+        "Bytes length must be multiple of address size"
     );
 
-    let bytes = uids_and_values.serialize()?.to_vec();
-    trace!("fetch_entries: number of bytes: {}:", bytes.len());
-
-    Ok(HttpResponse::Ok()
-        .content_type("application/octet-stream")
-        .body(bytes))
-}
-
-#[post("/indexes/{index_id}/fetch_entries")]
-pub(crate) async fn findex_fetch_entries(
-    req: HttpRequest,
-    index_id: web::Path<String>,
-    bytes: Bytes,
-    findex_server: Data<Arc<FindexServer>>,
-) -> ResponseBytes {
-    let user = findex_server.get_user(&req);
-    info!("user {user}: POST /indexes/{index_id}/fetch_entries");
-
-    check_permission(&user, &index_id, Permission::Read, &findex_server).await?;
-
-    let tokens = deserialize_token_set(&bytes.into_iter().collect::<Vec<_>>())?;
-    trace!("fetch_entries: number of tokens: {}:", tokens.len());
-
-    // Collect into a vector to fix the order.
-    let uids_and_values = findex_server
-        .db
-        .findex_fetch_entries(&get_index_id(index_id.as_str())?, tokens)
-        .await?;
     trace!(
-        "fetch_entries: number of uids_and_values: {}:",
-        uids_and_values.len()
+        "batch_read: number of addresses {}:",
+        bytes_slice.len() / ADDRESS_LENGTH
     );
 
-    let bytes = uids_and_values.serialize()?.to_vec();
-    trace!("fetch_entries: number of bytes: {}:", bytes.len());
+    // Collect into a vector to adhere the memory interface
+    let addresses: Vec<AddressType> = bytes_slice
+        .chunks_exact(ADDRESS_LENGTH)
+        .map(|chunk| {
+            let array: [u8; ADDRESS_LENGTH] = chunk
+                .try_into()
+                .expect("Chunk size guaranteed by chunks_exact, this should not fail.");
+            AddressType::from(array)
+        })
+        .collect();
 
-    Ok(HttpResponse::Ok()
-        .content_type("application/octet-stream")
-        .body(bytes))
-}
-
-#[post("/indexes/{index_id}/fetch_chains")]
-pub(crate) async fn findex_fetch_chains(
-    req: HttpRequest,
-    index_id: web::Path<String>,
-    bytes: Bytes,
-    findex_server: Data<Arc<FindexServer>>,
-) -> ResponseBytes {
-    let user = findex_server.get_user(&req);
-    info!("user {user}: POST /indexes/{index_id}/fetch_chains");
-
-    check_permission(&user, &index_id, Permission::Read, &findex_server).await?;
-
-    let tokens = deserialize_token_set(&bytes.into_iter().collect::<Vec<_>>())?;
-    trace!("fetch_chains: number of tokens: {}:", tokens.len());
-
-    let uids_and_values = findex_server
-        .db
-        .findex_fetch_chains(&get_index_id(index_id.as_str())?, tokens)
-        .await?;
+    let result_words = findex_server.db.get_memory().batch_read(addresses).await?;
     trace!(
-        "fetch_chains: number of uids_and_values: {}:",
-        uids_and_values.len()
+        "batch_read: number of non null words: {}:",
+        result_words.fold(0, |acc, x| acc + (x.is_some() as usize))
     );
 
-    let bytes = uids_and_values.serialize()?.to_vec();
+    let response_bytes = result_words.serialize()?.to_vec();
 
     Ok(HttpResponse::Ok()
         .content_type("application/octet-stream")
-        .body(bytes))
+        .body(response_bytes))
 }
 
-#[post("/indexes/{index_id}/upsert_entries")]
-pub(crate) async fn findex_upsert_entries(
+#[post("/indexes/{index_id}/guarded_write")]
+pub(crate) async fn findex_guarded_write(
     req: HttpRequest,
     index_id: web::Path<String>,
     bytes: Bytes,
     findex_server: Data<Arc<FindexServer>>,
 ) -> ResponseBytes {
     let user = findex_server.get_user(&req);
-    info!("user {user}: POST /indexes/{index_id}/upsert_entries",);
-
-    check_permission(&user, &index_id, Permission::Write, &findex_server).await?;
-
-    let upsert_data = UpsertData::deserialize(&bytes.into_iter().collect::<Vec<_>>())?;
-
-    trace!("upsert_entries: num upsert data: {}", upsert_data.len());
-
-    let rejected = findex_server
-        .db
-        .findex_upsert_entries(&get_index_id(index_id.as_str())?, upsert_data)
-        .await?;
-
-    let bytes = rejected.serialize()?.to_vec();
-    Ok(HttpResponse::Ok()
-        .content_type("application/octet-stream")
-        .body(bytes))
-}
-
-#[post("/indexes/{index_id}/insert_chains")]
-pub(crate) async fn findex_insert_chains(
-    req: HttpRequest,
-    index_id: web::Path<String>,
-    bytes: Bytes,
-    findex_server: Data<Arc<FindexServer>>,
-) -> Response<()> {
-    let user = findex_server.get_user(&req);
-    info!("user {user}: POST /indexes/{index_id}/insert_chains",);
-
-    check_permission(&user, &index_id, Permission::Write, &findex_server).await?;
-
-    let token_to_value_encrypted_value_map =
-        TokenToEncryptedValueMap::deserialize(&bytes.into_iter().collect::<Vec<_>>())?;
-
-    findex_server
-        .db
-        .findex_insert_chains(
-            &get_index_id(index_id.as_str())?,
-            token_to_value_encrypted_value_map,
-        )
-        .await?;
-
-    Ok(Json(()))
-}
-
-#[post("/indexes/{index_id}/delete_entries")]
-pub(crate) async fn findex_delete_entries(
-    req: HttpRequest,
-    index_id: web::Path<String>,
-    bytes: Bytes,
-    findex_server: Data<Arc<FindexServer>>,
-) -> Response<()> {
-    let user = findex_server.get_user(&req);
-    info!("user {user}: POST /indexes/{index_id}/delete_entries",);
-
-    check_permission(&user, &index_id, Permission::Write, &findex_server).await?;
-
-    let tokens = deserialize_token_set(&bytes.into_iter().collect::<Vec<_>>())?;
-    trace!("delete_entries: number of tokens: {}:", tokens.len());
-
-    findex_server
-        .db
-        .findex_delete(
-            &get_index_id(index_id.as_str())?,
-            FindexTable::Entry,
-            tokens,
-        )
-        .await?;
-
-    Ok(Json(()))
-}
-
-#[post("/indexes/{index_id}/delete_chains")]
-pub(crate) async fn findex_delete_chains(
-    req: HttpRequest,
-    index_id: web::Path<String>,
-    bytes: Bytes,
-    findex_server: Data<Arc<FindexServer>>,
-) -> Response<()> {
-    let user = findex_server.get_user(&req);
-    info!("user {user}: POST /indexes/{index_id}/delete_chains",);
-
-    check_permission(&user, &index_id, Permission::Write, &findex_server).await?;
-
-    let tokens = deserialize_token_set(&bytes.into_iter().collect::<Vec<_>>())?;
-    trace!("delete_chains: number of tokens: {}:", tokens.len());
-
-    findex_server
-        .db
-        .findex_delete(
-            &get_index_id(index_id.as_str())?,
-            FindexTable::Chain,
-            tokens,
-        )
-        .await?;
-
-    Ok(Json(()))
-}
-
-#[post("/indexes/{index_id}/dump_tokens")]
-pub(crate) async fn findex_dump_tokens(
-    req: HttpRequest,
-    index_id: web::Path<String>,
-    findex_server: Data<Arc<FindexServer>>,
-) -> ResponseBytes {
-    let user = findex_server.get_user(&req);
-    info!("user {user}: POST /indexes/{index_id}/dump_tokens");
+    info!("user {user}: POST /indexes/{index_id}/guarded_write");
 
     check_permission(&user, &index_id, Permission::Read, &findex_server).await?;
 
-    let tokens = findex_server
-        .db
-        .findex_dump_tokens(&get_index_id(index_id.as_str())?)
-        .await?;
-    trace!("dump_tokens: number of tokens: {}:", tokens.len());
+    let db = findex_server.db.get_memory();
+    type AddressType =
+        <<ServerRedis<WORD_LENGTH> as FindexMemoryTrait>::Memory as MemoryADT>::Address;
+    type WordType = <<ServerRedis<WORD_LENGTH> as FindexMemoryTrait>::Memory as MemoryADT>::Word; // same as above, keeping SSOT for words typing
 
-    let bytes = tokens.serialize()?.to_vec();
+    let bytes_slice = bytes.as_ref();
+
+    // Size calculations to assert the byte stream is valid for guarded_write operation requirements
+    const ADDRESS_SIZE: usize = std::mem::size_of::<AddressType>();
+    const WORD_SIZE: usize = std::mem::size_of::<WordType>();
+    const GUARD_SIZE: usize = ADDRESS_SIZE + (1 + WORD_SIZE); // +1 for Option discriminant
+
+    // Assert total length
+    assert!(
+        bytes_slice.len() >= GUARD_SIZE,
+        "Byte stream too short for guard structure"
+    );
+
+    // Assert remaining bytes are valid (adr/word) pairs
+    let tasks_bytes = &bytes_slice[GUARD_SIZE..];
+    assert!(
+        tasks_bytes.len() % (ADDRESS_SIZE + WORD_SIZE) == 0,
+        "tasks payload must be multiple of (address,word) pairs"
+    );
+
+    let task_count = tasks_bytes.len() / (ADDRESS_SIZE + WORD_SIZE);
+    trace!("Guarded_write called for {} tasks", task_count);
+
+    let guard: (AddressType, Option<WordType>) = {
+        // Convert address bytes to AddressType
+        let address = AddressType::from(
+            bytes_slice[..ADDRESS_SIZE]
+                .try_into()
+                .expect("Byte payload size checks should prevent this."),
+        );
+
+        // Get the discriminant byte
+        let is_some = bytes_slice[ADDRESS_SIZE] != 0;
+
+        // Convert the word bytes if Some
+        let word = if is_some {
+            Some(WordType::from(
+                bytes_slice[ADDRESS_SIZE + 1..GUARD_SIZE]
+                    .try_into()
+                    .expect("Byte payload size checks should prevent this."),
+            ))
+        } else {
+            None
+        };
+
+        (address, word)
+    };
+
+    let tasks: Vec<(AddressType, WordType)> = bytes_slice[..GUARD_SIZE]
+        .chunks_exact(ADDRESS_LENGTH + WORD_LENGTH)
+        .map(|chunk| {
+            let (addr_bytes, word_bytes) = chunk.split_at(ADDRESS_SIZE);
+
+            // Convert address
+            let address = AddressType::from(
+                addr_bytes
+                    .try_into()
+                    .expect("Chunk size guaranteed by chunks_exact"),
+            );
+
+            // Convert word
+            let word = WordType::from(
+                word_bytes
+                    .try_into()
+                    .expect("Chunk size guaranteed by chunks_exact"),
+            );
+
+            (address, word)
+        })
+        .collect();
+
+    let result_word = findex_server
+        .db
+        .get_memory()
+        .guarded_write(guard, tasks)
+        .await?;
+
+    let trace_msg = match result_word {
+        word if word == guard => format!(
+            "Guarded_write SUCCESS. Expected guard value matched. {} tasks written",
+            tasks.len()
+        ),
+        word => format!(
+            "Guarded_write FAILED. Guard mismatch: expected={:?}, found={:?}",
+            guard, word
+        ),
+    };
+
+    let response_bytes = result_word.serialize()?.to_vec();
 
     Ok(HttpResponse::Ok()
         .content_type("application/octet-stream")
-        .body(bytes))
+        .body(response_bytes))
 }
-// todo(manu): put findex parameters in cli conf
