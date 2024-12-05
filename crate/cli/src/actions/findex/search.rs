@@ -33,7 +33,7 @@ impl SearchAction {
     ///
     /// Returns an error if the version query fails or if there is an issue
     /// writing to the console.
-    #[allow(clippy::future_not_send)] // todo(manu): to remove this, changes must be done on `findex` repository
+    #[allow(clippy::future_not_send)] // TODO(manu): to remove this, changes must be done on `findex` repository
     pub async fn process(&self, rest_client: FindexRestClient) -> CliResult<()> {
         let findex = instantiate_findex(rest_client, &self.findex_parameters.index_id).await?;
         let results = findex

@@ -50,7 +50,6 @@ futures = "0.3"
 openssl = { workspace = true, default-features = false }
 redis = { version = "0.27", features = [
   "aio",
-  "ahash",
   "script",
   "connection-manager",
   "tokio-comp",

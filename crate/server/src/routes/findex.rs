@@ -218,4 +218,4 @@ pub(crate) async fn findex_dump_tokens(
         .content_type("application/octet-stream")
         .body(bytes))
 }
-// todo(manu): put findex parameters in cli conf
+// TODO(manu): put findex parameters in cli conf

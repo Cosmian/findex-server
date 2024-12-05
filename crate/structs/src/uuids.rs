@@ -45,9 +45,9 @@ impl Serializable for Uuids {
 
     /// Serialize the Uuids struct
     ///
-    /// | Field       | Type   | Description                          |
-    /// |-------------|--------|--------------------------------------|
-    /// | uuids       | Vec<Uuid> | A vector of UUIDs to be serialized |
+    /// | Field       | Type       | Description                          |
+    /// |-------------|------------|--------------------------------------|
+    /// | uuids       | Vec<Uuid>  | A vector of UUIDs to be serialized   |
     ///
     /// The serialization format is as follows:
     /// 1. The number of UUIDs (encoded as LEB128).

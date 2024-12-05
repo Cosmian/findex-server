@@ -19,7 +19,7 @@ use crate::{
     },
 };
 
-//todo(manu): routes must be revisited:
+//TODO(manu): routes must be revisited:
 // - /{index_id}/datasets/add_entries
 // - /{index_id}/findex/add_entries
 // - /{index_id}/permission/grant

@@ -31,7 +31,7 @@ fn build_key(index_id: &Uuid, table: FindexTable, uid: &[u8]) -> Vec<u8> {
 
 #[async_trait]
 impl FindexTrait for Redis {
-    // todo(manu): merge the 2 fetch
+    // TODO(manu): merge the 2 fetch
     #[instrument(ret(Display), err, skip_all, level = "trace")]
     async fn findex_fetch_entries(
         &self,
