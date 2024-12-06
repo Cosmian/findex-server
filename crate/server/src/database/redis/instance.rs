@@ -4,7 +4,7 @@ use tracing::info;
 use crate::error::result::FResult;
 type RedisAdrType = Address<ADDRESS_LENGTH>;
 type RedisWordType<const WORD_LENGTH: usize> = [u8; WORD_LENGTH];
-#[derive(Clone)]
+
 pub(crate) struct Redis<const WORD_LENGTH: usize> {
     pub(crate) memory: RedisMemory<RedisAdrType, RedisWordType<WORD_LENGTH>>,
 }

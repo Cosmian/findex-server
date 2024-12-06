@@ -4,7 +4,7 @@ use tracing::{debug, instrument, trace};
 
 use crate::{
     config::{DbParams, ServerParams},
-    database::{DatabaseTraits, Redis},
+    database::{redis::WORD_LENGTH, Redis},
     error::result::FResult,
     findex_server_bail,
     middlewares::{JwtAuthClaim, PeerCommonName},
@@ -13,27 +13,20 @@ use crate::{
 
 pub(crate) struct FindexServer {
     pub(crate) params: ServerParams,
-    pub(crate) db: Box<
-        dyn DatabaseTraits<
-            Memory = RedisMemory<Address = Address<ADDRESS_LENGTH>, Word = [u8; WORD_LENGTH]>
-                         + Sync
-                         + Send,
-        >,
-    >,
+    pub(crate) db: Redis<WORD_LENGTH>,
 }
 
 impl FindexServer {
     pub(crate) async fn instantiate(mut shared_config: ServerParams) -> FResult<Self> {
-        let db: Box<dyn DatabaseTraits + Sync + Send> =
-            if let Some(mut db_params) = shared_config.db_params.as_mut() {
-                match &mut db_params {
-                    DbParams::Redis(url) => Box::new(
-                        Redis::instantiate(url.as_str(), shared_config.clear_db_on_start).await?,
-                    ),
+        let db = if let Some(mut db_params) = shared_config.db_params.as_mut() {
+            match &mut db_params {
+                DbParams::Redis(url) => {
+                    Redis::instantiate(url.as_str(), shared_config.clear_db_on_start).await?
                 }
-            } else {
-                findex_server_bail!("Fatal: no database configuration provided. Stopping.")
-            };
+            }
+        } else {
+            findex_server_bail!("Fatal: no database configuration provided. Stopping.")
+        };
 
         Ok(Self {
             params: shared_config,

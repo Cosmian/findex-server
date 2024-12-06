@@ -28,7 +28,7 @@ pub(crate) async fn findex_batch_read(
 
     check_permission(&user, &index_id, Permission::Read, &findex_server).await?;
 
-    let db = findex_server.db.get_memory();
+    let db = findex_server.db;
     type AddressType = <Redis<WORD_LENGTH> as MemoryADT>::Address; // keeps a SSOT for types
 
     let bytes_slice = bytes.as_ref();
@@ -53,7 +53,7 @@ pub(crate) async fn findex_batch_read(
         })
         .collect();
 
-    let result_words = findex_server.db.get_memory().batch_read(addresses).await?;
+    let result_words = findex_server.db.batch_read(addresses).await?;
     trace!(
         "batch_read: number of non null words: {}:",
         result_words.fold(0, |acc, x| acc + (x.is_some() as usize))
@@ -78,7 +78,7 @@ pub(crate) async fn findex_guarded_write(
 
     check_permission(&user, &index_id, Permission::Read, &findex_server).await?;
 
-    let db = findex_server.db.get_memory();
+    let db = findex_server.db;
     type AddressType = <Redis<WORD_LENGTH> as MemoryADT>::Address;
     type WordType = <Redis<WORD_LENGTH> as MemoryADT>::Word; // same as above, keeping SSOT for words typing
 
