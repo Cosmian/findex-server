@@ -1,4 +1,3 @@
-pub mod console;
 pub mod datasets;
 pub mod findex;
 pub mod login;

@@ -6,12 +6,9 @@ use cosmian_findex_client::FindexRestClient;
 use cosmian_findex_structs::EncryptedEntries;
 use uuid::Uuid;
 
-use crate::{
-    actions::console,
-    error::{
-        result::{CliResult, CliResultHelper},
-        CliError,
-    },
+use crate::error::{
+    result::{CliResult, CliResultHelper},
+    CliError,
 };
 
 /// Manage encrypted datasets
@@ -91,7 +88,7 @@ impl AddEntries {
             .await
             .with_context(|| "Can't execute the add entries query on the findex server")?;
 
-        console::Stdout::new(&format!("{response}")).write()?;
+        println!("{response}");
 
         Ok(response.to_string())
     }
@@ -121,7 +118,7 @@ impl DeleteEntries {
             .await
             .with_context(|| "Can't execute the delete entries query on the findex server")?;
 
-        console::Stdout::new(&response.success).write()?;
+        println!("{}", response.success);
 
         Ok(response.success)
     }
@@ -153,7 +150,7 @@ impl GetEntries {
             .await
             .with_context(|| "Can't execute the get entries query on the findex server")?;
 
-        console::Stdout::new(&format!("{encrypted_entries}")).write()?;
+        println!("{encrypted_entries}");
 
         Ok(encrypted_entries.to_string())
     }

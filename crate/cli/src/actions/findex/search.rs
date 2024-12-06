@@ -4,10 +4,7 @@ use cosmian_findex_client::FindexRestClient;
 use tracing::trace;
 
 use super::FindexParameters;
-use crate::{
-    actions::{console, findex::instantiate_findex},
-    error::result::CliResult,
-};
+use crate::{actions::findex::instantiate_findex, error::result::CliResult};
 
 /// Findex: Search keywords.
 #[derive(Parser, Debug)]
@@ -44,7 +41,7 @@ impl SearchAction {
             )
             .await?;
 
-        console::Stdout::new(&results.to_string()).write()?;
+        println!("{results}");
         trace!("Search results: {results}");
 
         Ok(())

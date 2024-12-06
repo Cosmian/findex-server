@@ -30,7 +30,6 @@
     clippy::string_to_string,
     clippy::unreachable,
     clippy::as_conversions,
-    clippy::print_stdout,
     clippy::empty_structs_with_brackets,
     clippy::unseparated_literal_suffix,
     clippy::map_err_ignore,

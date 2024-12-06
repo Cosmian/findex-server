@@ -1,7 +1,6 @@
 use clap::Parser;
 use cosmian_findex_client::FindexRestClient;
 
-use super::console;
 use crate::error::result::{CliResult, CliResultHelper};
 
 /// Print the version of the server
@@ -22,7 +21,7 @@ impl ServerVersionAction {
             .await
             .with_context(|| "Can't execute the version query on the findex server")?;
 
-        console::Stdout::new(&version).write()?;
+        println!("{version}");
 
         Ok(())
     }

@@ -12,10 +12,7 @@ use cosmian_findex_client::FindexRestClient;
 use tracing::{instrument, trace};
 
 use super::FindexParameters;
-use crate::{
-    actions::{console, findex::instantiate_findex},
-    error::result::CliResult,
-};
+use crate::{actions::findex::instantiate_findex, error::result::CliResult};
 
 #[derive(Parser, Debug)]
 #[clap(verbatim_doc_comment)]
@@ -83,7 +80,7 @@ impl IndexOrDeleteAction {
             .await?;
         trace!("indexing done: keywords: {keywords}");
 
-        console::Stdout::new(&format!("indexing done: keywords: {keywords}")).write()?;
+        println!("indexing done: keywords: {keywords}");
 
         Ok(())
     }
@@ -111,7 +108,7 @@ impl IndexOrDeleteAction {
             .await?;
         trace!("deleting keywords done: {keywords}");
 
-        console::Stdout::new(&format!("deleting keywords done: {keywords}")).write()?;
+        println!("deleting keywords done: {keywords}");
 
         Ok(())
     }

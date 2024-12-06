@@ -3,10 +3,7 @@ use cosmian_findex_client::FindexRestClient;
 use cosmian_findex_structs::Permission;
 use uuid::Uuid;
 
-use crate::{
-    actions::console,
-    error::result::{CliResult, CliResultHelper},
-};
+use crate::error::result::{CliResult, CliResultHelper};
 
 /// Manage the users permissions to the indexes
 #[derive(Parser, Debug)]
@@ -58,7 +55,7 @@ impl CreateIndex {
             .await
             .with_context(|| "Can't execute the create index id query on the findex server")?;
         // should replace the user configuration file
-        console::Stdout::new(&response.success).write()?;
+        println!("Index ID: {}", response.success);
 
         Ok(response.success)
     }
@@ -84,7 +81,7 @@ impl ListPermissions {
             .await
             .with_context(|| "Can't execute the list permission query on the findex server")?;
 
-        console::Stdout::new(&format!("{response}")).write()?;
+        println!("Permissions: {response}");
 
         Ok(response.to_string())
     }
@@ -124,7 +121,7 @@ impl GrantPermission {
             .await
             .with_context(|| "Can't execute the grant permission query on the findex server")?;
 
-        console::Stdout::new(&response.success).write()?;
+        println!("{}", response.success);
 
         Ok(response.success)
     }
@@ -156,7 +153,7 @@ impl RevokePermission {
             .await
             .with_context(|| "Can't execute the revoke permission query on the findex server")?;
 
-        console::Stdout::new(&response.success).write()?;
+        println!("{}", response.success);
 
         Ok(response.success)
     }

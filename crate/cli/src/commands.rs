@@ -67,6 +67,7 @@ impl FindexCli {
         Ok(conf)
     }
 }
+
 #[derive(Subcommand)]
 pub enum CoreFindexActions {
     /// Index new keywords.

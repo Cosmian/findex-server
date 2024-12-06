@@ -883,7 +883,6 @@ dependencies = [
  "openssl",
  "predicates",
  "regex",
- "serde",
  "serde_json",
  "tempfile",
  "test_findex_server",

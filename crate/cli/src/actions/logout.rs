@@ -20,7 +20,7 @@ impl LogoutAction {
     /// configuration file.
     #[allow(clippy::print_stdout)]
     pub fn run(&self, conf: &FindexClientConfig) -> CliResult<()> {
-        let mut conf = conf.clone();
+        let mut conf = conf.to_owned();
         conf.http_config.access_token = None;
         let conf_path = conf.conf_path.clone().ok_or_else(|| {
             CliError::Default("Configuration path `conf_path` must be filled".to_owned())
