@@ -44,13 +44,11 @@ impl IndexOrDeleteAction {
         // read the database
         let mut csv_in_memory = Vec::new();
         let file = File::open(self.csv.clone())?;
-        let mut rdr = csv::Reader::from_reader(file);
-        for result in rdr.byte_records() {
+        for result in csv::Reader::from_reader(file).byte_records() {
             // The iterator yields Result<StringRecord, Error>, so we check the
             // error here.
             let record = result?;
-            let indexed_value: IndexedValue<Keyword, Data> =
-                IndexedValue::Data(Data::from(record.as_slice()));
+            let indexed_value = IndexedValue::Data(Data::from(record.as_slice()));
             let keywords = record.iter().map(Keyword::from).collect::<HashSet<_>>();
             csv_in_memory.push((indexed_value, keywords));
             trace!("CSV line: {record:?}");

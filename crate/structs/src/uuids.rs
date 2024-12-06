@@ -35,6 +35,14 @@ impl From<Vec<Uuid>> for Uuids {
     }
 }
 
+impl From<&[Uuid]> for Uuids {
+    fn from(uuids: &[Uuid]) -> Self {
+        Self {
+            uuids: uuids.to_vec(),
+        }
+    }
+}
+
 impl Serializable for Uuids {
     type Error = StructsError;
 

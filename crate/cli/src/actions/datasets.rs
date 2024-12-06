@@ -3,7 +3,7 @@ use std::{collections::HashMap, error::Error};
 use base64::{engine::general_purpose, Engine};
 use clap::Parser;
 use cosmian_findex_client::FindexRestClient;
-use cosmian_findex_structs::{EncryptedEntries, Uuids};
+use cosmian_findex_structs::EncryptedEntries;
 use uuid::Uuid;
 
 use crate::{
@@ -98,7 +98,7 @@ impl AddEntries {
 }
 
 /// Delete datasets entries using corresponding entries UUID.
-#[derive(Parser, Debug, Clone)]
+#[derive(Parser, Debug)]
 pub struct DeleteEntries {
     /// The index ID
     #[clap(long, required = true)]
@@ -117,7 +117,7 @@ impl DeleteEntries {
     /// Returns an error if the query execution on the Findex server fails.
     pub async fn run(&self, rest_client: FindexRestClient) -> CliResult<String> {
         let response = rest_client
-            .delete_entries(&self.index_id, &Uuids::from(self.uuids.clone()))
+            .delete_entries(&self.index_id, &self.uuids)
             .await
             .with_context(|| "Can't execute the delete entries query on the findex server")?;
 
@@ -149,7 +149,7 @@ impl GetEntries {
     /// Returns an error if the UUID parsing fails.
     pub async fn run(&self, rest_client: FindexRestClient) -> CliResult<String> {
         let encrypted_entries = rest_client
-            .get_entries(&self.index_id, &Uuids::from(self.uuids.clone()))
+            .get_entries(&self.index_id, &self.uuids)
             .await
             .with_context(|| "Can't execute the get entries query on the findex server")?;
 

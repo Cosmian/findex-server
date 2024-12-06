@@ -37,13 +37,13 @@ impl FindexRestClient {
     pub async fn delete_entries(
         &self,
         index_id: &Uuid,
-        uuids: &Uuids,
+        uuids: &[Uuid],
     ) -> FindexClientResult<SuccessResponse> {
         let endpoint = format!("/datasets/{index_id}/delete_entries");
         let server_url = format!("{}{endpoint}", self.client.server_url);
         trace!("POST: {server_url}");
 
-        let uuids = uuids.serialize()?;
+        let uuids = Uuids::from(uuids).serialize()?;
         let response = self
             .client
             .client
@@ -59,13 +59,13 @@ impl FindexRestClient {
     pub async fn get_entries(
         &self,
         index_id: &Uuid,
-        uuids: &Uuids,
+        uuids: &[Uuid],
     ) -> FindexClientResult<EncryptedEntries> {
         let endpoint = format!("/datasets/{index_id}/get_entries");
         let server_url = format!("{}{endpoint}", self.client.server_url);
         trace!("POST: {server_url}");
 
-        let uuids = uuids.serialize()?;
+        let uuids = Uuids::from(uuids).serialize()?;
         let response = self
             .client
             .client
