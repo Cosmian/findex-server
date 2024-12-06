@@ -6,7 +6,7 @@ use redis::pipe;
 use tracing::{instrument, trace};
 use uuid::Uuid;
 
-use super::{ServerRedis, WORD_LENGTH};
+use super::{Redis, WORD_LENGTH};
 use crate::{
     database::database_traits::DatasetsTrait,
     error::{result::FResult, server::FindexServerError},
@@ -18,7 +18,7 @@ fn build_dataset_key(index_id: &Uuid, uid: &Uuid) -> Vec<u8> {
 }
 
 #[async_trait]
-impl DatasetsTrait for ServerRedis<WORD_LENGTH> {
+impl DatasetsTrait for Redis<WORD_LENGTH> {
     //
     // Dataset management
     //

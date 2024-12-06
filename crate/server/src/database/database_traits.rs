@@ -40,15 +40,9 @@ pub(crate) trait DatasetsTrait: Sync + Send {
     ) -> FResult<EncryptedEntries>;
 }
 
-pub(crate) trait FindexMemoryTrait {
-    type Memory: Send
-        + Sync
-        + Clone
-        + MemoryADT<Address = Address<ADDRESS_LENGTH>, Word = [u8; WORD_LENGTH]>;
-
-    // Getter method to access the memory field. Beyond its getter role, this method is actually used to have a trait object that can constrain structures
-    // that implement it to have an attribute that satisfies the specific traits that findex expects out of a MemoryADT structure. Rust compiler doesn't natively support this.
-    fn get_memory(&self) -> &Self::Memory;
+pub(crate) trait FindexMemoryTrait:
+    Send + Sync + Clone + MemoryADT<Address = Address<ADDRESS_LENGTH>, Word = [u8; WORD_LENGTH]>
+{
 }
 
 #[async_trait]

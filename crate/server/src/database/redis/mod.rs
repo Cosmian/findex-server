@@ -1,4 +1,4 @@
-pub(crate) use instance::ServerRedis;
+pub(crate) use instance::Redis;
 
 use super::DatabaseTraits;
 
@@ -12,4 +12,4 @@ mod permissions;
 // WORD_LENGTH = 1 + CHUNK_LENGTH = 1 + (8 * BLOCK_LENGTH) = 129 for a BLOCK_LENGTH set to 16.
 pub(crate) const WORD_LENGTH: usize = 129;
 
-impl DatabaseTraits for ServerRedis<WORD_LENGTH> {}
+impl DatabaseTraits for Redis<WORD_LENGTH> {}

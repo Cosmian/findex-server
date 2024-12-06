@@ -13,7 +13,13 @@ use crate::{
 
 pub(crate) struct FindexServer {
     pub(crate) params: ServerParams,
-    pub(crate) db: Box<dyn DatabaseTraits + Sync + Send>,
+    pub(crate) db: Box<
+        dyn DatabaseTraits<
+            Memory = RedisMemory<Address = Address<ADDRESS_LENGTH>, Word = [u8; WORD_LENGTH]>
+                         + Sync
+                         + Send,
+        >,
+    >,
 }
 
 impl FindexServer {

@@ -12,8 +12,7 @@ use tracing::{info, trace};
 use crate::{
     core::FindexServer,
     database::redis::WORD_LENGTH,
-    database::FindexMemoryTrait,
-    database::ServerRedis,
+    database::Redis,
     routes::{check_permission, error::ResponseBytes},
 };
 
@@ -30,8 +29,7 @@ pub(crate) async fn findex_batch_read(
     check_permission(&user, &index_id, Permission::Read, &findex_server).await?;
 
     let db = findex_server.db.get_memory();
-    type AddressType =
-        <<ServerRedis<WORD_LENGTH> as FindexMemoryTrait>::Memory as MemoryADT>::Address; // verbose but keeps a SSOT for types
+    type AddressType = <Redis<WORD_LENGTH> as MemoryADT>::Address; // keeps a SSOT for types
 
     let bytes_slice = bytes.as_ref();
     assert!(
@@ -81,9 +79,8 @@ pub(crate) async fn findex_guarded_write(
     check_permission(&user, &index_id, Permission::Read, &findex_server).await?;
 
     let db = findex_server.db.get_memory();
-    type AddressType =
-        <<ServerRedis<WORD_LENGTH> as FindexMemoryTrait>::Memory as MemoryADT>::Address;
-    type WordType = <<ServerRedis<WORD_LENGTH> as FindexMemoryTrait>::Memory as MemoryADT>::Word; // same as above, keeping SSOT for words typing
+    type AddressType = <Redis<WORD_LENGTH> as MemoryADT>::Address;
+    type WordType = <Redis<WORD_LENGTH> as MemoryADT>::Word; // same as above, keeping SSOT for words typing
 
     let bytes_slice = bytes.as_ref();
 
@@ -109,27 +106,20 @@ pub(crate) async fn findex_guarded_write(
     trace!("Guarded_write called for {} tasks", task_count);
 
     let guard: (AddressType, Option<WordType>) = {
-        // Convert address bytes to AddressType
         let address = AddressType::from(
             bytes_slice[..ADDRESS_SIZE]
                 .try_into()
-                .expect("Byte payload size checks should prevent this."),
+                .expect("Byte payload size checks should always prevent this error..."),
         );
-
-        // Get the discriminant byte
-        let is_some = bytes_slice[ADDRESS_SIZE] != 0;
-
-        // Convert the word bytes if Some
-        let word = if is_some {
+        let word = if bytes_slice[ADDRESS_SIZE] != 0 {
             Some(WordType::from(
                 bytes_slice[ADDRESS_SIZE + 1..GUARD_SIZE]
                     .try_into()
-                    .expect("Byte payload size checks should prevent this."),
+                    .expect("Byte payload size checks should always prevent this error..."),
             ))
         } else {
             None
         };
-
         (address, word)
     };
 
@@ -137,14 +127,12 @@ pub(crate) async fn findex_guarded_write(
         .chunks_exact(ADDRESS_LENGTH + WORD_LENGTH)
         .map(|chunk| {
             let (addr_bytes, word_bytes) = chunk.split_at(ADDRESS_SIZE);
-
             // Convert address
             let address = AddressType::from(
                 addr_bytes
                     .try_into()
                     .expect("Chunk size guaranteed by chunks_exact"),
             );
-
             // Convert word
             let word = WordType::from(
                 word_bytes
@@ -164,7 +152,7 @@ pub(crate) async fn findex_guarded_write(
 
     let trace_msg = match result_word {
         word if word == guard => format!(
-            "Guarded_write SUCCESS. Expected guard value matched. {} tasks written",
+            "Guarded_write SUCCESS. Expected guard value matched. {} words written.",
             tasks.len()
         ),
         word => format!(

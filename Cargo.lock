@@ -866,7 +866,7 @@ dependencies = [
 [[package]]
 name = "cosmian_findex"
 version = "7.0.0"
-source = "git+https://github.com/Cosmian/findex?branch=feat/update_for_findex_server#e03c97f496ecb1b3195d3c839df6e4717cb3d384"
+source = "git+https://github.com/Cosmian/findex?branch=feat/update_for_findex_server#3b89a05e5b0669148946b3f90fae5e3786b49e30"
 dependencies = [
  "aes",
  "rand",

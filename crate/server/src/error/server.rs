@@ -1,3 +1,4 @@
+use cosmian_findex::MemoryError::MemoryError;
 use std::sync::mpsc::SendError;
 
 use actix_web::dev::ServerHandle;
@@ -61,8 +62,15 @@ impl From<redis::RedisError> for FindexServerError {
     }
 }
 
+// TODO: is this still needed?
 impl From<DbInterfaceError> for FindexServerError {
     fn from(e: DbInterfaceError) -> Self {
+        Self::DatabaseError(e.to_string())
+    }
+}
+
+impl From<MemoryError> for FindexServerError {
+    fn from(e: MemoryError) -> Self {
         Self::DatabaseError(e.to_string())
     }
 }

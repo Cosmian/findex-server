@@ -9,10 +9,10 @@ use crate::{
     error::{result::FResult, server::FindexServerError},
 };
 
-use super::{ServerRedis, WORD_LENGTH};
+use super::{Redis, WORD_LENGTH};
 
 #[async_trait]
-impl PermissionsTrait for ServerRedis<WORD_LENGTH> {
+impl PermissionsTrait for Redis<WORD_LENGTH> {
     #[instrument(ret(Display), err, skip(self))]
     async fn create_index_id(&self, user_id: &str) -> FResult<Uuid> {
         let uuid = Uuid::new_v4();
