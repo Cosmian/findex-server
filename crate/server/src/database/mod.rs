@@ -1,4 +1,4 @@
-mod database_traits;
+pub(crate) mod database_traits;
 pub(crate) mod redis;
 
 pub(crate) use database_traits::DatabaseTraits;

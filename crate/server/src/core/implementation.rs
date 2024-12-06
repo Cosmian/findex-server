@@ -2,6 +2,7 @@ use actix_web::{HttpMessage, HttpRequest};
 use cosmian_findex_structs::Permission;
 use tracing::{debug, instrument, trace};
 
+use crate::database::database_traits::PermissionsTrait;
 use crate::{
     config::{DbParams, ServerParams},
     database::{redis::WORD_LENGTH, Redis},
@@ -10,7 +11,6 @@ use crate::{
     middlewares::{JwtAuthClaim, PeerCommonName},
     routes::get_index_id,
 };
-
 pub(crate) struct FindexServer {
     pub(crate) params: ServerParams,
     pub(crate) db: Redis<WORD_LENGTH>,
