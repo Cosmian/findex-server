@@ -2,10 +2,12 @@ use actix_web::{HttpMessage, HttpRequest};
 use cosmian_findex_structs::Permission;
 use tracing::{debug, instrument, trace};
 
-use crate::database::database_traits::PermissionsTrait;
 use crate::{
     config::{DbParams, ServerParams},
-    database::{redis::WORD_LENGTH, Redis},
+    database::{
+        database_traits::PermissionsTrait,
+        redis::{Redis, WORD_LENGTH},
+    },
     error::result::FResult,
     findex_server_bail,
     middlewares::{JwtAuthClaim, PeerCommonName},

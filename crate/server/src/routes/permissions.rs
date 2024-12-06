@@ -10,6 +10,7 @@ use tracing::{debug, info};
 
 use crate::{
     core::FindexServer,
+    database::database_traits::PermissionsTrait,
     error::{result::FResult, server::FindexServerError},
     routes::{
         error::{ResponseBytes, SuccessResponse},

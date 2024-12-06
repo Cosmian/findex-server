@@ -11,8 +11,7 @@ use tracing::{info, trace};
 
 use crate::{
     core::FindexServer,
-    database::redis::WORD_LENGTH,
-    database::Redis,
+    database::redis::{Redis, WORD_LENGTH},
     routes::{check_permission, error::ResponseBytes},
 };
 
@@ -69,7 +68,7 @@ pub(crate) async fn findex_batch_read(
                 match opt_word {
                     Some(word) => {
                         bytes[0] = 1;
-                        bytes.extend_from_slice(&word);
+                        bytes.extend_from_slice(&<[u8; WORD_LENGTH]>::from(word));
                     }
                     None => {
                         bytes[0] = 0;

@@ -18,10 +18,6 @@ impl<const WORD_LENGTH: usize> Redis<WORD_LENGTH> {
         }
         Ok(Self { memory })
     }
-
-    pub(crate) async fn clear_database(&self) -> FResult<()> {
-        Ok(self.memory.clear_redis_db().await?)
-    }
 }
 
 impl<const WORD_LENGTH: usize> MemoryADT for Redis<WORD_LENGTH> {
