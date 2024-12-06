@@ -58,7 +58,7 @@ impl LoginAction {
     /// * The token exchange response cannot be parsed.
     /// * The client configuration cannot be updated or saved.
     #[allow(clippy::print_stdout)]
-    pub async fn process(&self, conf: &FindexClientConfig) -> CliResult<()> {
+    pub async fn run(&self, conf: &FindexClientConfig) -> CliResult<()> {
         let mut conf = conf.clone();
         let login_config = conf.http_config.oauth2_conf.as_ref().ok_or_else(|| {
             CliError::Default(format!(

@@ -42,19 +42,21 @@ impl IndexOrDeleteAction {
     #[instrument(err, skip(self))]
     pub(crate) fn to_indexed_value_keywords_map(&self) -> CliResult<IndexedValueToKeywordsMap> {
         // read the database
-        let mut csv_in_memory = Vec::new();
         let file = File::open(self.csv.clone())?;
-        for result in csv::Reader::from_reader(file).byte_records() {
-            // The iterator yields Result<StringRecord, Error>, so we check the
-            // error here.
-            let record = result?;
-            let indexed_value = IndexedValue::Data(Data::from(record.as_slice()));
-            let keywords = record.iter().map(Keyword::from).collect::<HashSet<_>>();
-            csv_in_memory.push((indexed_value, keywords));
-            trace!("CSV line: {record:?}");
-        }
+        let csv_in_memory =
+            csv::Reader::from_reader(file)
+                .byte_records()
+                .fold(Vec::new(), |mut acc, result| {
+                    if let Ok(record) = result {
+                        let indexed_value = IndexedValue::Data(Data::from(record.as_slice()));
+                        let keywords = record.iter().map(Keyword::from).collect::<HashSet<_>>();
+                        acc.push((indexed_value, keywords));
+                        trace!("CSV line: {record:?}");
+                    }
+                    acc
+                });
         let result: HashMap<IndexedValue<Keyword, Data>, HashSet<Keyword>> =
-            csv_in_memory.iter().cloned().collect();
+            csv_in_memory.into_iter().collect();
         Ok(IndexedValueToKeywordsMap::from(result))
     }
 

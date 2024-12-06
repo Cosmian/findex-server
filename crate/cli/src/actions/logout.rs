@@ -19,7 +19,7 @@ impl LogoutAction {
     /// Returns an error if there is an issue loading or saving the
     /// configuration file.
     #[allow(clippy::print_stdout)]
-    pub fn process(&self, conf: &FindexClientConfig) -> CliResult<()> {
+    pub fn run(&self, conf: &FindexClientConfig) -> CliResult<()> {
         let mut conf = conf.clone();
         conf.http_config.access_token = None;
         let conf_path = conf.conf_path.clone().ok_or_else(|| {

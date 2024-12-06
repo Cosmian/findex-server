@@ -23,7 +23,7 @@ impl PermissionsAction {
     /// # Errors
     ///
     /// Returns an error if there was a problem running the action.
-    pub async fn process(&self, rest_client: FindexRestClient) -> CliResult<()> {
+    pub async fn run(&self, rest_client: FindexRestClient) -> CliResult<()> {
         match self {
             Self::Create(action) => action.run(rest_client).await?,
             Self::List(action) => action.run(rest_client).await?,

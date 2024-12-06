@@ -28,7 +28,7 @@ impl DatasetsAction {
     /// # Errors
     ///
     /// Returns an error if one of Add, Delete of Get actions fails
-    pub async fn process(&self, rest_client: FindexRestClient) -> CliResult<()> {
+    pub async fn run(&self, rest_client: FindexRestClient) -> CliResult<()> {
         match self {
             Self::Add(action) => action.run(rest_client).await?,
             Self::Delete(action) => action.run(rest_client).await?,

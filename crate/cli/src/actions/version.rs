@@ -16,7 +16,7 @@ impl ServerVersionAction {
     ///
     /// Returns an error if the version query fails or if there is an issue
     /// writing to the console.
-    pub async fn process(&self, rest_client: FindexRestClient) -> CliResult<()> {
+    pub async fn run(&self, rest_client: FindexRestClient) -> CliResult<()> {
         let version = rest_client
             .version()
             .await
