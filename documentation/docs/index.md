@@ -20,7 +20,7 @@ Findex has been published as a scientific paper in the IACR ePrint archive: <htt
 
 Findex server is a high-performance, open-source server application written in Rust that implements the Findex protocol and offers a REST API to store encrypted indexes and perform search queries on them.  Findex Server mainly is an authentication layer and therefore all data-critical manipulations are performed by a database.
 
-The server is designed to be used in conjunction with the [Cosmian CLI](/cosmian_cli), a command-line interface that allows users to interact with the server.
+The server is designed to be used in conjunction with the [Cosmian CLI](../cosmian_cli/index.md), a command-line interface that allows users to interact with the server.
 
 ### Threat Model
 
@@ -77,7 +77,7 @@ architecture-beta
 
 By leveraging client-side encryption, Findex ensures that sensitive data remains secure and private, even when stored and processed on an untrusted server.
 
-The Findex server, written in Rust and using the Actix-web framework, is a REST-API server used to store encrypted indexes and perform search queries on them. It is designed to be used in conjunction with the [Cosmian CLI](/cosmian_cli), which is a command-line interface that allows users to interact with the server.
+The Findex server, written in Rust and using the Actix-web framework, is a REST-API server used to store encrypted indexes and perform search queries on them. It is designed to be used in conjunction with the [Cosmian CLI](../cosmian_cli/index.md), which is a command-line interface that allows users to interact with the server.
 
 ### Features
 
