@@ -20,10 +20,6 @@ pub enum PermissionsAction {
 impl PermissionsAction {
     /// Processes the permissions action.
     ///
-    /// # Arguments
-    ///
-    /// * `rest_client` - The Findex client used for the action.
-    ///
     /// # Errors
     ///
     /// Returns an error if there was a problem running the action.
@@ -53,11 +49,6 @@ impl CreateIndex {
     ///   * index new keywords with their own datasets
     ///   * or search keywords in the index
     ///
-    /// # Arguments
-    ///
-    /// * `rest_client` - A reference to the Findex client used to communicate
-    ///   with the Findex server.
-    ///
     /// # Errors
     ///
     /// Returns an error if the query execution on the Findex server fails.
@@ -83,11 +74,6 @@ pub struct ListPermissions {
 
 impl ListPermissions {
     /// Runs the `ListPermissions` action.
-    ///
-    /// # Arguments
-    ///
-    /// * `rest_client` - A reference to the Findex client used to communicate
-    ///   with the Findex server.
     ///
     /// # Errors
     ///
@@ -129,11 +115,6 @@ pub struct GrantPermission {
 impl GrantPermission {
     /// Runs the `GrantPermission` action.
     ///
-    /// # Arguments
-    ///
-    /// * `rest_client` - A reference to the Findex client used to communicate
-    ///   with the Findex server.
-    ///
     /// # Errors
     ///
     /// Returns an error if the query execution on the Findex server fails.
@@ -165,11 +146,6 @@ pub struct RevokePermission {
 
 impl RevokePermission {
     /// Runs the `RevokePermission` action.
-    ///
-    /// # Arguments
-    ///
-    /// * `rest_client` - A reference to the Findex client used to communicate
-    ///   with the Findex server.
     ///
     /// # Errors
     ///

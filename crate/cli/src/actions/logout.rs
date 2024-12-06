@@ -14,10 +14,6 @@ pub struct LogoutAction;
 impl LogoutAction {
     /// Process the logout action.
     ///
-    /// # Arguments
-    ///
-    /// * `conf_path` - The path to the findex configuration file.
-    ///
     /// # Errors
     ///
     /// Returns an error if there is an issue loading or saving the

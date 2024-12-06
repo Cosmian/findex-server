@@ -12,11 +12,6 @@ pub struct ServerVersionAction;
 impl ServerVersionAction {
     /// Process the server version action.
     ///
-    /// # Arguments
-    ///
-    /// * `rest_client` - The Findex server client instance used to communicate
-    ///   with the Findex server server.
-    ///
     /// # Errors
     ///
     /// Returns an error if the version query fails or if there is an issue

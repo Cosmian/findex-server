@@ -24,11 +24,6 @@ pub struct SearchAction {
 impl SearchAction {
     /// Search indexed keywords.
     ///
-    /// # Arguments
-    ///
-    /// * `rest_client` - The Findex server client instance used to communicate
-    ///   with the Findex server server.
-    ///
     /// # Errors
     ///
     /// Returns an error if the version query fails or if there is an issue

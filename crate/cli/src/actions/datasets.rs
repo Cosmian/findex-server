@@ -8,7 +8,10 @@ use uuid::Uuid;
 
 use crate::{
     actions::console,
-    error::result::{CliResult, CliResultHelper},
+    error::{
+        result::{CliResult, CliResultHelper},
+        CliError,
+    },
 };
 
 /// Manage encrypted datasets
@@ -22,13 +25,9 @@ pub enum DatasetsAction {
 impl DatasetsAction {
     /// Processes the Datasets action.
     ///
-    /// # Arguments
-    ///
-    /// * `rest_client` - The Findex client used for the action.
-    ///
     /// # Errors
     ///
-    /// Returns an error if there was a problem running the action.
+    /// Returns an error if one of Add, Delete of Get actions fails
     pub async fn process(&self, rest_client: FindexRestClient) -> CliResult<()> {
         match self {
             Self::Add(action) => action.run(rest_client).await?,
@@ -73,19 +72,19 @@ where
 impl AddEntries {
     /// Runs the `AddEntries` action.
     ///
-    /// # Arguments
-    /// * `rest_client` - A reference to the Findex client used to communicate
-    ///   with the Findex server.
-    ///
     /// # Errors
     /// Returns an error if the query execution on the Findex server fails.
     /// Returns an error if the base64 decoding fails.
     /// Returns an error if the UUID parsing fails.
     pub async fn run(&self, rest_client: FindexRestClient) -> CliResult<String> {
-        let mut encrypted_entries = HashMap::new();
-        for (key, value) in &self.entries {
-            encrypted_entries.insert(*key, general_purpose::STANDARD.decode(value)?);
-        }
+        let encrypted_entries = self.entries.iter().try_fold(
+            HashMap::with_capacity(self.entries.len()),
+            |mut acc, (key, value)| {
+                let decoded_value = general_purpose::STANDARD.decode(value)?;
+                acc.insert(*key, decoded_value);
+                Ok::<_, CliError>(acc)
+            },
+        )?;
 
         let response = rest_client
             .add_entries(&self.index_id, &EncryptedEntries::from(encrypted_entries))
@@ -99,7 +98,7 @@ impl AddEntries {
 }
 
 /// Delete datasets entries using corresponding entries UUID.
-#[derive(Parser, Debug)]
+#[derive(Parser, Debug, Clone)]
 pub struct DeleteEntries {
     /// The index ID
     #[clap(long, required = true)]
@@ -112,11 +111,6 @@ pub struct DeleteEntries {
 
 impl DeleteEntries {
     /// Runs the `DeleteEntries` action.
-    ///
-    /// # Arguments
-    ///
-    /// * `rest_client` - A reference to the Findex client used to communicate
-    ///   with the Findex server.
     ///
     /// # Errors
     ///
@@ -148,11 +142,6 @@ pub struct GetEntries {
 
 impl GetEntries {
     /// Runs the `GetEntries` action.
-    ///
-    /// # Arguments
-    ///
-    /// * `rest_client` - A reference to the Findex client used to communicate
-    ///   with the Findex server.
     ///
     /// # Errors
     ///
