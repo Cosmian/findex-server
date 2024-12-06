@@ -70,7 +70,7 @@ impl Serializable for Uuids {
 
     fn read(de: &mut bytes_ser_de::Deserializer) -> Result<Self, Self::Error> {
         let nb = de.read_leb128_u64()?;
-        let mut uuids = Vec::with_capacity(usize::try_from(nb)? * UUID_LENGTH);
+        let mut uuids = Vec::with_capacity(usize::try_from(nb)?);
         for _ in 0..nb {
             let uuid = de.read_array::<UUID_LENGTH>()?;
             uuids.push(Uuid::from_slice(&uuid)?);

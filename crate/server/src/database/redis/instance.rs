@@ -7,7 +7,7 @@ use tracing::info;
 use crate::error::result::FResult;
 
 /// The conditional upsert script used to only update a table if the
-/// indexed value matches ARGV[2]. When the value does not match, the
+/// indexed value matches ARGV[2] or no value is stored at ARGV[1]. When the value does not match, the
 /// indexed value is returned.
 const CONDITIONAL_UPSERT_SCRIPT: &str = r"
         local value=redis.call('GET',ARGV[1])

@@ -119,9 +119,7 @@ impl FindexTrait for Redis {
             .collect::<Result<Vec<_>, CoreError>>()?;
         trace!("fetch_entries: non empty tuples len: {}", res.len());
 
-        let result: TokenWithEncryptedValueList<LINK_LENGTH> = res.into();
-
-        Ok(result)
+        Ok(res.into())
     }
 
     #[instrument(ret(Display), err, skip_all, level = "trace")]

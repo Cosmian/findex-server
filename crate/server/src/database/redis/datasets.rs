@@ -12,9 +12,12 @@ use crate::{
     error::{result::FResult, server::FindexServerError},
 };
 
-/// Generate a key for the dataset table
-fn build_dataset_key(index_id: &Uuid, uid: &Uuid) -> Vec<u8> {
-    [index_id.as_bytes().as_ref(), uid.as_bytes().as_ref()].concat()
+/// Generate a Redis-key for the dataset table
+fn build_redis_key(index_id: &Uuid, uid: &Uuid) -> Vec<u8> {
+    let mut key = Vec::with_capacity(32);
+    key.extend_from_slice(index_id.as_bytes());
+    key.extend_from_slice(uid.as_bytes());
+    key
 }
 
 #[async_trait]
@@ -30,7 +33,7 @@ impl DatasetsTrait for Redis {
     ) -> FResult<()> {
         let mut pipe = pipe();
         for (entry_id, data) in entries.iter() {
-            let key = build_dataset_key(index_id, entry_id);
+            let key = build_redis_key(index_id, entry_id);
             pipe.set(key, data);
         }
         pipe.atomic()
@@ -43,7 +46,7 @@ impl DatasetsTrait for Redis {
     async fn dataset_delete_entries(&self, index_id: &Uuid, uuids: &Uuids) -> FResult<()> {
         let mut pipe = pipe();
         for entry_id in uuids.iter() {
-            let key = build_dataset_key(index_id, entry_id);
+            let key = build_redis_key(index_id, entry_id);
             pipe.del(key);
         }
         pipe.atomic()
@@ -60,7 +63,7 @@ impl DatasetsTrait for Redis {
     ) -> FResult<EncryptedEntries> {
         let redis_keys = uuids
             .iter()
-            .map(|uid| build_dataset_key(index_id, uid))
+            .map(|uid| build_redis_key(index_id, uid))
             .collect::<Vec<_>>();
         trace!("dataset_get_entries: redis_keys len: {}", redis_keys.len());
 

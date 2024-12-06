@@ -46,7 +46,7 @@ pub(crate) trait FindexTrait: Sync + Send {
 
 #[async_trait]
 pub(crate) trait PermissionsTrait: Sync + Send {
-    /// Create a new index id and return it
+    /// Create a new index id and return its ID.
     async fn create_index_id(&self, user_id: &str) -> FResult<Uuid>;
     /// Get the list of permissions for each index IDs
     async fn get_permissions(&self, user_id: &str) -> FResult<Permissions>;
@@ -67,7 +67,7 @@ pub(crate) trait PermissionsTrait: Sync + Send {
 
 #[async_trait]
 pub(crate) trait DatasetsTrait: Sync + Send {
-    /// Add entries to a dataset. By design, the entries are stored such as
+    /// Add entries to a dataset. Those encrypted entries are stored in database without decryption.
     async fn dataset_add_entries(&self, index_id: &Uuid, entries: &EncryptedEntries)
         -> FResult<()>;
     /// Delete entries from a dataset given their UUIDs

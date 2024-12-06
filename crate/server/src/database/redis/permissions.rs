@@ -15,7 +15,7 @@ use crate::{
 impl PermissionsTrait for Redis {
     #[instrument(ret(Display), err, skip(self), level = "trace")]
     async fn create_index_id(&self, user_id: &str) -> FResult<Uuid> {
-        let key = user_id.as_bytes();
+        let redis_key = user_id.as_bytes();
 
         let mut con = self.client.get_connection()?;
 
@@ -23,16 +23,17 @@ impl PermissionsTrait for Redis {
 
         // run the transaction block.
         let (mut returned_permissions_by_redis,): (Vec<Vec<u8>>,) =
-            transaction(&mut con, &[key], |con, pipe| {
+            transaction(&mut con, &[redis_key], |con, pipe| {
                 // load the old value, so we know what to increment.
-                let mut values: Vec<Vec<u8>> = con.get(key)?;
+                let mut values: Vec<Vec<u8>> = con.get(redis_key)?;
                 trace!("values: {values:?}");
 
                 let permissions = if values.is_empty() {
                     // if there is no value, we create a new one
                     Permissions::new(uuid, Permission::Admin)
                 } else {
-                    // Deserialize permissions
+                    // Deserialize permissions.
+                    // We expect only one value here but the redis.get() signature is a Vec<Vec<u8>> so we need to get only the first element.
                     let serialized_value = &values.pop().ok_or_else(|| {
                         RedisError::from((redis::ErrorKind::TypeError, "No permission found"))
                     })?;
@@ -49,9 +50,9 @@ impl PermissionsTrait for Redis {
                 })?;
 
                 // increment
-                pipe.set(key, permissions_bytes.as_slice())
+                pipe.set(redis_key, permissions_bytes.as_slice())
                     .ignore()
-                    .get(key)
+                    .get(redis_key)
                     .query(con)
             })?;
 
@@ -70,10 +71,10 @@ impl PermissionsTrait for Redis {
 
     #[instrument(ret(Display), err, skip(self), level = "trace")]
     async fn get_permissions(&self, user_id: &str) -> FResult<Permissions> {
-        let key = user_id.as_bytes().to_vec();
+        let redis_key = user_id.as_bytes();
 
         let mut pipe = pipe();
-        pipe.get(key);
+        pipe.get(redis_key);
 
         let mut values: Vec<Vec<u8>> = pipe
             .atomic()
@@ -96,7 +97,7 @@ impl PermissionsTrait for Redis {
             ))
         })?;
 
-        Ok(permission)
+        Ok(permission.clone())
     }
 
     #[instrument(ret, err, skip(self), level = "trace")]
@@ -106,7 +107,7 @@ impl PermissionsTrait for Redis {
         permission: Permission,
         index_id: &Uuid,
     ) -> FResult<()> {
-        let key = user_id.as_bytes().to_vec();
+        let redis_key = user_id.as_bytes().to_vec();
         let permissions = match self.get_permissions(user_id).await {
             Ok(mut permissions) => {
                 permissions.grant_permission(*index_id, permission);
@@ -116,7 +117,7 @@ impl PermissionsTrait for Redis {
         };
 
         let mut pipe = pipe();
-        pipe.set::<_, _>(key, permissions.serialize()?.as_slice());
+        pipe.set::<_, _>(redis_key, permissions.serialize()?.as_slice());
         pipe.atomic()
             .query_async(&mut self.mgr.clone())
             .await
@@ -125,7 +126,7 @@ impl PermissionsTrait for Redis {
 
     #[instrument(ret, err, skip(self), level = "trace")]
     async fn revoke_permission(&self, user_id: &str, index_id: &Uuid) -> FResult<()> {
-        let key = user_id.as_bytes().to_vec();
+        let key = user_id.as_bytes();
         match self.get_permissions(user_id).await {
             Ok(mut permissions) => {
                 permissions.revoke_permission(index_id);

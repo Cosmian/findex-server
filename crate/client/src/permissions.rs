@@ -13,12 +13,12 @@ use crate::{
 impl FindexRestClient {
     #[instrument(ret(Display), err, skip(self), level = "trace")]
     pub async fn create_index_id(&self) -> FindexClientResult<SuccessResponse> {
-        let endpoint = "/create/index".to_owned();
+        let endpoint = "/create/index";
         let server_url = format!("{}{endpoint}", self.client.server_url);
         trace!("POST: {server_url}");
         let response = self.client.client.post(server_url).send().await?;
 
-        handle_status_code(response, &endpoint).await
+        handle_status_code(response, endpoint).await
     }
 
     #[instrument(ret(Display), err, skip(self), level = "trace")]

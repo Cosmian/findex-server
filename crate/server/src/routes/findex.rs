@@ -36,7 +36,7 @@ pub(crate) async fn findex_fetch_entries(
 
     check_permission(&user, &index_id, Permission::Read, &findex_server).await?;
 
-    let tokens = deserialize_token_set(&bytes.into_iter().collect::<Vec<_>>())?;
+    let tokens = deserialize_token_set(&bytes)?;
     trace!("fetch_entries: number of tokens: {}:", tokens.len());
 
     // Collect into a vector to fix the order.
@@ -69,7 +69,7 @@ pub(crate) async fn findex_fetch_chains(
 
     check_permission(&user, &index_id, Permission::Read, &findex_server).await?;
 
-    let tokens = deserialize_token_set(&bytes.into_iter().collect::<Vec<_>>())?;
+    let tokens = deserialize_token_set(&bytes)?;
     trace!("fetch_chains: number of tokens: {}:", tokens.len());
 
     let uids_and_values = findex_server
@@ -100,7 +100,7 @@ pub(crate) async fn findex_upsert_entries(
 
     check_permission(&user, &index_id, Permission::Write, &findex_server).await?;
 
-    let upsert_data = UpsertData::deserialize(&bytes.into_iter().collect::<Vec<_>>())?;
+    let upsert_data = UpsertData::deserialize(&bytes)?;
 
     trace!("upsert_entries: num upsert data: {}", upsert_data.len());
 
@@ -127,8 +127,7 @@ pub(crate) async fn findex_insert_chains(
 
     check_permission(&user, &index_id, Permission::Write, &findex_server).await?;
 
-    let token_to_value_encrypted_value_map =
-        TokenToEncryptedValueMap::deserialize(&bytes.into_iter().collect::<Vec<_>>())?;
+    let token_to_value_encrypted_value_map = TokenToEncryptedValueMap::deserialize(&bytes)?;
 
     findex_server
         .db
@@ -153,7 +152,7 @@ pub(crate) async fn findex_delete_entries(
 
     check_permission(&user, &index_id, Permission::Write, &findex_server).await?;
 
-    let tokens = deserialize_token_set(&bytes.into_iter().collect::<Vec<_>>())?;
+    let tokens = deserialize_token_set(&bytes)?;
     trace!("delete_entries: number of tokens: {}:", tokens.len());
 
     findex_server
@@ -180,7 +179,7 @@ pub(crate) async fn findex_delete_chains(
 
     check_permission(&user, &index_id, Permission::Write, &findex_server).await?;
 
-    let tokens = deserialize_token_set(&bytes.into_iter().collect::<Vec<_>>())?;
+    let tokens = deserialize_token_set(&bytes)?;
     trace!("delete_chains: number of tokens: {}:", tokens.len());
 
     findex_server

@@ -142,13 +142,13 @@ impl Permissions {
     }
 
     #[must_use]
-    pub fn get_permission(&self, index_id: &Uuid) -> Option<Permission> {
-        self.permissions.get(index_id).cloned()
+    pub fn get_permission(&self, index_id: &Uuid) -> Option<&Permission> {
+        self.permissions.get(index_id)
     }
 
     #[must_use]
     pub fn min(&self, other_permissions: &Self) -> Self {
-        let mut permissions = HashMap::new();
+        let mut permissions = HashMap::with_capacity(self.permissions.len());
         for (index_id, permission) in &self.permissions {
             if let Some(other_permission) = other_permissions.permissions.get(index_id) {
                 permissions.insert(
