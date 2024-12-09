@@ -2,7 +2,6 @@ use cosmian_findex::mem::MemoryError;
 use std::sync::mpsc::SendError;
 
 use actix_web::dev::ServerHandle;
-use cloudproof_findex::db_interfaces::DbInterfaceError;
 use cosmian_findex::Error as CoreError;
 use cosmian_findex_structs::StructsError;
 use std::fmt::Debug;
@@ -59,13 +58,6 @@ impl From<std::io::Error> for FindexServerError {
 impl From<redis::RedisError> for FindexServerError {
     fn from(err: redis::RedisError) -> Self {
         Self::Redis(err.to_string())
-    }
-}
-
-// TODO: is this still needed?
-impl From<DbInterfaceError> for FindexServerError {
-    fn from(e: DbInterfaceError) -> Self {
-        Self::DatabaseError(e.to_string())
     }
 }
 
