@@ -1,4 +1,4 @@
-use cosmian_findex::{Address, MemoryADT, MemoryError::MemoryError, RedisMemory, ADDRESS_LENGTH};
+use cosmian_findex::{mem::MemoryError, mem::RedisMemory, Address, MemoryADT, ADDRESS_LENGTH};
 use tracing::info;
 
 use crate::error::result::FResult;
@@ -11,7 +11,7 @@ pub(crate) struct Redis<const WORD_LENGTH: usize> {
 
 impl<const WORD_LENGTH: usize> Redis<WORD_LENGTH> {
     pub(crate) async fn instantiate(redis_url: &str, clear_database: bool) -> FResult<Self> {
-        let memory = cosmian_findex::RedisMemory::connect(redis_url).await?;
+        let memory = RedisMemory::connect(redis_url).await?;
         if clear_database {
             info!("Warning: irreversible operation: clearing the database");
             memory.clear_redis_db().await?;
