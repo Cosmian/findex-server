@@ -5,9 +5,7 @@ use std::{
 };
 
 use clap::Parser;
-use cloudproof_findex::reexport::cosmian_findex::{
-    Data, IndexedValue, IndexedValueToKeywordsMap, Keyword,
-};
+
 use cosmian_findex_client::FindexRestClient;
 use tracing::{instrument, trace};
 

@@ -5,7 +5,7 @@ use std::{
 };
 
 use base64::{engine::general_purpose, Engine};
-use cloudproof_findex::reexport::cosmian_crypto_core::bytes_ser_de::{Deserializer, Serializer};
+use cosmian_crypto_core::bytes_ser_de::{Deserializer, Serializer};
 use uuid::Uuid;
 
 use crate::{error::result::StructsResult, Uuids};

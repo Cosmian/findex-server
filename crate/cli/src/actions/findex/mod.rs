@@ -1,11 +1,6 @@
 use clap::Parser;
-use cloudproof_findex::{
-    reexport::{
-        cosmian_crypto_core::FixedSizeCBytes,
-        cosmian_findex::{Label, UserKey},
-    },
-    Configuration, InstantiatedFindex,
-};
+
+use cosmian_crypto_core::FixedSizeCBytes;
 use cosmian_findex_client::FindexRestClient;
 use tracing::debug;
 use uuid::Uuid;

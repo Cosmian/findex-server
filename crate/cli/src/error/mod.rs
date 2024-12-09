@@ -2,11 +2,8 @@ use std::str::Utf8Error;
 
 #[cfg(test)]
 use assert_cmd::cargo::CargoError;
-use cloudproof_findex::{
-    db_interfaces::DbInterfaceError,
-    reexport::{cosmian_crypto_core::CryptoCoreError, cosmian_findex},
-};
 use cosmian_config_utils::ConfigUtilsError;
+use cosmian_crypto_core::CryptoCoreError;
 use cosmian_findex_client::{
     reexport::{cosmian_findex_config::FindexConfigError, cosmian_http_client::HttpClientError},
     FindexClientError,

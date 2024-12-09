@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use cosmian_findex::{mem::MemoryError, Address, MemoryADT, ADDRESS_LENGTH};
+use cosmian_findex::{Address, MemoryADT, ADDRESS_LENGTH};
 use cosmian_findex_config::FindexClientConfig;
 use cosmian_findex_server::database::redis::WORD_LENGTH;
 use cosmian_http_client::HttpClient;

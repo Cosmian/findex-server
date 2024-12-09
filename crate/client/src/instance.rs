@@ -22,7 +22,6 @@ pub async fn instantiate_findex(
     let mut rng = ChaChaRng::from_entropy();
     let seed = Secret::random(&mut rng);
 
-    let res: Findex<{ WORD_LENGTH }, Value, std::convert::Infallible, FindexRestClient> =
-        Findex::new(seed, rest_client, encode_fn::<WORD_LENGTH, _>, decode_fn);
+    let res = Findex::new(seed, rest_client, encode_fn::<WORD_LENGTH, _>, decode_fn);
     Ok(res)
 }
