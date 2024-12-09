@@ -12,11 +12,8 @@ use cosmian_findex_client::FindexRestClient;
 use tracing::{instrument, trace};
 
 use super::FindexParameters;
-use crate::{
-    actions::{console, findex::instantiate_findex},
-    error::result::CliResult,
-};
-
+use crate::{actions::console, error::result::CliResult};
+use cosmian_findex_client::instantiate_findex;
 #[derive(Parser, Debug)]
 #[clap(verbatim_doc_comment)]
 pub struct IndexOrDeleteAction {
@@ -73,6 +70,8 @@ impl IndexOrDeleteAction {
     /// - There is an error adding the data to the Findex index.
     /// - There is an error writing the result to the console.
     pub async fn add(&self, rest_client: FindexRestClient) -> CliResult<()> {
+        let keylol = instantiate_findex().await?;
+
         let keywords = instantiate_findex(rest_client, &self.findex_parameters.index_id)
             .await?
             .add(

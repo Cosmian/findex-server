@@ -1,6 +1,8 @@
 use std::fmt::Display;
 
+use cosmian_findex::{mem::MemoryError, Address, MemoryADT, ADDRESS_LENGTH};
 use cosmian_findex_config::FindexClientConfig;
+use cosmian_findex_server::database::redis::WORD_LENGTH;
 use cosmian_http_client::HttpClient;
 use reqwest::{Response, StatusCode};
 use serde::{Deserialize, Serialize};
@@ -56,6 +58,116 @@ impl FindexRestClient {
             return Ok(response.json::<String>().await?);
         }
 
+        // process error
+        let p = handle_error(endpoint, response).await?;
+        Err(FindexClientError::RequestFailed(p))
+    }
+}
+
+impl MemoryADT for FindexRestClient {
+    type Address = Address<ADDRESS_LENGTH>;
+    type Word = [u8; WORD_LENGTH]; // TODO(hatem): un-hard code this
+    type Error = FindexClientError;
+
+    async fn batch_read(
+        &self,
+        addresses: Vec<Self::Address>,
+    ) -> Result<Vec<Option<[u8; WORD_LENGTH]>>, FindexClientError>
+/* -> impl Send + std::future::Future<Output = Result<Vec<Option<Self::Word>>, Self::Error>> */
+    {
+        let endpoint = "/indexes/{index_id}/batch_read";
+        let server_url = format!("{}{endpoint}", self.client.server_url);
+        // Convert addresses to bytes
+        let request_bytes = addresses
+            .into_iter()
+            .flat_map(|addr| <[u8; ADDRESS_LENGTH]>::from(addr)) // TODO: is flat map ok ?
+            .collect::<Vec<u8>>();
+
+        let response = self
+            .client
+            .client
+            .post(server_url)
+            .body(request_bytes)
+            .send()
+            .await?;
+        let status_code = response.status();
+        if status_code.is_success() {
+            // request successful, decode the response using same encoding protocol defined in crate/server/src/routes/findex.rs
+            let bytes = response.bytes().await?;
+            let mut result = Vec::new();
+            let mut pos = 0;
+
+            while pos < bytes.len() {
+                if bytes[pos] == 0 {
+                    result.push(None);
+                    pos += 1;
+                } else {
+                    let word_bytes = &bytes[pos + 1..pos + 1 + WORD_LENGTH];
+                    let mut word = [0u8; WORD_LENGTH];
+                    word.copy_from_slice(word_bytes);
+                    result.push(Some(word));
+                    pos += 130; // 1 (discriminant) + WORD_LENGTH (word)
+                }
+            }
+
+            return Ok(result);
+        }
+
+        // process error
+        let p = handle_error(endpoint, response).await?;
+        Err(FindexClientError::RequestFailed(p))
+    }
+
+    async fn guarded_write(
+        &self,
+        guard: (Self::Address, Option<Self::Word>),
+        tasks: Vec<(Self::Address, Self::Word)>,
+    ) -> Result<Option<[u8; WORD_LENGTH]>, FindexClientError> {
+        let endpoint = "/indexes/{index_id}/batch_read";
+        let server_url = format!("{}{endpoint}", self.client.server_url);
+
+        // code the request body
+        let mut request_bytes = Vec::new();
+        request_bytes.extend_from_slice(&<[u8; ADDRESS_LENGTH]>::from(guard.0)); // Add guard address
+        match guard.1 {
+            // Add guard word with option flag
+            Some(word) => {
+                request_bytes.push(1); // Some
+                request_bytes.extend_from_slice(&word);
+            }
+            None => {
+                request_bytes.push(0); // None
+            }
+        }
+        for (addr, word) in tasks {
+            // Add tasks
+            request_bytes.extend_from_slice(&<[u8; ADDRESS_LENGTH]>::from(addr));
+            request_bytes.extend_from_slice(&word);
+        }
+
+        let response = self
+            .client
+            .client
+            .post(server_url)
+            .body(request_bytes)
+            .send()
+            .await?;
+
+        let status_code = response.status();
+
+        if status_code.is_success() {
+            // request successful, decode the response using same encoding protocol defined in crate/server/src/routes/findex.rs
+            let bytes = response.bytes().await?;
+            let result_word = if bytes[0] == 0 {
+                None
+            } else {
+                let word_bytes = &bytes[1..1 + WORD_LENGTH];
+                let mut word = [0u8; WORD_LENGTH];
+                word.copy_from_slice(word_bytes);
+                Some(word)
+            };
+            return Ok(result_word);
+        }
         // process error
         let p = handle_error(endpoint, response).await?;
         Err(FindexClientError::RequestFailed(p))

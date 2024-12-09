@@ -866,7 +866,7 @@ dependencies = [
 [[package]]
 name = "cosmian_findex"
 version = "7.0.0"
-source = "git+https://github.com/Cosmian/findex?branch=feat/update_for_findex_server#d477000bf04a61e10803cea12b7408fd4cab88b5"
+source = "git+https://github.com/Cosmian/findex?branch=feat/update_for_findex_server#4aeaa79d392e639295739bb09152e788888c397f"
 dependencies = [
  "aes",
  "rand",
@@ -913,9 +913,13 @@ dependencies = [
 name = "cosmian_findex_client"
 version = "0.1.0"
 dependencies = [
+ "cloudproof_findex",
+ "cosmian_findex 7.0.0",
  "cosmian_findex_config",
+ "cosmian_findex_server",
  "cosmian_findex_structs",
  "cosmian_http_client",
+ "rand_chacha",
  "reqwest",
  "serde",
  "thiserror",

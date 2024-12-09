@@ -1,5 +1,5 @@
 pub(crate) mod database_traits;
-pub(crate) mod redis;
+pub mod redis;
 
 #[cfg(test)]
 mod tests;
