@@ -1,0 +1,80 @@
+---
+name: RHEL
+
+on:
+  workflow_call:
+    inputs:
+      toolchain:
+        required: true
+        type: string
+      archive-name:
+        required: true
+        type: string
+      target:
+        required: true
+        type: string
+      debug_or_release:
+        required: true
+        type: string
+      features:
+        required: false
+        type: string
+
+jobs:
+  rhel9-tests:
+    services:
+      redis:
+        image: redis
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    name: ${{ inputs.archive-name }}
+    runs-on: ubuntu-22.04
+    container:
+      image: redhat/ubi9
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ inputs.toolchain }}
+          components: rustfmt, clippy
+
+      - name: RHEL 9 prerequisites
+        run: |
+          set -ex
+
+          yum -y install openssl-devel openssl
+          yum -y install python-devel
+          yum -y install wget
+          yum -y install perl-IPC-Cmd perl-Digest-SHA1 perl-CPAN perl-devel
+
+      - name: Build and tests
+        env:
+          REDIS_HOST: redis
+
+          # Google variables
+          TEST_GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.TEST_GOOGLE_OAUTH_CLIENT_ID }}
+          TEST_GOOGLE_OAUTH_CLIENT_SECRET: ${{ secrets.TEST_GOOGLE_OAUTH_CLIENT_SECRET }}
+          TEST_GOOGLE_OAUTH_REFRESH_TOKEN: ${{ secrets.TEST_GOOGLE_OAUTH_REFRESH_TOKEN }}
+          GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY }}
+
+          TARGET: ${{ inputs.target }}
+          DEBUG_OR_RELEASE: ${{ inputs.debug_or_release }}
+        run: |
+          bash .github/scripts/cargo_build.sh
+
+      - name: Upload findex-server for RHEL 9
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.archive-name }}-${{ inputs.debug_or_release }}
+          path: |
+            target/${{ inputs.target }}/${{ inputs.debug_or_release }}/cosmian_findex_server
+            target/${{ inputs.target }}/${{ inputs.debug_or_release }}/findex
+          retention-days: 1
+          if-no-files-found: error

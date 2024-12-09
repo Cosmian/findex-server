@@ -1,0 +1,7 @@
+/target
+/data
+/env
+.cargo_check/
+.vscode
+.env
+cosmian-findex-server/
