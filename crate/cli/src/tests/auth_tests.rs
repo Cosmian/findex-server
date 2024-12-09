@@ -1,33 +1,31 @@
-#![allow(unused)]
-use std::{path::PathBuf, process::Command};
+use std::env;
 
-use assert_cmd::prelude::*;
-use base64::Engine;
-use cosmian_findex_client::FINDEX_CLI_CONF_ENV;
-use cosmian_logger::log_utils::log_init;
-use tempfile::TempDir;
+use cosmian_logger::log_init;
 use test_findex_server::{
-    start_test_server_with_options, AuthenticationOptions, DBConfig, TestsContext,
+    start_test_server_with_options, AuthenticationOptions, DBConfig, DatabaseType,
 };
 use tracing::{info, trace};
 
-use crate::{error::result::CliResult, tests::PROG_NAME};
+use crate::error::result::CliResult;
 
 // let us not make other test cases fail
-const PORT: u16 = 9999;
+const PORT: u16 = 6667;
 
 #[tokio::test]
-#[allow(clippy::needless_return)]
 pub(crate) async fn test_all_authentications() -> CliResult<()> {
-    log_init(option_env!("RUST_LOG"));
+    log_init(None);
+    let url = env::var("REDIS_HOST").map_or_else(
+        |_| "redis://localhost:6379".to_owned(),
+        |var_env| format!("redis://{var_env}:6379"),
+    );
+    trace!("TESTS: using redis on {url}");
     // plaintext no auth
     info!("Testing server with no auth");
     let ctx = start_test_server_with_options(
         DBConfig {
-            database_type: Some("sqlite".to_owned()),
-            sqlite_path: PathBuf::from("./sqlite-data-auth-tests"),
-            clear_database: true,
-            ..DBConfig::default()
+            database_type: DatabaseType::Redis,
+            clear_database: false,
+            database_url: url.clone(),
         },
         PORT,
         AuthenticationOptions {
@@ -40,10 +38,9 @@ pub(crate) async fn test_all_authentications() -> CliResult<()> {
     ctx.stop_server().await?;
 
     let default_db_config = DBConfig {
-        database_type: Some("sqlite".to_owned()),
-        sqlite_path: PathBuf::from("./sqlite-data-auth-tests"),
+        database_type: DatabaseType::Redis,
         clear_database: false,
-        ..DBConfig::default()
+        database_url: url,
     };
 
     // plaintext JWT token auth
@@ -74,37 +71,9 @@ pub(crate) async fn test_all_authentications() -> CliResult<()> {
     .await?;
     ctx.stop_server().await?;
 
-    // Bad API token auth but JWT auth used at first
-    info!("Testing server with bad API token auth but JWT auth used at first");
-    let ctx = start_test_server_with_options(
-        default_db_config.clone(),
-        PORT,
-        AuthenticationOptions {
-            use_jwt_token: true,
-            use_https: true,
-            use_client_cert: false,
-        },
-    )
-    .await?;
-    ctx.stop_server().await?;
-
-    // API token auth
-    info!("Testing server with API token auth");
-    let ctx = start_test_server_with_options(
-        default_db_config.clone(),
-        PORT,
-        AuthenticationOptions {
-            use_jwt_token: false,
-            use_https: false,
-            use_client_cert: false,
-        },
-    )
-    .await?;
-    ctx.stop_server().await?;
-
-    // On recent versions of macOS, the root Certificate for the client is searched on the keychains
-    // and not found, since it is a local self-signed certificate.
-    // This is likely a bug in reqwest
+    // On recent versions of macOS, the root Certificate for the client is searched
+    // on the keychains and not found, since it is a local self-signed
+    // certificate. This is likely a bug in reqwest
     #[cfg(not(target_os = "macos"))]
     {
         // tls client cert auth
@@ -121,21 +90,7 @@ pub(crate) async fn test_all_authentications() -> CliResult<()> {
         .await?;
         ctx.stop_server().await?;
 
-        // Bad API token auth but cert auth used at first
-        info!("Testing server with bad API token auth but cert auth used at first");
-        let ctx = start_test_server_with_options(
-            default_db_config.clone(),
-            PORT,
-            AuthenticationOptions {
-                use_jwt_token: false,
-                use_https: true,
-                use_client_cert: true,
-            },
-        )
-        .await?;
-        ctx.stop_server().await?;
-
-        // Bad API token and good JWT token auth but still cert auth used at first
+        // Good JWT token auth but still cert auth used at first
         info!(
             "Testing server with bad API token and good JWT token auth but still cert auth used \
              at first"

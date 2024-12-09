@@ -1,8 +1,8 @@
 [workspace]
 default-members = ["crate/server", "crate/cli"]
 members = [
+  "crate/structs",
   "crate/server",
-  "crate/logger",
   "crate/client",
   "crate/cli",
   "crate/test_server",
@@ -12,8 +12,11 @@ resolver = "2"
 [workspace.package]
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.71.0"
-authors = ["Hatem M'naouer <hatem.mnaouer@cosmian.com>"]
+rust-version = "1.83.0"
+authors = [
+  "Emmanuel Coste<emmanuel.coste@cosmian.com>",
+  "Hatem M'naouer <hatem.mnaouer@cosmian.com>",
+]
 license = "BUSL-1.1"
 license-file = "LICENSE"
 repository = "https://github.com/Cosmian/cosmian_findex_server"
@@ -38,37 +41,25 @@ incremental = false
 opt-level = 0
 
 [workspace.dependencies]
-actix-rt = "2.10"
 actix-server = { version = "2.5", default-features = false }
 actix-web = { version = "4.9.0", default-features = false }
-base64 = "0.21"
-chrono = "0.4"
+base64 = "0.22"
 clap = { version = "4.5", default-features = false }
-cloudproof = "3.0"
+cloudproof_findex = { git = "https://www.github.com/Cosmian/cloudproof_rust", branch = "feat/add_basic_findex_rest_client" }
+cosmian_http_client = { git = "https://www.github.com/Cosmian/http_client_server", branch = "develop" }
+cosmian_config_utils = { git = "https://www.github.com/Cosmian/http_client_server", branch = "develop" }
+cosmian_logger = { git = "https://www.github.com/Cosmian/http_client_server", branch = "develop" }
 der = { version = "0.7", default-features = false }
-env_logger = "0.11"
-hex = { version = "0.4", default-features = false }
-leb128 = "0.2.5"
-log = { version = "0.4", default-features = false }
-native-tls = "0.2"
-num_cpus = "1.13"
-num-bigint-dig = { version = "0.8", default-features = false }
 openssl = { version = "0.10", default-features = false }
 pem = "3.0"
-pyo3 = { version = "0.20", default-features = false }
 reqwest = { version = "0.11", default-features = false }
-rustls = "0.21"
-serde = "1.0"
-serde_json = "1.0"
-sha3 = { version = "0.10", default-features = false }
-strum = { version = "0.25", default-features = false }
-thiserror = "1.0"
-time = "0.3"
-tokio = { version = "1.39", default-features = false }
-tracing-subscriber = { version = "0.3", default-features = false }
-tracing = "0.1"
-url = "2.5"
-uuid = "1.10"
-x509-cert = { version = "0.2.5", default-features = false }
+serde = "1.0.215"
+serde_json = "1.0.133"
+thiserror = "2.0.4"
+tokio = { version = "1.42", default-features = false }
+tempfile = "3.14"
+tracing = "0.1.41"
+url = "2.5.4"
 x509-parser = "0.16"
 zeroize = { version = "1.8", default-features = false }
+uuid = { version = "1.11", features = ["v4", "serde"] }

@@ -19,7 +19,7 @@ use futures::{
 use openssl::{nid::Nid, x509::X509};
 use tracing::{debug, error, trace};
 
-use crate::{findex_server_bail, result::FResult};
+use crate::{error::result::FResult, findex_server_bail};
 
 // see this https://github.com/actix/actix-web/pull/1754#issuecomment-716192605
 // for inspiration
@@ -35,8 +35,9 @@ pub(crate) struct PeerCertificate {
 
 /// Extract the peer certificate from the TLS stream and pass it to middleware.
 ///
-/// This function extracts the peer certificate from the TLS stream and passes it to the middleware.
-/// The middleware can then use the peer certificate to authenticate the client.
+/// This function extracts the peer certificate from the TLS stream and passes
+/// it to the middleware. The middleware can then use the peer certificate to
+/// authenticate the client.
 pub(crate) fn extract_peer_certificate(cnx: &dyn Any, extensions: &mut Extensions) {
     // Check if the connection is a TLS connection.
     if let Some(cnx) = cnx.downcast_ref::<TlsStream<TcpStream>>() {
@@ -57,10 +58,12 @@ pub(crate) struct PeerCommonName {
     pub(crate) common_name: String,
 }
 
-/// The middleware that checks the peer certificate and extracts the common name.
+/// The middleware that checks the peer certificate and extracts the common
+/// name.
 ///
-/// This middleware checks the peer certificate for a common name and extracts it.
-/// The common name is then added to the request context so that it can be used by other middleware or handlers.
+/// This middleware checks the peer certificate for a common name and extracts
+/// it. The common name is then added to the request context so that it can be
+/// used by other middleware or handlers.
 pub(crate) struct SslAuth;
 
 impl<S, B> Transform<S, ServiceRequest> for SslAuth
@@ -104,9 +107,11 @@ where
 
     /// Call the `SslAuthMiddleware`.
     ///
-    /// This function calls the underlying service and checks the peer certificate for a common name.
-    /// If the common name is found, it is added to the request context so that it can be used by other middleware or handlers.
-    /// If the common name is not found, an unauthorized response is returned.
+    /// This function calls the underlying service and checks the peer
+    /// certificate for a common name. If the common name is found, it is
+    /// added to the request context so that it can be used by other middleware
+    /// or handlers. If the common name is not found, an unauthorized
+    /// response is returned.
     #[allow(clippy::cognitive_complexity)]
     fn call(&self, req: ServiceRequest) -> Self::Future {
         // Log that the middleware is being called.

@@ -15,17 +15,13 @@ doctest = false
 [features]
 
 [dependencies]
-base64 = { workspace = true }
-cloudproof = { workspace = true }
-der = { workspace = true }
-log = { workspace = true }
-pem = { workspace = true }
+cloudproof_findex = { git = "https://www.github.com/Cosmian/cloudproof_rust", branch = "feat/add_basic_findex_rest_client" }
+cosmian_config_utils = { workspace = true }
+cosmian_findex_structs = { path = "../structs" }
+cosmian_http_client = { workspace = true }
+cosmian_logger = { workspace = true }
 reqwest = { workspace = true, features = ["default", "json", "native-tls"] }
-rustls = { workspace = true, features = ["dangerous_configuration"] }
 serde = { workspace = true }
-serde_json = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }
-url = { workspace = true }
-webpki-roots = "0.22"
-x509-cert = { workspace = true }
+uuid = { workspace = true }

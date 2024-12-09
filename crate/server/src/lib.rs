@@ -40,6 +40,7 @@
     clippy::unseparated_literal_suffix,
     clippy::map_err_ignore,
     clippy::redundant_clone,
+    clippy::todo
 )]
 #![allow(
     clippy::module_name_repetitions,
@@ -57,11 +58,7 @@ pub mod database;
 pub mod error;
 pub mod findex_server;
 pub mod middlewares;
-pub mod result;
 pub mod routes;
-pub mod secret;
-
-pub(crate) use database::FServer;
 
 #[allow(clippy::panic, clippy::unwrap_used, clippy::expect_used, unsafe_code)]
 #[cfg(test)]

@@ -1,20 +1,62 @@
-#![allow(clippy::upper_case_acronyms)]
-//required to detect generic type in Serializer
-#![feature(min_specialization)]
+#![deny(
+    nonstandard_style,
+    refining_impl_trait,
+    future_incompatible,
+    keyword_idents,
+    let_underscore,
+    unreachable_pub,
+    unused,
+    clippy::all,
+    clippy::suspicious,
+    clippy::complexity,
+    clippy::perf,
+    clippy::style,
+    clippy::pedantic,
+    clippy::cargo,
+    clippy::nursery,
 
-pub use config::{ClientConf, GmailApiConf, FINDEX_CLI_CONF_ENV};
-pub use error::ClientError;
-pub use file_utils::{
-    read_bytes_from_file, read_bytes_from_files_to_bulk, read_from_json_file,
-    write_bulk_decrypted_data, write_bulk_encrypted_data, write_bytes_to_file,
-    write_json_object_to_file, write_single_decrypted_data, write_single_encrypted_data,
-};
-pub use findex_rest_client::FindexClient;
-pub use result::{ClientResultHelper, RestClientResult};
+    // restriction lints
+    clippy::unwrap_used,
+    clippy::get_unwrap,
+    clippy::expect_used,
+    clippy::indexing_slicing,
+    clippy::unwrap_in_result,
+    clippy::assertions_on_result_states,
+    clippy::panic,
+    clippy::panic_in_result_fn,
+    clippy::renamed_function_params,
+    clippy::verbose_file_reads,
+    clippy::str_to_string,
+    clippy::string_to_string,
+    clippy::unreachable,
+    clippy::as_conversions,
+    clippy::print_stdout,
+    clippy::empty_structs_with_brackets,
+    clippy::unseparated_literal_suffix,
+    clippy::map_err_ignore,
+    clippy::redundant_clone,
+    clippy::todo
 
-mod certificate_verifier;
+)]
+#![allow(
+    clippy::module_name_repetitions,
+    clippy::too_many_lines,
+    clippy::cargo_common_metadata,
+    clippy::multiple_crate_versions,
+    clippy::redundant_pub_crate
+)]
+
+pub use config::{FindexClientConfig, FINDEX_CLI_CONF_ENV};
+pub use error::{result::FindexClientResult, FindexClientError};
+pub use rest_client::{handle_error, FindexRestClient};
+
 mod config;
+mod datasets;
 mod error;
-mod file_utils;
-mod findex_rest_client;
-mod result;
+mod permissions;
+mod rest_client;
+
+pub mod reexport {
+    pub use cosmian_config_utils;
+    pub use cosmian_http_client;
+}

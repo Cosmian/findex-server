@@ -16,9 +16,25 @@
     clippy::nursery,
 
     // restriction lints
+    clippy::unwrap_used,
+    clippy::get_unwrap,
+    clippy::expect_used,
+    clippy::indexing_slicing,
+    clippy::unwrap_in_result,
+    clippy::assertions_on_result_states,
+    clippy::panic,
+    clippy::panic_in_result_fn,
+    clippy::renamed_function_params,
+    clippy::verbose_file_reads,
+    clippy::str_to_string,
+    clippy::string_to_string,
+    clippy::unreachable,
+    clippy::as_conversions,
+    clippy::empty_structs_with_brackets,
+    clippy::unseparated_literal_suffix,
     clippy::map_err_ignore,
-    clippy::print_stdout,
-    clippy::redundant_clone
+    clippy::redundant_clone,
+    clippy::todo
 )]
 #![allow(
     clippy::module_name_repetitions,
@@ -28,7 +44,15 @@
     clippy::redundant_pub_crate
 )]
 pub mod actions;
+pub mod commands;
 pub mod error;
 
+pub use commands::{findex_cli_main, CoreFindexActions, FindexCli};
+
+pub mod reexports {
+    pub use cloudproof_findex;
+    pub use cosmian_findex_client;
+    pub use cosmian_findex_structs;
+}
 #[cfg(test)]
 mod tests;

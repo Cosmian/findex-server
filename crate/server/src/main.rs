@@ -3,21 +3,20 @@ use std::path::PathBuf;
 use clap::Parser;
 use cosmian_findex_server::{
     config::{ClapConfig, ServerParams},
-    error::FindexServerError,
+    error::{result::FResult, server::FindexServerError},
     findex_server::start_findex_server,
     findex_server_bail,
-    result::FResult,
 };
-use cosmian_logger::log_utils::log_init;
+use cosmian_logger::log_init;
 use dotenvy::dotenv;
 use tracing::{debug, info};
 
-const FINDEX_SERVER_CONF: &str = "/etc/cosmian_findex_server/server.toml";
+const FINDEX_SERVER_CONF: &str = "/etc/cosmian/findex_server.toml";
 
 /// The main entrypoint of the program.
 ///
-/// This function sets up the necessary environment variables and logging options,
-/// then parses the command line arguments using [`ClapConfig::parse()`](https://docs.rs/clap/latest/clap/struct.ClapConfig.html#method.parse).
+/// This function sets up the necessary environment variables and logging
+/// options, then parses the command line arguments using [`ClapConfig::parse()`](https://docs.rs/clap/latest/clap/struct.ClapConfig.html#method.parse).
 #[tokio::main]
 #[allow(clippy::needless_return)]
 async fn main() -> FResult<()> {
@@ -46,8 +45,8 @@ async fn main() -> FResult<()> {
         let conf_path = PathBuf::from(conf_path);
         if !conf_path.exists() {
             findex_server_bail!(FindexServerError::ServerError(format!(
-                "Cannot read findex server config at specified path: {conf_path:?} - file does not \
-                 exist"
+                "Cannot read findex server config at specified path: {conf_path:?} - file does \
+                 not exist"
             )));
         }
         conf_path
@@ -77,7 +76,8 @@ async fn main() -> FResult<()> {
         ClapConfig::parse()
     };
 
-    // Instantiate a config object using the env variables and the args of the binary
+    // Instantiate a config object using the env variables and the args of the
+    // binary
     debug!("Command line config: {clap_config:#?}");
 
     // Parse the Server Config from the command line arguments

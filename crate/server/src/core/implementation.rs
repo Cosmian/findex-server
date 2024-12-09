@@ -1,50 +1,80 @@
-use cloudproof::reexport::crypto_core::FixedSizeCBytes;
+use actix_web::{HttpMessage, HttpRequest};
+use cosmian_findex_structs::Permission;
+use tracing::{debug, instrument, trace};
 
 use crate::{
     config::{DbParams, ServerParams},
-    database::{Database, RedisWithFindex, SqlitePool, REDIS_WITH_FINDEX_MASTER_KEY_LENGTH},
-    findex_server_bail,
-    result::FResult,
-    secret::Secret,
+    database::{DatabaseTraits, Redis},
+    error::result::FResult,
+    middlewares::{JwtAuthClaim, PeerCommonName},
+    routes::get_index_id,
 };
 
-use super::FindexServer;
+pub(crate) struct FindexServer {
+    pub(crate) params: ServerParams,
+    pub(crate) db: Box<dyn DatabaseTraits + Sync + Send>,
+}
 
 impl FindexServer {
     pub(crate) async fn instantiate(mut shared_config: ServerParams) -> FResult<Self> {
-        let db: Box<dyn Database + Sync + Send> = if let Some(mut db_params) =
-            shared_config.db_params.as_mut()
-        {
-            match &mut db_params {
-                DbParams::Sqlite(db_path) => Box::new(
-                    SqlitePool::instantiate(
-                        &db_path.join("findex_server.db"),
-                        shared_config.clear_db_on_start,
-                    )
-                    .await?,
-                ),
-                DbParams::RedisFindex(url, master_key, label) => {
-                    // There is no reason to keep a copy of the key in the shared config
-                    // So we are going to create a "zeroizable" copy which will be passed to Redis with Findex
-                    // and zeroize the one in the shared config
-                    let new_master_key =
-                        Secret::<REDIS_WITH_FINDEX_MASTER_KEY_LENGTH>::from_unprotected_bytes(
-                            &mut master_key.to_bytes(),
-                        );
-                    // `master_key` implements ZeroizeOnDrop so there is no need
-                    // to manually zeroize.
-                    Box::new(
-                        RedisWithFindex::instantiate(url.as_str(), new_master_key, label).await?,
-                    )
-                }
+        let db: Box<dyn DatabaseTraits + Sync + Send> = match &mut shared_config.db_params {
+            DbParams::Redis(url) => {
+                Box::new(Redis::instantiate(url.as_str(), shared_config.clear_db_on_start).await?)
             }
-        } else {
-            findex_server_bail!("Fatal: no database configuration provided. Stopping.")
         };
 
         Ok(Self {
             params: shared_config,
             db,
         })
+    }
+
+    /// Get the user from the request depending on the authentication method
+    /// The user is encoded in the JWT `Authorization` header
+    /// If the header is not present, the user is extracted from the client
+    /// certificate.
+    ///  If the client certificate is not present, the user is
+    /// extracted from the configuration file
+    pub(crate) fn get_user(&self, req_http: &HttpRequest) -> String {
+        let default_username = self.params.default_username.clone();
+
+        if self.params.force_default_username {
+            debug!(
+                "Authenticated using forced default user: {}",
+                default_username
+            );
+            return default_username;
+        }
+        // if there is a JWT token, use it in priority
+        let user = req_http.extensions().get::<JwtAuthClaim>().map_or_else(
+            || {
+                req_http
+                    .extensions()
+                    .get::<PeerCommonName>()
+                    .map_or(default_username, |claim| claim.common_name.clone())
+            },
+            |claim| claim.email.clone(),
+        );
+        debug!("Authenticated user: {}", user);
+        user
+    }
+
+    #[instrument(ret(Display), err, skip(self))]
+    pub(crate) async fn get_permission(
+        &self,
+        user_id: &str,
+        index_id: &str,
+    ) -> FResult<Permission> {
+        if user_id == self.params.default_username {
+            trace!("User is the default user and has admin access");
+            return Ok(Permission::Admin);
+        }
+
+        let permission = self
+            .db
+            .get_permission(user_id, &get_index_id(index_id)?)
+            .await?;
+        trace!("User {user_id} has: {permission}");
+        Ok(permission)
     }
 }

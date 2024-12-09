@@ -5,8 +5,8 @@ use openssl::x509::X509;
 use super::{DbParams, HttpParams};
 use crate::{
     config::{ClapConfig, IdpConfig},
+    error::result::FResult,
     findex_server_bail,
-    result::FResult,
 };
 
 /// This structure is the context used by the server
@@ -20,11 +20,12 @@ pub struct ServerParams {
     pub default_username: String,
 
     /// When an authentication method is provided, perform the authentication
-    /// but always use the default username instead of the one provided by the authentication method
+    /// but always use the default username instead of the one provided by the
+    /// authentication method
     pub force_default_username: bool,
 
     /// The DB parameters may be supplied on the command line
-    pub db_params: Option<DbParams>,
+    pub db_params: DbParams,
 
     /// Whether to clear the database on start
     pub clear_db_on_start: bool,
@@ -46,15 +47,18 @@ impl ServerParams {
     ///
     /// # Arguments
     ///
-    /// * `conf` - The `ClapConfig` object containing the configuration parameters.
+    /// * `conf` - The `ClapConfig` object containing the configuration
+    ///   parameters.
     ///
     /// # Returns
     ///
-    /// Returns a `FResult` containing the `ServerParams` instance if successful, or an error if the conversion fails.
+    /// Returns a `FResult` containing the `ServerParams` instance if
+    /// successful, or an error if the conversion fails.
     ///
     /// # Errors
     ///
-    /// Returns an error if the conversion from `ClapConfig` to `ServerParams` fails.
+    /// Returns an error if the conversion from `ClapConfig` to `ServerParams`
+    /// fails.
     pub fn try_from(conf: ClapConfig) -> FResult<Self> {
         let http_params = HttpParams::try_from(&conf.http)?;
 
@@ -76,7 +80,7 @@ impl ServerParams {
 
         Ok(Self {
             identity_provider_configurations: conf.auth.extract_idp_configs()?,
-            db_params: conf.db.init(&conf.workspace.init()?)?,
+            db_params: conf.db.init()?,
             clear_db_on_start: conf.db.clear_database,
             hostname: conf.http.hostname,
             port: conf.http.port,
@@ -95,11 +99,13 @@ impl ServerParams {
     ///
     /// # Returns
     ///
-    /// Returns a `FResult` containing the loaded `X509` certificate if successful, or an error if the loading fails.
+    /// Returns a `FResult` containing the loaded `X509` certificate if
+    /// successful, or an error if the loading fails.
     ///
     /// # Errors
     ///
-    /// Returns an error if the certificate file cannot be read or if the parsing of the certificate fails.
+    /// Returns an error if the certificate file cannot be read or if the
+    /// parsing of the certificate fails.
     fn load_cert(authority_cert_file: &PathBuf) -> FResult<X509> {
         // Open and read the file into a byte vector
         let pem_bytes = std::fs::read(authority_cert_file)?;
@@ -161,7 +167,7 @@ impl Clone for ServerParams {
             identity_provider_configurations: self.identity_provider_configurations.clone(),
             default_username: self.default_username.clone(),
             force_default_username: self.force_default_username,
-            db_params: None,
+            db_params: DbParams::default(),
             clear_db_on_start: self.clear_db_on_start,
             hostname: self.hostname.clone(),
             port: self.port,

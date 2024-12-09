@@ -5,7 +5,10 @@ use serde::{Deserialize, Serialize};
 use tracing::{debug, trace};
 
 use super::JwksManager;
-use crate::{error::FindexServerError, findex_server_ensure, result::FResult};
+use crate::{
+    error::{result::FResult, server::FindexServerError},
+    findex_server_ensure,
+};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub(crate) struct UserClaim {
@@ -35,19 +38,6 @@ pub(crate) struct UserClaim {
     pub email_type: Option<String>,
     // Google CSE
     pub google_email: Option<String>,
-}
-
-#[derive(Debug, Deserialize)]
-#[allow(dead_code)]
-pub(crate) struct JwtTokenHeaders {
-    typ: Option<String>,
-    cty: Option<String>,
-    alg: Option<String>,
-    kid: Option<String>,
-    x5t: Option<String>,
-    x5u: Option<String>,
-    x5c: Option<Vec<String>>,
-    crit: Option<String>,
 }
 
 #[derive(Debug)]

@@ -1,26 +1,26 @@
 use clap::Args;
 use serde::{Deserialize, Serialize};
 
-use crate::{config::IdpConfig, error::FindexServerError, findex_server_ensure};
+use crate::{config::IdpConfig, error::server::FindexServerError, findex_server_ensure};
 
 // Support for JWT token inspired by the doc at : https://cloud.google.com/api-gateway/docs/authenticating-users-jwt
 // and following pages
 
-#[derive(Debug, Default, Args, Deserialize, Serialize)]
+#[derive(Debug, Default, Args, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(default)]
 pub struct JwtAuthConfig {
     /// The issuer URI of the JWT token
     ///
-    /// To handle multiple identity managers, add different parameters under each argument
-    /// (jwt-issuer-uri, jwks-uri and optionally jwt-audience), keeping them in
-    /// the same order :
+    /// To handle multiple identity managers, add different parameters under
+    /// each argument (jwt-issuer-uri, jwks-uri and optionally
+    /// jwt-audience), keeping them in the same order :
     ///
     /// --`jwt_issuer_uri` <`JWT_ISSUER_URI_1`> <`JWT_ISSUER_URI_2`>
     /// --`jwks_uri` <`JWKS_URI_1`> <`JWKS_URI_2`>
     /// --`jwt_audience` <`JWT_AUDIENCE_1`> <`JWT_AUDIENCE_2`>
     ///
-    /// For Auth0, this is the delegated authority domain configured on Auth0, for instance
-    /// `https://<your-tenant>.<region>.auth0.com/`
+    /// For Auth0, this is the delegated authority domain configured on Auth0,
+    /// for instance `https://<your-tenant>.<region>.auth0.com/`
     ///
     /// For Google, this would be `https://accounts.google.com`
     #[clap(long, env = "FINDEX_SERVER_JWT_ISSUER_URI", num_args = 1..)]
@@ -28,9 +28,9 @@ pub struct JwtAuthConfig {
 
     /// The JWKS (Json Web Key Set) URI of the JWT token
     ///
-    /// To handle multiple identity managers, add different parameters under each argument
-    /// (jwt-issuer-uri, jwks-uri and optionally jwt-audience), keeping them in
-    /// the same order
+    /// To handle multiple identity managers, add different parameters under
+    /// each argument (jwt-issuer-uri, jwks-uri and optionally
+    /// jwt-audience), keeping them in the same order
     ///
     /// For Auth0, this would be `https://<your-tenant>.<region>.auth0.com/.well-known/jwks.json`
     ///
@@ -42,7 +42,8 @@ pub struct JwtAuthConfig {
 
     /// The audience of the JWT token
     ///
-    /// Optional: the server will validate the JWT `aud` claim against this value if set
+    /// Optional: the server will validate the JWT `aud` claim against this
+    /// value if set
     #[clap(long, env = "FINDEX_SERVER_JST_AUDIENCE", num_args = 1..)]
     pub jwt_audience: Option<Vec<String>>,
 }
@@ -61,9 +62,11 @@ impl JwtAuthConfig {
         )
     }
 
-    /// Parse this configuration into one identity provider configuration per JWT issuer URI.
+    /// Parse this configuration into one identity provider configuration per
+    /// JWT issuer URI.
     ///
-    /// Assert that when provided, JWKS URI and JWT audience are provided once per JWT issuer URI;
+    /// Assert that when provided, JWKS URI and JWT audience are provided once
+    /// per JWT issuer URI;
     pub(crate) fn extract_idp_configs(self) -> Result<Option<Vec<IdpConfig>>, FindexServerError> {
         self.jwt_issuer_uri
             .map(|issuer_uris| {
