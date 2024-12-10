@@ -3,6 +3,7 @@ mod findex;
 mod instance;
 mod permissions;
 
+// TODO : change these for proper encode/decode functions
 // keep a SSOT for the encode/decode functions to be used in the findex instance, as WORD_LENGTH depends of the serialization function
 pub use cosmian_findex::dummy_decode as decode_fn;
 pub use cosmian_findex::dummy_encode as encode_fn;

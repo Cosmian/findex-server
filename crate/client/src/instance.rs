@@ -4,23 +4,18 @@ use rand_chacha::{rand_core::SeedableRng, ChaChaRng};
 use tracing::trace;
 
 use crate::{FindexClientError, FindexRestClient};
-use uuid::Uuid;
 
 #[allow(clippy::future_not_send)]
 pub async fn instantiate_findex(
     rest_client: FindexRestClient,
-    index_id: &Uuid,
 ) -> Result<
-    Findex<{ WORD_LENGTH }, Value, std::convert::Infallible, FindexRestClient>, // TODO: is this the correct error type ?
+    Findex<{ WORD_LENGTH }, Value, std::convert::Infallible, FindexRestClient>,
     FindexClientError,
 > {
-    trace!(
-        "This function will return an error if there is an error instantiating the Findex client."
-    );
-    // let config = Configuration::Rest(rest_client.client.client, "dummy_value_1".to_owned());
-    // crypto CSRNG
+    // TODO: install crypto core
     let mut rng = ChaChaRng::from_entropy();
     let seed = Secret::random(&mut rng);
+    trace!("Instantiating Findex rest client with seed: {:?}", seed); // TODO(review) : should we log the seed?
 
     let res = Findex::new(seed, rest_client, encode_fn::<WORD_LENGTH, _>, decode_fn);
     Ok(res)

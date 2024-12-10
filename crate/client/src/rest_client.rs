@@ -6,7 +6,7 @@ use cosmian_findex_server::database::redis::WORD_LENGTH;
 use cosmian_http_client::HttpClient;
 use reqwest::{Response, StatusCode};
 use serde::{Deserialize, Serialize};
-use tracing::{instrument, trace};
+use tracing::{instrument, trace, warn};
 
 use crate::error::{
     result::{FindexClientResult, FindexRestClientResultHelper},
@@ -29,6 +29,7 @@ impl Display for SuccessResponse {
 pub struct FindexRestClient {
     pub client: HttpClient,
     pub conf: FindexClientConfig,
+    pub index_id: String,
 }
 
 impl FindexRestClient {
@@ -36,7 +37,10 @@ impl FindexRestClient {
     ///
     /// Parameters `server_url` and `accept_invalid_certs` from the command line
     /// will override the ones from the configuration file.
-    pub fn new(conf: FindexClientConfig) -> Result<FindexRestClient, FindexClientError> {
+    pub fn new(
+        conf: FindexClientConfig,
+        index_id: String,
+    ) -> Result<FindexRestClient, FindexClientError> {
         // Instantiate a Findex server REST client with the given configuration
         let client = HttpClient::instantiate(&conf.http_config).with_context(|| {
             format!(
@@ -45,7 +49,11 @@ impl FindexRestClient {
             )
         })?;
 
-        Ok(Self { client, conf })
+        Ok(Self {
+            client,
+            conf,
+            index_id,
+        })
     }
 
     #[instrument(ret(Display), err, skip(self))]
@@ -66,27 +74,31 @@ impl FindexRestClient {
 
 impl MemoryADT for FindexRestClient {
     type Address = Address<ADDRESS_LENGTH>;
-    type Word = [u8; WORD_LENGTH]; // TODO(hatem): un-hard code this
+    type Word = [u8; WORD_LENGTH];
     type Error = FindexClientError;
 
     async fn batch_read(
         &self,
         addresses: Vec<Self::Address>,
-    ) -> Result<Vec<Option<[u8; WORD_LENGTH]>>, FindexClientError>
-/* -> impl Send + std::future::Future<Output = Result<Vec<Option<Self::Word>>, Self::Error>> */
-    {
-        let endpoint = "/indexes/{index_id}/batch_read";
-        let server_url = format!("{}{endpoint}", self.client.server_url);
+    ) -> Result<Vec<Option<[u8; WORD_LENGTH]>>, FindexClientError> {
+        let endpoint = format!("/indexes/{}/batch_read", self.index_id);
+        let server_url = format!("{}{}", self.client.server_url, endpoint);
+        trace!(
+            "Initiating batch_read of {} addresses for index {} at server_url: {}",
+            addresses.len(),
+            self.index_id,
+            server_url
+        );
         // Convert addresses to bytes
         let request_bytes = addresses
             .into_iter()
-            .flat_map(|addr| <[u8; ADDRESS_LENGTH]>::from(addr)) // TODO: is flat map ok ?
+            .flat_map(|addr| <[u8; ADDRESS_LENGTH]>::from(addr)) // TODO(review): is flat map ok ?
             .collect::<Vec<u8>>();
 
         let response = self
             .client
             .client
-            .post(server_url)
+            .post(server_url.clone())
             .body(request_bytes)
             .send()
             .await?;
@@ -106,7 +118,7 @@ impl MemoryADT for FindexRestClient {
                     let mut word = [0u8; WORD_LENGTH];
                     word.copy_from_slice(word_bytes);
                     result.push(Some(word));
-                    pos += 130; // 1 (discriminant) + WORD_LENGTH (word)
+                    pos += 130; // 1 (flag) + WORD_LENGTH (word)
                 }
             }
 
@@ -114,7 +126,8 @@ impl MemoryADT for FindexRestClient {
         }
 
         // process error
-        let p = handle_error(endpoint, response).await?;
+        warn!("batch_read failed on server url {:?}.", server_url);
+        let p = handle_error(&endpoint, response).await?;
         Err(FindexClientError::RequestFailed(p))
     }
 
@@ -123,8 +136,14 @@ impl MemoryADT for FindexRestClient {
         guard: (Self::Address, Option<Self::Word>),
         tasks: Vec<(Self::Address, Self::Word)>,
     ) -> Result<Option<[u8; WORD_LENGTH]>, FindexClientError> {
-        let endpoint = "/indexes/{index_id}/batch_read";
-        let server_url = format!("{}{endpoint}", self.client.server_url);
+        let endpoint = format!("/indexes/{}/batch_read", self.index_id);
+        let server_url = format!("{}{}", self.client.server_url, endpoint.clone());
+        trace!(
+            "Initiating guarded_write of {} values for index {} at server_url: {}",
+            tasks.len(),
+            self.index_id,
+            server_url.clone()
+        );
 
         // code the request body
         let mut request_bytes = Vec::new();
@@ -148,7 +167,7 @@ impl MemoryADT for FindexRestClient {
         let response = self
             .client
             .client
-            .post(server_url)
+            .post(server_url.clone())
             .body(request_bytes)
             .send()
             .await?;
@@ -166,10 +185,16 @@ impl MemoryADT for FindexRestClient {
                 word.copy_from_slice(word_bytes);
                 Some(word)
             };
+            trace!(
+                "guarded_write successful on server url {:?}. result_word: {:?}",
+                server_url.clone(),
+                result_word
+            );
             return Ok(result_word);
         }
         // process error
-        let p = handle_error(endpoint, response).await?;
+        warn!("guarded_write failed on server url {}.", server_url);
+        let p = handle_error(&endpoint, response).await?;
         Err(FindexClientError::RequestFailed(p))
     }
 }
