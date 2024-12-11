@@ -71,9 +71,6 @@ pub struct FindexParameters {
     /// The key is a 64 bytes hex string.
     #[clap(long, short = 'k', value_parser = KeyLengthValueParser)]
     pub key: Secret<BYTE_KEY_LENGTH>,
-    /// The Findex label
-    #[clap(long, short = 'l')]
-    pub label: String,
     /// The index ID
     #[clap(long, short = 'i')]
     pub index_id: Uuid,
