@@ -12,6 +12,7 @@ use uuid::Uuid;
 
 use crate::{
     core::FindexServer,
+    database::database_traits::DatasetsTrait,
     error::result::FResult,
     routes::{
         check_permission,

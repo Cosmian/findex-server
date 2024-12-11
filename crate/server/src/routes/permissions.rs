@@ -12,6 +12,7 @@ use uuid::Uuid;
 
 use crate::{
     core::FindexServer,
+    database::database_traits::PermissionsTrait,
     error::{result::FResult, server::FindexServerError},
     routes::error::{ResponseBytes, SuccessResponse},
 };
@@ -32,6 +33,7 @@ pub(crate) async fn check_permission(
     Ok(())
 }
 
+// TODO(hatem): make this atomic
 #[post("/create/index")]
 pub(crate) async fn create_index_id(
     req: HttpRequest,

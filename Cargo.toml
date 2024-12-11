@@ -45,7 +45,8 @@ actix-server = { version = "2.5", default-features = false }
 actix-web = { version = "4.9.0", default-features = false }
 base64 = "0.22"
 clap = { version = "4.5", default-features = false }
-cloudproof_findex = { git = "https://www.github.com/Cosmian/cloudproof_rust", branch = "feat/add_basic_findex_rest_client" }
+# cosmian_config_utils = { path ="../../core/client_server/crate/config_utils" }
+# cosmian_http_client = { path ="../../core/client_server/crate/http_client" }
 cosmian_http_client = { git = "https://www.github.com/Cosmian/http_client_server", branch = "develop" }
 cosmian_config_utils = { git = "https://www.github.com/Cosmian/http_client_server", branch = "develop" }
 cosmian_logger = { git = "https://www.github.com/Cosmian/http_client_server", branch = "develop" }
@@ -62,4 +63,6 @@ tracing = "0.1.41"
 url = "2.5.4"
 x509-parser = "0.16"
 zeroize = { version = "1.8", default-features = false }
-uuid = { version = "1.11", features = ["v4", "serde"] }
+uuid = { version = "1.10", features = ["v4"] }
+cosmian_findex = { git = "https://github.com/Cosmian/findex", branch = "feat/update_for_findex_server" }
+cosmian_crypto_core = { version = "9.3.0", default-features = false }

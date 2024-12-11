@@ -42,7 +42,7 @@ clap = { workspace = true, features = [
   "derive",
   "cargo",
 ] }
-cloudproof_findex = { workspace = true, features = ["redis-interface"] }
+cosmian_findex = { workspace = true, features = ["redis-mem"] }
 cosmian_findex_structs = { path = "../structs" }
 cosmian_logger = { workspace = true }
 dotenvy = "0.15"

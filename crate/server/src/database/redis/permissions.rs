@@ -11,15 +11,31 @@ use crate::{
     error::{result::FResult, server::FindexServerError},
 };
 
+use super::{Redis, WORD_LENGTH};
+
 #[async_trait]
-impl PermissionsTrait for Redis {
-    #[instrument(ret(Display), err, skip(self), level = "trace")]
+impl PermissionsTrait for Redis<WORD_LENGTH> {
+    #[instrument(ret(Display), err, skip(self))]
     async fn create_index_id(&self, user_id: &str) -> FResult<Uuid> {
         let redis_key = user_id.as_bytes();
 
         let mut con = self.client.get_connection()?;
 
         let uuid = Uuid::new_v4();
+        let key = user_id.as_bytes().to_vec();
+        let permissions = (self.get_permissions(user_id).await).map_or_else(
+            |_error| Permissions::new(uuid, Permission::Admin),
+            |mut permissions| {
+                permissions.grant_permission(uuid, Permission::Admin);
+                permissions
+            },
+        );
+        let mut pipe = pipe();
+        pipe.set::<_, _>(key, permissions.serialize());
+        pipe.atomic()
+            .query_async::<()>(&mut self.memory.manager.clone())
+            .await
+            .map_err(FindexServerError::from)?;
 
         // run the transaction block.
         let (mut returned_permissions_by_redis,): (Vec<Vec<u8>>,) =
@@ -78,7 +94,7 @@ impl PermissionsTrait for Redis {
 
         let mut values: Vec<Vec<u8>> = pipe
             .atomic()
-            .query_async(&mut self.mgr.clone())
+            .query_async(&mut self.memory.manager.clone())
             .await
             .map_err(FindexServerError::from)?;
 
@@ -119,7 +135,7 @@ impl PermissionsTrait for Redis {
         let mut pipe = pipe();
         pipe.set::<_, _>(redis_key, permissions.serialize()?.as_slice());
         pipe.atomic()
-            .query_async(&mut self.mgr.clone())
+            .query_async(&mut self.memory.manager.clone())
             .await
             .map_err(FindexServerError::from)
     }
@@ -135,7 +151,7 @@ impl PermissionsTrait for Redis {
                 pipe.set::<_, _>(key, permissions.serialize()?.as_slice());
 
                 pipe.atomic()
-                    .query_async::<()>(&mut self.mgr.clone())
+                    .query_async::<()>(&mut self.memory.manager.clone())
                     .await
                     .map_err(FindexServerError::from)?;
             }

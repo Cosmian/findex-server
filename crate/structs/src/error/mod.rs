@@ -1,4 +1,4 @@
-use cloudproof_findex::reexport::cosmian_crypto_core::CryptoCoreError;
+use cosmian_crypto_core::CryptoCoreError;
 use thiserror::Error;
 
 pub(crate) mod result;

@@ -1,10 +1,5 @@
 use async_trait::async_trait;
-use cloudproof_findex::{
-    db_interfaces::{redis::FindexTable, rest::UpsertData},
-    reexport::cosmian_findex::{
-        TokenToEncryptedValueMap, TokenWithEncryptedValueList, Tokens, ENTRY_LENGTH, LINK_LENGTH,
-    },
-};
+use cosmian_findex::{mem::MemoryError, Address, MemoryADT, ADDRESS_LENGTH};
 use cosmian_findex_structs::{EncryptedEntries, Permission, Permissions, Uuids};
 use uuid::Uuid;
 
@@ -80,5 +75,21 @@ pub(crate) trait DatasetsTrait: Sync + Send {
     ) -> FResult<EncryptedEntries>;
 }
 
+#[allow(dead_code)] // TODO : code is actually used, find why compiler thinks it's not
 #[async_trait]
-pub(crate) trait DatabaseTraits: FindexTrait + PermissionsTrait + DatasetsTrait {}
+pub(crate) trait FindexMemoryTrait:
+    Send
+    + Sync
+    + MemoryADT<Address = Address<ADDRESS_LENGTH>, Word = [u8; WORD_LENGTH], Error = MemoryError>
+{
+    //
+    // Memory R/W ops
+    //
+}
+
+#[allow(dead_code)] // code is actually used
+#[async_trait]
+pub(crate) trait DatabaseTraits:
+    PermissionsTrait + DatasetsTrait + FindexMemoryTrait
+{
+}

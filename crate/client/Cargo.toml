@@ -15,13 +15,15 @@ doctest = false
 [features]
 
 [dependencies]
-cloudproof_findex = { git = "https://www.github.com/Cosmian/cloudproof_rust", branch = "feat/add_basic_findex_rest_client" }
-cosmian_config_utils = { workspace = true }
+cosmian_findex_config = { path = "../config" }
 cosmian_findex_structs = { path = "../structs" }
+cosmian_findex_server = { path = "../server" }
 cosmian_http_client = { workspace = true }
-cosmian_logger = { workspace = true }
 reqwest = { workspace = true, features = ["default", "json", "native-tls"] }
 serde = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }
 uuid = { workspace = true }
+cosmian_findex = { workspace = true }
+rand_chacha = "0.3.1"
+cosmian_crypto_core = { workspace = true }

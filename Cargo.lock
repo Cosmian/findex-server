@@ -45,7 +45,7 @@ dependencies = [
  "actix-service",
  "actix-tls",
  "actix-utils",
- "ahash 0.8.11",
+ "ahash",
  "base64 0.22.1",
  "bitflags 2.6.0",
  "brotli",
@@ -138,7 +138,7 @@ dependencies = [
  "futures-core",
  "futures-util",
  "mio",
- "socket2 0.5.7",
+ "socket2",
  "tokio",
  "tracing",
 ]
@@ -216,7 +216,7 @@ dependencies = [
  "actix-tls",
  "actix-utils",
  "actix-web-codegen",
- "ahash 0.8.11",
+ "ahash",
  "bytes",
  "bytestring",
  "cfg-if",
@@ -238,7 +238,7 @@ dependencies = [
  "serde_json",
  "serde_urlencoded",
  "smallvec",
- "socket2 0.5.7",
+ "socket2",
  "time",
  "url",
 ]
@@ -303,18 +303,6 @@ dependencies = [
  "ctr",
  "ghash",
  "subtle",
- "zeroize",
-]
-
-[[package]]
-name = "ahash"
-version = "0.7.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "891477e0c6a8957309ee5c45a6368af3ae14bb510732d2684ffa19af310920f9"
-dependencies = [
- "getrandom",
- "once_cell",
- "version_check",
 ]
 
 [[package]]
@@ -735,22 +723,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "afb84c814227b90d6895e01398aee0d8033c00e7466aca416fb6a8e0eb19d8a7"
 
 [[package]]
-name = "cloudproof_findex"
-version = "6.0.2"
-source = "git+https://www.github.com/Cosmian/cloudproof_rust?branch=feat%2Fadd_basic_findex_rest_client#cd1649c39d0e0c89e4815aa25f867d11721c4ce5"
-dependencies = [
- "async-trait",
- "base64 0.21.7",
- "cosmian_crypto_core",
- "cosmian_findex",
- "redis 0.23.3",
- "reqwest",
- "serde",
- "tracing",
- "tracing-subscriber",
-]
-
-[[package]]
 name = "combine"
 version = "4.6.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -835,31 +807,29 @@ dependencies = [
 
 [[package]]
 name = "cosmian_crypto_core"
-version = "9.6.0"
+version = "9.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7a1af2d1b2b48bf77eb8719f4d66c6ef80cfecbd1f82f8c6ed70945cea1323a0"
+checksum = "38d0b3571bc613b9e1003a1d49e7574b58f0cc623b9396b8ee0b672faf870a40"
 dependencies = [
- "aead",
- "aes-gcm",
  "getrandom",
  "leb128",
  "rand_chacha",
  "rand_core",
- "tiny-keccak",
  "zeroize",
 ]
 
 [[package]]
 name = "cosmian_findex"
-version = "6.0.1"
-source = "git+https://www.github.com/Cosmian/findex?branch=fix%2Fmissing_some_structs_serialization#b1d8d021aa19a6bbd3726513e1755432bc1742dd"
+version = "7.0.0"
+source = "git+https://github.com/Cosmian/findex?branch=feat/update_for_findex_server#4aeaa79d392e639295739bb09152e788888c397f"
 dependencies = [
- "async-trait",
- "base64 0.21.7",
- "cosmian_crypto_core",
- "never",
+ "aes",
+ "rand",
+ "rand_chacha",
+ "rand_core",
+ "redis",
  "tiny-keccak",
- "tracing",
+ "xts-mode",
  "zeroize",
 ]
 
@@ -872,9 +842,9 @@ dependencies = [
  "assert_cmd",
  "base64 0.22.1",
  "clap",
- "cloudproof_findex",
  "const-oid",
  "cosmian_config_utils",
+ "cosmian_crypto_core",
  "cosmian_findex_client",
  "cosmian_findex_structs",
  "cosmian_logger",
@@ -897,11 +867,13 @@ dependencies = [
 name = "cosmian_findex_client"
 version = "0.1.1"
 dependencies = [
- "cloudproof_findex",
- "cosmian_config_utils",
+ "cosmian_crypto_core",
+ "cosmian_findex",
+ "cosmian_findex_config",
+ "cosmian_findex_server",
  "cosmian_findex_structs",
  "cosmian_http_client",
- "cosmian_logger",
+ "rand_chacha",
  "reqwest",
  "serde",
  "thiserror 2.0.4",
@@ -922,13 +894,13 @@ dependencies = [
  "async-trait",
  "chrono",
  "clap",
- "cloudproof_findex",
+ "cosmian_findex",
  "cosmian_findex_structs",
  "cosmian_logger",
  "dotenvy",
  "futures",
  "openssl",
- "redis 0.27.5",
+ "redis",
  "reqwest",
  "serde",
  "serde_json",
@@ -946,9 +918,9 @@ dependencies = [
 name = "cosmian_findex_structs"
 version = "0.1.1"
 dependencies = [
- "base64 0.22.1",
- "cloudproof_findex",
- "thiserror 2.0.4",
+ "base64 0.21.7",
+ "cosmian_crypto_core",
+ "thiserror",
  "uuid",
 ]
 
@@ -1520,7 +1492,7 @@ version = "0.14.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e5274423e17b7c9fc20b6e7e208532f9b19825d82dfd615708b70edd83df41f1"
 dependencies = [
- "ahash 0.8.11",
+ "ahash",
  "allocator-api2",
 ]
 
@@ -1641,7 +1613,7 @@ dependencies = [
  "httpdate",
  "itoa",
  "pin-project-lite",
- "socket2 0.4.10",
+ "socket2",
  "tokio",
  "tower-service",
  "tracing",
@@ -2078,12 +2050,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "never"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c96aba5aa877601bb3f6dd6a63a969e1f82e60646e81e71b14496995e9853c91"
-
-[[package]]
 name = "nom"
 version = "7.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2494,35 +2460,11 @@ dependencies = [
 
 [[package]]
 name = "redis"
-version = "0.23.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4f49cdc0bb3f412bf8e7d1bd90fe1d9eb10bc5c399ba90973c14662a27b3f8ba"
-dependencies = [
- "ahash 0.7.8",
- "arc-swap",
- "async-trait",
- "bytes",
- "combine",
- "futures",
- "futures-util",
- "itoa",
- "percent-encoding",
- "pin-project-lite",
- "ryu",
- "sha1_smol",
- "socket2 0.4.10",
- "tokio",
- "tokio-retry",
- "tokio-util",
- "url",
-]
-
-[[package]]
-name = "redis"
 version = "0.27.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "81cccf17a692ce51b86564334614d72dcae1def0fd5ecebc9f02956da74352b5"
 dependencies = [
+ "ahash",
  "arc-swap",
  "async-trait",
  "bytes",
@@ -2535,7 +2477,7 @@ dependencies = [
  "pin-project-lite",
  "ryu",
  "sha1_smol",
- "socket2 0.5.7",
+ "socket2",
  "tokio",
  "tokio-retry2",
  "tokio-util",
@@ -2958,16 +2900,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3c5e1a9a646d36c3599cd173a41282daf47c44583ad367b8e6837255952e5c67"
 dependencies = [
  "serde",
-]
-
-[[package]]
-name = "socket2"
-version = "0.4.10"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9f7916fc008ca5542385b89a3d3ce689953c143e9304a9bf8beec1de48994c0d"
-dependencies = [
- "libc",
- "winapi",
 ]
 
 [[package]]
@@ -3468,7 +3400,7 @@ dependencies = [
  "parking_lot",
  "pin-project-lite",
  "signal-hook-registry",
- "socket2 0.5.7",
+ "socket2",
  "tokio-macros",
  "windows-sys 0.52.0",
 ]
@@ -3502,17 +3434,6 @@ checksum = "59df6849caa43bb7567f9a36f863c447d95a11d5903c9cc334ba32576a27eadd"
 dependencies = [
  "openssl",
  "openssl-sys",
- "tokio",
-]
-
-[[package]]
-name = "tokio-retry"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7f57eb36ecbe0fc510036adff84824dd3c24bb781e21bfa67b69d556aa85214f"
-dependencies = [
- "pin-project",
- "rand",
  "tokio",
 ]
 

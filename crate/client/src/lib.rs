@@ -57,6 +57,8 @@ mod permissions;
 mod rest_client;
 
 pub mod reexport {
-    pub use cosmian_config_utils;
+    pub use cosmian_findex::Secret;
+    pub use cosmian_findex::KEY_LENGTH as HEX_KEY_LENGTH;
+    pub use cosmian_findex_config;
     pub use cosmian_http_client;
 }
