@@ -3,11 +3,11 @@ pub use rest_client::{handle_error, FindexRestClient};
 
 mod datasets;
 mod error;
-mod instance;
 mod permissions;
 mod rest_client;
 pub mod reexport {
+    pub use cosmian_findex::Secret;
+    pub use cosmian_findex::KEY_LENGTH as HEX_KEY_LENGTH;
     pub use cosmian_findex_config;
     pub use cosmian_http_client;
 }
-pub use instance::instantiate_findex;

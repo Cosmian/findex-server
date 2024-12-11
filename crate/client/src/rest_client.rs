@@ -1,17 +1,16 @@
 use std::fmt::Display;
 
-use cosmian_findex::{Address, MemoryADT, ADDRESS_LENGTH};
-use cosmian_findex_config::FindexClientConfig;
-use cosmian_findex_server::database::redis::WORD_LENGTH;
-use cosmian_http_client::HttpClient;
-use reqwest::{Response, StatusCode};
-use serde::{Deserialize, Serialize};
-use tracing::{instrument, trace, warn};
-
 use crate::error::{
     result::{FindexClientResult, FindexRestClientResultHelper},
     FindexClientError,
 };
+use cosmian_findex::{Address, Findex, MemoryADT, Secret, Value, ADDRESS_LENGTH, KEY_LENGTH};
+use cosmian_findex_config::FindexClientConfig;
+use cosmian_findex_server::database::redis::{decode_fn, encode_fn, WORD_LENGTH};
+use cosmian_http_client::HttpClient;
+use reqwest::{Response, StatusCode};
+use serde::{Deserialize, Serialize};
+use tracing::{instrument, trace, warn};
 
 // Response for success
 #[derive(Deserialize, Serialize, Debug)] // Debug is required by ok_json()
@@ -29,7 +28,7 @@ impl Display for SuccessResponse {
 pub struct FindexRestClient {
     pub client: HttpClient,
     pub conf: FindexClientConfig,
-    pub index_id: String,
+    pub index_id: Option<String>,
 }
 
 impl FindexRestClient {
@@ -37,10 +36,7 @@ impl FindexRestClient {
     ///
     /// Parameters `server_url` and `accept_invalid_certs` from the command line
     /// will override the ones from the configuration file.
-    pub fn new(
-        conf: FindexClientConfig,
-        index_id: String,
-    ) -> Result<FindexRestClient, FindexClientError> {
+    pub fn new(conf: FindexClientConfig) -> Result<FindexRestClient, FindexClientError> {
         // Instantiate a Findex server REST client with the given configuration
         let client = HttpClient::instantiate(&conf.http_config).with_context(|| {
             format!(
@@ -52,8 +48,37 @@ impl FindexRestClient {
         Ok(Self {
             client,
             conf,
-            index_id,
+            index_id: None,
         })
+    }
+    /// Instantiate a Findex REST client with a specific index. See below. Do not expose this.
+    fn new_memory(&self, index_id: String) -> FindexRestClient {
+        Self {
+            client: self.client.clone(), // TODO(review): is cloning ok  here ?
+            conf: self.conf.clone(),
+            index_id: Some(index_id),
+        }
+    }
+    /// Instantiate a Findex REST client with a specific index.
+    /// Batch read and guarded write operations are defined in the findex crate and thus their signatures are not editable
+    /// Ideal way to access the Some(index_id) is by having it as a field in the FindexRestClient struct
+    /// In the cli crate, first instantiate a base FindexRestClient and that will be used to instantiate a FindexRestClient with a specific index
+    /// each time a call for Findex is needed
+    pub fn instantiate_findex(
+        &self,
+        index_id: String,
+        key_bytes: &mut [u8; KEY_LENGTH],
+    ) -> Result<
+        Findex<{ WORD_LENGTH }, Value, std::convert::Infallible, FindexRestClient>,
+        FindexClientError,
+    > {
+        trace!("Instantiating a Findex rest client");
+        Ok(Findex::new(
+            Secret::<KEY_LENGTH>::from_unprotected_bytes(key_bytes),
+            self.new_memory(index_id),
+            encode_fn::<WORD_LENGTH, _>,
+            decode_fn,
+        ))
     }
 
     #[instrument(ret(Display), err, skip(self))]
@@ -81,12 +106,15 @@ impl MemoryADT for FindexRestClient {
         &self,
         addresses: Vec<Self::Address>,
     ) -> Result<Vec<Option<[u8; WORD_LENGTH]>>, FindexClientError> {
-        let endpoint = format!("/indexes/{}/batch_read", self.index_id);
+        let index_id = self.index_id.clone().expect(
+            "Unexpected error : this function should never be called while from base instance",
+        );
+        let endpoint = format!("/indexes/{}/batch_read", index_id);
         let server_url = format!("{}{}", self.client.server_url, endpoint);
         trace!(
             "Initiating batch_read of {} addresses for index {} at server_url: {}",
             addresses.len(),
-            self.index_id,
+            index_id,
             server_url
         );
         // Convert addresses to bytes
@@ -136,12 +164,15 @@ impl MemoryADT for FindexRestClient {
         guard: (Self::Address, Option<Self::Word>),
         tasks: Vec<(Self::Address, Self::Word)>,
     ) -> Result<Option<[u8; WORD_LENGTH]>, FindexClientError> {
-        let endpoint = format!("/indexes/{}/batch_read", self.index_id);
+        let index_id = self.index_id.clone().expect(
+            "Unexpected error : this function should never be called while from base instance",
+        );
+        let endpoint = format!("/indexes/{}/batch_read", index_id);
         let server_url = format!("{}{}", self.client.server_url, endpoint.clone());
         trace!(
             "Initiating guarded_write of {} values for index {} at server_url: {}",
             tasks.len(),
-            self.index_id,
+            index_id,
             server_url.clone()
         );
 

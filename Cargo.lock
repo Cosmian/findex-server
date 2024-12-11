@@ -868,6 +868,7 @@ dependencies = [
 name = "cosmian_findex_client"
 version = "0.1.0"
 dependencies = [
+ "cosmian_crypto_core",
  "cosmian_findex",
  "cosmian_findex_config",
  "cosmian_findex_server",

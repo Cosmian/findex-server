@@ -31,8 +31,6 @@ pub enum CliError {
     #[error(transparent)]
     FindexClientError(#[from] FindexClientError),
     #[error(transparent)]
-    DbInterfaceError(#[from] DbInterfaceError),
-    #[error(transparent)]
     FromHexError(#[from] FromHexError),
     #[error(transparent)]
     Utf8Error(#[from] Utf8Error),
@@ -41,8 +39,6 @@ pub enum CliError {
     #[cfg(test)]
     #[error(transparent)]
     CargoError(#[from] CargoError),
-    #[error(transparent)]
-    ErrorDbInterfaceError(#[from] cosmian_findex::Error<DbInterfaceError>),
     #[error(transparent)]
     UuidError(#[from] uuid::Error),
     #[error(transparent)]

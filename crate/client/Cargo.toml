@@ -26,3 +26,4 @@ tracing = { workspace = true }
 uuid = { workspace = true }
 cosmian_findex = { workspace = true }
 rand_chacha = "0.3.1"
+cosmian_crypto_core = { workspace = true }

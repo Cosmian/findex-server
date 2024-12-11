@@ -1,9 +1,8 @@
+use crate::{FindexClientError, FindexRestClient};
+use cosmian_crypto_core::CsRng;
 use cosmian_findex::{Findex, Secret, Value};
 use cosmian_findex_server::database::redis::{decode_fn, encode_fn, WORD_LENGTH};
-use rand_chacha::{rand_core::SeedableRng, ChaChaRng};
 use tracing::trace;
-
-use crate::{FindexClientError, FindexRestClient};
 
 #[allow(clippy::future_not_send)]
 pub async fn instantiate_findex(
@@ -12,8 +11,7 @@ pub async fn instantiate_findex(
     Findex<{ WORD_LENGTH }, Value, std::convert::Infallible, FindexRestClient>,
     FindexClientError,
 > {
-    // TODO: install crypto core
-    let mut rng = ChaChaRng::from_entropy();
+    let mut rng = CsRng::from_entropy();
     let seed = Secret::random(&mut rng);
     trace!("Instantiating Findex rest client with seed: {:?}", seed); // TODO(review) : should we log the seed?
 
