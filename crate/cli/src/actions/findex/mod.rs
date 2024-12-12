@@ -4,8 +4,6 @@ use clap::{
 };
 
 use cosmian_findex::{Secret, KEY_LENGTH as BYTE_KEY_LENGTH};
-use cosmian_findex_client::{FindexRestClient, InstantiatedFindex};
-use tracing::debug;
 use uuid::Uuid;
 
 use crate::error::result::CliResult;

@@ -8,7 +8,6 @@ use clap::Parser;
 
 use cosmian_findex::{IndexADT, Value};
 use cosmian_findex_client::FindexRestClient;
-use predicates::boolean;
 use tracing::{instrument, trace};
 
 use super::FindexParameters;
@@ -103,15 +102,6 @@ impl_byte_vector!(Keyword);
 #[must_use]
 #[derive(Clone, Debug, Hash, PartialEq, Eq)]
 pub struct Data(Value);
-
-// impl_byte_vector!(Data);
-
-impl Data {
-    // Your implementation here
-    fn from(slice: &[u8]) -> Self {
-        Self(Value::from(slice))
-    }
-}
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Keywords(HashSet<Keyword>);
@@ -251,7 +241,6 @@ impl IndexOrDeleteAction {
     async fn add_or_delete(&self, rest_client: FindexRestClient, is_insert: bool) -> CliResult<()> {
         let bindings = self.to_indexed_value_keywords_map()?;
         let iterable_bindings = bindings.iter().map(|(k, v)| (k.clone(), v.clone()));
-        bindings.iter().map(|(k, v)| (k.clone(), v.clone()));
         let findex = rest_client
             .instantiate_findex(
                 &self.findex_parameters.index_id,
