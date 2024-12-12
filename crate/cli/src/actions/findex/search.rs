@@ -1,17 +1,12 @@
+use super::FindexParameters;
+use crate::{
+    actions::{console, findex::structs::Keywords},
+    error::result::CliResult,
+};
 use clap::Parser;
 use cosmian_findex::IndexADT;
 use cosmian_findex_client::FindexRestClient;
 use tracing::trace;
-// use cosmian_findex_client::FindexRestClient;
-// use tracing::trace;
-
-use crate::{actions::console, error::result::CliResult};
-
-use super::FindexParameters;
-// use crate::{
-//     actions::{console, findex::instantiate_findex},
-//     error::result::CliResult,
-// };
 
 /// Findex: Search keywords.
 #[derive(Parser, Debug)]
@@ -45,7 +40,7 @@ impl SearchAction {
                 &self.findex_parameters.key,
             )
             .unwrap()
-            .search(self.keyword.iter().cloned())
+            .search(Keywords::from(self.keyword.clone()).0.iter().cloned()) // TODO(review): is this sub-optimal ? can it be improved some way ?
             .await?;
         let formatted_string = results
             .iter()

@@ -10,6 +10,7 @@ use crate::error::result::CliResult;
 
 pub mod index_or_delete;
 pub mod search;
+mod structs;
 
 const HEX_KEY_LENGTH: usize = BYTE_KEY_LENGTH * 2;
 
