@@ -1,3 +1,4 @@
+use cosmian_findex::{Secret, KEY_LENGTH};
 use cosmian_findex_structs::Permission;
 use cosmian_logger::log_init;
 use test_findex_server::{
@@ -33,8 +34,7 @@ fn add(cli_conf_path: &str, index_id: &Uuid, dataset_path: &str) -> CliResult<()
         "index",
         IndexOrDeleteAction {
             findex_parameters: FindexParameters {
-                key: "11223344556677889900AABBCCDDEEFF".to_owned(),
-                label: "My Findex label".to_owned(),
+                key: Secret::<KEY_LENGTH>::from("11223344556677889900AABBCCDDEEFF".to_owned()),
                 index_id: index_id.to_owned(),
             },
             csv: dataset_path.into(),

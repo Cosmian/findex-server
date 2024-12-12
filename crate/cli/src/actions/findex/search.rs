@@ -1,6 +1,11 @@
 use clap::Parser;
+use cosmian_findex::IndexADT;
+use cosmian_findex_client::FindexRestClient;
+use tracing::trace;
 // use cosmian_findex_client::FindexRestClient;
 // use tracing::trace;
+
+use crate::{actions::console, error::result::CliResult};
 
 use super::FindexParameters;
 // use crate::{
@@ -33,20 +38,23 @@ impl SearchAction {
     // /// Returns an error if the version query fails or if there is an issue
     //zzz/ writing to the console.
     // #[allow(clippy::future_not_send)] // todo(manu): to remove this, changes must be done on `findex` repository
-    // pub async fn process(&self, rest_client: FindexRestClient) -> CliResult<()> {
-    //     let findex = instantiate_findex(rest_client, &self.findex_parameters.index_id).await?;
-    //     let results = findex
-    //         .search(
-    //             &self.findex_parameters.user_key()?,
-    //             &self.findex_parameters.label(),
+    pub async fn process(&self, rest_client: FindexRestClient) -> CliResult<()> {
+        let results = rest_client
+            .instantiate_findex(
+                &self.findex_parameters.index_id,
+                &self.findex_parameters.key,
+            )
+            .unwrap()
+            .search(self.keyword.iter().cloned())
+            .await?;
+        let formatted_string = results
+            .iter()
+            .map(|(key, value)| format!("{}: {:?}", key, value))
+            .collect::<Vec<_>>()
+            .join("\n");
+        console::Stdout::new(&formatted_string).write()?;
+        trace!("Search results: {formatted_string}");
 
-    //             &|_| async move { Ok(false) },
-    //         )
-    //         .await?;
-
-    //     console::Stdout::new(&results.to_string()).write()?;
-    //     trace!("Search results: {results}");
-
-    //     Ok(())
-    // }
+        Ok(())
+    }
 }
