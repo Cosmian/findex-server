@@ -28,7 +28,7 @@ impl Display for SuccessResponse {
 #[derive(Clone)]
 pub struct FindexRestClient {
     pub client: HttpClient,
-    pub conf: FindexClientConfig,
+    pub config: FindexClientConfig,
 }
 
 impl FindexRestClient {
@@ -39,16 +39,16 @@ impl FindexRestClient {
     /// # Errors
     /// Return an error if the configuration file is not found or if the
     /// configuration is invalid or if the client cannot be instantiated.
-    pub fn new(conf: FindexClientConfig) -> Result<Self, FindexClientError> {
+    pub fn new(config: FindexClientConfig) -> Result<Self, FindexClientError> {
         // Instantiate a Findex server REST client with the given configuration
-        let client = HttpClient::instantiate(&conf.http_config).with_context(|| {
+        let client = HttpClient::instantiate(&config.http_config).with_context(|| {
             format!(
                 "Unable to instantiate a Findex REST client to server at {}",
-                conf.http_config.server_url
+                config.http_config.server_url
             )
         })?;
 
-        Ok(Self { client, conf })
+        Ok(Self { client, config })
     }
 
     #[instrument(ret(Display), err, skip(self))]

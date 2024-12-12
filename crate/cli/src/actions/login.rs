@@ -1,5 +1,4 @@
 use clap::Parser;
-use cosmian_config_utils::ConfigUtils;
 use cosmian_findex_client::{reexport::cosmian_http_client::LoginState, FindexClientConfig};
 
 use crate::error::{result::CliResult, CliError};
@@ -28,43 +27,17 @@ use crate::error::{result::CliResult, CliError};
 pub struct LoginAction;
 
 impl LoginAction {
-    /// This function processes the login action.
-    /// It loads the client configuration from the specified path, retrieves the
-    /// `OAuth2` configuration, initializes the login state, prompts the
-    /// user to browse to the authorization URL, finalizes the login process
-    /// by receiving the authorization code and exchanging it for an access
-    /// token, updates the configuration with the access token, and saves
-    /// the configuration to the specified path.
-    ///
-    /// # Arguments
-    ///
-    /// * `conf_path` - The path to the client configuration file.
+    /// Process the login action.
     ///
     /// # Errors
-    ///
-    /// This function can return a `CliError` in the following cases:
-    ///
-    /// * The `login` command requires an Identity Provider (`IdP`) that must be
-    ///   configured in the `oauth2_conf` object in the client configuration
-    ///   file.
-    /// * The client configuration file cannot be loaded.
-    /// * The `OAuth2` configuration is missing or invalid in the client
-    ///   configuration file.
-    /// * The authorization URL cannot be parsed.
-    /// * The authorization code is not received or does not match the CSRF
-    ///   token.
-    /// * The access token cannot be requested from the Identity Provider.
-    /// * The token exchange request fails.
-    /// * The token exchange response cannot be parsed.
-    /// * The client configuration cannot be updated or saved.
+    /// Fails if the configuration file is missing or if the `oauth2_conf` object
+    /// Fails if credentials are invalid. No access token could be retrieved.
     #[allow(clippy::print_stdout)]
-    pub async fn run(&self, conf: &FindexClientConfig) -> CliResult<()> {
-        let mut conf = conf.clone();
-        let login_config = conf.http_config.oauth2_conf.as_ref().ok_or_else(|| {
+    pub async fn run(&self, config: &mut FindexClientConfig) -> CliResult<()> {
+        let login_config = config.http_config.oauth2_conf.as_ref().ok_or_else(|| {
             CliError::Default(format!(
                 "The `login` command (only used for JWT authentication) requires an Identity \
-                 Provider (IdP) that MUST be configured in the oauth2_conf object in {:?}",
-                conf.conf_path
+                 Provider (IdP) that MUST be configured in the oauth2_conf object in {config:?}",
             ))
         })?;
 
@@ -72,18 +45,7 @@ impl LoginAction {
         println!("Browse to: {}", state.auth_url);
         let access_token = state.finalize().await?;
 
-        // update the configuration and save it
-        conf.http_config.access_token = Some(access_token);
-        let conf_path = conf.conf_path.clone().ok_or_else(|| {
-            CliError::Default("Configuration path `conf_path` must be filled".to_owned())
-        })?;
-        conf.to_toml(&conf_path)?;
-
-        println!(
-            "\nSuccess! The access token was saved in the Findex CLI configuration file: {:?}",
-            conf.conf_path
-        );
-
+        config.http_config.access_token = Some(access_token);
         Ok(())
     }
 }

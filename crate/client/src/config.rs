@@ -12,15 +12,12 @@ pub(crate) const FINDEX_CLI_CONF_PATH: &str = ".cosmian/findex.toml";
 
 #[derive(Serialize, Deserialize, Eq, PartialEq, Debug, Clone)]
 pub struct FindexClientConfig {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub conf_path: Option<PathBuf>,
     pub http_config: HttpClientConfig,
 }
 
 impl Default for FindexClientConfig {
     fn default() -> Self {
         Self {
-            conf_path: None,
             http_config: HttpClientConfig {
                 server_url: "http://0.0.0.0:6668".to_owned(),
                 ..HttpClientConfig::default()
@@ -33,8 +30,10 @@ impl ConfigUtils for FindexClientConfig {}
 
 impl FindexClientConfig {
     /// Load the configuration from the given path
+    ///
     /// # Arguments
     /// * `conf_path` - The path to the configuration file
+    ///
     /// # Errors
     /// Return an error if the configuration file is not found or if the
     /// configuration is invalid
