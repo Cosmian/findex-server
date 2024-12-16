@@ -50,13 +50,13 @@ impl FindexParameters {
 /// This function will return an error if there is an error instantiating the
 /// Findex client.
 pub async fn instantiate_findex(
-    rest_client: FindexRestClient,
+    rest_client: &FindexRestClient,
     index_id: &Uuid,
 ) -> CliResult<InstantiatedFindex> {
     let config = Configuration::Rest(
-        rest_client.client.client,
-        rest_client.client.server_url.clone(),
-        rest_client.client.server_url,
+        rest_client.clone().client.client,
+        rest_client.clone().client.server_url,
+        rest_client.clone().client.server_url,
         index_id.to_string(),
     );
     let findex = InstantiatedFindex::new(config).await?;

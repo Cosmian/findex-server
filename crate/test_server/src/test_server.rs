@@ -316,10 +316,6 @@ fn generate_owner_conf(
             },
             ..Default::default()
         },
-
-        // We use the private key since the private key is the public key with additional
-        // information.
-        ..FindexClientConfig::default()
     };
     // write the conf to a file
     FindexClientConfig::to_toml(
