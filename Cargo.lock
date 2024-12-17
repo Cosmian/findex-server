@@ -821,7 +821,7 @@ dependencies = [
 [[package]]
 name = "cosmian_findex"
 version = "7.0.0"
-source = "git+https://github.com/Cosmian/findex?branch=feat/update_for_findex_server#4aeaa79d392e639295739bb09152e788888c397f"
+source = "git+https://github.com/Cosmian/findex?branch=feat/update_for_findex_server#34c0d1fb4f717579a15fb122c943b907c4bcf529"
 dependencies = [
  "aes",
  "rand",
@@ -845,6 +845,7 @@ dependencies = [
  "const-oid",
  "cosmian_config_utils",
  "cosmian_crypto_core",
+ "cosmian_findex",
  "cosmian_findex_client",
  "cosmian_findex_structs",
  "cosmian_logger",

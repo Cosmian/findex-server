@@ -3,19 +3,16 @@ use clap::{
     Parser,
 };
 
-use cosmian_findex_client::{
-    reexport::{Secret, HEX_KEY_LENGTH},
-    FindexRestClient,
-};
-use tracing::debug;
+use cosmian_findex::{Secret, KEY_LENGTH as BYTE_KEY_LENGTH};
 use uuid::Uuid;
 
 use crate::error::result::CliResult;
 
 pub mod index_or_delete;
 pub mod search;
+mod structs;
 
-const BYTE_KEY_LENGTH: usize = HEX_KEY_LENGTH / 2;
+const HEX_KEY_LENGTH: usize = BYTE_KEY_LENGTH * 2;
 
 #[derive(Clone)]
 struct KeyLengthValueParser;
@@ -67,8 +64,8 @@ impl clap::builder::TypedValueParser for KeyLengthValueParser {
 #[derive(Parser, Debug)]
 #[clap(verbatim_doc_comment)]
 pub struct FindexParameters {
-    /// The user findex key used (to add, search, delete and compact).
-    /// The key is a 64 bytes hex string.
+    /// The user findex seed used (to add, search, delete and compact).
+    /// The seed is a 64 bytes hex string.
     #[clap(long, short = 'k', value_parser = KeyLengthValueParser)]
     pub key: Secret<BYTE_KEY_LENGTH>,
     /// The index ID
@@ -80,27 +77,28 @@ impl FindexParameters {
     /// Returns the user key decoded from hex.
     /// # Errors
     /// This function will return an error if the key is not a valid hex string.
-    pub fn user_key(&self) -> CliResult<UserKey> {
-        Ok(&hex::decode(self.key.clone())?)
+    pub fn user_key(&self) -> CliResult<Secret<BYTE_KEY_LENGTH>> {
+        Ok(self.key.clone())
     }
 }
 
-#[allow(clippy::future_not_send)]
-/// Instantiates a Findex client.
-/// # Errors
-/// This function will return an error if there is an error instantiating the
-/// Findex client.
-pub async fn instantiate_findex(
-    rest_client: &FindexRestClient,
-    index_id: &Uuid,
-) -> CliResult<InstantiatedFindex> {
-    let config = Configuration::Rest(
-        rest_client.clone().client.client,
-        rest_client.clone().client.server_url,
-        rest_client.clone().client.server_url,
-        index_id.to_string(),
-    );
-    let findex = InstantiatedFindex::new(config).await?;
-    debug!("Findex instantiated");
-    Ok(findex)
-}
+// #[allow(clippy::future_not_send)]
+// /// Instantiates a Findex client.
+// /// # Errors
+// /// This function will return an error if there is an error instantiating the
+// /// Findex client.
+// pub async fn instantiate_findex(
+//     rest_client: FindexRestClient,
+//     index_id: &Uuid,
+// ) -> CliResult<InstantiatedFindex> {
+//     let config = Configuration::Rest(
+//         rest_client.client.client,
+//         rest_client.client.server_url.clone(),
+//         rest_client.client.server_url,
+//         index_id.to_string(),
+//     );
+//     let findex = rest_client.instantiate_findex(index_id, )
+//     // InstantiatedFindex::new(config).await?;
+//     debug!("Findex instantiated");
+//     Ok(findex)
+// }

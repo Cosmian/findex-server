@@ -4,6 +4,7 @@ use std::str::Utf8Error;
 use assert_cmd::cargo::CargoError;
 use cosmian_config_utils::ConfigUtilsError;
 use cosmian_crypto_core::CryptoCoreError;
+use cosmian_findex::Address;
 use cosmian_findex_client::{
     reexport::{cosmian_findex_config::FindexConfigError, cosmian_http_client::HttpClientError},
     FindexClientError,
@@ -16,6 +17,12 @@ pub mod result;
 // Each error type must have a corresponding HTTP status code
 #[derive(Error, Debug)]
 pub enum CliError {
+    // TODO(hatem): shorten this
+    #[error(transparent)]
+    FindexError(
+        #[from]
+        cosmian_findex::Error<Address<16>, cosmian_findex::Error<Address<16>, FindexClientError>>,
+    ),
     #[error(transparent)]
     ConfigUtilsError(#[from] ConfigUtilsError),
     #[error(transparent)]

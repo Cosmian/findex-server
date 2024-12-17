@@ -1,16 +1,20 @@
 use std::fmt::Display;
 
-use crate::error::{
-    result::{FindexClientResult, FindexRestClientResultHelper},
-    FindexClientError,
+use crate::{
+    error::{
+        result::{FindexClientResult, FindexRestClientResultHelper},
+        FindexClientError,
+    },
+    InstantiatedFindex,
 };
-use cosmian_findex::{Address, Findex, MemoryADT, Secret, Value, ADDRESS_LENGTH, KEY_LENGTH};
+use cosmian_findex::{Address, Findex, MemoryADT, Secret, ADDRESS_LENGTH, KEY_LENGTH};
 use cosmian_findex_config::FindexClientConfig;
 use cosmian_findex_server::database::redis::{decode_fn, encode_fn, WORD_LENGTH};
 use cosmian_http_client::HttpClient;
 use reqwest::{Response, StatusCode};
 use serde::{Deserialize, Serialize};
 use tracing::{instrument, trace, warn};
+use uuid::Uuid;
 
 // Response for success
 #[derive(Deserialize, Serialize, Debug)] // Debug is required by ok_json()
@@ -29,7 +33,7 @@ impl Display for SuccessResponse {
 pub struct FindexRestClient {
     pub client: HttpClient,
     pub conf: FindexClientConfig,
-    pub index_id: Option<String>,
+    index_id: Option<String>,
 }
 
 impl FindexRestClient {
@@ -56,11 +60,11 @@ impl FindexRestClient {
         })
     }
     /// Instantiate a Findex REST client with a specific index. See below. Do not expose this.
-    fn new_memory(&self, index_id: String) -> FindexRestClient {
+    fn new_memory(&self, index_id: Uuid) -> FindexRestClient {
         Self {
             client: self.client.clone(), // TODO(review): is cloning ok  here ?
             conf: self.conf.clone(),
-            index_id: Some(index_id),
+            index_id: Some(index_id.to_string()),
         }
     }
     /// Instantiate a Findex REST client with a specific index.
@@ -70,16 +74,13 @@ impl FindexRestClient {
     /// each time a call for Findex is needed
     pub fn instantiate_findex(
         &self,
-        index_id: String,
-        key_bytes: &mut [u8; KEY_LENGTH],
-    ) -> Result<
-        Findex<{ WORD_LENGTH }, Value, std::convert::Infallible, FindexRestClient>,
-        FindexClientError,
-    > {
+        index_id: &Uuid,
+        key: &Secret<KEY_LENGTH>,
+    ) -> Result<InstantiatedFindex, FindexClientError> {
         trace!("Instantiating a Findex rest client");
         Ok(Findex::new(
-            Secret::<KEY_LENGTH>::from_unprotected_bytes(key_bytes),
-            self.new_memory(index_id),
+            key.clone(), // TODO(review): is cloning ok here ?
+            self.new_memory(*index_id),
             encode_fn::<WORD_LENGTH, _>,
             decode_fn,
         ))

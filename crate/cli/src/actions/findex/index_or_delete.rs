@@ -4,14 +4,15 @@ use std::{
     path::PathBuf,
 };
 
+use crate::actions::findex::structs::{Keyword, KeywordToDataSetsMap};
 use clap::Parser;
 
+use cosmian_findex::{IndexADT, Value};
 use cosmian_findex_client::FindexRestClient;
 use tracing::{instrument, trace};
 
 use super::FindexParameters;
 use crate::{actions::console, error::result::CliResult};
-use cosmian_findex_client::instantiate_findex;
 #[derive(Parser, Debug)]
 #[clap(verbatim_doc_comment)]
 pub struct IndexOrDeleteAction {
@@ -24,8 +25,8 @@ pub struct IndexOrDeleteAction {
 }
 
 impl IndexOrDeleteAction {
-    /// Converts a CSV file to a hashmap where the keys are indexed values and
-    /// the values are sets of keywords.
+    /// Converts a CSV file to a hashmap where the keys are keywords and
+    /// the values are sets of indexed values (Data).
     ///
     /// # Errors
     ///
@@ -34,27 +35,68 @@ impl IndexOrDeleteAction {
     /// - There is an error reading the CSV records.
     /// - There is an error converting the CSV records to the expected data
     ///   types.
+    /// Reads a CSV file and maps each record to a set of keywords to HashSet<Data>.
     #[instrument(err, skip(self))]
-    pub(crate) fn to_indexed_value_keywords_map(&self) -> CliResult<IndexedValueToKeywordsMap> {
-        // read the database
+    pub(crate) fn to_indexed_value_keywords_map(&self) -> CliResult<KeywordToDataSetsMap> {
+        // Initialize a HashMap to store CSV data in memory
+        let mut csv_in_memory: KeywordToDataSetsMap = KeywordToDataSetsMap(HashMap::new());
+
+        // Open the CSV file
         let file = File::open(self.csv.clone())?;
-        let csv_in_memory =
-            csv::Reader::from_reader(file)
-                .byte_records()
-                .fold(Vec::new(), |mut acc, result| {
-                    if let Ok(record) = result {
-                        let indexed_value = IndexedValue::Data(Data::from(record.as_slice()));
-                        let keywords = record.iter().map(Keyword::from).collect::<HashSet<_>>();
-                        acc.push((indexed_value, keywords));
-                        trace!("CSV line: {record:?}");
-                    }
-                    acc
-                });
-        let result: HashMap<IndexedValue<Keyword, Data>, HashSet<Keyword>> =
-            csv_in_memory.into_iter().collect();
-        Ok(IndexedValueToKeywordsMap::from(result))
+        let mut rdr = csv::Reader::from_reader(file);
+
+        // Iterate over each record in the CSV file
+        for result in rdr.byte_records() {
+            // Check for errors in reading the record
+            let record = result?;
+
+            // Convert the record into a Findex indexed value
+            let indexed_value = Value::from(record.as_slice());
+
+            // Extract keywords from the record and associate them with the indexed values
+            record.iter().map(Keyword::from).for_each(|k| {
+                csv_in_memory
+                    .entry(k)
+                    .or_insert_with(HashSet::new)
+                    .insert(indexed_value.clone());
+            });
+
+            // Log the CSV line for traceability
+            trace!("CSV line: {record:?}");
+        }
+
+        // Return the resulting HashMap
+        Ok(csv_in_memory)
     }
 
+    async fn add_or_delete(&self, rest_client: FindexRestClient, is_insert: bool) -> CliResult<()> {
+        let bindings = self.to_indexed_value_keywords_map()?;
+        let iterable_bindings = bindings.iter().map(|(k, v)| (k.clone(), v.clone()));
+        let findex = rest_client
+            .instantiate_findex(
+                &self.findex_parameters.index_id,
+                &self.findex_parameters.key,
+            )
+            .unwrap();
+        if is_insert {
+            findex.insert(iterable_bindings).await
+        } else {
+            findex.delete(iterable_bindings).await
+        }?;
+        let written_keywords = bindings.keys().collect::<Vec<_>>();
+        let operation_name = if is_insert { "Indexing" } else { "Deleting" };
+        trace!("{} done: keywords: {:?}", operation_name, written_keywords);
+
+        console::Stdout::new(&format!(
+            "{} done: keywords: {:?}",
+            operation_name, written_keywords
+        ))
+        .write()?;
+
+        Ok(())
+    }
+
+    #[allow(clippy::future_not_send)]
     /// Adds the data from the CSV file to the Findex index.
     ///
     /// # Errors
@@ -67,20 +109,7 @@ impl IndexOrDeleteAction {
     /// - There is an error adding the data to the Findex index.
     /// - There is an error writing the result to the console.
     pub async fn add(&self, rest_client: FindexRestClient) -> CliResult<()> {
-    #[allow(clippy::future_not_send)]
-        let keywords = instantiate_findex(rest_client, &self.findex_parameters.index_id)
-            .await?
-            .add(
-                &self.findex_parameters.user_key()?,
-                &self.findex_parameters.label(),
-                self.to_indexed_value_keywords_map()?,
-            )
-            .await?;
-        trace!("indexing done: keywords: {keywords}");
-
-        println!("indexing done: keywords: {keywords}");
-
-        Ok(())
+        Self::add_or_delete(self, rest_client, true).await
     }
 
     /// Deletes the data from the CSV file from the Findex index.
@@ -94,20 +123,7 @@ impl IndexOrDeleteAction {
     /// - There is an error converting the CSV file to a hashmap.
     /// - There is an error deleting the data from the Findex index.
     /// - There is an error writing the result to the console.
-    #[allow(clippy::future_not_send)]
-    pub async fn delete(&self, rest_client: &FindexRestClient) -> CliResult<()> {
-        let keywords = instantiate_findex(rest_client, &self.findex_parameters.index_id)
-            .await?
-            .delete(
-                &self.findex_parameters.user_key()?,
-                &self.findex_parameters.label(),
-                self.to_indexed_value_keywords_map()?,
-            )
-            .await?;
-        trace!("deleting keywords done: {keywords}");
-
-        println!("deleting keywords done: {keywords}");
-
-        Ok(())
+    pub async fn delete(&self, rest_client: FindexRestClient) -> CliResult<()> {
+        Self::add_or_delete(self, rest_client, false).await
     }
 }
