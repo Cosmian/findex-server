@@ -13,8 +13,7 @@ use crate::{
 pub(crate) fn search_cmd(cli_conf_path: &str, action: SearchAction) -> CliResult<String> {
     let mut args = vec![
         "--key".to_owned(),
-        String::from_utf8(action.findex_parameters.key.to_ascii_uppercase())
-            .expect("Invalid UTF-8"),
+        action.findex_parameters.key.to_ascii_uppercase(),
         "--index-id".to_owned(),
         action.findex_parameters.index_id.to_string(),
     ];

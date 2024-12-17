@@ -1,4 +1,3 @@
-use cosmian_findex::{Secret, KEY_LENGTH};
 use cosmian_findex_structs::Permission;
 use cosmian_logger::log_init;
 use test_findex_server::{
@@ -29,14 +28,12 @@ const SMALL_DATASET: &str = "../../test_data/datasets/smallpop.csv";
 const HUGE_DATASET: &str = "../../test_data/datasets/business-employment.csv";
 
 fn add(cli_conf_path: &str, index_id: &Uuid, dataset_path: &str) -> CliResult<()> {
-    let mut key_bytes: [u8; 32] = *b"11223344556677889900AABBCCDDEEFF";
-
     index_or_delete_cmd(
         cli_conf_path,
         "index",
         IndexOrDeleteAction {
             findex_parameters: FindexParameters {
-                key: Secret::<KEY_LENGTH>::from_unprotected_bytes(&mut key_bytes),
+                key: "11223344556677889900AABBCCDDEEFF11223344556677889900AABBCCDDEEFF".to_string(),
                 index_id: index_id.to_owned(),
             },
             csv: dataset_path.into(),
@@ -46,14 +43,12 @@ fn add(cli_conf_path: &str, index_id: &Uuid, dataset_path: &str) -> CliResult<()
 }
 
 fn delete(cli_conf_path: &str, index_id: &Uuid, dataset_path: &str) -> CliResult<()> {
-    let mut key_bytes: [u8; 32] = *b"11223344556677889900AABBCCDDEEFF";
-
     index_or_delete_cmd(
         cli_conf_path,
         "delete",
         IndexOrDeleteAction {
             findex_parameters: FindexParameters {
-                key: Secret::<KEY_LENGTH>::from_unprotected_bytes(&mut key_bytes),
+                key: "11223344556677889900AABBCCDDEEFF11223344556677889900AABBCCDDEEFF".to_string(),
                 index_id: index_id.to_owned(),
             },
             csv: dataset_path.into(),
@@ -67,12 +62,11 @@ fn search(
     index_id: &Uuid,
     search_options: &SearchOptions,
 ) -> CliResult<String> {
-    let mut key_bytes: [u8; 32] = *b"11223344556677889900AABBCCDDEEFF";
     search_cmd(
         cli_conf_path,
         SearchAction {
             findex_parameters: FindexParameters {
-                key: Secret::<KEY_LENGTH>::from_unprotected_bytes(&mut key_bytes),
+                key: "11223344556677889900AABBCCDDEEFF11223344556677889900AABBCCDDEEFF".to_string(),
                 index_id: index_id.to_owned(),
             },
             keyword: search_options.keywords.clone(),
