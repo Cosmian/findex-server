@@ -79,7 +79,7 @@ impl FindexRestClient {
     ) -> Result<InstantiatedFindex, FindexClientError> {
         trace!("Instantiating a Findex rest client");
         Ok(Findex::new(
-            key.clone(), // TODO(review): is cloning ok here ?
+            key, // TODO(review): is cloning ok here ?
             self.new_memory(*index_id),
             encode_fn::<WORD_LENGTH, _>,
             decode_fn,

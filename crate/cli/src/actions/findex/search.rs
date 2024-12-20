@@ -1,4 +1,3 @@
-use super::FindexParameters;
 use crate::{
     actions::{console, findex::structs::Keywords},
     error::result::CliResult,
@@ -7,6 +6,8 @@ use clap::Parser;
 use cosmian_findex::IndexADT;
 use cosmian_findex_client::FindexRestClient;
 use tracing::trace;
+
+use super::parameters::FindexParameters;
 
 /// Findex: Search keywords.
 #[derive(Parser, Debug)]
@@ -37,7 +38,7 @@ impl SearchAction {
         let results = rest_client
             .instantiate_findex(
                 &self.findex_parameters.index_id,
-                &self.findex_parameters.key,
+                &self.findex_parameters.user_key()?,
             )
             .unwrap()
             .search(Keywords::from(self.keyword.clone()).0.iter().cloned()) // TODO(review): is this sub-optimal ? can it be improved some way ?

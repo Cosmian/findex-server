@@ -19,9 +19,7 @@ pub(crate) fn index_or_delete_cmd(
     let mut cmd = Command::cargo_bin(PROG_NAME)?;
     let args = vec![
         "--key".to_owned(),
-        String::from_utf8(action.findex_parameters.key.to_ascii_uppercase())
-            .expect("Invalid UTF-8"),
-        "--index-id".to_owned(),
+        action.findex_parameters.key.to_ascii_uppercase(),
         "--index-id".to_owned(),
         action.findex_parameters.index_id.to_string(),
         "--csv".to_owned(),

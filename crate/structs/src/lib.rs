@@ -48,9 +48,9 @@
 
 mod encrypted_entries;
 mod error;
+mod findex_serialization;
 mod permissions;
 mod uuids;
-
 pub use encrypted_entries::EncryptedEntries;
 pub use error::StructsError;
 pub use permissions::{Permission, Permissions};

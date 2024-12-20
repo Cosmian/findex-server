@@ -53,28 +53,6 @@ pub enum CliError {
     Default(String),
 }
 
-/// Return early with an error if a condition is not satisfied.
-///
-/// This macro is equivalent to `if !$cond { return Err(From::from($err)); }`.
-#[macro_export]
-macro_rules! cli_ensure {
-    ($cond:expr, $msg:literal $(,)?) => {
-        if !$cond {
-            return ::core::result::Result::Err($crate::cli_error!($msg));
-        }
-    };
-    ($cond:expr, $err:expr $(,)?) => {
-        if !$cond {
-            return ::core::result::Result::Err($err);
-        }
-    };
-    ($cond:expr, $fmt:expr, $($arg:tt)*) => {
-        if !$cond {
-            return ::core::result::Result::Err($crate::cli_error!($fmt, $($arg)*));
-        }
-    };
-}
-
 /// Construct a server error from a string.
 #[macro_export]
 macro_rules! cli_error {
@@ -89,50 +67,16 @@ macro_rules! cli_error {
     };
 }
 
-/// Return early with an error if a condition is not satisfied.
-#[macro_export]
-macro_rules! cli_bail {
-    ($msg:literal) => {
-        return ::core::result::Result::Err($crate::cli_error!($msg))
-    };
-    ($err:expr $(,)?) => {
-        return ::core::result::Result::Err($err)
-    };
-    ($fmt:expr, $($arg:tt)*) => {
-        return ::core::result::Result::Err($crate::cli_error!($fmt, $($arg)*))
-    };
-}
+// todo(review) : i deleted some non used code from here, is it ok ?
 
 #[cfg(test)]
 #[allow(clippy::unwrap_used)]
 mod tests {
-
-    use crate::error::result::CliResult;
 
     #[test]
     fn test_cli_error_interpolation() {
         let var = 42;
         let err = cli_error!("interpolate {var}");
         assert_eq!("interpolate 42", err.to_string());
-
-        let err = bail();
-        assert_eq!("interpolate 43", err.unwrap_err().to_string());
-
-        let err = ensure();
-        assert_eq!("interpolate 44", err.unwrap_err().to_string());
-    }
-
-    fn bail() -> CliResult<()> {
-        let var = 43;
-        if true {
-            cli_bail!("interpolate {var}");
-        }
-        Ok(())
-    }
-
-    fn ensure() -> CliResult<()> {
-        let var = 44;
-        cli_ensure!(false, "interpolate {var}");
-        Ok(())
     }
 }

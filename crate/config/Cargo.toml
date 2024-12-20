@@ -20,3 +20,4 @@ cosmian_http_client = { workspace = true }
 cosmian_config_utils = { workspace = true }
 serde = { workspace = true }
 thiserror = { workspace = true }
+cosmian_findex = { workspace = true, features = ["redis-mem"] }

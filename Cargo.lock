@@ -883,6 +883,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "cosmian_findex_config"
+version = "0.1.0"
+dependencies = [
+ "cosmian_config_utils",
+ "cosmian_findex",
+ "cosmian_http_client",
+ "cosmian_logger",
+ "serde",
+ "thiserror",
+]
+
+[[package]]
 name = "cosmian_findex_server"
 version = "0.1.1"
 dependencies = [
@@ -896,6 +908,7 @@ dependencies = [
  "chrono",
  "clap",
  "cosmian_findex",
+ "cosmian_findex_config",
  "cosmian_findex_structs",
  "cosmian_logger",
  "dotenvy",
@@ -921,6 +934,12 @@ version = "0.1.1"
 dependencies = [
  "base64 0.21.7",
  "cosmian_crypto_core",
+ "cosmian_findex",
+ "cosmian_findex_config",
+ "rand",
+ "rmp-serde",
+ "serde",
+ "serde_bytes",
  "thiserror",
  "uuid",
 ]
@@ -2604,6 +2623,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "rmp"
+version = "0.8.14"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "228ed7c16fa39782c3b3468e974aec2795e9089153cd08ee2e9aefb3613334c4"
+dependencies = [
+ "byteorder",
+ "num-traits",
+ "paste",
+]
+
+[[package]]
+name = "rmp-serde"
+version = "1.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "52e599a477cf9840e92f2cde9a7189e67b42c57532749bf90aea6ec10facd4db"
+dependencies = [
+ "byteorder",
+ "rmp",
+ "serde",
+]
+
+[[package]]
 name = "rsa"
 version = "0.9.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2767,6 +2808,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6513c1ad0b11a9376da888e3e0baa0077f1aed55c17f50e7b2397136129fb88f"
 dependencies = [
  "serde_derive",
+]
+
+[[package]]
+name = "serde_bytes"
+version = "0.11.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "387cc504cb06bb40a96c8e04e951fe01854cf6bc921053c954e4a606d9675c6a"
+dependencies = [
+ "serde",
 ]
 
 [[package]]

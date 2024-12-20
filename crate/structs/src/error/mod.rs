@@ -19,6 +19,12 @@ pub enum StructsError {
 
     #[error("Crypto core error: {0}")]
     Crypto(String),
+
+    #[error("error while serializing data: {0}")]
+    SerializationError(String),
+
+    #[error("error while deserializing data: {0}")]
+    DeserializationError(String),
 }
 
 impl From<CryptoCoreError> for StructsError {

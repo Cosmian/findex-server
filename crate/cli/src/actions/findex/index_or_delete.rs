@@ -11,8 +11,9 @@ use cosmian_findex::{IndexADT, Value};
 use cosmian_findex_client::FindexRestClient;
 use tracing::{instrument, trace};
 
-use super::FindexParameters;
 use crate::{actions::console, error::result::CliResult};
+
+use super::parameters::FindexParameters;
 #[derive(Parser, Debug)]
 #[clap(verbatim_doc_comment)]
 pub struct IndexOrDeleteAction {
@@ -75,7 +76,7 @@ impl IndexOrDeleteAction {
         let findex = rest_client
             .instantiate_findex(
                 &self.findex_parameters.index_id,
-                &self.findex_parameters.key,
+                &self.findex_parameters.user_key()?,
             )
             .unwrap();
         if is_insert {
