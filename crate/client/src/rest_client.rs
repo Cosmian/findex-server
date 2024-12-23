@@ -10,6 +10,7 @@ use crate::{
 use cosmian_findex::{Address, Findex, MemoryADT, Secret, ADDRESS_LENGTH, KEY_LENGTH};
 use cosmian_findex_config::FindexClientConfig;
 use cosmian_findex_server::database::redis::{decode_fn, encode_fn, WORD_LENGTH};
+use cosmian_findex_structs::{Addresses, Guard, OptionalWords, Tasks};
 use cosmian_http_client::HttpClient;
 use reqwest::{Response, StatusCode};
 use serde::{Deserialize, Serialize};
@@ -123,10 +124,7 @@ impl MemoryADT for FindexRestClient {
             server_url
         );
         // Convert addresses to bytes
-        let request_bytes = addresses
-            .into_iter()
-            .flat_map(|addr| <[u8; ADDRESS_LENGTH]>::from(addr)) // TODO(review): is flat map ok ?
-            .collect::<Vec<u8>>();
+        let request_bytes = Addresses::new(addresses).serialize()?;
 
         let response = self
             .client
@@ -137,25 +135,15 @@ impl MemoryADT for FindexRestClient {
             .await?;
         let status_code = response.status();
         if status_code.is_success() {
-            // request successful, decode the response using same encoding protocol defined in crate/server/src/routes/findex.rs
-            let bytes = response.bytes().await?;
-            let mut result = Vec::new();
-            let mut pos = 0;
-
-            while pos < bytes.len() {
-                if bytes[pos] == 0 {
-                    result.push(None);
-                    pos += 1;
-                } else {
-                    let word_bytes = &bytes[pos + 1..pos + 1 + WORD_LENGTH];
-                    let mut word = [0u8; WORD_LENGTH];
-                    word.copy_from_slice(word_bytes);
-                    result.push(Some(word));
-                    pos += 130; // 1 (flag) + WORD_LENGTH (word)
-                }
-            }
-
-            return Ok(result);
+            // request successful, decode the response using same encoding protocol
+            let bytes = response.bytes().await?.to_vec();
+            let result = OptionalWords::<WORD_LENGTH>::deserialize(bytes)?;
+            trace!(
+                "batch_read successful on server url {:?}. result: {:?}",
+                server_url.clone(),
+                result
+            );
+            return Ok(result.into_inner());
         }
 
         // process error
@@ -182,23 +170,13 @@ impl MemoryADT for FindexRestClient {
         );
 
         // code the request body
-        let mut request_bytes = Vec::new();
-        request_bytes.extend_from_slice(&<[u8; ADDRESS_LENGTH]>::from(guard.0)); // Add guard address
-        match guard.1 {
-            // Add guard word with option flag
-            Some(word) => {
-                request_bytes.push(1); // Some
-                request_bytes.extend_from_slice(&word);
-            }
-            None => {
-                request_bytes.push(0); // None
-            }
-        }
-        for (addr, word) in tasks {
-            // Add tasks
-            request_bytes.extend_from_slice(&<[u8; ADDRESS_LENGTH]>::from(addr));
-            request_bytes.extend_from_slice(&word);
-        }
+        let guard_bytes = Guard::new(guard.0, guard.1).serialize()?;
+        let task_bytes = Tasks::new(tasks).serialize()?;
+
+        // Merge the two vectors into one
+        let mut request_bytes = Vec::with_capacity(guard_bytes.len() + task_bytes.len());
+        request_bytes.extend_from_slice(&guard_bytes);
+        request_bytes.extend_from_slice(&task_bytes);
 
         let response = self
             .client
@@ -213,20 +191,21 @@ impl MemoryADT for FindexRestClient {
         if status_code.is_success() {
             // request successful, decode the response using same encoding protocol defined in crate/server/src/routes/findex.rs
             let bytes = response.bytes().await?;
-            let result_word = if bytes[0] == 0 {
-                None
+            let result_word =
+                OptionalWords::<WORD_LENGTH>::deserialize(bytes.to_vec())?.into_inner();
+            if result_word.len() != 1 {
+                return Err(FindexClientError::RequestFailed(format!(
+                    "Unexpected response from server. Expected 1 word, got {}",
+                    result_word.len()
+                )));
             } else {
-                let word_bytes = &bytes[1..1 + WORD_LENGTH];
-                let mut word = [0u8; WORD_LENGTH];
-                word.copy_from_slice(word_bytes);
-                Some(word)
-            };
-            trace!(
-                "guarded_write successful on server url {:?}. result_word: {:?}",
-                server_url.clone(),
-                result_word
-            );
-            return Ok(result_word);
+                trace!(
+                    "guarded_write successful on server url {:?}. result_word: {:?}",
+                    server_url.clone(),
+                    result_word
+                );
+                return Ok(result_word[0]);
+            }
         }
         // process error
         warn!("guarded_write failed on server url {}.", server_url);

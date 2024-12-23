@@ -2,26 +2,30 @@
 use crate::StructsError;
 use cosmian_crypto_core::bytes_ser_de::{Deserializer, Serializer};
 use cosmian_findex::{Address, ADDRESS_LENGTH};
-use cosmian_findex_config::WORD_LENGTH;
 
-type SerializationResult<R> = Result<R, StructsError>;
+pub type SerializationResult<R> = Result<R, StructsError>;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Addresses(Vec<Address<ADDRESS_LENGTH>>);
 
 // Serialization functions
 impl Addresses {
-    pub fn serialize(addresses: Addresses) -> SerializationResult<Vec<u8>> {
-        let mut ser = Serializer::with_capacity(addresses.0.len());
-        ser.write_leb128_u64(addresses.0.len() as u64)
+    pub fn new(addresses: Vec<Address<ADDRESS_LENGTH>>) -> Self {
+        Addresses(addresses)
+    }
+    /// Serializes the `Addresses` instance into a vector of bytes.
+    pub fn serialize(&self) -> SerializationResult<Vec<u8>> {
+        let mut ser = Serializer::with_capacity(self.0.len());
+        ser.write_leb128_u64(self.0.len() as u64)
             .map_err(|e| StructsError::SerializationError(e.to_string()))?;
-        for adr in addresses.0.iter() {
+        for adr in self.0.iter() {
             ser.write_array(adr.as_ref())
                 .map_err(|e| StructsError::SerializationError(e.to_string()))?;
         }
         Ok(ser.finalize().to_vec())
     }
 
+    /// Deserializes a vector of bytes into an `Addresses` instance.
     pub fn deserialize(data: Vec<u8>) -> SerializationResult<Addresses> {
         let mut de = Deserializer::new(&data);
         let length = <usize>::try_from(de.read_leb128_u64()?)?;
@@ -33,7 +37,19 @@ impl Addresses {
         Ok(Addresses(items))
     }
 }
-fn ser_option_word<const WORD_LENGTH: usize>(
+
+/// Serializes the `OptionalWords` instance into a vector of bytes.
+///
+/// The serialization protocol is as follows:
+/// 1. The length of the vector is serialized as a LEB128-encoded u64.
+/// 2. Each element in the vector is serialized as follows:
+///    - If the element is `Some`, a `1` is written followed by the byte array.
+///    - If the element is `None`, a `0` is written.
+///
+/// # Errors
+///
+/// Returns a `SerializationError` if any step of the serialization process fails.
+fn ser_optional_word<const WORD_LENGTH: usize>(
     ser: &mut Serializer,
     word: &Option<[u8; WORD_LENGTH]>,
 ) -> SerializationResult<usize> {
@@ -47,7 +63,17 @@ fn ser_option_word<const WORD_LENGTH: usize>(
     .map_err(|e| StructsError::SerializationError(e.to_string()))
 }
 
-fn read_optional_word<const WORD_LENGTH: usize>(
+/// Deserializes an optional word from a deserializer.
+///
+/// The deserialization protocol is as follows:
+/// 1. A flag is read from the deserializer.
+/// 2. If the flag is `0`, `None` is returned.
+/// 3. If the flag is `1`, a word is read from the deserializer and returned as `Some`.
+///
+/// # Errors
+///
+/// Returns a `DeserializationError` if any step of the deserialization process fails.
+fn deser_optional_word<const WORD_LENGTH: usize>(
     de: &mut Deserializer,
 ) -> SerializationResult<Option<[u8; WORD_LENGTH]>> {
     let flag = <usize>::try_from(de.read_leb128_u64()?)?;
@@ -67,13 +93,115 @@ fn read_optional_word<const WORD_LENGTH: usize>(
 pub struct OptionalWords<const WORD_LENGTH: usize>(Vec<Option<[u8; WORD_LENGTH]>>);
 
 impl<const WORD_LENGTH: usize> OptionalWords<WORD_LENGTH> {
+    // Public method to access the inner vector
+    pub fn into_inner(self) -> Vec<Option<[u8; WORD_LENGTH]>> {
+        self.0
+    }
+
     /// Serializes the `OptionalWords` instance into a vector of bytes.
+    pub fn serialize(&self) -> SerializationResult<Vec<u8>> {
+        let mut ser = Serializer::with_capacity(self.0.len());
+        ser.write_leb128_u64(self.0.len() as u64)
+            .map_err(|e| StructsError::SerializationError(e.to_string()))?;
+        for word in self.0.iter() {
+            ser_optional_word(&mut ser, word)
+                .map_err(|e| StructsError::SerializationError(e.to_string()))?;
+        }
+        Ok(ser.finalize().to_vec())
+    }
+
+    /// Deserializes a vector of bytes into an `OptionalWords` instance.
+    pub fn deserialize(data: Vec<u8>) -> SerializationResult<Self> {
+        let mut de = Deserializer::new(&data);
+        let length = <usize>::try_from(de.read_leb128_u64()?)?;
+        let mut items = Vec::with_capacity(length);
+
+        for _ in 0..length {
+            let word = deser_optional_word::<WORD_LENGTH>(&mut de)?;
+            items.push(word);
+        }
+        Ok(OptionalWords(items))
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Guard<const WORD_LENGTH: usize>(Address<ADDRESS_LENGTH>, Option<[u8; WORD_LENGTH]>);
+
+impl<const WORD_LENGTH: usize> Guard<WORD_LENGTH> {
+    /// Creates a new `Guard` instance.
+    pub fn new(address: Address<ADDRESS_LENGTH>, word: Option<[u8; WORD_LENGTH]>) -> Self {
+        Guard(address, word)
+    }
+
+    /// Serializes the `Guard` instance into a vector of bytes.
+    ///
+    /// The serialization protocol is as follows:
+    /// 1. The address is serialized as a byte array.
+    /// 2. The optional word is serialized as follows:
+    ///    - If the word is `Some`, a `1` is written followed by the byte array.
+    ///    - If the word is `None`, a `0` is written.
+    ///
+    /// # Errors
+    ///
+    /// Returns a `SerializationError` if any step of the serialization process fails.
+    pub fn serialize(&self) -> SerializationResult<Vec<u8>> {
+        let mut ser = Serializer::with_capacity(ADDRESS_LENGTH + WORD_LENGTH);
+        ser.write_array(&self.0.as_ref())
+            .map_err(|e| StructsError::SerializationError(e.to_string()))?;
+        match &self.1 {
+            Some(word) => {
+                ser.write_leb128_u64(1)?;
+                ser.write_array(word)
+            }
+            None => ser.write_leb128_u64(0),
+        }
+        .map_err(|e| StructsError::SerializationError(e.to_string()))?;
+        Ok(ser.finalize().to_vec())
+    }
+
+    /// Deserializes a vector of bytes into a `Guard` instance.
+    ///
+    /// The deserialization protocol is as follows:
+    /// 1. The address is deserialized from a byte array.
+    /// 2. The optional word is deserialized as follows:
+    ///    - If the next byte is `1`, the word is deserialized from the following byte array.
+    ///    - If the next byte is `0`, the word is set to `None`.
+    ///
+    /// # Errors
+    ///
+    /// Returns a `DeserializationError` if any step of the deserialization process fails.
+    pub fn deserialize(data: Vec<u8>) -> SerializationResult<Self> {
+        let mut de = Deserializer::new(&data);
+        let address: Address<ADDRESS_LENGTH> = de.read_array()?.into();
+        let flag = <usize>::try_from(de.read_leb128_u64()?)?;
+        let word = if flag == 1 {
+            Some(de.read_array()?)
+        } else if flag == 0 {
+            None
+        } else {
+            return Err(StructsError::DeserializationError(
+                "Invalid value for serialized option flag".to_string(),
+            ));
+        };
+        Ok(Guard(address, word))
+    }
+}
+#[derive(Debug, Clone, PartialEq)]
+pub struct Tasks<const WORD_LENGTH: usize>(Vec<(Address<ADDRESS_LENGTH>, [u8; WORD_LENGTH])>);
+
+impl<const WORD_LENGTH: usize> Tasks<WORD_LENGTH> {
+    /// Creates a new `Tasks` instance.
+    pub fn new(tasks: Vec<(Address<ADDRESS_LENGTH>, [u8; WORD_LENGTH])>) -> Self {
+        Tasks(tasks)
+    }
+
+    /// Serializes the `Tasks` instance into a vector of bytes.
     ///
     /// The serialization protocol is as follows:
     /// 1. The length of the vector is serialized as a LEB128-encoded u64.
     /// 2. Each element in the vector is serialized as follows:
-    ///    - If the element is `Some`, a `1` is written followed by the byte array.
-    ///    - If the element is `None`, a `0` is written.
+    ///    - The address is serialized as a byte array.
+    ///    - The word is serialized as a byte array.
     ///
     /// # Errors
     ///
@@ -82,36 +210,47 @@ impl<const WORD_LENGTH: usize> OptionalWords<WORD_LENGTH> {
         let mut ser = Serializer::with_capacity(self.0.len());
         ser.write_leb128_u64(self.0.len() as u64)
             .map_err(|e| StructsError::SerializationError(e.to_string()))?;
-        for word in self.0.iter() {
-            ser_option_word(&mut ser, word)
-                .map_err(|e| StructsError::SerializationError(e.to_string()))?;
+        for (address, word) in self.0.iter() {
+            {
+                ser.write_array(address.as_ref())?;
+                ser.write_array(word)
+            }
+            .map_err(|e| StructsError::SerializationError(e.to_string()))?;
         }
         Ok(ser.finalize().to_vec())
     }
 
+    /// Deserializes a vector of bytes into a `Tasks` instance.
+    ///
+    /// The deserialization protocol is as follows:
+    /// 1. The length of the vector is deserialized from a LEB128-encoded u64.
+    /// 2. Each element in the vector is deserialized as follows:
+    ///    - The address is deserialized from a byte array.
+    ///    - The word is deserialized from a byte array.
+    ///
+    /// # Errors
+    ///
+    /// Returns a `DeserializationError` if any step of the deserialization process fails.
     pub fn deserialize(data: Vec<u8>) -> SerializationResult<Self> {
         let mut de = Deserializer::new(&data);
         let length = <usize>::try_from(de.read_leb128_u64()?)?;
         let mut items = Vec::with_capacity(length);
-
         for _ in 0..length {
-            let word = read_optional_word::<WORD_LENGTH>(&mut de)?;
-            items.push(word);
+            let address: Address<ADDRESS_LENGTH> = de.read_array()?.into();
+            let word: [u8; WORD_LENGTH] = de.read_array()?.into();
+            items.push((address, word));
         }
-        Ok(OptionalWords(items))
+        Ok(Tasks(items))
     }
 }
 
-#[derive(Debug)]
-struct Guard<const WORD_LENGTH: usize>(Address<ADDRESS_LENGTH>, Option<[u8; WORD_LENGTH]>);
-
-// #[derive(Debug)]
-// struct Tasks<const WORD_LENGTH: usize>(Vec<(Address, [u8; WORD_LENGTH])>);
-
 #[cfg(test)]
 mod tests {
-    use super::{Addresses, OptionalWords, WORD_LENGTH};
+    use crate::findex_serialization::Guard;
+
+    use super::{Addresses, OptionalWords, Tasks};
     use cosmian_findex::{Address, ADDRESS_LENGTH};
+    use cosmian_findex_config::WORD_LENGTH;
     use rand::rngs::StdRng;
     use rand::{Rng, SeedableRng};
 
@@ -120,18 +259,14 @@ mod tests {
     #[test]
     fn test_ser_deser_addresses() {
         let mut rng = StdRng::from_seed(SEED);
-        // Create random addresses
+
         let address1: Address<ADDRESS_LENGTH> = rng.gen::<u128>().to_be_bytes().into();
         let address2: Address<ADDRESS_LENGTH> = rng.gen::<u128>().to_be_bytes().into();
         let addresses = Addresses(vec![address1, address2]);
 
-        // Serialize the addresses
-        let serialized = Addresses::serialize(addresses.clone()).expect("Serialization failed");
-
-        // Deserialize the addresses
+        let serialized = addresses.serialize().expect("Serialization failed");
         let deserialized = Addresses::deserialize(serialized).expect("Deserialization failed");
 
-        // Check that the deserialized addresses match the original addresses
         assert_eq!(addresses, deserialized, "Addresses do not match",);
     }
 
@@ -146,12 +281,59 @@ mod tests {
 
         let optional_words: OptionalWords<129> = OptionalWords(vec![None, Some(word1)]);
 
-        // Serialize the optional words
         let serialized = optional_words.serialize().expect("Serialization failed");
-        // Deserialize the optional words
         let deserialized = OptionalWords::deserialize(serialized).expect("Deserialization failed");
 
-        // Check that the deserialized optional words match the original optional words
         assert_eq!(optional_words, deserialized, "Optional words do not match",);
+    }
+
+    #[test]
+    fn test_ser_deser_guard() {
+        let mut rng = StdRng::from_seed(SEED);
+
+        let address1: Address<ADDRESS_LENGTH> = rng.gen::<u128>().to_be_bytes().into();
+        let mut word = [0u8; WORD_LENGTH];
+        rng.fill(&mut word[..]);
+
+        let guard_some: Guard<WORD_LENGTH> = Guard(address1, Some(word));
+        let serialized_some = guard_some.serialize().expect("Serialization failed");
+        let deserialized_some =
+            Guard::deserialize(serialized_some).expect("Deserialization failed");
+
+        assert_eq!(
+            guard_some, deserialized_some,
+            "Guard with Some(word) does not match"
+        );
+
+        let address2: Address<ADDRESS_LENGTH> = rng.gen::<u128>().to_be_bytes().into();
+        let guard_none: Guard<WORD_LENGTH> = Guard(address2, None);
+
+        let serialized_none = guard_none.serialize().expect("Serialization failed");
+        let deserialized_none =
+            Guard::deserialize(serialized_none).expect("Deserialization failed");
+
+        assert_eq!(
+            guard_none, deserialized_none,
+            "Guard with None does not match"
+        );
+    }
+
+    #[test]
+    fn test_ser_deser_tasks() {
+        let mut rng = StdRng::from_seed(SEED);
+
+        let address1: Address<ADDRESS_LENGTH> = rng.gen::<u128>().to_be_bytes().into();
+        let address2: Address<ADDRESS_LENGTH> = rng.gen::<u128>().to_be_bytes().into();
+        let mut word1 = [0u8; WORD_LENGTH];
+        let mut word2 = [0u8; WORD_LENGTH];
+        rng.fill(&mut word1[..]);
+        rng.fill(&mut word2[..]);
+
+        let tasks = Tasks(vec![(address1, word1), (address2, word2)]);
+
+        let serialized = tasks.serialize().expect("Serialization failed");
+        let deserialized = Tasks::deserialize(serialized).expect("Deserialization failed");
+
+        assert_eq!(tasks, deserialized, "Tasks do not match");
     }
 }

@@ -53,5 +53,6 @@ mod permissions;
 mod uuids;
 pub use encrypted_entries::EncryptedEntries;
 pub use error::StructsError;
+pub use findex_serialization::{Addresses, Guard, OptionalWords, SerializationResult, Tasks};
 pub use permissions::{Permission, Permissions};
 pub use uuids::Uuids;
