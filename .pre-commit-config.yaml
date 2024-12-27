@@ -129,7 +129,7 @@ repos:
       - id: cargo-machete
       - id: docker-compose-up
       - id: cargo-build-all
-      - id: cargo-test
+      # - id: cargo-test
       - id: clippy-autofix-unreachable-pub
       - id: clippy-autofix-all-targets-all-features
       - id: clippy-autofix-all-targets

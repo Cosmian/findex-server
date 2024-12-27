@@ -14,7 +14,7 @@ use crate::{
 pub(crate) fn index_or_delete_cmd(
     cli_conf_path: &str,
     command: &str,
-    action: IndexOrDeleteAction,
+    action: &IndexOrDeleteAction,
 ) -> CliResult<String> {
     let mut cmd = Command::cargo_bin(PROG_NAME)?;
     let args = vec![

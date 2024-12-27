@@ -1,8 +1,4 @@
-use std::{
-    collections::{HashMap, HashSet},
-    fs::File,
-    path::PathBuf,
-};
+use std::{collections::HashMap, fs::File, path::PathBuf};
 
 use crate::actions::findex::structs::{Keyword, KeywordToDataSetsMap};
 use clap::Parser;
@@ -58,7 +54,7 @@ impl IndexOrDeleteAction {
             record.iter().map(Keyword::from).for_each(|k| {
                 csv_in_memory
                     .entry(k)
-                    .or_insert_with(HashSet::new)
+                    .or_default()
                     .insert(indexed_value.clone());
             });
 
@@ -70,15 +66,27 @@ impl IndexOrDeleteAction {
         Ok(csv_in_memory)
     }
 
+    /// Processes the add or delete operation using the provided REST client
+    ///
+    /// # Arguments
+    /// * `rest_client` - The Findex REST client to use for operations
+    /// * `is_insert` - Boolean flag indicating whether to insert (true) or delete (false)
+    ///
+    /// # Errors
+    /// * Returns `CliError` if:
+    ///   - Failed to create indexed value keywords map
+    ///   - Failed to instantiate Findex
+    ///   - Failed to insert or delete records
+    ///
+    /// # Returns
+    /// * `CliResult<()>` - Ok if operation succeeds, Error otherwise
     async fn add_or_delete(&self, rest_client: FindexRestClient, is_insert: bool) -> CliResult<()> {
         let bindings = self.to_indexed_value_keywords_map()?;
         let iterable_bindings = bindings.iter().map(|(k, v)| (k.clone(), v.clone()));
-        let findex = rest_client
-            .instantiate_findex(
-                &self.findex_parameters.index_id,
-                &self.findex_parameters.user_key()?,
-            )
-            .unwrap();
+        let findex = rest_client.instantiate_findex(
+            &self.findex_parameters.index_id,
+            &self.findex_parameters.user_key()?,
+        )?;
         if is_insert {
             findex.insert(iterable_bindings).await
         } else {
@@ -89,8 +97,7 @@ impl IndexOrDeleteAction {
         trace!("{} done: keywords: {:?}", operation_name, written_keywords);
 
         console::Stdout::new(&format!(
-            "{} done: keywords: {:?}",
-            operation_name, written_keywords
+            "{operation_name} done: keywords: {written_keywords:?}",
         ))
         .write()?;
 

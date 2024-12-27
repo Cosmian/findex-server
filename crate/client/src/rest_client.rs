@@ -160,7 +160,7 @@ impl MemoryADT for FindexRestClient {
         let index_id = self.index_id.clone().expect(
             "Unexpected error : this function should never be called while from base instance",
         );
-        let endpoint = format!("/indexes/{}/batch_read", index_id);
+        let endpoint = format!("/indexes/{}/guarded_write", index_id);
         let server_url = format!("{}{}", self.client.server_url, endpoint.clone());
         trace!(
             "Initiating guarded_write of {} values for index {} at server_url: {}",

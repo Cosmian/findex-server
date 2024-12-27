@@ -33,7 +33,7 @@ pub(crate) async fn check_permission(
     Ok(())
 }
 
-// TODO(hatem): make this atomic
+// TODO: make this atomic
 #[post("/create/index")]
 pub(crate) async fn create_index_id(
     req: HttpRequest,

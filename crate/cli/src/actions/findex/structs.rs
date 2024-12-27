@@ -72,6 +72,6 @@ impl From<Vec<String>> for Keywords {
             .into_iter()
             .map(|s| Keyword::from(s.as_str()))
             .collect();
-        Keywords(keywords)
+        Self(keywords)
     }
 }

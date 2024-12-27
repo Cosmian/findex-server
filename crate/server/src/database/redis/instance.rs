@@ -27,9 +27,9 @@ impl<const WORD_LENGTH: usize> MemoryADT for Redis<WORD_LENGTH> {
 
     async fn batch_read(
         &self,
-        addresses: Vec<Address<ADDRESS_LENGTH>>,
+        a: Vec<Address<ADDRESS_LENGTH>>,
     ) -> Result<Vec<Option<Self::Word>>, MemoryError> {
-        self.memory.batch_read(addresses).await
+        self.memory.batch_read(a).await
     }
 
     async fn guarded_write(

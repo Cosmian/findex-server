@@ -73,6 +73,7 @@ impl AddEntries {
     /// Returns an error if the query execution on the Findex server fails.
     /// Returns an error if the base64 decoding fails.
     /// Returns an error if the UUID parsing fails.
+    #[allow(clippy::print_stdout)] // printed by design
     pub async fn run(&self, rest_client: &FindexRestClient) -> CliResult<String> {
         let encrypted_entries = self.entries.iter().try_fold(
             HashMap::with_capacity(self.entries.len()),
@@ -112,6 +113,7 @@ impl DeleteEntries {
     /// # Errors
     ///
     /// Returns an error if the query execution on the Findex server fails.
+    #[allow(clippy::print_stdout)] // printed by design
     pub async fn run(&self, rest_client: &FindexRestClient) -> CliResult<String> {
         let response = rest_client
             .delete_entries(&self.index_id, &self.uuids)
@@ -144,6 +146,7 @@ impl GetEntries {
     ///
     /// Returns an error if the query execution on the Findex server fails.
     /// Returns an error if the UUID parsing fails.
+    #[allow(clippy::print_stdout)] // printed by design
     pub async fn run(&self, rest_client: &FindexRestClient) -> CliResult<String> {
         let encrypted_entries = rest_client
             .get_entries(&self.index_id, &self.uuids)

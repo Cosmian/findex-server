@@ -13,6 +13,10 @@ impl Addresses {
     pub fn new(addresses: Vec<Address<ADDRESS_LENGTH>>) -> Self {
         Addresses(addresses)
     }
+
+    pub fn into_inner(self) -> Vec<Address<ADDRESS_LENGTH>> {
+        self.0
+    }
     /// Serializes the `Addresses` instance into a vector of bytes.
     pub fn serialize(&self) -> SerializationResult<Vec<u8>> {
         let mut ser = Serializer::with_capacity(self.0.len());
@@ -93,6 +97,11 @@ fn deser_optional_word<const WORD_LENGTH: usize>(
 pub struct OptionalWords<const WORD_LENGTH: usize>(Vec<Option<[u8; WORD_LENGTH]>>);
 
 impl<const WORD_LENGTH: usize> OptionalWords<WORD_LENGTH> {
+    /// Creates a new `OptionalWords` instance.
+    pub fn new(words: Vec<Option<[u8; WORD_LENGTH]>>) -> Self {
+        OptionalWords(words)
+    }
+
     // Public method to access the inner vector
     pub fn into_inner(self) -> Vec<Option<[u8; WORD_LENGTH]>> {
         self.0
@@ -133,6 +142,14 @@ impl<const WORD_LENGTH: usize> Guard<WORD_LENGTH> {
         Guard(address, word)
     }
 
+    pub fn into_inner(self) -> (Address<ADDRESS_LENGTH>, Option<[u8; WORD_LENGTH]>) {
+        (self.0, self.1)
+    }
+
+    pub fn possible_sizes() -> (usize, usize) {
+        (ADDRESS_LENGTH + 1, ADDRESS_LENGTH + 1 + WORD_LENGTH)
+    }
+
     /// Serializes the `Guard` instance into a vector of bytes.
     ///
     /// The serialization protocol is as follows:
@@ -146,7 +163,7 @@ impl<const WORD_LENGTH: usize> Guard<WORD_LENGTH> {
     /// Returns a `SerializationError` if any step of the serialization process fails.
     pub fn serialize(&self) -> SerializationResult<Vec<u8>> {
         let mut ser = Serializer::with_capacity(ADDRESS_LENGTH + WORD_LENGTH);
-        ser.write_array(&self.0.as_ref())
+        ser.write_array(self.0.as_ref())
             .map_err(|e| StructsError::SerializationError(e.to_string()))?;
         match &self.1 {
             Some(word) => {
@@ -156,7 +173,8 @@ impl<const WORD_LENGTH: usize> Guard<WORD_LENGTH> {
             None => ser.write_leb128_u64(0),
         }
         .map_err(|e| StructsError::SerializationError(e.to_string()))?;
-        Ok(ser.finalize().to_vec())
+        let our_result = ser.finalize().to_vec();
+        Ok(our_result)
     }
 
     /// Deserializes a vector of bytes into a `Guard` instance.
@@ -193,6 +211,10 @@ impl<const WORD_LENGTH: usize> Tasks<WORD_LENGTH> {
     /// Creates a new `Tasks` instance.
     pub fn new(tasks: Vec<(Address<ADDRESS_LENGTH>, [u8; WORD_LENGTH])>) -> Self {
         Tasks(tasks)
+    }
+
+    pub fn into_inner(self) -> Vec<(Address<ADDRESS_LENGTH>, [u8; WORD_LENGTH])> {
+        self.0
     }
 
     /// Serializes the `Tasks` instance into a vector of bytes.
@@ -237,7 +259,7 @@ impl<const WORD_LENGTH: usize> Tasks<WORD_LENGTH> {
         let mut items = Vec::with_capacity(length);
         for _ in 0..length {
             let address: Address<ADDRESS_LENGTH> = de.read_array()?.into();
-            let word: [u8; WORD_LENGTH] = de.read_array()?.into();
+            let word: [u8; WORD_LENGTH] = de.read_array()?;
             items.push((address, word));
         }
         Ok(Tasks(items))

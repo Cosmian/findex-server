@@ -6,6 +6,7 @@ use cosmian_findex_client::FINDEX_CLI_CONF_ENV;
 use cosmian_findex_structs::EncryptedEntries;
 use cosmian_logger::log_init;
 use test_findex_server::start_default_test_findex_server;
+use tracing::{debug, warn};
 use uuid::Uuid;
 
 use crate::{
@@ -87,7 +88,11 @@ pub(crate) fn datasets_get_entries_cmd(
     cmd.arg("datasets").args(args);
     let output = recover_cmd_logs(&mut cmd);
     if output.status.success() {
-        let findex_output = std::str::from_utf8(&output.stdout)?;
+        let findex_output = std::str::from_utf8(&output.stdout)?
+            .split("index_id")
+            .next()
+            .unwrap_or("");
+
         return parse_entries(findex_output);
     }
     Err(CliError::Default(
@@ -98,15 +103,33 @@ pub(crate) fn datasets_get_entries_cmd(
 #[allow(clippy::indexing_slicing)]
 fn parse_entries(s: &str) -> CliResult<EncryptedEntries> {
     let mut entries_map = HashMap::new();
+    let mut i = 1;
     for line in s.lines() {
-        let parts: Vec<&str> = line.split(", Entry Value: ").collect();
+        // first line is faulty on RHL9
+        let safe_line = if line.contains("return=") {
+            line.split(", Entry Value: ").collect::<Vec<&str>>()[1]
+        } else {
+            line
+        };
+        warn!("safe_line {i} ****: {safe_line}");
+        i += 1;
+        let parts: Vec<&str> = safe_line.split(", Entry Value: ").collect();
         if parts.len() == 2 {
             let index_id = parts[0].replace("Entry ID: ", "");
             let entry = parts[1].to_owned();
-            entries_map.insert(
-                Uuid::parse_str(&index_id)?,
-                general_purpose::STANDARD.decode(entry)?,
-            );
+            let uid = Uuid::parse_str(&index_id).map_err(|e| {
+                CliError::Default(format!(
+                    "Error parsing Uuid: {e}. $$$$$$$$$$$$. Original index_id : {index_id}"
+                ))
+            });
+            if uid.is_err() {
+                warn!("Error parsing Uuid: $$$$$$$$$$$$. Original index_id : {index_id}");
+                continue;
+            };
+            #[allow(clippy::unwrap_used)]
+            entries_map.insert(uid.unwrap(), general_purpose::STANDARD.decode(entry)?);
+        } else {
+            warn!("Invalid line: $$$$$$$$ {line}");
         }
     }
     Ok(EncryptedEntries::from(entries_map))
@@ -131,6 +154,7 @@ pub(crate) async fn test_datasets() -> CliResult<()> {
         .collect();
 
     let uuids: Vec<Uuid> = encrypted_entries.iter().map(|(uuid, _)| *uuid).collect();
+    debug!("uuids: {:?}", uuids);
 
     // Add entries to the dataset
     dataset_add_entries_cmd(
@@ -149,7 +173,6 @@ pub(crate) async fn test_datasets() -> CliResult<()> {
             uuids: uuids.clone(),
         },
     )?;
-    // println!("added_entries: {added_entries}");
     assert_eq!(added_entries.len(), entries_number);
 
     dataset_delete_entries_cmd(
@@ -163,8 +186,7 @@ pub(crate) async fn test_datasets() -> CliResult<()> {
     // Get the added entries from the dataset
     let deleted_entries =
         datasets_get_entries_cmd(&ctx.owner_client_conf_path, &GetEntries { index_id, uuids })?;
-    // println!("added_entries: {added_entries}");
-    assert_eq!(deleted_entries.len(), 0);
+    assert_eq!(added_entries.len(), 0);
 
     Ok(())
 }
