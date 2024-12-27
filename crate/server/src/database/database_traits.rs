@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use cosmian_findex::{mem::MemoryError, Address, MemoryADT, ADDRESS_LENGTH};
+use cosmian_findex::{Address, MemoryADT, MemoryError, ADDRESS_LENGTH};
 use cosmian_findex_structs::{EncryptedEntries, Permission, Permissions, Uuids};
 use uuid::Uuid;
 

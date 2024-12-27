@@ -1,4 +1,4 @@
-use cosmian_findex::mem::MemoryError;
+use cosmian_findex::MemoryError;
 use std::sync::mpsc::SendError;
 
 use actix_web::dev::ServerHandle;
