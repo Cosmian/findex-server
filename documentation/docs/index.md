@@ -1,11 +1,13 @@
 # Cosmian Findex server
 
 The Cosmian Findex is a high-performance, [**open-source**](https://github.com/Cosmian/findex-server), server application
-written in [**Rust**](https://www.rust-lang.org/) that provides a REST API.
+written in [**Rust**](https://www.rust-lang.org/) that provides a REST API to index and search encrypted data.
 
 ## What is Findex?
 
-Findex is a cryptographic protocol designed to make search queries on an untrusted cloud server securely. Findex is concurrent and database-independent, allowing large database indexes to be outsourced securely without compromising usability.
+Findex is a cryptographic protocol designed to make search queries on an untrusted cloud server securely.
+Findex is concurrent and database-independent, allowing large database indexes to be outsourced securely
+without compromising usability.
 
 ![Architecture client server](./images/Findex.svg)
 
@@ -31,9 +33,9 @@ The threat model for Findex assumes that the cloud server is untrusted and may a
 
 ## Quick Start
 
-For [Findex server](./quick_start.md).
+For server side: [Findex server](./quick_start.md).
 
-For [Cosmian CLI](./quick_start_client.md).
+For client side: [Cosmian CLI](./quick_start_client.md).
 
 ## Findex server
 

@@ -4,6 +4,7 @@ use cosmian_http_client::HttpClient;
 use reqwest::{Response, StatusCode};
 use serde::{Deserialize, Serialize};
 use tracing::{instrument, trace};
+use uuid::Uuid;
 
 use crate::{
     error::{
@@ -17,6 +18,7 @@ use crate::{
 #[derive(Deserialize, Serialize, Debug)] // Debug is required by ok_json()
 pub struct SuccessResponse {
     pub success: String,
+    pub index_id: Uuid,
 }
 
 impl Display for SuccessResponse {

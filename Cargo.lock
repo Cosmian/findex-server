@@ -822,7 +822,7 @@ checksum = "773648b94d0e5d620f64f280777445740e61fe701025087ec8b57f45c791888b"
 [[package]]
 name = "cosmian_config_utils"
 version = "0.1.0"
-source = "git+https://www.github.com/Cosmian/http_client_server?branch=develop#c7ea728c89415a443868cbdf83b0cc7fa7dbefab"
+source = "git+https://www.github.com/Cosmian/http_client_server?branch=fix%2Fconfig_utils_trait#cf43e2a8cedab1b79cb58ddc05383ccc646466db"
 dependencies = [
  "base64 0.21.7",
  "serde",
@@ -955,9 +955,10 @@ dependencies = [
 [[package]]
 name = "cosmian_http_client"
 version = "0.1.0"
-source = "git+https://www.github.com/Cosmian/http_client_server?branch=develop#c7ea728c89415a443868cbdf83b0cc7fa7dbefab"
+source = "git+https://www.github.com/Cosmian/http_client_server?branch=develop#732ab49a020f72892332a288c08bdbf4eaa8317f"
 dependencies = [
  "actix-web",
+ "derive_more",
  "oauth2",
  "reqwest",
  "rustls",
@@ -973,7 +974,7 @@ dependencies = [
 [[package]]
 name = "cosmian_logger"
 version = "0.1.0"
-source = "git+https://www.github.com/Cosmian/http_client_server?branch=develop#c7ea728c89415a443868cbdf83b0cc7fa7dbefab"
+source = "git+https://www.github.com/Cosmian/http_client_server?branch=develop#732ab49a020f72892332a288c08bdbf4eaa8317f"
 dependencies = [
  "tracing",
  "tracing-subscriber",
@@ -1640,7 +1641,7 @@ dependencies = [
  "httpdate",
  "itoa",
  "pin-project-lite",
- "socket2 0.5.7",
+ "socket2 0.4.10",
  "tokio",
  "tower-service",
  "tracing",

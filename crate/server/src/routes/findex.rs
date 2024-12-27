@@ -14,13 +14,13 @@ use cloudproof_findex::{
 };
 use cosmian_findex_structs::Permission;
 use tracing::{info, trace};
+use uuid::Uuid;
 
 use crate::{
     core::FindexServer,
     routes::{
         check_permission,
         error::{Response, ResponseBytes},
-        get_index_id,
     },
 };
 
@@ -39,10 +39,13 @@ pub(crate) async fn findex_fetch_entries(
     let tokens = deserialize_token_set(&bytes)?;
     trace!("fetch_entries: number of tokens: {}:", tokens.len());
 
+    // Parse index_id
+    let index_id = Uuid::parse_str(&index_id)?;
+
     // Collect into a vector to fix the order.
     let uids_and_values = findex_server
         .db
-        .findex_fetch_entries(&get_index_id(index_id.as_str())?, tokens)
+        .findex_fetch_entries(&index_id, tokens)
         .await?;
     trace!(
         "fetch_entries: number of uids_and_values: {}:",
@@ -72,9 +75,12 @@ pub(crate) async fn findex_fetch_chains(
     let tokens = deserialize_token_set(&bytes)?;
     trace!("fetch_chains: number of tokens: {}:", tokens.len());
 
+    // Parse index_id
+    let index_id = Uuid::parse_str(&index_id)?;
+
     let uids_and_values = findex_server
         .db
-        .findex_fetch_chains(&get_index_id(index_id.as_str())?, tokens)
+        .findex_fetch_chains(&index_id, tokens)
         .await?;
     trace!(
         "fetch_chains: number of uids_and_values: {}:",
@@ -104,9 +110,12 @@ pub(crate) async fn findex_upsert_entries(
 
     trace!("upsert_entries: num upsert data: {}", upsert_data.len());
 
+    // Parse index_id
+    let index_id = Uuid::parse_str(&index_id)?;
+
     let rejected = findex_server
         .db
-        .findex_upsert_entries(&get_index_id(index_id.as_str())?, upsert_data)
+        .findex_upsert_entries(&index_id, upsert_data)
         .await?;
 
     let bytes = rejected.serialize()?.to_vec();
@@ -127,14 +136,14 @@ pub(crate) async fn findex_insert_chains(
 
     check_permission(&user, &index_id, Permission::Write, &findex_server).await?;
 
+    // Parse index_id
+    let index_id = Uuid::parse_str(&index_id)?;
+
     let token_to_value_encrypted_value_map = TokenToEncryptedValueMap::deserialize(&bytes)?;
 
     findex_server
         .db
-        .findex_insert_chains(
-            &get_index_id(index_id.as_str())?,
-            token_to_value_encrypted_value_map,
-        )
+        .findex_insert_chains(&index_id, token_to_value_encrypted_value_map)
         .await?;
 
     Ok(Json(()))
@@ -155,13 +164,12 @@ pub(crate) async fn findex_delete_entries(
     let tokens = deserialize_token_set(&bytes)?;
     trace!("delete_entries: number of tokens: {}:", tokens.len());
 
+    // Parse index_id
+    let index_id = Uuid::parse_str(&index_id)?;
+
     findex_server
         .db
-        .findex_delete(
-            &get_index_id(index_id.as_str())?,
-            FindexTable::Entry,
-            tokens,
-        )
+        .findex_delete(&index_id, FindexTable::Entry, tokens)
         .await?;
 
     Ok(Json(()))
@@ -182,13 +190,12 @@ pub(crate) async fn findex_delete_chains(
     let tokens = deserialize_token_set(&bytes)?;
     trace!("delete_chains: number of tokens: {}:", tokens.len());
 
+    // Parse index_id
+    let index_id = Uuid::parse_str(&index_id)?;
+
     findex_server
         .db
-        .findex_delete(
-            &get_index_id(index_id.as_str())?,
-            FindexTable::Chain,
-            tokens,
-        )
+        .findex_delete(&index_id, FindexTable::Chain, tokens)
         .await?;
 
     Ok(Json(()))
@@ -205,10 +212,10 @@ pub(crate) async fn findex_dump_tokens(
 
     check_permission(&user, &index_id, Permission::Read, &findex_server).await?;
 
-    let tokens = findex_server
-        .db
-        .findex_dump_tokens(&get_index_id(index_id.as_str())?)
-        .await?;
+    // Parse index_id
+    let index_id = Uuid::parse_str(&index_id)?;
+
+    let tokens = findex_server.db.findex_dump_tokens(&index_id).await?;
     trace!("dump_tokens: number of tokens: {}:", tokens.len());
 
     let bytes = tokens.serialize()?.to_vec();

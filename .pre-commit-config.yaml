@@ -34,15 +34,13 @@ repos:
     rev: v0.42.0
     hooks:
       - id: markdownlint-fix
-        args: [--disable=MD004, --disable=MD013, --disable=MD024, --disable=MD029, --disable=MD041, --disable=MD046, --fix]
-        exclude: documentation/docs
+        args: [--disable=MD013, --disable=MD041, --disable=MD046, --fix]
 
   - repo: https://github.com/tcort/markdown-link-check
     rev: v3.12.2
     hooks:
       - id: markdown-link-check
-        args: [-q]
-        exclude: documentation/docs/ms_dke/ms_dke.md
+        args: [-q, --config, .markdown-link-check.json]
 
   - repo: https://github.com/jumanjihouse/pre-commit-hook-yamlfmt
     rev: 0.2.3

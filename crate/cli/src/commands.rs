@@ -1,7 +1,6 @@
 use std::path::PathBuf;
 
 use clap::{Parser, Subcommand};
-use cosmian_config_utils::ConfigUtils;
 use cosmian_findex_client::{FindexClientConfig, FindexRestClient};
 use cosmian_logger::log_init;
 use tracing::info;
@@ -50,8 +49,7 @@ impl FindexCli {
     /// - If the command line arguments are invalid
     pub fn prepare_config(&self) -> CliResult<FindexClientConfig> {
         // Load configuration file and override with command line options
-        let conf_path = FindexClientConfig::location(self.conf_path.clone())?;
-        let mut config = FindexClientConfig::from_toml(&conf_path)?;
+        let mut config = FindexClientConfig::load(self.conf_path.clone())?;
         if let Some(url) = self.url.clone() {
             info!("Override URL from configuration file with: {url}");
             config.http_config.server_url = url;
@@ -120,10 +118,9 @@ pub async fn findex_cli_main() -> CliResult<()> {
 
     // Post-process the login/logout actions: save Findex CLI configuration
     // The reason why it is done here is that the login/logout actions are also call by meta Cosmian CLI using its own Findex client configuration
-    let conf_path = FindexClientConfig::location(cli_opts.conf_path.clone())?;
     match cli_opts.command {
         CoreFindexActions::Login(_) | CoreFindexActions::Logout(_) => {
-            config.to_toml(&conf_path)?;
+            config.save(cli_opts.conf_path.clone())?;
         }
         _ => {}
     }
