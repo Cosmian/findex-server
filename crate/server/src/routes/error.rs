@@ -5,6 +5,7 @@ use actix_web::{
 };
 use serde::{Deserialize, Serialize};
 use tracing::{error, warn};
+use uuid::Uuid;
 
 use crate::error::server::FindexServerError;
 
@@ -53,4 +54,5 @@ impl actix_web::error::ResponseError for FindexServerError {
 #[derive(Deserialize, Serialize, Debug)] // Debug is required by ok_json()
 pub(crate) struct SuccessResponse {
     pub success: String,
+    pub index_id: Uuid,
 }

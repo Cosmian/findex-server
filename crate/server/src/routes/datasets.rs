@@ -8,6 +8,7 @@ use actix_web::{
 use cloudproof_findex::reexport::cosmian_crypto_core::bytes_ser_de::Serializable;
 use cosmian_findex_structs::{EncryptedEntries, Permission, Uuids};
 use tracing::{info, trace};
+use uuid::Uuid;
 
 use crate::{
     core::FindexServer,
@@ -15,15 +16,9 @@ use crate::{
     routes::{
         check_permission,
         error::{ResponseBytes, SuccessResponse},
-        get_index_id,
     },
 };
 
-//TODO(manu): routes must be revisited:
-// - /{index_id}/datasets/add_entries
-// - /{index_id}/findex/add_entries
-// - /{index_id}/permission/grant
-// - /{index_id}/create
 #[post("/datasets/{index_id}/add_entries")]
 pub(crate) async fn datasets_add_entries(
     req: HttpRequest,
@@ -41,9 +36,12 @@ pub(crate) async fn datasets_add_entries(
         encrypted_entries.len()
     );
 
+    // Parse index_id
+    let index_id = Uuid::parse_str(&index_id)?;
+
     findex_server
         .db
-        .dataset_add_entries(&get_index_id(index_id.as_str())?, &encrypted_entries)
+        .dataset_add_entries(&index_id, &encrypted_entries)
         .await?;
 
     Ok(Json(SuccessResponse {
@@ -51,6 +49,7 @@ pub(crate) async fn datasets_add_entries(
             "{} entries successfully added to index {index_id}",
             encrypted_entries.len()
         ),
+        index_id,
     }))
 }
 
@@ -68,15 +67,19 @@ pub(crate) async fn datasets_del_entries(
     let uuids = Uuids::deserialize(&bytes.into_iter().collect::<Vec<_>>())?;
     trace!("delete_entries: number of uuids: {}:", uuids.len());
 
+    // Parse index_id
+    let index_id = Uuid::parse_str(&index_id)?;
+
     findex_server
         .db
-        .dataset_delete_entries(&get_index_id(index_id.as_str())?, &uuids)
+        .dataset_delete_entries(&index_id, &uuids)
         .await?;
 
     Ok(Json(SuccessResponse {
         success: format!(
             "Encrypted entries successfully deleted from index {index_id}. Uuids were {uuids}"
         ),
+        index_id,
     }))
 }
 
@@ -94,9 +97,12 @@ pub(crate) async fn datasets_get_entries(
     let uuids = Uuids::deserialize(&bytes.into_iter().collect::<Vec<_>>())?;
     trace!("get_entries: number of uuids: {}:", uuids.len());
 
+    // Parse index_id
+    let index_id = Uuid::parse_str(&index_id)?;
+
     let encrypted_entries = findex_server
         .db
-        .dataset_get_entries(&get_index_id(index_id.as_str())?, &uuids)
+        .dataset_get_entries(&index_id, &uuids)
         .await?;
 
     let bytes = encrypted_entries.serialize()?;

@@ -2,7 +2,6 @@ mod datasets;
 mod error;
 mod findex;
 mod permissions;
-mod utils;
 mod version;
 
 pub(crate) use datasets::{datasets_add_entries, datasets_del_entries, datasets_get_entries};
@@ -13,5 +12,4 @@ pub(crate) use findex::{
 pub(crate) use permissions::{
     check_permission, create_index_id, grant_permission, list_permission, revoke_permission,
 };
-pub(crate) use utils::get_index_id;
 pub(crate) use version::get_version;

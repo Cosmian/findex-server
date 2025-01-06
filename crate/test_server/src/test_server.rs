@@ -1,6 +1,6 @@
 use std::{
     env,
-    path::{Path, PathBuf},
+    path::PathBuf,
     sync::mpsc,
     thread::{self, JoinHandle},
     time::Duration,
@@ -318,10 +318,7 @@ fn generate_owner_conf(
         },
     };
     // write the conf to a file
-    FindexClientConfig::to_toml(
-        &owner_client_conf,
-        &Path::new(&owner_client_conf_path).to_path_buf(),
-    )?;
+    owner_client_conf.to_toml(&owner_client_conf_path)?;
 
     Ok((owner_client_conf_path, owner_client_conf))
 }
@@ -354,7 +351,7 @@ fn generate_user_conf(
 
     // write the user conf
     let user_conf_path = format!("/tmp/user_findex_{port}.toml");
-    FindexClientConfig::to_toml(&user_conf, &Path::new(&user_conf_path).to_path_buf())?;
+    user_conf.to_toml(&user_conf_path)?;
 
     // return the path
     Ok(user_conf_path)

@@ -22,7 +22,7 @@ impl PermissionsAction {
     /// Returns an error if there was a problem running the action.
     pub async fn run(&self, rest_client: &FindexRestClient) -> CliResult<()> {
         match self {
-            Self::Create(action) => action.run(rest_client).await?,
+            Self::Create(action) => action.run(rest_client).await?.to_string(),
             Self::List(action) => action.run(rest_client).await?,
             Self::Grant(action) => action.run(rest_client).await?,
             Self::Revoke(action) => action.run(rest_client).await?,
@@ -35,7 +35,7 @@ impl PermissionsAction {
 /// Create a new index. It results on an `admin` permission on a new index.
 ///
 /// Users can have 1 permission on multiple indexes
-#[derive(Parser, Debug)]
+#[derive(Parser, Debug, Default)]
 pub struct CreateIndex;
 
 impl CreateIndex {
@@ -49,15 +49,15 @@ impl CreateIndex {
     /// # Errors
     ///
     /// Returns an error if the query execution on the Findex server fails.
-    pub async fn run(&self, rest_client: &FindexRestClient) -> CliResult<String> {
+    pub async fn run(&self, rest_client: &FindexRestClient) -> CliResult<Uuid> {
         let response = rest_client
             .create_index_id()
             .await
             .with_context(|| "Can't execute the create index id query on the findex server")?;
         // should replace the user configuration file
-        println!("Index ID: {}", response.success);
+        println!("Index ID: {}", response.index_id);
 
-        Ok(response.success)
+        Ok(response.index_id)
     }
 }
 

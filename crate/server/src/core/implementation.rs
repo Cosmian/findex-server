@@ -1,13 +1,13 @@
 use actix_web::{HttpMessage, HttpRequest};
 use cosmian_findex_structs::Permission;
 use tracing::{debug, instrument, trace};
+use uuid::Uuid;
 
 use crate::{
     config::{DbParams, ServerParams},
     database::{DatabaseTraits, Redis},
     error::result::FResult,
     middlewares::{JwtAuthClaim, PeerCommonName},
-    routes::get_index_id,
 };
 
 pub(crate) struct FindexServer {
@@ -70,10 +70,10 @@ impl FindexServer {
             return Ok(Permission::Admin);
         }
 
-        let permission = self
-            .db
-            .get_permission(user_id, &get_index_id(index_id)?)
-            .await?;
+        // Parse index_id
+        let index_id = Uuid::parse_str(index_id)?;
+
+        let permission = self.db.get_permission(user_id, &index_id).await?;
         trace!("User {user_id} has: {permission}");
         Ok(permission)
     }
