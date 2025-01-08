@@ -1,11 +1,9 @@
 use async_trait::async_trait;
 use cosmian_findex::{ADDRESS_LENGTH, Address, MemoryADT, MemoryError};
-use cosmian_findex_structs::{EncryptedEntries, Permission, Permissions, Uuids};
+use cosmian_findex_structs::{EncryptedEntries, Permission, Permissions, Uuids, WORD_LENGTH};
 use uuid::Uuid;
 
 use crate::error::result::FResult;
-
-use super::redis::WORD_LENGTH;
 
 #[async_trait]
 pub(crate) trait PermissionsTrait: Sync + Send {

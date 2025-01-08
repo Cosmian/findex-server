@@ -4,11 +4,8 @@ use std::str::Utf8Error;
 use assert_cmd::cargo::CargoError;
 use cosmian_config_utils::ConfigUtilsError;
 use cosmian_crypto_core::CryptoCoreError;
-use cosmian_findex::{Address, ADDRESS_LENGTH};
-use cosmian_findex_client::{
-    reexport::{cosmian_findex_config::FindexConfigError, cosmian_http_client::HttpClientError},
-    FindexClientError,
-};
+use cosmian_findex::{ADDRESS_LENGTH, Address};
+use cosmian_findex_client::{FindexClientError, reexport::cosmian_http_client::HttpClientError};
 use hex::FromHexError;
 use thiserror::Error;
 

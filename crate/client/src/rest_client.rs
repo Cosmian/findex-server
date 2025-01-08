@@ -1,16 +1,17 @@
 use std::fmt::Display;
 
 use crate::{
-    error::{
-        result::{FindexClientResult, FindexRestClientResultHelper},
-        FindexClientError,
-    },
     InstantiatedFindex,
+    config::FindexClientConfig,
+    error::{
+        FindexClientError,
+        result::{FindexClientResult, FindexRestClientResultHelper},
+    },
 };
-use cosmian_findex::{Address, Findex, MemoryADT, Secret, ADDRESS_LENGTH, KEY_LENGTH};
-use cosmian_findex_config::FindexClientConfig;
-use cosmian_findex_server::database::redis::{decode_fn, encode_fn, WORD_LENGTH};
-use cosmian_findex_structs::{Addresses, Guard, OptionalWords, Tasks};
+use cosmian_findex::{ADDRESS_LENGTH, Address, Findex, KEY_LENGTH, MemoryADT, Secret};
+use cosmian_findex_structs::{
+    Addresses, Guard, OptionalWords, Tasks, WORD_LENGTH, decode_fn, encode_fn,
+};
 use cosmian_http_client::HttpClient;
 use reqwest::{Response, StatusCode};
 use serde::{Deserialize, Serialize};
@@ -33,7 +34,7 @@ impl Display for SuccessResponse {
 #[derive(Clone)]
 pub struct FindexRestClient {
     pub client: HttpClient,
-    pub conf: FindexClientConfig,
+    pub config: FindexClientConfig,
     index_id: Option<String>,
 }
 
@@ -56,7 +57,7 @@ impl FindexRestClient {
 
         Ok(Self {
             client,
-            conf,
+            config,
             index_id: None,
         })
     }
@@ -64,7 +65,7 @@ impl FindexRestClient {
     fn new_memory(&self, index_id: Uuid) -> FindexRestClient {
         Self {
             client: self.client.clone(), // TODO(review): is cloning ok  here ?
-            conf: self.conf.clone(),
+            config: self.config.clone(),
             index_id: Some(index_id.to_string()),
         }
     }

@@ -43,6 +43,7 @@ clap = { workspace = true, features = [
   "cargo",
 ] }
 cosmian_findex = { workspace = true, features = ["redis-mem"] }
+cosmian_findex_client = { path = "../client" }
 cosmian_findex_structs = { path = "../structs" }
 cosmian_logger = { workspace = true }
 dotenvy = "0.15"
@@ -73,7 +74,6 @@ toml = "0.8"
 tracing = { workspace = true }
 url = { workspace = true }
 uuid = { workspace = true, features = ["v4"] }
-cosmian_findex_config = { path = "../config" }
 cosmian_crypto_core = { workspace = true }
 
 [dev-dependencies]

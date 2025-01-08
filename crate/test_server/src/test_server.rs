@@ -1,3 +1,4 @@
+use cosmian_config_utils::ConfigUtils;
 use std::{
     env,
     path::PathBuf,
@@ -8,9 +9,8 @@ use std::{
 
 use actix_server::ServerHandle;
 use cosmian_findex_client::{
-    findex_client_bail, findex_client_error,
-    reexport::{cosmian_config_utils::ConfigUtils, cosmian_http_client::HttpClientConfig},
-    FindexClientConfig, FindexClientError, FindexRestClient,
+    FindexClientConfig, FindexClientError, FindexRestClient, findex_client_bail,
+    findex_client_error, reexport::cosmian_http_client::HttpClientConfig,
 };
 use cosmian_findex_server::{
     config::{
@@ -21,7 +21,7 @@ use cosmian_findex_server::{
 use tokio::sync::OnceCell;
 use tracing::{info, trace};
 
-use crate::test_jwt::{get_auth0_jwt_config, AUTH0_TOKEN};
+use crate::test_jwt::{AUTH0_TOKEN, get_auth0_jwt_config};
 
 /// In order to run most tests in parallel,
 /// we use that to avoid to try to start N Findex servers (one per test)
@@ -57,15 +57,11 @@ fn get_db_config() -> DBConfig {
 pub async fn start_default_test_findex_server() -> &'static TestsContext {
     trace!("Starting default test server");
     ONCE.get_or_try_init(|| {
-        start_test_server_with_options(
-            get_db_config(),
-            6668,
-            AuthenticationOptions {
-                use_jwt_token: false,
-                use_https: false,
-                use_client_cert: false,
-            },
-        )
+        start_test_server_with_options(get_db_config(), 6668, AuthenticationOptions {
+            use_jwt_token: false,
+            use_https: false,
+            use_client_cert: false,
+        })
     })
     .await
     .unwrap()
@@ -75,15 +71,11 @@ pub async fn start_default_test_findex_server_with_cert_auth() -> &'static Tests
     trace!("Starting test server with cert auth");
     ONCE_SERVER_WITH_AUTH
         .get_or_try_init(|| {
-            start_test_server_with_options(
-                get_db_config(),
-                6660,
-                AuthenticationOptions {
-                    use_jwt_token: false,
-                    use_https: true,
-                    use_client_cert: true,
-                },
-            )
+            start_test_server_with_options(get_db_config(), 6660, AuthenticationOptions {
+                use_jwt_token: false,
+                use_https: true,
+                use_client_cert: true,
+            })
         })
         .await
         .unwrap()
@@ -363,7 +355,7 @@ mod test {
     use tracing::trace;
 
     use crate::{
-        start_test_server_with_options, test_server::redis_db_config, AuthenticationOptions,
+        AuthenticationOptions, start_test_server_with_options, test_server::redis_db_config,
     };
 
     #[tokio::test]
@@ -377,16 +369,13 @@ mod test {
         ];
         for (use_https, use_jwt_token, use_client_cert, description) in test_cases {
             trace!("Running test case: {}", description);
-            let context = start_test_server_with_options(
-                redis_db_config(),
-                6667,
-                AuthenticationOptions {
+            let context =
+                start_test_server_with_options(redis_db_config(), 6667, AuthenticationOptions {
                     use_https,
                     use_jwt_token,
                     use_client_cert,
-                },
-            )
-            .await?;
+                })
+                .await?;
             context.stop_server().await?;
         }
         Ok(())

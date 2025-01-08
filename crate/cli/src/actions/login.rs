@@ -1,7 +1,7 @@
 use clap::Parser;
-use cosmian_findex_client::{reexport::cosmian_http_client::LoginState, FindexClientConfig};
+use cosmian_findex_client::{FindexClientConfig, reexport::cosmian_http_client::LoginState};
 
-use crate::error::{result::CliResult, CliError};
+use crate::error::{CliError, result::CliResult};
 
 /// Login to the Identity Provider of the Findex server using the `OAuth2`
 /// authorization code flow.

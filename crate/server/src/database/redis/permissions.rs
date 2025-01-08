@@ -1,7 +1,6 @@
 use async_trait::async_trait;
 use cosmian_crypto_core::bytes_ser_de::Serializable;
-use cosmian_findex_config::WORD_LENGTH;
-use cosmian_findex_structs::{Permission, Permissions};
+use cosmian_findex_structs::{Permission, Permissions, WORD_LENGTH};
 use redis::{RedisError, cmd, pipe};
 use tracing::{debug, instrument, trace};
 use uuid::Uuid;
@@ -12,48 +11,7 @@ use crate::{
     error::{result::FResult, server::FindexServerError},
 };
 
-// // original code : https://github.com/redis-rs/redis-rs/blob/859e97087d3d9b487b2bf054c0efbbcf0aa5bf52/redis/src/aio/async_transactions.rs
-// // this better should be reviewed by the redis team to ensure reliability
-// #[allow(dependency_on_unit_never_type_fallback)]
-// pub async fn transaction_async<
-//     T,
-//     E: From<RedisError>,
-//     K: ToRedisArgs,
-//     F: FnMut(
-//         ConnectionManager,
-//         &mut Pipeline,
-//     ) -> Pin<Box<dyn Future<Output = Result<Option<T>, E>> + Send>>,
-// >(
-//     mut mgr: ConnectionManager,
-//     keys: &[K],
-//     mut func: F,
-// ) -> Result<T, E> {
-//     loop {
-//         match cmd("WATCH").arg(keys).query_async(&mut mgr).await {
-//             Ok(result) => Ok(result),
-//             Err(e) => {
-//                 cmd("UNWATCH").query_async(&mut mgr).await?; // Force UNWATCH after WATCH failure
-//                 Err(e) // Propagate original error
-//             }
-//         }?;
-//         let response = func(mgr.clone(), pipe().atomic()).await;
-//         match response {
-//             Ok(None) => {
-//                 trace!("retrying transaction");
-//                 continue;
-//             }
-//             // make sure no watch is left in the connection
-//             Ok(Some(response)) => {
-//                 cmd("UNWATCH").query_async(&mut mgr).await?;
-//                 return Ok(response);
-//             }
-//             Err(e) => {
-//                 cmd("UNWATCH").query_async(&mut mgr).await?;
-//                 Err(e)
-//             }
-//         }?;
-//     }
-// }
+// TODO(hatem) : change this to smth with compare and swapb
 
 #[async_trait]
 impl PermissionsTrait for Redis<WORD_LENGTH> {

@@ -1,14 +1,11 @@
 use actix_web::{HttpMessage, HttpRequest};
-use cosmian_findex_structs::Permission;
+use cosmian_findex_structs::{Permission, WORD_LENGTH};
 use tracing::{debug, instrument, trace};
 use uuid::Uuid;
 
 use crate::{
     config::{DbParams, ServerParams},
-    database::{
-        database_traits::PermissionsTrait,
-        redis::{Redis, WORD_LENGTH},
-    },
+    database::{database_traits::PermissionsTrait, redis::Redis},
     error::result::FResult,
     middlewares::{JwtAuthClaim, PeerCommonName},
 };

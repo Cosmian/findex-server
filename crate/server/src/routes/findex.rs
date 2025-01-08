@@ -5,12 +5,11 @@ use actix_web::{
     web::{self, Bytes, Data},
 };
 use cosmian_findex::{ADDRESS_LENGTH, MemoryADT};
-use cosmian_findex_structs::{Addresses, Guard, OptionalWords, Permission, Tasks};
+use cosmian_findex_structs::{Addresses, Guard, OptionalWords, Permission, Tasks, WORD_LENGTH};
 use tracing::{info, trace};
 
 use crate::{
     core::FindexServer,
-    database::redis::WORD_LENGTH,
     error::server::FindexServerError,
     routes::{check_permission, error::ResponseBytes},
 };

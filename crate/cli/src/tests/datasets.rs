@@ -1,7 +1,7 @@
 use std::{collections::HashMap, ops::Deref, process::Command};
 
 use assert_cmd::prelude::*;
-use base64::{engine::general_purpose, Engine};
+use base64::{Engine, engine::general_purpose};
 use cosmian_findex_client::FINDEX_CLI_CONF_ENV;
 use cosmian_findex_structs::EncryptedEntries;
 use cosmian_logger::log_init;
@@ -11,8 +11,8 @@ use uuid::Uuid;
 
 use crate::{
     actions::datasets::{AddEntries, DeleteEntries, GetEntries},
-    error::{result::CliResult, CliError},
-    tests::{utils::recover_cmd_logs, PROG_NAME},
+    error::{CliError, result::CliResult},
+    tests::{PROG_NAME, utils::recover_cmd_logs},
 };
 
 pub(crate) fn dataset_add_entries_cmd(
@@ -157,36 +157,28 @@ pub(crate) async fn test_datasets() -> CliResult<()> {
     debug!("uuids: {:?}", uuids);
 
     // Add entries to the dataset
-    dataset_add_entries_cmd(
-        &ctx.owner_client_conf_path,
-        &AddEntries {
-            index_id,
-            entries: encrypted_entries,
-        },
-    )?;
+    dataset_add_entries_cmd(&ctx.owner_client_conf_path, &AddEntries {
+        index_id,
+        entries: encrypted_entries,
+    })?;
 
     // Get the added entries from the dataset
-    let added_entries = datasets_get_entries_cmd(
-        &ctx.owner_client_conf_path,
-        &GetEntries {
-            index_id,
-            uuids: uuids.clone(),
-        },
-    )?;
+    let added_entries = datasets_get_entries_cmd(&ctx.owner_client_conf_path, &GetEntries {
+        index_id,
+        uuids: uuids.clone(),
+    })?;
     assert_eq!(added_entries.len(), entries_number);
 
-    dataset_delete_entries_cmd(
-        &ctx.owner_client_conf_path,
-        &DeleteEntries {
-            index_id,
-            uuids: added_entries.get_uuids().deref().to_owned(),
-        },
-    )?;
+    dataset_delete_entries_cmd(&ctx.owner_client_conf_path, &DeleteEntries {
+        index_id,
+        uuids: added_entries.get_uuids().deref().to_owned(),
+    })?;
 
     // Get the added entries from the dataset
     let deleted_entries =
         datasets_get_entries_cmd(&ctx.owner_client_conf_path, &GetEntries { index_id, uuids })?;
-    assert_eq!(added_entries.len(), 0);
+    // println!("added_entries: {added_entries}");
+    assert_eq!(deleted_entries.len(), 0);
 
     Ok(())
 }

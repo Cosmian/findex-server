@@ -20,5 +20,4 @@ thiserror = { workspace = true }
 uuid = { workspace = true }
 cosmian_crypto_core = { workspace = true, features = ["ser"] }
 cosmian_findex = { workspace = true }
-cosmian_findex_config = { path = "../config" }
 rand = "0.8.5"

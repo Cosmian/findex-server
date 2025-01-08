@@ -7,7 +7,7 @@ use cosmian_findex::{IndexADT, Value};
 use cosmian_findex_client::FindexRestClient;
 use tracing::{instrument, trace};
 
-use crate::{actions::console, error::result::CliResult};
+use crate::error::result::CliResult;
 
 use super::parameters::FindexParameters;
 #[derive(Parser, Debug)]
@@ -80,7 +80,11 @@ impl IndexOrDeleteAction {
     ///
     /// # Returns
     /// * `CliResult<()>` - Ok if operation succeeds, Error otherwise
-    async fn add_or_delete(&self, rest_client: FindexRestClient, is_insert: bool) -> CliResult<()> {
+    async fn add_or_delete(
+        &self,
+        rest_client: &mut FindexRestClient,
+        is_insert: bool,
+    ) -> CliResult<()> {
         let bindings = self.to_indexed_value_keywords_map()?;
         let iterable_bindings = bindings.iter().map(|(k, v)| (k.clone(), v.clone()));
         let findex = rest_client.instantiate_findex(
@@ -96,10 +100,7 @@ impl IndexOrDeleteAction {
         let operation_name = if is_insert { "Indexing" } else { "Deleting" };
         trace!("{} done: keywords: {:?}", operation_name, written_keywords);
 
-        console::Stdout::new(&format!(
-            "{operation_name} done: keywords: {written_keywords:?}",
-        ))
-        .write()?;
+        println!("indexing done: keywords: {:?}", written_keywords);
 
         Ok(())
     }
@@ -116,7 +117,7 @@ impl IndexOrDeleteAction {
     /// - There is an error converting the CSV file to a hashmap.
     /// - There is an error adding the data to the Findex index.
     /// - There is an error writing the result to the console.
-    pub async fn add(&self, rest_client: FindexRestClient) -> CliResult<()> {
+    pub async fn add(&self, rest_client: &mut FindexRestClient) -> CliResult<()> {
         Self::add_or_delete(self, rest_client, true).await
     }
 
@@ -131,7 +132,7 @@ impl IndexOrDeleteAction {
     /// - There is an error converting the CSV file to a hashmap.
     /// - There is an error deleting the data from the Findex index.
     /// - There is an error writing the result to the console.
-    pub async fn delete(&self, rest_client: FindexRestClient) -> CliResult<()> {
+    pub async fn delete(&self, rest_client: &mut FindexRestClient) -> CliResult<()> {
         Self::add_or_delete(self, rest_client, false).await
     }
 }
