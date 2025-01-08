@@ -17,13 +17,6 @@ Below are the conventions that are used in the repository and that should be res
 This projects follow the [git-flow branching model](https://git-flow.readthedocs.io/fr/latest/presentation.html).
 To contribute a new feature, pull the `develop` branch locally and submit a PR to be merged into `develop` then request review from at least one team member.
 
-## Code Review Guidelines
-
-Reviewers should verify:
-- All linter bypasses are properly documented
-- Code adheres to project conventions
-- Tests are included and passing
-- Documentation is updated
 
 ## License
 By contributing to this project, you agree that your contributions will be licensed under the project's license.

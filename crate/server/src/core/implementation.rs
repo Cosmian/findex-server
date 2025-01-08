@@ -19,14 +19,10 @@ pub(crate) struct FindexServer {
 
 impl FindexServer {
     pub(crate) async fn instantiate(mut shared_config: ServerParams) -> FResult<Self> {
-        let db = if let Some(mut db_params) = shared_config.db_params.as_mut() {
-            match &mut db_params {
-                DbParams::Redis(url) => {
-                    Redis::instantiate(url.as_str(), shared_config.clear_db_on_start).await?
-                }
+        let db = match &mut shared_config.db_params {
+            DbParams::Redis(url) => {
+                Redis::instantiate(url.as_str(), shared_config.clear_db_on_start).await?
             }
-        } else {
-            findex_server_bail!("Fatal: no database configuration provided. Stopping.")
         };
 
         Ok(Self {

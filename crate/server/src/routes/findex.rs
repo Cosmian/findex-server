@@ -1,14 +1,12 @@
 use std::sync::Arc;
 
 use actix_web::{
-    post,
+    HttpRequest, HttpResponse, post,
     web::{self, Bytes, Data},
-    HttpRequest, HttpResponse,
 };
-use cosmian_findex::{MemoryADT, ADDRESS_LENGTH};
+use cosmian_findex::{ADDRESS_LENGTH, MemoryADT};
 use cosmian_findex_structs::{Addresses, Guard, OptionalWords, Permission, Tasks};
 use tracing::{info, trace};
-use uuid::Uuid;
 
 use crate::{
     core::FindexServer,

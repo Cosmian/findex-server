@@ -16,7 +16,6 @@ doctest = false
 
 [dependencies]
 base64 = { workspace = true }
-cloudproof_findex = { workspace = true }
 thiserror = { workspace = true }
 uuid = { workspace = true }
 cosmian_crypto_core = { workspace = true, features = ["ser"] }

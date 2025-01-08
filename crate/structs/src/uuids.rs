@@ -1,8 +1,6 @@
 use std::{fmt::Display, ops::Deref};
 
-use cloudproof_findex::reexport::cosmian_crypto_core::bytes_ser_de::{
-    self, to_leb128_len, Serializable,
-};
+use cosmian_crypto_core::bytes_ser_de::{self, to_leb128_len, Serializable};
 use uuid::Uuid;
 
 use crate::{encrypted_entries::UUID_LENGTH, StructsError};
@@ -81,7 +79,7 @@ impl Serializable for Uuids {
 
 #[cfg(test)]
 mod tests {
-    use cloudproof_findex::reexport::cosmian_crypto_core::bytes_ser_de::Serializable;
+    use cosmian_crypto_core::bytes_ser_de::Serializable;
     use uuid::Uuid;
 
     use super::Uuids;

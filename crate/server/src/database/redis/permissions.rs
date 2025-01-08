@@ -1,7 +1,8 @@
 use async_trait::async_trait;
-use cloudproof_findex::reexport::cosmian_crypto_core::bytes_ser_de::Serializable;
+use cosmian_crypto_core::bytes_ser_de::Serializable;
+use cosmian_findex_config::WORD_LENGTH;
 use cosmian_findex_structs::{Permission, Permissions};
-use redis::{pipe, transaction, Commands, RedisError};
+use redis::{RedisError, cmd, pipe};
 use tracing::{debug, instrument, trace};
 use uuid::Uuid;
 
@@ -11,78 +12,132 @@ use crate::{
     error::{result::FResult, server::FindexServerError},
 };
 
-use super::{Redis, WORD_LENGTH};
+// // original code : https://github.com/redis-rs/redis-rs/blob/859e97087d3d9b487b2bf054c0efbbcf0aa5bf52/redis/src/aio/async_transactions.rs
+// // this better should be reviewed by the redis team to ensure reliability
+// #[allow(dependency_on_unit_never_type_fallback)]
+// pub async fn transaction_async<
+//     T,
+//     E: From<RedisError>,
+//     K: ToRedisArgs,
+//     F: FnMut(
+//         ConnectionManager,
+//         &mut Pipeline,
+//     ) -> Pin<Box<dyn Future<Output = Result<Option<T>, E>> + Send>>,
+// >(
+//     mut mgr: ConnectionManager,
+//     keys: &[K],
+//     mut func: F,
+// ) -> Result<T, E> {
+//     loop {
+//         match cmd("WATCH").arg(keys).query_async(&mut mgr).await {
+//             Ok(result) => Ok(result),
+//             Err(e) => {
+//                 cmd("UNWATCH").query_async(&mut mgr).await?; // Force UNWATCH after WATCH failure
+//                 Err(e) // Propagate original error
+//             }
+//         }?;
+//         let response = func(mgr.clone(), pipe().atomic()).await;
+//         match response {
+//             Ok(None) => {
+//                 trace!("retrying transaction");
+//                 continue;
+//             }
+//             // make sure no watch is left in the connection
+//             Ok(Some(response)) => {
+//                 cmd("UNWATCH").query_async(&mut mgr).await?;
+//                 return Ok(response);
+//             }
+//             Err(e) => {
+//                 cmd("UNWATCH").query_async(&mut mgr).await?;
+//                 Err(e)
+//             }
+//         }?;
+//     }
+// }
 
 #[async_trait]
 impl PermissionsTrait for Redis<WORD_LENGTH> {
-    #[instrument(ret(Display), err, skip(self))]
+    #[instrument(ret(Display), err, skip(self), level = "trace")]
     async fn create_index_id(&self, user_id: &str) -> FResult<Uuid> {
         let redis_key = user_id.as_bytes();
 
-        let mut con = self.client.get_connection()?;
+        let mut con_manager: redis::aio::ConnectionManager = self.memory.manager.clone();
 
         let uuid = Uuid::new_v4();
-        let key = user_id.as_bytes().to_vec();
-        let permissions = (self.get_permissions(user_id).await).map_or_else(
-            |_error| Permissions::new(uuid, Permission::Admin),
-            |mut permissions| {
-                permissions.grant_permission(uuid, Permission::Admin);
-                permissions
-            },
-        );
-        let mut pipe = pipe();
-        pipe.set::<_, _>(key, permissions.serialize());
-        pipe.atomic()
-            .query_async::<()>(&mut self.memory.manager.clone())
-            .await
-            .map_err(FindexServerError::from)?;
 
-        // run the transaction block.
-        let (mut returned_permissions_by_redis,): (Vec<Vec<u8>>,) =
-            transaction(&mut con, &[redis_key], |con, pipe| {
-                // load the old value, so we know what to increment.
-                let mut values: Vec<Vec<u8>> = con.get(redis_key)?;
-                trace!("values: {values:?}");
+        // simulate the transaction block using async code
+        loop {
+            // first, WATCH the redis_key for changes
+            let _: () = cmd("WATCH")
+                .arg(redis_key)
+                .query_async(&mut con_manager)
+                .await?;
+            // then, read the value of the redis_key
+            let mut values: Vec<Vec<u8>> = redis::cmd("GET")
+                .arg(redis_key)
+                .query_async(&mut con_manager)
+                .await?;
+            trace!("values: {values:?}");
 
-                let permissions = if values.is_empty() {
-                    // if there is no value, we create a new one
-                    Permissions::new(uuid, Permission::Admin)
-                } else {
-                    // Deserialize permissions.
-                    // We expect only one value here but the redis.get() signature is a Vec<Vec<u8>> so we need to get only the first element.
-                    let serialized_value = &values.pop().ok_or_else(|| {
-                        RedisError::from((redis::ErrorKind::TypeError, "No permission found"))
-                    })?;
-                    let mut permissions =
-                        Permissions::deserialize(serialized_value).map_err(|_e| {
-                            RedisError::from((redis::ErrorKind::TypeError, "Failed to deserialize"))
-                        })?;
-
-                    permissions.grant_permission(uuid, Permission::Admin);
-                    permissions
-                };
-                let permissions_bytes = permissions.serialize().map_err(|_e| {
-                    RedisError::from((redis::ErrorKind::TypeError, "Failed to serialize"))
+            // apply what we need to apply
+            let permissions = if values.is_empty() {
+                // if there is no value, we create a new one
+                Permissions::new(uuid, Permission::Admin)
+            } else {
+                // Deserialize permissions.
+                // We expect only one value here but the redis.get() signature is a Vec<Vec<u8>> so we need to get only the first element.
+                let serialized_value = &values.pop().ok_or_else(|| {
+                    RedisError::from((redis::ErrorKind::TypeError, "No permission found"))
+                })?;
+                let mut permissions = Permissions::deserialize(serialized_value).map_err(|_e| {
+                    RedisError::from((redis::ErrorKind::TypeError, "Failed to deserialize"))
                 })?;
 
-                // increment
-                pipe.set(redis_key, permissions_bytes.as_slice())
-                    .ignore()
-                    .get(redis_key)
-                    .query(con)
+                permissions.grant_permission(uuid, Permission::Admin);
+                permissions
+            };
+            let permissions_bytes = permissions.serialize().map_err(|_e| {
+                RedisError::from((redis::ErrorKind::TypeError, "Failed to serialize"))
             })?;
 
-        // Deserialize permissions
-        let serialized_value = returned_permissions_by_redis.pop().ok_or_else(|| {
-            FindexServerError::Unauthorized(format!(
-                "No permission found written for user {user_id}"
-            ))
-        })?;
-        let returned_permissions = Permissions::deserialize(&serialized_value)?;
+            // now, prepare the pipe that will increment
+            let mut pipe = redis::pipe();
+            pipe.atomic()
+                .set(redis_key, permissions_bytes.as_slice())
+                .ignore()
+                .get(redis_key);
 
-        debug!("new permissions for user {user_id}: {returned_permissions:?}",);
+            // final step : execute the pipe and restart in case of WATCH failure
+            let returned_permissions: Result<(Vec<Vec<u8>>,), _> = redis::cmd("GET")
+                .arg(redis_key)
+                .query_async(&mut con_manager)
+                .await;
+            match returned_permissions {
+                Ok((returned_permissions_by_redis,)) => {
+                    // Deserialize permissions
+                    let serialized_value =
+                        returned_permissions_by_redis.clone().pop().ok_or_else(|| {
+                            // todo(review): can we avoid the clone here?
+                            FindexServerError::Unauthorized(format!(
+                                "No permission found written for user {user_id}"
+                            ))
+                        })?;
+                    let returned_permissions = Permissions::deserialize(&serialized_value)?;
 
-        Ok(uuid)
+                    debug!("new permissions for user {user_id}: {returned_permissions:?}",);
+
+                    break Ok(uuid);
+                }
+                Err(e) => {
+                    if e.to_string().contains("WATCH") {
+                        // Key was modified, retry the transaction
+                        continue;
+                    }
+                    // Some other error occurred
+                    break Err(e.into());
+                }
+            }
+        }
     }
 
     #[instrument(ret(Display), err, skip(self), level = "trace")]

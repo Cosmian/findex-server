@@ -50,7 +50,6 @@ pub mod error;
 pub use commands::{findex_cli_main, CoreFindexActions, FindexCli};
 
 pub mod reexports {
-    pub use cloudproof_findex;
     pub use cosmian_findex_client;
     pub use cosmian_findex_structs;
 }

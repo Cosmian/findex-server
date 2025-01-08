@@ -1,11 +1,10 @@
 use std::{str::FromStr, sync::Arc};
 
 use actix_web::{
-    post,
+    HttpRequest, HttpResponse, post,
     web::{self, Data, Json},
-    HttpRequest, HttpResponse,
 };
-use cloudproof_findex::reexport::cosmian_crypto_core::bytes_ser_de::Serializable;
+use cosmian_crypto_core::bytes_ser_de::Serializable;
 use cosmian_findex_structs::Permission;
 use tracing::{debug, info};
 use uuid::Uuid;
@@ -33,7 +32,6 @@ pub(crate) async fn check_permission(
     Ok(())
 }
 
-// TODO: make this atomic
 #[post("/create/index")]
 pub(crate) async fn create_index_id(
     req: HttpRequest,

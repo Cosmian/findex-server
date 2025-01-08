@@ -2,7 +2,6 @@ use cosmian_findex::MemoryError;
 use std::sync::mpsc::SendError;
 
 use actix_web::dev::ServerHandle;
-use cosmian_findex::Error as CoreError;
 use cosmian_findex_structs::StructsError;
 use std::fmt::Debug;
 use thiserror::Error;
@@ -65,12 +64,6 @@ impl From<redis::RedisError> for FindexServerError {
 impl From<MemoryError> for FindexServerError {
     fn from(e: MemoryError) -> Self {
         Self::DatabaseError(e.to_string())
-    }
-}
-
-impl From<CoreError> for FindexServerError {
-    fn from(e: CoreError) -> Self {
-        Self::Findex(e.to_string())
     }
 }
 

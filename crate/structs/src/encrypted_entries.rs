@@ -4,8 +4,8 @@ use std::{
     ops::{Deref, DerefMut},
 };
 
-use base64::{engine::general_purpose, Engine};
-use cosmian_crypto_core::bytes_ser_de::{Deserializer, Serializer};
+use base64::{Engine, engine::general_purpose};
+use cosmian_crypto_core::bytes_ser_de::{Deserializer, Serializable, Serializer, to_leb128_len};
 use uuid::Uuid;
 
 use crate::{StructsError, Uuids};
@@ -141,7 +141,7 @@ impl EncryptedEntries {
 mod tests {
     use std::collections::HashMap;
 
-    use cloudproof_findex::reexport::cosmian_crypto_core::bytes_ser_de::Serializable;
+    use cosmian_crypto_core::bytes_ser_de::Serializable;
     use uuid::Uuid;
 
     use super::EncryptedEntries;

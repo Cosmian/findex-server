@@ -1,4 +1,4 @@
-use cloudproof_findex::reexport::cosmian_crypto_core::bytes_ser_de::Serializable;
+use cosmian_crypto_core::bytes_ser_de::Serializable;
 use cosmian_findex_structs::{EncryptedEntries, Uuids};
 use tracing::{instrument, trace};
 use uuid::Uuid;

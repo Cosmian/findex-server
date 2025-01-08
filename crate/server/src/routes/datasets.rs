@@ -5,7 +5,7 @@ use actix_web::{
     web::{self, Bytes, Data, Json},
     HttpRequest, HttpResponse,
 };
-use cloudproof_findex::reexport::cosmian_crypto_core::bytes_ser_de::Serializable;
+use cosmian_crypto_core::bytes_ser_de::Serializable;
 use cosmian_findex_structs::{EncryptedEntries, Permission, Uuids};
 use tracing::{info, trace};
 use uuid::Uuid;
