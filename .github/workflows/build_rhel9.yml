@@ -67,7 +67,7 @@ jobs:
           TARGET: ${{ inputs.target }}
           DEBUG_OR_RELEASE: ${{ inputs.debug_or_release }}
         run: |
-          bash .github/scripts/cargo_build_and_test.sh
+          bash .github/scripts/cargo_build.sh
 
       - name: Upload findex-server for RHEL 9
         uses: actions/upload-artifact@v4

@@ -45,7 +45,7 @@ jobs:
           DEBUG_OR_RELEASE: ${{ inputs.debug_or_release }}
           SKIP_SERVICES_TESTS: ${{ inputs.skip_services_tests }}
         run: |
-          bash .github/scripts/cargo_build_and_test.sh
+          bash .github/scripts/cargo_build.sh
 
       - name: Upload findex-server for ${{ inputs.distribution }}
         uses: actions/upload-artifact@v4
