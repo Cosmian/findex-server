@@ -1,4 +1,4 @@
-use cosmian_findex::{Address, MemoryADT, MemoryError, RedisMemory, ADDRESS_LENGTH};
+use cosmian_findex::{ADDRESS_LENGTH, Address, MemoryADT, MemoryError, RedisMemory};
 use tracing::info;
 
 use crate::error::result::FResult;

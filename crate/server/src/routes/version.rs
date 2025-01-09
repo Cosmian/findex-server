@@ -1,9 +1,8 @@
 use std::sync::Arc;
 
 use actix_web::{
-    get,
+    HttpRequest, get,
     web::{Data, Json},
-    HttpRequest,
 };
 use clap::crate_version;
 use openssl::version;

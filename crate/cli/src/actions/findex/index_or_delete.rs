@@ -82,7 +82,7 @@ impl IndexOrDeleteAction {
     /// * `CliResult<()>` - Ok if operation succeeds, Error otherwise
     async fn add_or_delete(
         &self,
-        rest_client: &mut FindexRestClient,
+        rest_client: &FindexRestClient,
         is_insert: bool,
     ) -> CliResult<()> {
         let bindings = self.to_indexed_value_keywords_map()?;
@@ -100,7 +100,7 @@ impl IndexOrDeleteAction {
         let operation_name = if is_insert { "Indexing" } else { "Deleting" };
         trace!("{} done: keywords: {:?}", operation_name, written_keywords);
 
-        println!("indexing done: keywords: {:?}", written_keywords);
+        println!("indexing done: keywords: {written_keywords:?}");
 
         Ok(())
     }

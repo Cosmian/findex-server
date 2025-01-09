@@ -11,7 +11,7 @@ use uuid::Uuid;
 use super::{index_or_delete::index_or_delete_cmd, search::search_cmd};
 use crate::{
     actions::{
-        findex::{index_or_delete::IndexOrDeleteAction, search::SearchAction, FindexParameters},
+        findex::{FindexParameters, index_or_delete::IndexOrDeleteAction, search::SearchAction},
         permissions::{GrantPermission, ListPermissions, RevokePermission},
     },
     error::result::CliResult,
@@ -29,32 +29,24 @@ const SMALL_DATASET: &str = "../../test_data/datasets/smallpop.csv";
 const HUGE_DATASET: &str = "../../test_data/datasets/business-employment.csv";
 
 fn add(cli_conf_path: &str, index_id: &Uuid, dataset_path: &str) -> CliResult<()> {
-    index_or_delete_cmd(
-        cli_conf_path,
-        "index",
-        &IndexOrDeleteAction {
-            findex_parameters: FindexParameters {
-                key: "11223344556677889900AABBCCDDEEFF11223344556677889900AABBCCDDEEFF".to_owned(),
-                index_id: index_id.to_owned(),
-            },
-            csv: dataset_path.into(),
+    index_or_delete_cmd(cli_conf_path, "index", &IndexOrDeleteAction {
+        findex_parameters: FindexParameters {
+            key: "11223344556677889900AABBCCDDEEFF11223344556677889900AABBCCDDEEFF".to_owned(),
+            index_id: index_id.to_owned(),
         },
-    )?;
+        csv: dataset_path.into(),
+    })?;
     Ok(())
 }
 
 fn delete(cli_conf_path: &str, index_id: &Uuid, dataset_path: &str) -> CliResult<()> {
-    index_or_delete_cmd(
-        cli_conf_path,
-        "delete",
-        &IndexOrDeleteAction {
-            findex_parameters: FindexParameters {
-                key: "11223344556677889900AABBCCDDEEFF11223344556677889900AABBCCDDEEFF".to_owned(),
-                index_id: index_id.to_owned(),
-            },
-            csv: dataset_path.into(),
+    index_or_delete_cmd(cli_conf_path, "delete", &IndexOrDeleteAction {
+        findex_parameters: FindexParameters {
+            key: "11223344556677889900AABBCCDDEEFF11223344556677889900AABBCCDDEEFF".to_owned(),
+            index_id: index_id.to_owned(),
         },
-    )?;
+        csv: dataset_path.into(),
+    })?;
     Ok(())
 }
 
@@ -63,16 +55,13 @@ fn search(
     index_id: &Uuid,
     search_options: &SearchOptions,
 ) -> CliResult<String> {
-    search_cmd(
-        cli_conf_path,
-        SearchAction {
-            findex_parameters: FindexParameters {
-                key: "11223344556677889900AABBCCDDEEFF11223344556677889900AABBCCDDEEFF".to_owned(),
-                index_id: index_id.to_owned(),
-            },
-            keyword: search_options.keywords.clone(),
+    search_cmd(cli_conf_path, SearchAction {
+        findex_parameters: FindexParameters {
+            key: "11223344556677889900AABBCCDDEEFF11223344556677889900AABBCCDDEEFF".to_owned(),
+            index_id: index_id.to_owned(),
         },
-    )
+        keyword: search_options.keywords.clone(),
+    })
 }
 
 /// Helper function for `parse_locations`, docs below
@@ -254,14 +243,11 @@ pub(crate) async fn test_findex_grant_and_revoke_permission() -> CliResult<()> {
     add(&ctx.owner_client_conf_path, &index_id, SMALL_DATASET)?;
 
     // Grant read permission to the client
-    grant_permission_cmd(
-        &ctx.owner_client_conf_path,
-        &GrantPermission {
-            user: "user.client@acme.com".to_owned(),
-            index_id,
-            permission: Permission::Read,
-        },
-    )?;
+    grant_permission_cmd(&ctx.owner_client_conf_path, &GrantPermission {
+        user: "user.client@acme.com".to_owned(),
+        index_id,
+        permission: Permission::Read,
+    })?;
 
     // User can read...
     let search_results = search(&ctx.user_client_conf_path, &index_id, &search_options)?;
@@ -278,21 +264,15 @@ pub(crate) async fn test_findex_grant_and_revoke_permission() -> CliResult<()> {
     assert!(add(&ctx.user_client_conf_path, &index_id, SMALL_DATASET).is_err());
 
     // Grant write permission
-    grant_permission_cmd(
-        &ctx.owner_client_conf_path,
-        &GrantPermission {
-            user: "user.client@acme.com".to_owned(),
-            index_id,
-            permission: Permission::Write,
-        },
-    )?;
+    grant_permission_cmd(&ctx.owner_client_conf_path, &GrantPermission {
+        user: "user.client@acme.com".to_owned(),
+        index_id,
+        permission: Permission::Write,
+    })?;
 
-    list_permission_cmd(
-        &ctx.owner_client_conf_path,
-        &ListPermissions {
-            user: "user.client@acme.com".to_owned(),
-        },
-    )?;
+    list_permission_cmd(&ctx.owner_client_conf_path, &ListPermissions {
+        user: "user.client@acme.com".to_owned(),
+    })?;
 
     // User can read...
     let search_results = search(&ctx.user_client_conf_path, &index_id, &search_options)?;
@@ -308,23 +288,17 @@ pub(crate) async fn test_findex_grant_and_revoke_permission() -> CliResult<()> {
     add(&ctx.user_client_conf_path, &index_id, SMALL_DATASET)?;
 
     // Try to escalade privileges from `read` to `admin`
-    grant_permission_cmd(
-        &ctx.user_client_conf_path,
-        &GrantPermission {
-            user: "user.client@acme.com".to_owned(),
-            index_id,
-            permission: Permission::Admin,
-        },
-    )
+    grant_permission_cmd(&ctx.user_client_conf_path, &GrantPermission {
+        user: "user.client@acme.com".to_owned(),
+        index_id,
+        permission: Permission::Admin,
+    })
     .unwrap_err();
 
-    revoke_permission_cmd(
-        &ctx.owner_client_conf_path,
-        &RevokePermission {
-            user: "user.client@acme.com".to_owned(),
-            index_id,
-        },
-    )?;
+    revoke_permission_cmd(&ctx.owner_client_conf_path, &RevokePermission {
+        user: "user.client@acme.com".to_owned(),
+        index_id,
+    })?;
 
     search(&ctx.user_client_conf_path, &index_id, &search_options).unwrap_err();
 

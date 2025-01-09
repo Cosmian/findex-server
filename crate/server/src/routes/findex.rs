@@ -29,7 +29,7 @@ pub(crate) async fn findex_batch_read(
     check_permission(&user, &index_id, Permission::Read, &findex_server).await?;
 
     let bytes_slice = bytes.as_ref();
-    let addresses = Addresses::deserialize(bytes_slice.to_vec())?;
+    let addresses = Addresses::deserialize(bytes_slice)?;
 
     trace!(
         "batch_read: number of addresses {}:",
@@ -106,9 +106,9 @@ pub(crate) async fn findex_guarded_write(
     }
 
     #[allow(clippy::unwrap_used)] // guard and tasks are checked to be Some just above
-    let guard = Guard::deserialize(guard.unwrap().to_vec())?;
+    let guard = Guard::deserialize(guard.unwrap())?;
     #[allow(clippy::unwrap_used)] // same as above, already checked to be Some
-    let tasks = Tasks::deserialize(tasks.unwrap().to_vec())?;
+    let tasks = Tasks::deserialize(tasks.unwrap())?;
 
     let result_word = findex_server
         .db

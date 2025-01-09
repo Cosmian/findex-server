@@ -71,10 +71,10 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
                 .query_async(&mut con_manager)
                 .await;
             match returned_permissions {
-                Ok((returned_permissions_by_redis,)) => {
+                Ok((mut returned_permissions_by_redis,)) => {
                     // Deserialize permissions
                     let serialized_value =
-                        returned_permissions_by_redis.clone().pop().ok_or_else(|| {
+                        returned_permissions_by_redis.pop().ok_or_else(|| {
                             // todo(review): can we avoid the clone here?
                             FindexServerError::Unauthorized(format!(
                                 "No permission found written for user {user_id}"

@@ -6,8 +6,8 @@ use tracing::debug;
 
 use crate::{
     actions::findex::index_or_delete::IndexOrDeleteAction,
-    error::{result::CliResult, CliError},
-    tests::{utils::recover_cmd_logs, PROG_NAME},
+    error::{CliError, result::CliResult},
+    tests::{PROG_NAME, utils::recover_cmd_logs},
 };
 
 #[allow(clippy::unwrap_used)]

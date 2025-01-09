@@ -84,7 +84,6 @@ pub(crate) fn datasets_get_entries_cmd(
         args.push(uuid.to_string());
     }
     cmd.env(FINDEX_CLI_CONF_ENV, cli_conf_path);
-
     cmd.arg("datasets").args(args);
     let output = recover_cmd_logs(&mut cmd);
     if output.status.success() {
@@ -100,6 +99,7 @@ pub(crate) fn datasets_get_entries_cmd(
     ))
 }
 
+#[allow(clippy::cognitive_complexity)] // cog complexity is 26/25, no need to split and complexity the code
 #[allow(clippy::indexing_slicing)]
 fn parse_entries(s: &str) -> CliResult<EncryptedEntries> {
     let mut entries_map = HashMap::new();

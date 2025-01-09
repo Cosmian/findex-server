@@ -2,14 +2,14 @@ use std::process::Command;
 
 use assert_cmd::prelude::*;
 use cosmian_config_utils::ConfigUtils;
-use cosmian_findex_client::{FindexClientConfig, FindexRestClient, FINDEX_CLI_CONF_ENV};
+use cosmian_findex_client::{FINDEX_CLI_CONF_ENV, FindexClientConfig, FindexRestClient};
 use tracing::debug;
 use uuid::Uuid;
 
 use crate::{
     actions::permissions::{CreateIndex, GrantPermission, ListPermissions, RevokePermission},
-    error::{result::CliResult, CliError},
-    tests::{utils::recover_cmd_logs, PROG_NAME},
+    error::{CliError, result::CliResult},
+    tests::{PROG_NAME, utils::recover_cmd_logs},
 };
 
 pub(crate) async fn create_index_id_cmd(cli_conf_path: &str) -> CliResult<Uuid> {

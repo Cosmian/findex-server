@@ -138,7 +138,7 @@ impl MemoryADT for FindexRestClient {
         if status_code.is_success() {
             // request successful, decode the response using same encoding protocol
             let bytes = response.bytes().await?.to_vec();
-            let result = OptionalWords::<WORD_LENGTH>::deserialize(bytes)?;
+            let result = OptionalWords::<WORD_LENGTH>::deserialize(&bytes)?;
             trace!(
                 "batch_read successful on server url {:?}. result: {:?}",
                 server_url.clone(),
@@ -192,8 +192,7 @@ impl MemoryADT for FindexRestClient {
         if status_code.is_success() {
             // request successful, decode the response using same encoding protocol defined in crate/server/src/routes/findex.rs
             let bytes = response.bytes().await?;
-            let result_word =
-                OptionalWords::<WORD_LENGTH>::deserialize(bytes.to_vec())?.into_inner();
+            let result_word = OptionalWords::<WORD_LENGTH>::deserialize(&bytes)?.into_inner();
             if result_word.len() != 1 {
                 return Err(FindexClientError::RequestFailed(format!(
                     "Unexpected response from server. Expected 1 word, got {}",

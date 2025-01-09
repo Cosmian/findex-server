@@ -1,12 +1,12 @@
-use std::sync::{mpsc, Arc};
+use std::sync::{Arc, mpsc};
 
 use actix_cors::Cors;
 use actix_identity::IdentityMiddleware;
 use actix_web::{
+    App, HttpServer,
     dev::ServerHandle,
     middleware::Condition,
     web::{self, Data, JsonConfig, PayloadConfig},
-    App, HttpServer,
 };
 use openssl::{
     ssl::{SslAcceptor, SslAcceptorBuilder, SslMethod, SslVerifyMode},
@@ -19,7 +19,7 @@ use crate::{
     core::FindexServer,
     error::result::FResult,
     findex_server_bail,
-    middlewares::{extract_peer_certificate, AuthTransformer, JwksManager, JwtConfig, SslAuth},
+    middlewares::{AuthTransformer, JwksManager, JwtConfig, SslAuth, extract_peer_certificate},
     routes::{
         create_index_id, datasets_add_entries, datasets_del_entries, datasets_get_entries,
         findex_batch_read, findex_guarded_write, get_version, grant_permission, list_permission,

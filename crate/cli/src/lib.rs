@@ -47,7 +47,7 @@ pub mod actions;
 pub mod commands;
 pub mod error;
 
-pub use commands::{findex_cli_main, CoreFindexActions, FindexCli};
+pub use commands::{CoreFindexActions, FindexCli, findex_cli_main};
 
 pub mod reexports {
     pub use cosmian_findex_client;

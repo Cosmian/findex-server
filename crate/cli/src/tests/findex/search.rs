@@ -6,8 +6,8 @@ use tracing::debug;
 
 use crate::{
     actions::findex::search::SearchAction,
-    error::{result::CliResult, CliError},
-    tests::{utils::recover_cmd_logs, PROG_NAME},
+    error::{CliError, result::CliResult},
+    tests::{PROG_NAME, utils::recover_cmd_logs},
 };
 
 pub(crate) fn search_cmd(cli_conf_path: &str, action: SearchAction) -> CliResult<String> {
