@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use cosmian_crypto_core::bytes_ser_de::Serializable;
 use cosmian_findex_structs::{Permission, Permissions, WORD_LENGTH};
 use redis::{RedisError, cmd, pipe};
-use tracing::{debug, instrument, trace};
+use tracing::{debug, instrument, trace, warn};
 use uuid::Uuid;
 
 use super::Redis;
@@ -40,10 +40,12 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
             // apply what we need to apply
             let permissions = if values.is_empty() {
                 // if there is no value, we create a new one
+                warn!("new permissions for user {user_id}: admin");
                 Permissions::new(uuid, Permission::Admin)
             } else {
                 // Deserialize permissions.
                 // We expect only one value here but the redis.get() signature is a Vec<Vec<u8>> so we need to get only the first element.
+                warn!("permissions that were just read: {values:?}",);
                 let serialized_value = &values.pop().ok_or_else(|| {
                     RedisError::from((redis::ErrorKind::TypeError, "No permission found"))
                 })?;
@@ -54,22 +56,29 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
                 permissions.grant_permission(uuid, Permission::Admin);
                 permissions
             };
+            warn!("permissions that were just assigned: {permissions:?}",);
             let permissions_bytes = permissions.serialize().map_err(|_e| {
                 RedisError::from((redis::ErrorKind::TypeError, "Failed to serialize"))
             })?;
 
+            warn!("permissions_bytes: {permissions_bytes:?}. Preparing pipeline");
+
             // now, prepare the pipe that will increment
             let mut pipe = redis::pipe();
-            pipe.atomic()
+            // final step : execute the pipe and restart in case of WATCH failure
+            //redis::cmd("GET")
+
+            let returned_permissions: Result<(Vec<Vec<u8>>,), _> = pipe
+                .atomic()
                 .set(redis_key, permissions_bytes.as_slice())
                 .ignore()
-                .get(redis_key);
-
-            // final step : execute the pipe and restart in case of WATCH failure
-            let returned_permissions: Result<(Vec<Vec<u8>>,), _> = redis::cmd("GET")
-                .arg(redis_key)
+                .get(redis_key)
+                // .arg(redis_key)
                 .query_async(&mut con_manager)
                 .await;
+
+            warn!("returned_permissions: {returned_permissions:?}",);
+
             match returned_permissions {
                 Ok((mut returned_permissions_by_redis,)) => {
                     // Deserialize permissions
