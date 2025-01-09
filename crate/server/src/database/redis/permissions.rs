@@ -39,7 +39,7 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
 
             // apply what we need to apply
             let permissions = if values.is_empty() {
-                // if there is no value, we create a new one
+                // if there is no value, we create a new one.
                 warn!("new permissions for user {user_id}: admin");
                 Permissions::new(uuid, Permission::Admin)
             } else {
