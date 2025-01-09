@@ -36,7 +36,7 @@ function BuildProject {
     }
     else {
         cargo build --target x86_64-pc-windows-msvc
-        cargo test --target x86_64-pc-windows-msvc -p cosmian_findex_server -- --test-threads=1 --nocapture --skip test_read_write_toml --skip test_findex --skip test_all_authentications --skip test_server_auth_matrix --skip test_datasets
+        cargo test --target x86_64-pc-windows-msvc -p cosmian_findex_server -- --nocapture --skip test_read_write_toml --skip test_findex --skip test_all_authentications --skip test_server_auth_matrix --skip test_datasets
     }
 
     # Check dynamic links

@@ -46,4 +46,4 @@ cargo build --target $TARGET $RELEASE
 export RUST_LOG="cosmian_findex_cli=debug,cosmian_findex_client=debug,cosmian_findex_server=trace,test_findex_server=trace"
 
 # shellcheck disable=SC2086
-cargo test --target $TARGET $RELEASE --workspace -- --nocapture $SKIP_SERVICES_TESTS --test-threads=1 #--include-ignored
+cargo test --target $TARGET $RELEASE --workspace -- --nocapture $SKIP_SERVICES_TESTS  #--include-ignored
