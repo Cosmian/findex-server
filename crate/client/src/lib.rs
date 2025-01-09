@@ -7,9 +7,9 @@ mod error;
 mod permissions;
 mod rest_client;
 
-pub use config::{FINDEX_CLI_CONF_ENV, FindexClientConfig};
-pub use error::{FindexClientError, result::FindexClientResult};
-pub use rest_client::{FindexRestClient, handle_error};
+pub use config::{FindexClientConfig, FINDEX_CLI_CONF_ENV};
+pub use error::{result::FindexClientResult, FindexClientError};
+pub use rest_client::{handle_error, FindexRestClient};
 
 pub type InstantiatedFindex =
     Findex<{ WORD_LENGTH }, Value, std::convert::Infallible, FindexRestClient>;

@@ -1,14 +1,14 @@
 use std::{collections::HashMap, error::Error};
 
-use base64::{Engine, engine::general_purpose};
+use base64::{engine::general_purpose, Engine};
 use clap::Parser;
 use cosmian_findex_client::FindexRestClient;
 use cosmian_findex_structs::EncryptedEntries;
 use uuid::Uuid;
 
 use crate::error::{
-    CliError,
     result::{CliResult, CliResultHelper},
+    CliError,
 };
 
 /// Manage encrypted datasets

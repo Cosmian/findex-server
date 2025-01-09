@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use cosmian_findex::{ADDRESS_LENGTH, Address, MemoryADT, MemoryError};
+use cosmian_findex::{Address, MemoryADT, MemoryError, ADDRESS_LENGTH};
 use cosmian_findex_structs::{EncryptedEntries, Permission, Permissions, Uuids, WORD_LENGTH};
 use uuid::Uuid;
 
@@ -28,7 +28,7 @@ pub(crate) trait DatasetsTrait: Sync + Send {
     // Dataset management
     //
     async fn dataset_add_entries(&self, index_id: &Uuid, entries: &EncryptedEntries)
-    -> FResult<()>;
+        -> FResult<()>;
     async fn dataset_delete_entries(&self, index_id: &Uuid, uuids: &Uuids) -> FResult<()>;
     async fn dataset_get_entries(
         &self,

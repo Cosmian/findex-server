@@ -1,16 +1,16 @@
 use std::fmt::Display;
 
 use crate::{
-    InstantiatedFindex,
     config::FindexClientConfig,
     error::{
-        FindexClientError,
         result::{FindexClientResult, FindexRestClientResultHelper},
+        FindexClientError,
     },
+    InstantiatedFindex,
 };
-use cosmian_findex::{ADDRESS_LENGTH, Address, Findex, KEY_LENGTH, MemoryADT, Secret};
+use cosmian_findex::{Address, Findex, MemoryADT, Secret, ADDRESS_LENGTH, KEY_LENGTH};
 use cosmian_findex_structs::{
-    Addresses, Guard, OptionalWords, Tasks, WORD_LENGTH, decode_fn, encode_fn,
+    decode_fn, encode_fn, Addresses, Guard, OptionalWords, Tasks, WORD_LENGTH,
 };
 use cosmian_http_client::HttpClient;
 use reqwest::{Response, StatusCode};

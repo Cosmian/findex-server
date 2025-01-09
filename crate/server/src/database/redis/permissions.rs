@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use cosmian_crypto_core::bytes_ser_de::Serializable;
 use cosmian_findex_structs::{Permission, Permissions, WORD_LENGTH};
-use redis::{RedisError, cmd, pipe};
+use redis::{cmd, pipe, RedisError};
 use tracing::{debug, instrument, trace, warn};
 use uuid::Uuid;
 

@@ -1,10 +1,11 @@
 use std::sync::Arc;
 
 use actix_web::{
-    HttpRequest, HttpResponse, post,
+    post,
     web::{self, Bytes, Data},
+    HttpRequest, HttpResponse,
 };
-use cosmian_findex::{ADDRESS_LENGTH, MemoryADT};
+use cosmian_findex::{MemoryADT, ADDRESS_LENGTH};
 use cosmian_findex_structs::{Addresses, Guard, OptionalWords, Permission, Tasks, WORD_LENGTH};
 use tracing::{info, trace};
 

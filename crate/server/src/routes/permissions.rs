@@ -1,8 +1,9 @@
 use std::{str::FromStr, sync::Arc};
 
 use actix_web::{
-    HttpRequest, HttpResponse, post,
+    post,
     web::{self, Data, Json},
+    HttpRequest, HttpResponse,
 };
 use cosmian_crypto_core::bytes_ser_de::Serializable;
 use cosmian_findex_structs::Permission;

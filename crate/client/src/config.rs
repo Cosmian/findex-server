@@ -4,7 +4,7 @@ use cosmian_http_client::HttpClientConfig;
 use serde::{Deserialize, Serialize};
 
 use crate::{FindexClientError, FindexClientResult};
-use cosmian_config_utils::{ConfigUtils, location};
+use cosmian_config_utils::{location, ConfigUtils};
 
 pub const FINDEX_CLI_CONF_ENV: &str = "FINDEX_CLI_CONF";
 pub(crate) const FINDEX_CLI_CONF_DEFAULT_SYSTEM_PATH: &str = "/etc/cosmian/findex.toml";
@@ -91,8 +91,8 @@ mod tests {
     use cosmian_config_utils::get_default_conf_path;
     use cosmian_logger::log_init;
 
-    use super::{FINDEX_CLI_CONF_ENV, FindexClientConfig};
-    use crate::{FindexClientResult, config::FINDEX_CLI_CONF_PATH};
+    use super::{FindexClientConfig, FINDEX_CLI_CONF_ENV};
+    use crate::{config::FINDEX_CLI_CONF_PATH, FindexClientResult};
 
     #[test]
     #[allow(clippy::panic_in_result_fn, clippy::unwrap_used)]

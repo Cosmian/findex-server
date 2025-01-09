@@ -4,10 +4,10 @@ use tracing::{instrument, trace};
 use uuid::Uuid;
 
 use crate::{
-    FindexRestClient,
-    error::{FindexClientError, result::FindexClientResult},
+    error::{result::FindexClientResult, FindexClientError},
     handle_error,
-    rest_client::{SuccessResponse, handle_status_code},
+    rest_client::{handle_status_code, SuccessResponse},
+    FindexRestClient,
 };
 
 impl FindexRestClient {

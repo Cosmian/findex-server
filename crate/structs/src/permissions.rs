@@ -1,10 +1,10 @@
 use std::{collections::HashMap, fmt::Display, str::FromStr};
 
-use cosmian_crypto_core::bytes_ser_de::{self, Serializable, to_leb128_len};
+use cosmian_crypto_core::bytes_ser_de::{self, to_leb128_len, Serializable};
 use uuid::Uuid;
 
 use crate::{
-    error::{StructsError, result::StructsResult},
+    error::{result::StructsResult, StructsError},
     structs_bail,
 };
 

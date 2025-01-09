@@ -1,6 +1,6 @@
 use clap::Parser;
 
-use cosmian_findex::{KEY_LENGTH as BYTE_KEY_LENGTH, Secret};
+use cosmian_findex::{Secret, KEY_LENGTH as BYTE_KEY_LENGTH};
 use uuid::Uuid;
 
 use crate::{cli_error, error::result::CliResult};

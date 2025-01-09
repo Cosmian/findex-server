@@ -6,14 +6,16 @@ use tracing::debug;
 
 use crate::{
     actions::findex::search::SearchAction,
-    error::{CliError, result::CliResult},
-    tests::{PROG_NAME, utils::recover_cmd_logs},
+    error::{result::CliResult, CliError},
+    tests::{utils::recover_cmd_logs, PROG_NAME},
 };
 
 pub(crate) fn search_cmd(cli_conf_path: &str, action: SearchAction) -> CliResult<String> {
     let mut args = vec![
         "--key".to_owned(),
-        action.findex_parameters.key.to_ascii_uppercase(),
+        action.findex_parameters.key.clone(),
+        "--label".to_owned(),
+        action.findex_parameters.label,
         "--index-id".to_owned(),
         action.findex_parameters.index_id.to_string(),
     ];

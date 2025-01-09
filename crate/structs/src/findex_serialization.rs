@@ -1,7 +1,7 @@
 /// this module contains serialization and deserialization functions needed for the Findex server
 use crate::StructsError;
 use cosmian_crypto_core::bytes_ser_de::{Deserializer, Serializer};
-use cosmian_findex::{ADDRESS_LENGTH, Address};
+use cosmian_findex::{Address, ADDRESS_LENGTH};
 
 pub type SerializationResult<R> = Result<R, StructsError>;
 
@@ -300,11 +300,11 @@ impl<const WORD_LENGTH: usize> Tasks<WORD_LENGTH> {
 #[allow(clippy::expect_used)]
 #[cfg(test)]
 mod tests {
-    use crate::WORD_LENGTH;
     use crate::findex_serialization::Guard;
+    use crate::WORD_LENGTH;
 
     use super::{Addresses, OptionalWords, Tasks};
-    use cosmian_findex::{ADDRESS_LENGTH, Address};
+    use cosmian_findex::{Address, ADDRESS_LENGTH};
     use rand::rngs::StdRng;
     use rand::{Rng, SeedableRng};
 

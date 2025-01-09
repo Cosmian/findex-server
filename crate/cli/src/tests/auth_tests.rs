@@ -2,7 +2,7 @@ use std::env;
 
 use cosmian_logger::log_init;
 use test_findex_server::{
-    AuthenticationOptions, DBConfig, DatabaseType, start_test_server_with_options,
+    start_test_server_with_options, AuthenticationOptions, DBConfig, DatabaseType,
 };
 use tracing::{info, trace};
 
@@ -45,24 +45,30 @@ pub(crate) async fn test_all_authentications() -> CliResult<()> {
 
     // plaintext JWT token auth
     info!("Testing server with JWT token auth");
-    let ctx =
-        start_test_server_with_options(default_db_config.clone(), PORT, AuthenticationOptions {
+    let ctx = start_test_server_with_options(
+        default_db_config.clone(),
+        PORT,
+        AuthenticationOptions {
             use_jwt_token: true,
             use_https: false,
             use_client_cert: false,
-        })
-        .await?;
+        },
+    )
+    .await?;
     ctx.stop_server().await?;
 
     // tls token auth
     info!("Testing server with TLS token auth");
-    let ctx =
-        start_test_server_with_options(default_db_config.clone(), PORT, AuthenticationOptions {
+    let ctx = start_test_server_with_options(
+        default_db_config.clone(),
+        PORT,
+        AuthenticationOptions {
             use_jwt_token: true,
             use_https: true,
             use_client_cert: false,
-        })
-        .await?;
+        },
+    )
+    .await?;
     ctx.stop_server().await?;
 
     // On recent versions of macOS, the root Certificate for the client is searched
@@ -89,11 +95,15 @@ pub(crate) async fn test_all_authentications() -> CliResult<()> {
             "Testing server with bad API token and good JWT token auth but still cert auth used \
              at first"
         );
-        let ctx = start_test_server_with_options(default_db_config, PORT, AuthenticationOptions {
-            use_jwt_token: true,
-            use_https: true,
-            use_client_cert: true,
-        })
+        let ctx = start_test_server_with_options(
+            default_db_config,
+            PORT,
+            AuthenticationOptions {
+                use_jwt_token: true,
+                use_https: true,
+                use_client_cert: true,
+            },
+        )
         .await?;
         ctx.stop_server().await?;
     }

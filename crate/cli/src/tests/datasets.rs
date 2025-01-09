@@ -1,18 +1,17 @@
 use std::{collections::HashMap, ops::Deref, process::Command};
 
 use assert_cmd::prelude::*;
-use base64::{Engine, engine::general_purpose};
+use base64::{engine::general_purpose, Engine};
 use cosmian_findex_client::FINDEX_CLI_CONF_ENV;
 use cosmian_findex_structs::EncryptedEntries;
 use cosmian_logger::log_init;
 use test_findex_server::start_default_test_findex_server;
-use tracing::{debug, warn};
 use uuid::Uuid;
 
 use crate::{
     actions::datasets::{AddEntries, DeleteEntries, GetEntries},
-    error::{CliError, result::CliResult},
-    tests::{PROG_NAME, utils::recover_cmd_logs},
+    error::{result::CliResult, CliError},
+    tests::{utils::recover_cmd_logs, PROG_NAME},
 };
 
 pub(crate) fn dataset_add_entries_cmd(
@@ -84,14 +83,11 @@ pub(crate) fn datasets_get_entries_cmd(
         args.push(uuid.to_string());
     }
     cmd.env(FINDEX_CLI_CONF_ENV, cli_conf_path);
+
     cmd.arg("datasets").args(args);
     let output = recover_cmd_logs(&mut cmd);
     if output.status.success() {
-        let findex_output = std::str::from_utf8(&output.stdout)?
-            .split("index_id")
-            .next()
-            .unwrap_or("");
-
+        let findex_output = std::str::from_utf8(&output.stdout)?;
         return parse_entries(findex_output);
     }
     Err(CliError::Default(
@@ -99,37 +95,18 @@ pub(crate) fn datasets_get_entries_cmd(
     ))
 }
 
-#[allow(clippy::cognitive_complexity)] // cog complexity is 26/25, no need to split and complexity the code
 #[allow(clippy::indexing_slicing)]
 fn parse_entries(s: &str) -> CliResult<EncryptedEntries> {
     let mut entries_map = HashMap::new();
-    let mut i = 1;
     for line in s.lines() {
-        // first line is faulty on RHL9
-        let safe_line = if line.contains("return=") {
-            line.split(", Entry Value: ").collect::<Vec<&str>>()[1]
-        } else {
-            line
-        };
-        warn!("safe_line {i} ****: {safe_line}");
-        i += 1;
-        let parts: Vec<&str> = safe_line.split(", Entry Value: ").collect();
+        let parts: Vec<&str> = line.split(", Entry Value: ").collect();
         if parts.len() == 2 {
             let index_id = parts[0].replace("Entry ID: ", "");
             let entry = parts[1].to_owned();
-            let uid = Uuid::parse_str(&index_id).map_err(|e| {
-                CliError::Default(format!(
-                    "Error parsing Uuid: {e}. $$$$$$$$$$$$. Original index_id : {index_id}"
-                ))
-            });
-            if uid.is_err() {
-                warn!("Error parsing Uuid: $$$$$$$$$$$$. Original index_id : {index_id}");
-                continue;
-            };
-            #[allow(clippy::unwrap_used)]
-            entries_map.insert(uid.unwrap(), general_purpose::STANDARD.decode(entry)?);
-        } else {
-            warn!("Invalid line: $$$$$$$$ {line}");
+            entries_map.insert(
+                Uuid::parse_str(&index_id)?,
+                general_purpose::STANDARD.decode(entry)?,
+            );
         }
     }
     Ok(EncryptedEntries::from(entries_map))
@@ -154,25 +131,34 @@ pub(crate) async fn test_datasets() -> CliResult<()> {
         .collect();
 
     let uuids: Vec<Uuid> = encrypted_entries.iter().map(|(uuid, _)| *uuid).collect();
-    debug!("uuids: {:?}", uuids);
 
     // Add entries to the dataset
-    dataset_add_entries_cmd(&ctx.owner_client_conf_path, &AddEntries {
-        index_id,
-        entries: encrypted_entries,
-    })?;
+    dataset_add_entries_cmd(
+        &ctx.owner_client_conf_path,
+        &AddEntries {
+            index_id,
+            entries: encrypted_entries,
+        },
+    )?;
 
     // Get the added entries from the dataset
-    let added_entries = datasets_get_entries_cmd(&ctx.owner_client_conf_path, &GetEntries {
-        index_id,
-        uuids: uuids.clone(),
-    })?;
+    let added_entries = datasets_get_entries_cmd(
+        &ctx.owner_client_conf_path,
+        &GetEntries {
+            index_id,
+            uuids: uuids.clone(),
+        },
+    )?;
+    // println!("added_entries: {added_entries}");
     assert_eq!(added_entries.len(), entries_number);
 
-    dataset_delete_entries_cmd(&ctx.owner_client_conf_path, &DeleteEntries {
-        index_id,
-        uuids: added_entries.get_uuids().deref().to_owned(),
-    })?;
+    dataset_delete_entries_cmd(
+        &ctx.owner_client_conf_path,
+        &DeleteEntries {
+            index_id,
+            uuids: added_entries.get_uuids().deref().to_owned(),
+        },
+    )?;
 
     // Get the added entries from the dataset
     let deleted_entries =
