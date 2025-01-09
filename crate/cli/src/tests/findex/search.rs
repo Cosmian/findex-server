@@ -14,8 +14,6 @@ pub(crate) fn search_cmd(cli_conf_path: &str, action: SearchAction) -> CliResult
     let mut args = vec![
         "--key".to_owned(),
         action.findex_parameters.key.clone(),
-        "--label".to_owned(),
-        action.findex_parameters.label,
         "--index-id".to_owned(),
         action.findex_parameters.index_id.to_string(),
     ];

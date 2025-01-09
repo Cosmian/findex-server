@@ -14,14 +14,12 @@ use crate::{
 pub(crate) fn index_or_delete_cmd(
     cli_conf_path: &str,
     command: &str,
-    action: IndexOrDeleteAction,
+    action: &IndexOrDeleteAction,
 ) -> CliResult<String> {
     let mut cmd = Command::cargo_bin(PROG_NAME)?;
     let args = vec![
         "--key".to_owned(),
         action.findex_parameters.key.clone(),
-        "--label".to_owned(),
-        action.findex_parameters.label,
         "--index-id".to_owned(),
         action.findex_parameters.index_id.to_string(),
         "--csv".to_owned(),

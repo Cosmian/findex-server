@@ -112,7 +112,7 @@ impl IndexOrDeleteAction {
     ///
     /// This function will return an error if:
     /// - There is an error instantiating the Findex client.
-    /// - There is an error retrieving the user key or label from the Findex
+    /// - (deprecated) There is an error retrieving the user key or label from the Findex
     ///   parameters.
     /// - There is an error converting the CSV file to a hashmap.
     /// - There is an error adding the data to the Findex index.
@@ -127,7 +127,7 @@ impl IndexOrDeleteAction {
     ///
     /// This function will return an error if:
     /// - There is an error instantiating the Findex client.
-    /// - There is an error retrieving the user key or label from the Findex
+    /// - (deprecated) There is an error retrieving the user key or label from the Findex
     ///   parameters.
     /// - There is an error converting the CSV file to a hashmap.
     /// - There is an error deleting the data from the Findex index.
