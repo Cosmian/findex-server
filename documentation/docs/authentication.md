@@ -13,7 +13,7 @@ In that case, the Findex server delegates the authentication process to an exter
     The Findex server must be run with the following arguments:
     For example with Google OAuth2:
     ```sh
-    docker run -p 6668:6668 --name findex-server ghcr.io/cosmian/findex-server:0.1.0 \
+    docker run -p 6668:6668 --name findex-server ghcr.io/cosmian/findex-server:latest \
                --jwt-issuer-uri=https://accounts.google.com \
                --jwks-uri=https://www.googleapis.com/oauth2/v3/certs \
                --jwt-audience=cosmian_findex_server
@@ -91,7 +91,7 @@ In that case, the Findex server uses PKCS12 certificates to authenticate the use
     The Findex server must be run with the following arguments:
     For example with Google OAuth2:
     ```sh
-    docker run -p 6668:6668 --name findex-server ghcr.io/cosmian/findex-server:0.1.0 \
+    docker run -p 6668:6668 --name findex-server ghcr.io/cosmian/findex-server:latest \
                --https-p12-file=server/certificate.p12 \
                --https-p12-password=complex_password \
                --authority-cert-file=server/ca.crt

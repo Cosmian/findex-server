@@ -865,7 +865,7 @@ dependencies = [
 
 [[package]]
 name = "cosmian_findex_cli"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "actix-rt",
  "actix-server",
@@ -895,7 +895,7 @@ dependencies = [
 
 [[package]]
 name = "cosmian_findex_client"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "cloudproof_findex",
  "cosmian_config_utils",
@@ -911,7 +911,7 @@ dependencies = [
 
 [[package]]
 name = "cosmian_findex_server"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "actix-cors",
  "actix-identity",
@@ -944,7 +944,7 @@ dependencies = [
 
 [[package]]
 name = "cosmian_findex_structs"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "base64 0.22.1",
  "cloudproof_findex",
@@ -3297,7 +3297,7 @@ checksum = "3369f5ac52d5eb6ab48c6b4ffdc8efbcad6b89c765749064ba298f2c68a16a76"
 
 [[package]]
 name = "test_findex_server"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "actix-server",
  "cosmian_findex_client",

@@ -1,6 +1,6 @@
 FROM ubuntu:22.04 AS builder
 
-LABEL version="0.1.0"
+LABEL version="0.1.1"
 LABEL name="Cosmian Findex server docker container"
 
 ENV DEBIAN_FRONTEND=noninteractive

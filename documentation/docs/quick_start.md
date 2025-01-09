@@ -25,7 +25,7 @@ services:
       - 6379:6379
   findex-server:
     container_name: findex-server
-    image: ghcr.io/cosmian/findex-server:0.1.0
+    image: ghcr.io/cosmian/findex-server:latest
     ports:
       - 6668:6668
     environment:
@@ -37,7 +37,7 @@ services:
 
 ## Pre-built binaries
 
-An other option include running the server binary directly or building it from source: pre-built binaries [are available](https://package.cosmian.com/findex-server/0.1.0/) for Linux, MacOS, and Windows.
+An other option include running the server binary directly or building it from source: pre-built binaries [are available](https://package.cosmian.com/findex-server/0.1.1/) for Linux, MacOS, and Windows.
 
 First, run the Redis server independently:
 
@@ -48,7 +48,7 @@ docker run -d -p 6379:6379 redis
 Then, download the binary for your platform and run it:
 
 ```sh
-wget https://package.cosmian.com/findex-server/0.1.0/ubuntu_24_04-release.zip
+wget https://package.cosmian.com/findex-server/0.1.1/ubuntu_24_04-release.zip
 unzip ubuntu_24_04-release.zip
 ./ubuntu_24_04-release/cosmian_findex_server -- --database-url redis://localhost:6379 --database-type redis
 ```

@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.1] - 2025-01-09
+
+### 🚀 Features
+
+- Server returns index_id in json response (#26)
+
+### 🐛 Bug Fixes
+
+- Save configuration file outside of clap actions (#25)
+
+### ⚙️ Miscellaneous Tasks
+
+- Add concurrency blocking instruction
+
 ## [0.1.0] - 2024-12-09
 
 ### 🚀 Features
