@@ -69,7 +69,7 @@ impl IndexOrDeleteAction {
     /// - There is an error adding the data to the Findex index.
     /// - There is an error writing the result to the console.
     #[allow(clippy::future_not_send)]
-    pub async fn add(&self, rest_client: FindexRestClient) -> CliResult<()> {
+    pub async fn add(&self, rest_client: &FindexRestClient) -> CliResult<()> {
         let keywords = instantiate_findex(rest_client, &self.findex_parameters.index_id)
             .await?
             .add(
@@ -97,7 +97,7 @@ impl IndexOrDeleteAction {
     /// - There is an error deleting the data from the Findex index.
     /// - There is an error writing the result to the console.
     #[allow(clippy::future_not_send)]
-    pub async fn delete(&self, rest_client: FindexRestClient) -> CliResult<()> {
+    pub async fn delete(&self, rest_client: &FindexRestClient) -> CliResult<()> {
         let keywords = instantiate_findex(rest_client, &self.findex_parameters.index_id)
             .await?
             .delete(

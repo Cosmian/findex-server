@@ -8,14 +8,12 @@ use actix_web::{
 use cloudproof_findex::reexport::cosmian_crypto_core::bytes_ser_de::Serializable;
 use cosmian_findex_structs::Permission;
 use tracing::{debug, info};
+use uuid::Uuid;
 
 use crate::{
     core::FindexServer,
     error::{result::FResult, server::FindexServerError},
-    routes::{
-        error::{ResponseBytes, SuccessResponse},
-        get_index_id,
-    },
+    routes::error::{ResponseBytes, SuccessResponse},
 };
 
 pub(crate) async fn check_permission(
@@ -47,6 +45,7 @@ pub(crate) async fn create_index_id(
 
     Ok(Json(SuccessResponse {
         success: format!("[{user}] New admin permission successfully created on index: {index_id}"),
+        index_id,
     }))
 }
 
@@ -70,12 +69,15 @@ pub(crate) async fn grant_permission(
         )));
     }
 
+    // Parse index_id
+    let index_id = Uuid::parse_str(&index_id)?;
+
     findex_server
         .db
         .grant_permission(
             &user_id,
             Permission::from_str(permission.as_str())?,
-            &get_index_id(&index_id)?,
+            &index_id,
         )
         .await?;
 
@@ -83,6 +85,7 @@ pub(crate) async fn grant_permission(
         success: format!(
             "[{user_id}] permission {permission} on index {index_id} successfully added"
         ),
+        index_id,
     }))
 }
 
@@ -128,12 +131,16 @@ pub(crate) async fn revoke_permission(
         )));
     }
 
+    // Parse index_id
+    let index_id = Uuid::parse_str(&index_id)?;
+
     findex_server
         .db
-        .revoke_permission(&user_id, &get_index_id(&index_id)?)
+        .revoke_permission(&user_id, &index_id)
         .await?;
 
     Ok(Json(SuccessResponse {
         success: format!("Permission for {user_id} on index {index_id} successfully added"),
+        index_id,
     }))
 }

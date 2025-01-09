@@ -13,7 +13,6 @@ use crate::{
 impl FindexRestClient {
     #[instrument(ret(Display), err, skip_all, level = "trace")]
     pub async fn add_entries(
-        // TODO(manu): revisit function names (prefix with dataset_, findex_, permissions)
         &self,
         index_id: &Uuid,
         encrypted_entries: &EncryptedEntries,

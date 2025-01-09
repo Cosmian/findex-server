@@ -160,7 +160,7 @@ pub(crate) async fn test_findex_cert_auth() -> CliResult<()> {
         expected_results: vec!["States9686".to_owned(), "States14061".to_owned()],
     };
 
-    let index_id = create_index_id_cmd(&ctx.owner_client_conf_path)?;
+    let index_id = create_index_id_cmd(&ctx.owner_client_conf_path).await?;
     trace!("index_id: {index_id}");
 
     add_search_delete(&ctx.owner_client_conf_path, &index_id, &search_options)?;
@@ -179,7 +179,7 @@ pub(crate) async fn test_findex_grant_and_revoke_permission() -> CliResult<()> {
         expected_results: vec!["States9686".to_owned(), "States14061".to_owned()],
     };
 
-    let index_id = create_index_id_cmd(&ctx.owner_client_conf_path)?;
+    let index_id = create_index_id_cmd(&ctx.owner_client_conf_path).await?;
     trace!("index_id: {index_id}");
 
     add(&ctx.owner_client_conf_path, &index_id, SMALL_DATASET)?;

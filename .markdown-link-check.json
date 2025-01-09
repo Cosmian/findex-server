@@ -1,0 +1,13 @@
+{
+  "ignorePatterns": [
+    {
+      "pattern": "../cosmian_cli"
+    },
+    {
+      "pattern": "package.cosmian.com"
+    },
+    {
+      "pattern": "../cosmian_vm"
+    }
+  ]
+}
