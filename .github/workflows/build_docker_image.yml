@@ -14,9 +14,6 @@ on:
         required: true
         type: string
 
-concurrency:
-  group: docker_build
-
 env:
   REGISTRY: ghcr.io
 
