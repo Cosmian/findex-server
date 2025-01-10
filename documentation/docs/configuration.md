@@ -21,8 +21,6 @@ clear_database = false
 [http]
 port = 6668
 hostname = "0.0.0.0"
-
-[auth]
 ```
 
 ## Example with X509 authentication
@@ -42,8 +40,6 @@ hostname = "0.0.0.0"
 https_p12_file = "/etc/cosmian/certificates/server/findex.server.acme.com.p12"
 https_p12_password = "password"
 authority_cert_file = "/etc/cosmian/certificates/server/ca.crt"
-
-[auth]
 ```
 
 ## Example with OpenID authentication

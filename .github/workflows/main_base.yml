@@ -81,7 +81,7 @@ jobs:
           done
           # Warning, no windows binaries in debug
           if [ "${{ inputs.debug_or_release }}" == "release" ]; then
-            zip -r "$archive_name".zip windows-release
+            zip -r windows-release.zip windows-release
           fi
 
       - name: Push to package.cosmian.com
@@ -99,12 +99,28 @@ jobs:
             *.zip \
             cosmian@package.cosmian.com:$DESTINATION_DIR/
 
+          if [ "${{ inputs.debug_or_release }}" == "release" ]; then
+            ssh -o 'StrictHostKeyChecking no' -i /root/.ssh/id_rsa cosmian@package.cosmian.com mkdir -p $DESTINATION_DIR/{rhel9,ubuntu-24.04}
+
+            # RedHat 9 package
+            scp -o 'StrictHostKeyChecking no' \
+              -i /root/.ssh/id_rsa rhel9-${{ inputs.debug_or_release }}/generate-rpm/*.rpm \
+              cosmian@package.cosmian.com:$DESTINATION_DIR/rhel9
+
+            # Ubuntu packages
+            scp -o 'StrictHostKeyChecking no' \
+              -i /root/.ssh/id_rsa ubuntu_24_04-${{ inputs.debug_or_release }}/debian/*.deb \
+              cosmian@package.cosmian.com:$DESTINATION_DIR/ubuntu-24.04
+          fi
+
       - name: Release on tags, attach asset on release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v1
         with:
           files: |
             *.zip
+            rhel9-release/generate-rpm/*.rpm \
+            ubuntu_24_04-release/debian/*.deb
 
   public_documentation:
     needs:

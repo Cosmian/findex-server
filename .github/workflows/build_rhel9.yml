@@ -76,5 +76,6 @@ jobs:
           path: |
             target/${{ inputs.target }}/${{ inputs.debug_or_release }}/cosmian_findex_server
             target/${{ inputs.target }}/${{ inputs.debug_or_release }}/findex
+            target/${{ inputs.target }}/generate-rpm/cosmian_findex_server-*
           retention-days: 1
           if-no-files-found: error
