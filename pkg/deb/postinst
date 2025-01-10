@@ -1,0 +1,9 @@
+#!/bin/sh -ex
+
+systemctl unmask cosmian_findex_server.service
+systemctl enable cosmian_findex_server.service
+systemctl stop cosmian_findex_server.service
+
+systemctl daemon-reload
+
+#DEBHELPER#

@@ -76,3 +76,50 @@ uuid = { workspace = true, features = ["v4"] }
 
 [dev-dependencies]
 tempfile = { workspace = true }
+
+# ------------------------------------------------------------------------------
+# START DEBIAN PACKAGING
+[package.metadata.deb]
+maintainer = "Emmanuel Coste <emmanuel.coste@cosmian.com>"
+maintainer-scripts = "../../pkg/deb/"
+copyright = "2024, Cosmian Tech SAS <tech@cosmian.com>"
+license-file = ["../../LICENSE", "0"]
+changelog = "../../CHANGELOG.md"
+section = "security"
+priority = "optional"
+assets = [
+  [
+    "target/release/cosmian_findex_server",
+    "usr/sbin/cosmian_findex_server",
+    "500",
+  ],
+  [
+    "../../README.md",
+    "usr/share/doc/cosmian_findex_server/README",
+    "644",
+  ],
+  [
+    "../../pkg/findex_server.toml",
+    "etc/cosmian/",
+    "400",
+  ],
+]
+systemd-units = [
+  { unit-name = "cosmian_findex_server", unit-scripts = "../../pkg", enable = true, start = false, restart-after-upgrade = false },
+]
+
+# END DEBIAN PACKAGING
+# ------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
+# START RPM PACKAGING
+[package.metadata.generate-rpm]
+license = "BUSL-1.1"
+assets = [
+  { source = "target/release/cosmian_findex_server", dest = "/usr/sbin/cosmian_findex_server", mode = "500" },
+  { source = "../../README.md", dest = "/usr/share/doc/cosmian_findex_server/README", mode = "644", doc = true },
+  { source = "../../pkg/findex_server.toml", dest = "/etc/cosmian/findex_server.toml", mode = "400" },
+  { source = "../../pkg/cosmian_findex_server.service", dest = "/lib/systemd/system/cosmian_findex_server.service", mode = "644" },
+]
+auto-req = "no" # do not try to discover .so dependencies
+require-sh = true

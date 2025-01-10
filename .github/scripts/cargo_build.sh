@@ -7,6 +7,23 @@ set -ex
 # export DEBUG_OR_RELEASE=debug
 # export SKIP_SERVICES_TESTS="--skip test_redis"
 
+ROOT_FOLDER=$(pwd)
+
+if [ "$DEBUG_OR_RELEASE" = "release" ]; then
+  # First build the Debian and RPM packages.
+  rm -rf target/"$TARGET"/debian
+  rm -rf target/"$TARGET"/generate-rpm
+  if [ -f /etc/redhat-release ]; then
+    cd crate/server && cargo build --target "$TARGET" --release && cd -
+    cargo install --version 0.14.1 cargo-generate-rpm --force
+    cd "$ROOT_FOLDER"
+    cargo generate-rpm --target "$TARGET" -p crate/server --metadata-overwrite=pkg/rpm/scriptlets.toml
+  elif [ -f /etc/lsb-release ]; then
+    cargo install --version 2.4.0 cargo-deb --force
+    cargo deb --target "$TARGET" -p cosmian_findex_server
+  fi
+fi
+
 if [ -z "$TARGET" ]; then
   echo "Error: TARGET is not set."
   exit 1
