@@ -1,7 +1,12 @@
+use std::future::Future;
+
 use async_trait::async_trait;
 use cosmian_crypto_core::bytes_ser_de::Serializable;
 use cosmian_findex_structs::{Permission, Permissions, WORD_LENGTH};
-use redis::{cmd, pipe, RedisError};
+use redis::{
+    aio::ConnectionLike, cmd, pipe, AsyncCommands, FromRedisValue, Pipeline, RedisError,
+    ToRedisArgs,
+};
 use tracing::{debug, instrument, trace, warn};
 use uuid::Uuid;
 
@@ -12,6 +17,33 @@ use crate::{
 };
 
 // TODO(hatem) : change this to smth with compare and swapb
+async fn transaction_async<
+    C: ConnectionLike + Clone,
+    K: ToRedisArgs,
+    T: FromRedisValue,
+    F: Fn(C, Pipeline) -> Fut,
+    Fut: Future<Output = Result<Option<T>, RedisError>>,
+>(
+    mut connection: C,
+    keys: &[K],
+    func: F,
+) -> Result<T, RedisError> {
+    loop {
+        cmd("WATCH").arg(keys).exec_async(&mut connection).await?;
+
+        let mut p = pipe();
+        let response = func(connection.clone(), p.atomic().to_owned()).await?;
+
+        match response {
+            None => continue,
+            Some(response) => {
+                cmd("UNWATCH").exec_async(&mut connection).await?;
+
+                return Ok(response);
+            }
+        }
+    }
+}
 
 #[async_trait]
 impl PermissionsTrait for Redis<WORD_LENGTH> {
@@ -19,92 +51,58 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
     async fn create_index_id(&self, user_id: &str) -> FResult<Uuid> {
         let redis_key = user_id.as_bytes();
 
-        let mut con_manager: redis::aio::ConnectionManager = self.memory.manager.clone();
+        let con_manager = self.memory.manager.clone();
 
         let uuid = Uuid::new_v4();
 
-        // simulate the transaction block using async code
-        loop {
-            // first, WATCH the redis_key for changes
-            let _: () = cmd("WATCH")
-                .arg(redis_key)
-                .query_async(&mut con_manager)
-                .await?;
-            // then, read the value of the redis_key
-            let mut values: Vec<Vec<u8>> = redis::cmd("GET")
-                .arg(redis_key)
-                .query_async(&mut con_manager)
-                .await?;
-            trace!("values: {values:?}");
+        // run the transaction block.
+        let (mut returned_permissions_by_redis,): (Vec<Vec<u8>>,) =
+            transaction_async(con_manager, &[redis_key], |mut con, mut pipe| async move {
+                // load the old value, so we know what to increment.
+                let mut values: Vec<Vec<u8>> = con.get(redis_key).await?;
+                trace!("values: {values:?}");
 
-            // apply what we need to apply
-            let permissions = if values.is_empty() {
-                // if there is no value, we create a new one.
-                warn!("new permissions for user {user_id}: admin");
-                Permissions::new(uuid, Permission::Admin)
-            } else {
-                // Deserialize permissions.
-                // We expect only one value here but the redis.get() signature is a Vec<Vec<u8>> so we need to get only the first element.
-                warn!("permissions that were just read: {values:?}",);
-                let serialized_value = &values.pop().ok_or_else(|| {
-                    RedisError::from((redis::ErrorKind::TypeError, "No permission found"))
-                })?;
-                let mut permissions = Permissions::deserialize(serialized_value).map_err(|_e| {
-                    RedisError::from((redis::ErrorKind::TypeError, "Failed to deserialize"))
-                })?;
-
-                permissions.grant_permission(uuid, Permission::Admin);
-                permissions
-            };
-            warn!("permissions that were just assigned: {permissions:?}",);
-            let permissions_bytes = permissions.serialize().map_err(|_e| {
-                RedisError::from((redis::ErrorKind::TypeError, "Failed to serialize"))
-            })?;
-
-            warn!("permissions_bytes: {permissions_bytes:?}. Preparing pipeline");
-
-            // now, prepare the pipe that will increment
-            let mut pipe = redis::pipe();
-            // final step : execute the pipe and restart in case of WATCH failure
-            //redis::cmd("GET")
-
-            let returned_permissions: Result<(Vec<Vec<u8>>,), _> = pipe
-                .atomic()
-                .set(redis_key, permissions_bytes.as_slice())
-                .ignore()
-                .get(redis_key)
-                // .arg(redis_key)
-                .query_async(&mut con_manager)
-                .await;
-
-            warn!("returned_permissions: {returned_permissions:?}",);
-
-            match returned_permissions {
-                Ok((mut returned_permissions_by_redis,)) => {
-                    // Deserialize permissions
-                    let serialized_value =
-                        returned_permissions_by_redis.pop().ok_or_else(|| {
-                            // todo(review): can we avoid the clone here?
-                            FindexServerError::Unauthorized(format!(
-                                "No permission found written for user {user_id}"
-                            ))
+                let permissions = if values.is_empty() {
+                    // if there is no value, we create a new one
+                    Permissions::new(uuid, Permission::Admin)
+                } else {
+                    // Deserialize permissions.
+                    // We expect only one value here but the redis.get() signature is a Vec<Vec<u8>> so we need to get only the first element.
+                    let serialized_value = &values.pop().ok_or_else(|| {
+                        RedisError::from((redis::ErrorKind::TypeError, "No permission found"))
+                    })?;
+                    let mut permissions =
+                        Permissions::deserialize(serialized_value).map_err(|_e| {
+                            RedisError::from((redis::ErrorKind::TypeError, "Failed to deserialize"))
                         })?;
-                    let returned_permissions = Permissions::deserialize(&serialized_value)?;
 
-                    debug!("new permissions for user {user_id}: {returned_permissions:?}",);
+                    permissions.grant_permission(uuid, Permission::Admin);
+                    permissions
+                };
+                let permissions_bytes = permissions.serialize().map_err(|_e| {
+                    RedisError::from((redis::ErrorKind::TypeError, "Failed to serialize"))
+                })?;
 
-                    break Ok(uuid);
-                }
-                Err(e) => {
-                    if e.to_string().contains("WATCH") {
-                        // Key was modified, retry the transaction
-                        continue;
-                    }
-                    // Some other error occurred
-                    break Err(e.into());
-                }
-            }
-        }
+                // increment
+                pipe.set(redis_key, permissions_bytes.as_slice())
+                    .ignore()
+                    .get(redis_key)
+                    .query_async(&mut con)
+                    .await
+            })
+            .await?;
+
+        // Deserialize permissions
+        let serialized_value = returned_permissions_by_redis.pop().ok_or_else(|| {
+            FindexServerError::Unauthorized(format!(
+                "No permission found written for user {user_id}"
+            ))
+        })?;
+        let returned_permissions = Permissions::deserialize(&serialized_value)?;
+
+        debug!("new permissions for user {user_id}: {returned_permissions:?}",);
+
+        Ok(uuid)
     }
 
     #[instrument(ret(Display), err, skip(self), level = "trace")]
@@ -112,10 +110,11 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
         let redis_key = user_id.as_bytes();
 
         let mut pipe = pipe();
-        pipe.get(redis_key);
 
         let mut values: Vec<Vec<u8>> = pipe
             .atomic()
+            // .pipe
+            .get(redis_key)
             .query_async(&mut self.memory.manager.clone())
             .await
             .map_err(FindexServerError::from)?;
@@ -127,8 +126,10 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
         Permissions::deserialize(serialized_value).map_err(FindexServerError::from)
     }
 
+    // so far the error is here
     async fn get_permission(&self, user_id: &str, index_id: &Uuid) -> FResult<Permission> {
         let permissions = self.get_permissions(user_id).await?;
+        // warn!("WARNING : permissions that were digged out are : {permissions:?}",);
         let permission = permissions.get_permission(index_id).ok_or_else(|| {
             FindexServerError::Unauthorized(format!(
                 "No permission for {user_id} on index {index_id}"
@@ -138,28 +139,57 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
         Ok(permission.clone())
     }
 
-    #[instrument(ret, err, skip(self), level = "trace")]
+    // #[instrument(ret, err, skip(self), level = "trace")]
+    #[allow(dependency_on_unit_never_type_fallback)]
     async fn grant_permission(
         &self,
         user_id: &str,
-        permission: Permission,
+        arg_permission: Permission,
         index_id: &Uuid,
     ) -> FResult<()> {
         let redis_key = user_id.as_bytes().to_vec();
-        let permissions = match self.get_permissions(user_id).await {
-            Ok(mut permissions) => {
-                permissions.grant_permission(*index_id, permission);
+        warn!("WARNING redis_key: {redis_key:?}",);
+        warn!("WARNING LA PERMISSION: {arg_permission:?}",);
+        let _p = self.get_permissions(user_id).await;
+
+        let permissions = match _p {
+            Ok(mut permissions) /* some hashmap */ => {
+                warn!("WARNING : permissions that are going to be set: {permissions:?}",);
+                permissions.grant_permission(*index_id, arg_permission); // adds the "new" permission to the existing ones
                 permissions
             }
-            Err(_) => Permissions::new(*index_id, permission),
+            Err(_) => Permissions::new(*index_id, arg_permission),
         };
+        warn!("WARNING : permissions after we added the new one: {permissions:?}",);
+        // so far this is correct
 
+        // in other terms, the error happens here
         let mut pipe = pipe();
-        pipe.set::<_, _>(redis_key, permissions.serialize()?.as_slice());
         pipe.atomic()
+            .set(redis_key.clone(), permissions.serialize()?.as_slice())
             .query_async(&mut self.memory.manager.clone())
             .await
-            .map_err(FindexServerError::from)
+            .map_err(FindexServerError::from)?;
+        // Read back the data to ensure it's correct
+        let mut pipe = redis::pipe();
+        let values: Vec<Vec<u8>> = pipe
+            .atomic()
+            .get(redis_key)
+            .query_async(&mut self.memory.manager.clone())
+            .await
+            .map_err(FindexServerError::from)?;
+
+        let serialized_value = &values.clone().pop().ok_or_else(|| {
+            FindexServerError::Unauthorized(format!("No permission found for {user_id}"))
+        })?;
+
+        let deserialized_permissions =
+            Permissions::deserialize(serialized_value).map_err(FindexServerError::from)?;
+        warn!(
+            "WARNING Deserialized permissions: {:?}",
+            deserialized_permissions
+        );
+        Ok(())
     }
 
     #[instrument(ret, err, skip(self), level = "trace")]
