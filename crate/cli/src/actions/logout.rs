@@ -18,10 +18,8 @@ impl LogoutAction {
     /// Returns an error if there is an issue loading or saving the
     /// configuration file.
     #[allow(clippy::print_stdout)]
-    pub fn run(&self, conf: &mut FindexClientConfig) -> CliResult<()> {
+    pub fn run(&self, conf: &mut FindexClientConfig) -> CliResult<String> {
         conf.http_config.access_token = None;
-        println!("\nThe access token was removed from the Findex CLI configuration",);
-
-        Ok(())
+        Ok("\nThe access token was removed from the Findex CLI configuration".to_string())
     }
 }

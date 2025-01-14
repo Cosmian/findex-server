@@ -20,15 +20,17 @@ impl PermissionsAction {
     /// # Errors
     ///
     /// Returns an error if there was a problem running the action.
-    pub async fn run(&self, rest_client: &FindexRestClient) -> CliResult<()> {
-        match self {
-            Self::Create(action) => action.run(rest_client).await?.to_string(),
-            Self::List(action) => action.run(rest_client).await?,
-            Self::Grant(action) => action.run(rest_client).await?,
-            Self::Revoke(action) => action.run(rest_client).await?,
-        };
+    pub async fn run(&self, rest_client: &FindexRestClient) -> CliResult<String> {
+        let stdout = match self {
+            Self::Create(action) => {
+                format!("Index ID: {}", action.run(rest_client).await?.to_string())
+            }
+            Self::List(action) => format!("Permissions: {}", action.run(rest_client).await?),
+            Self::Grant(action) => format!("{}", action.run(rest_client).await?),
+            Self::Revoke(action) => format!("{}", action.run(rest_client).await?),
+        }; // holds the formatted output that should be printed by the CLI
 
-        Ok(())
+        Ok(stdout)
     }
 }
 
@@ -55,7 +57,6 @@ impl CreateIndex {
             .await
             .with_context(|| "Can't execute the create index id query on the findex server")?;
         // should replace the user configuration file
-        println!("Index ID: {}", response.index_id);
 
         Ok(response.index_id)
     }
@@ -80,8 +81,6 @@ impl ListPermissions {
             .list_permission(&self.user)
             .await
             .with_context(|| "Can't execute the list permission query on the findex server")?;
-
-        println!("Permissions: {response}");
 
         Ok(response.to_string())
     }
@@ -121,8 +120,6 @@ impl GrantPermission {
             .await
             .with_context(|| "Can't execute the grant permission query on the findex server")?;
 
-        println!("{}", response.success);
-
         Ok(response.success)
     }
 }
@@ -152,8 +149,6 @@ impl RevokePermission {
             .revoke_permission(&self.user, &self.index_id)
             .await
             .with_context(|| "Can't execute the revoke permission query on the findex server")?;
-
-        println!("{}", response.success);
 
         Ok(response.success)
     }

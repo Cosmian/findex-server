@@ -91,9 +91,9 @@ impl CoreFindexActions {
             Self::Datasets(action) => Ok(println!("{}", action.run(findex_client).await?)),
             Self::Delete(action) => Ok(println!("{}", action.delete(findex_client).await?)),
             Self::Index(action) => Ok(println!("{}", action.add(findex_client).await?)),
-            Self::Permissions(action) => action.run(findex_client).await,
-            Self::Login(action) => action.run(&mut findex_client.config).await,
-            Self::Logout(action) => action.run(&mut findex_client.config),
+            Self::Permissions(action) => Ok(println!("{}", action.run(findex_client).await?)),
+            Self::Login(action) => action.run(&mut findex_client.config).await, // Login is the only action that needs an intermediary URL output, thus we leave printing to stdout handled internally
+            Self::Logout(action) => Ok(println!("{}", action.run(&mut findex_client.config)?)),
             Self::Search(action) => Ok(println!("{}", action.run(findex_client).await?)),
             Self::ServerVersion(action) => Ok(println!("{}", action.run(findex_client).await?)),
         }
