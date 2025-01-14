@@ -1,6 +1,6 @@
 mod auth_tests;
 mod datasets;
-mod findex;
+mod findex_tests;
 mod permissions;
 mod utils;
 
