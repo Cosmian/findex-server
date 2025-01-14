@@ -25,14 +25,14 @@ impl DatasetsAction {
     /// # Errors
     ///
     /// Returns an error if one of Add, Delete of Get actions fails
-    pub async fn run(&self, rest_client: &FindexRestClient) -> CliResult<()> {
-        match self {
+    pub async fn run(&self, rest_client: &FindexRestClient) -> CliResult<String> {
+        let res = match self {
             Self::Add(action) => action.run(rest_client).await?,
             Self::Delete(action) => action.run(rest_client).await?,
             Self::Get(action) => action.run(rest_client).await?,
         };
 
-        Ok(())
+        Ok(res)
     }
 }
 
@@ -89,8 +89,6 @@ impl AddEntries {
             .await
             .with_context(|| "Can't execute the add entries query on the findex server")?;
 
-        println!("{response}");
-
         Ok(response.to_string())
     }
 }
@@ -119,8 +117,6 @@ impl DeleteEntries {
             .delete_entries(&self.index_id, &self.uuids)
             .await
             .with_context(|| "Can't execute the delete entries query on the findex server")?;
-
-        println!("{}", response.success);
 
         Ok(response.success)
     }
@@ -152,8 +148,6 @@ impl GetEntries {
             .get_entries(&self.index_id, &self.uuids)
             .await
             .with_context(|| "Can't execute the get entries query on the findex server")?;
-
-        println!("{encrypted_entries}");
 
         Ok(encrypted_entries.to_string())
     }

@@ -88,14 +88,14 @@ impl CoreFindexActions {
     #[allow(clippy::future_not_send)]
     pub async fn run(&self, findex_client: &mut FindexRestClient) -> CliResult<()> {
         match self {
-            Self::Datasets(action) => action.run(findex_client).await,
+            Self::Datasets(action) => Ok(println!("{}", action.run(findex_client).await?)),
             Self::Delete(action) => Ok(println!("{}", action.delete(findex_client).await?)),
             Self::Index(action) => Ok(println!("{}", action.add(findex_client).await?)),
             Self::Permissions(action) => action.run(findex_client).await,
             Self::Login(action) => action.run(&mut findex_client.config).await,
             Self::Logout(action) => action.run(&mut findex_client.config),
             Self::Search(action) => Ok(println!("{}", action.run(findex_client).await?)),
-            Self::ServerVersion(action) => action.run(findex_client).await,
+            Self::ServerVersion(action) => Ok(println!("{}", action.run(findex_client).await?)),
         }
     }
 }
