@@ -46,6 +46,6 @@ impl SearchAction {
             .join("\n");
         trace!("Search results: {formatted_string}");
 
-        Ok(format!("{}", formatted_string))
+        Ok(formatted_string)
     }
 }

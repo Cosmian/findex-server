@@ -100,7 +100,7 @@ impl IndexOrDeleteAction {
         let operation_name = if is_insert { "Indexing" } else { "Deleting" };
         trace!("{} done: keywords: {:?}", operation_name, written_keywords);
 
-        let output = format!("indexing done: keywords: {:?}", written_keywords);
+        let output = format!("indexing done: keywords: {written_keywords:?}",);
 
         Ok(output)
     }

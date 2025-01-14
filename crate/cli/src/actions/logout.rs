@@ -20,6 +20,6 @@ impl LogoutAction {
     #[allow(clippy::print_stdout)]
     pub fn run(&self, conf: &mut FindexClientConfig) -> CliResult<String> {
         conf.http_config.access_token = None;
-        Ok("\nThe access token was removed from the Findex CLI configuration".to_string())
+        Ok("\nThe access token was removed from the Findex CLI configuration".to_owned())
     }
 }

@@ -20,6 +20,6 @@ impl ServerVersionAction {
             .version()
             .await
             .with_context(|| "Can't execute the version query on the findex server")?;
-        Ok(format!("{}", version))
+        Ok(version)
     }
 }

@@ -144,21 +144,21 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
     async fn grant_permission(
         &self,
         user_id: &str,
-        arg_permission: Permission,
+        permission: Permission,
         index_id: &Uuid,
     ) -> FResult<()> {
         let redis_key = user_id.as_bytes().to_vec();
         warn!("WARNING redis_key: {redis_key:?}",);
-        warn!("WARNING LA PERMISSION: {arg_permission:?}",);
+        warn!("WARNING LA PERMISSION: {permission:?}",);
         let _p = self.get_permissions(user_id).await;
 
         let permissions = match _p {
-            Ok(mut permissions) /* some hashmap */ => {
+            Ok(mut permissions) => {
                 warn!("WARNING : permissions that are going to be set: {permissions:?}",);
-                permissions.grant_permission(*index_id, arg_permission); // adds the "new" permission to the existing ones
+                permissions.grant_permission(*index_id, permission); // adds the "new" permission to the existing ones
                 permissions
             }
-            Err(_) => Permissions::new(*index_id, arg_permission),
+            Err(_) => Permissions::new(*index_id, permission),
         };
         warn!("WARNING : permissions after we added the new one: {permissions:?}",);
         // so far this is correct
@@ -172,14 +172,14 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
             .map_err(FindexServerError::from)?;
         // Read back the data to ensure it's correct
         let mut pipe = redis::pipe();
-        let values: Vec<Vec<u8>> = pipe
+        let mut values: Vec<Vec<u8>> = pipe
             .atomic()
             .get(redis_key)
             .query_async(&mut self.memory.manager.clone())
             .await
             .map_err(FindexServerError::from)?;
 
-        let serialized_value = &values.clone().pop().ok_or_else(|| {
+        let serialized_value = &values.pop().ok_or_else(|| {
             FindexServerError::Unauthorized(format!("No permission found for {user_id}"))
         })?;
 

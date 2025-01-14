@@ -145,7 +145,7 @@ async fn add_search_delete(
     let test_conf = FindexClientConfig::load(Some(PathBuf::from(cli_conf_path)))?;
     let mut rest_client = FindexRestClient::new(test_conf)?;
 
-    add(&index_id, &search_options.dataset_path, &mut rest_client).await?;
+    add(index_id, &search_options.dataset_path, &mut rest_client).await?;
 
     // make sure searching returns the expected results
     let search_results = search(index_id, search_options, &mut rest_client).await?;
@@ -164,7 +164,7 @@ async fn add_search_delete(
         );
     }
 
-    delete(&index_id, &search_options.dataset_path, &mut rest_client).await?;
+    delete(index_id, &search_options.dataset_path, &mut rest_client).await?;
 
     // make sure no results are returned after deletion
     let search_results = search(index_id, search_options, &mut rest_client).await?;

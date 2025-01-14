@@ -85,7 +85,7 @@ impl CoreFindexActions {
     /// Process the command line arguments
     /// # Errors
     /// - If the configuration file is not found or invalid
-    #[allow(clippy::future_not_send)]
+    #[allow(clippy::future_not_send, clippy::unit_arg)] // println! does return () but it prints the output of action.run() beforehand, nothing is "lost" and hence this lint will only cause useless boilerplate code
     pub async fn run(&self, findex_client: &mut FindexRestClient) -> CliResult<()> {
         match self {
             Self::Datasets(action) => Ok(println!("{}", action.run(findex_client).await?)),
