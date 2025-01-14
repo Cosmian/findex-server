@@ -9,10 +9,9 @@ use cosmian_logger::log_init;
 use test_findex_server::{
     start_default_test_findex_server, start_default_test_findex_server_with_cert_auth,
 };
-use tracing::{debug, trace, warn};
+use tracing::{debug, trace};
 use uuid::Uuid;
 
-use super::search::search_cmd;
 use crate::{
     actions::{
         findex::{index_or_delete::IndexOrDeleteAction, search::SearchAction, FindexParameters},
@@ -33,14 +32,14 @@ const SMALL_DATASET: &str = "../../test_data/datasets/smallpop.csv";
 const HUGE_DATASET: &str = "../../test_data/datasets/business-employment.csv";
 
 async fn add(
-    index_id: Uuid,
+    index_id: &Uuid,
     dataset_path: &str,
     rest_client: &mut FindexRestClient,
 ) -> CliResult<()> {
     IndexOrDeleteAction {
         findex_parameters: FindexParameters {
             key: "11223344556677889900AABBCCDDEEFF11223344556677889900AABBCCDDEEFF".to_owned(),
-            index_id,
+            index_id: *index_id,
         },
         csv: PathBuf::from(dataset_path),
     }
@@ -50,14 +49,14 @@ async fn add(
 }
 
 async fn delete(
-    index_id: Uuid,
+    index_id: &Uuid,
     dataset_path: &str,
     rest_client: &mut FindexRestClient,
 ) -> CliResult<()> {
     IndexOrDeleteAction {
         findex_parameters: FindexParameters {
             key: "11223344556677889900AABBCCDDEEFF11223344556677889900AABBCCDDEEFF".to_owned(),
-            index_id,
+            index_id: *index_id,
         },
         csv: PathBuf::from(dataset_path),
     }
@@ -66,21 +65,21 @@ async fn delete(
     Ok(())
 }
 
-fn search(
-    cli_conf_path: &str,
+async fn search(
     index_id: &Uuid,
     search_options: &SearchOptions,
+    rest_client: &mut FindexRestClient,
 ) -> CliResult<String> {
-    search_cmd(
-        cli_conf_path,
-        SearchAction {
-            findex_parameters: FindexParameters {
-                key: "11223344556677889900AABBCCDDEEFF11223344556677889900AABBCCDDEEFF".to_owned(),
-                index_id: index_id.to_owned(),
-            },
-            keyword: search_options.keywords.clone(),
+    let res = SearchAction {
+        findex_parameters: FindexParameters {
+            key: "11223344556677889900AABBCCDDEEFF11223344556677889900AABBCCDDEEFF".to_owned(),
+            index_id: *index_id,
         },
-    )
+        keyword: search_options.keywords.clone(),
+    }
+    .run(rest_client)
+    .await?;
+    Ok(res)
 }
 
 /// Helper function for `parse_locations`, docs below
@@ -143,18 +142,13 @@ async fn add_search_delete(
     index_id: &Uuid,
     search_options: &SearchOptions,
 ) -> CliResult<()> {
-    let ma_conf = FindexClientConfig::load(Some(PathBuf::from(cli_conf_path)))?;
-    let mut rest_client = FindexRestClient::new(ma_conf)?;
+    let test_conf = FindexClientConfig::load(Some(PathBuf::from(cli_conf_path)))?;
+    let mut rest_client = FindexRestClient::new(test_conf)?;
 
-    add(
-        index_id.to_owned(),
-        &search_options.dataset_path,
-        &mut rest_client,
-    )
-    .await?;
+    add(&index_id, &search_options.dataset_path, &mut rest_client).await?;
 
     // make sure searching returns the expected results
-    let search_results = search(cli_conf_path, index_id, search_options)?;
+    let search_results = search(index_id, search_options, &mut rest_client).await?;
     debug!("Search results (as string): {:?}", search_results);
 
     // parse Values to their unicode representation
@@ -170,15 +164,10 @@ async fn add_search_delete(
         );
     }
 
-    delete(
-        index_id.to_owned(),
-        &search_options.dataset_path,
-        &mut rest_client,
-    )
-    .await?;
+    delete(&index_id, &search_options.dataset_path, &mut rest_client).await?;
 
     // make sure no results are returned after deletion
-    let search_results = search(cli_conf_path, index_id, search_options)?;
+    let search_results = search(index_id, search_options, &mut rest_client).await?;
     for expected_result in &search_options.expected_results {
         assert!(
             !search_results.contains(expected_result),
@@ -280,7 +269,7 @@ pub(crate) async fn test_findex_grant_and_revoke_permission() -> CliResult<()> {
     let user_conf = FindexClientConfig::load(Some(PathBuf::from(&ctx.user_client_conf_path)))?;
     let mut user_rest_client = FindexRestClient::new(user_conf)?;
 
-    add(index_id, SMALL_DATASET, &mut owner_rest_client).await?;
+    add(&index_id, SMALL_DATASET, &mut owner_rest_client).await?;
 
     // Grant read permission to the client
     grant_permission_cmd(
@@ -293,7 +282,7 @@ pub(crate) async fn test_findex_grant_and_revoke_permission() -> CliResult<()> {
     )?;
 
     // User can read...
-    let search_results = search(&ctx.user_client_conf_path, &index_id, &search_options)?;
+    let search_results = search(&index_id, &search_options, &mut user_rest_client).await?;
     let (parsed_res, _) = parse_locations(&search_results, true);
 
     for expected_result in &search_options.expected_results {
@@ -304,7 +293,7 @@ pub(crate) async fn test_findex_grant_and_revoke_permission() -> CliResult<()> {
     }
 
     // ... but not write
-    assert!(add(index_id, SMALL_DATASET, &mut user_rest_client)
+    assert!(add(&index_id, SMALL_DATASET, &mut user_rest_client)
         .await
         .is_err());
 
@@ -326,7 +315,7 @@ pub(crate) async fn test_findex_grant_and_revoke_permission() -> CliResult<()> {
     )?;
 
     // User can read...
-    let search_results = search(&ctx.user_client_conf_path, &index_id, &search_options)?;
+    let search_results = search(&index_id, &search_options, &mut user_rest_client).await?;
     let (parsed_res, _) = parse_locations(&search_results, true);
     for expected_result in &search_options.expected_results {
         assert!(
@@ -336,7 +325,7 @@ pub(crate) async fn test_findex_grant_and_revoke_permission() -> CliResult<()> {
     }
 
     // ... and write
-    add(index_id, SMALL_DATASET, &mut user_rest_client).await?;
+    add(&index_id, SMALL_DATASET, &mut user_rest_client).await?;
 
     // Try to escalade privileges from `read` to `admin`
     grant_permission_cmd(
@@ -357,7 +346,9 @@ pub(crate) async fn test_findex_grant_and_revoke_permission() -> CliResult<()> {
         },
     )?;
 
-    search(&ctx.user_client_conf_path, &index_id, &search_options).unwrap_err();
+    let _search_results = search(&index_id, &search_options, &mut user_rest_client)
+        .await
+        .unwrap_err();
 
     Ok(())
 }

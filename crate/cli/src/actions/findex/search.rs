@@ -31,7 +31,7 @@ impl SearchAction {
     /// Returns an error if the version query fails or if there is an issue
     /// writing to the console.
     // #[allow(clippy::future_not_send)] // todo(manu): to remove this, changes must be done on `findex` repository
-    pub async fn process(&self, rest_client: &mut FindexRestClient) -> CliResult<()> {
+    pub async fn run(&self, rest_client: &mut FindexRestClient) -> CliResult<String> {
         let results = rest_client
             .instantiate_findex(
                 &self.findex_parameters.index_id,
@@ -44,9 +44,8 @@ impl SearchAction {
             .map(|(key, value)| format!("{key}: {value:?}"))
             .collect::<Vec<_>>()
             .join("\n");
-        println!("{formatted_string}");
         trace!("Search results: {formatted_string}");
 
-        Ok(())
+        Ok(format!("{}", formatted_string))
     }
 }
