@@ -63,7 +63,7 @@ impl DerefMut for KeywordToDataSetsMap {
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub(crate) struct Keywords(pub Vec<Keyword>);
 
 impl From<Vec<String>> for Keywords {

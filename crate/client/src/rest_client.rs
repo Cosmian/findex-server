@@ -88,7 +88,7 @@ impl FindexRestClient {
         ))
     }
 
-    #[instrument(ret(Display), err, skip(self))]
+    // #[instrument(ret(Display), err, skip(self))]
     pub async fn version(&self) -> FindexClientResult<String> {
         let endpoint = "/version";
         let server_url = format!("{}{endpoint}", self.client.server_url);

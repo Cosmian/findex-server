@@ -16,13 +16,7 @@ pub mod result;
 pub enum CliError {
     // TODO(hatem): shorten this
     #[error(transparent)]
-    FindexError(
-        #[from]
-        cosmian_findex::Error<
-            Address<ADDRESS_LENGTH>,
-            cosmian_findex::Error<Address<ADDRESS_LENGTH>, FindexClientError>,
-        >,
-    ),
+    FindexError(#[from] cosmian_findex::Error<Address<ADDRESS_LENGTH>>),
     #[error(transparent)]
     ConfigUtilsError(#[from] ConfigUtilsError),
     #[error(transparent)]

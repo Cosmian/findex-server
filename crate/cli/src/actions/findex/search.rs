@@ -1,6 +1,8 @@
+use std::collections::HashSet;
+
 use crate::{actions::findex::structs::Keywords, error::result::CliResult};
 use clap::Parser;
-use cosmian_findex::IndexADT;
+use cosmian_findex::{IndexADT, Value};
 use cosmian_findex_client::FindexRestClient;
 use tracing::trace;
 
@@ -32,14 +34,18 @@ impl SearchAction {
     /// writing to the console.
     // #[allow(clippy::future_not_send)] // todo(manu): to remove this, changes must be done on `findex` repository
     pub async fn run(&self, rest_client: &mut FindexRestClient) -> CliResult<String> {
-        let results = rest_client
-            .instantiate_findex(
-                &self.findex_parameters.index_id,
-                &self.findex_parameters.user_key()?,
-            )?
-            .search(Keywords::from(self.keyword.clone()).0.iter().cloned()) // TODO(review): is this sub-optimal ? can it be improved some way ?
-            .await?;
-        let formatted_string = results
+        // tod(hatem) : optimise post findex pr
+        let findex_instance = rest_client.instantiate_findex(
+            &self.findex_parameters.index_id,
+            &self.findex_parameters.user_key()?,
+        )?;
+        let mut search_results: Vec<(_, HashSet<Value>)> = Vec::new();
+        for k in Keywords::from(self.keyword.clone()).0.iter() {
+            let _a = findex_instance.search(k).await?;
+            search_results.push((k.clone(), _a));
+        }
+
+        let formatted_string = search_results
             .iter()
             .map(|(key, value)| format!("{key}: {value:?}"))
             .collect::<Vec<_>>()

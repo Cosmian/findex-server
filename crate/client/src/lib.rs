@@ -11,8 +11,7 @@ pub use config::{FindexClientConfig, FINDEX_CLI_CONF_ENV};
 pub use error::{result::FindexClientResult, FindexClientError};
 pub use rest_client::{handle_error, FindexRestClient};
 
-pub type InstantiatedFindex =
-    Findex<{ WORD_LENGTH }, Value, std::convert::Infallible, FindexRestClient>;
+pub type InstantiatedFindex = Findex<WORD_LENGTH, Value, String, FindexRestClient>;
 
 pub mod reexport {
     pub use cosmian_http_client;

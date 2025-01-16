@@ -91,11 +91,14 @@ impl IndexOrDeleteAction {
             &self.findex_parameters.index_id,
             &self.findex_parameters.user_key()?,
         )?;
-        if is_insert {
-            findex.insert(iterable_bindings).await
-        } else {
-            findex.delete(iterable_bindings).await
-        }?;
+        // TODO(hatem) : re - optimise below after exec
+        for (key, value) in iterable_bindings.clone() {
+            if is_insert {
+                findex.insert(key, value).await
+            } else {
+                findex.delete(key, value).await
+            }?;
+        }
         let written_keywords = bindings.keys().collect::<Vec<_>>();
         let operation_name = if is_insert { "Indexing" } else { "Deleting" };
         trace!("{} done: keywords: {:?}", operation_name, written_keywords);
