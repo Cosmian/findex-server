@@ -15,7 +15,7 @@ use cosmian_findex_structs::{
 use cosmian_http_client::HttpClient;
 use reqwest::{Response, StatusCode};
 use serde::{Deserialize, Serialize};
-use tracing::{instrument, trace, warn};
+use tracing::{trace, warn};
 use uuid::Uuid;
 
 // Response for success
