@@ -13,74 +13,17 @@ use tracing::{debug, trace};
 use uuid::Uuid;
 
 use crate::{
-    actions::{
-        findex::{index_or_delete::IndexOrDeleteAction, search::SearchAction, FindexParameters},
-        permissions::{GrantPermission, ListPermissions, RevokePermission},
-    },
     error::result::CliResult,
-    tests::permissions::{
-        create_index_id_cmd, grant_permission_cmd, list_permission_cmd, revoke_permission_cmd,
+    tests::{
+        permissions::{create_index_id, grant_permission, list_permission, revoke_permission},
+        utils::{add, delete, search},
     },
 };
-struct SearchOptions {
-    dataset_path: String,
-    keywords: Vec<String>,
-    expected_results: Vec<String>,
-}
+
+use super::utils::SearchOptions;
 
 const SMALL_DATASET: &str = "../../test_data/datasets/smallpop.csv";
 const HUGE_DATASET: &str = "../../test_data/datasets/business-employment.csv";
-
-async fn add(
-    index_id: &Uuid,
-    dataset_path: &str,
-    rest_client: &mut FindexRestClient,
-) -> CliResult<()> {
-    IndexOrDeleteAction {
-        findex_parameters: FindexParameters {
-            key: "11223344556677889900AABBCCDDEEFF11223344556677889900AABBCCDDEEFF".to_owned(),
-            index_id: *index_id,
-        },
-        csv: PathBuf::from(dataset_path),
-    }
-    .add(rest_client)
-    .await?;
-    Ok(())
-}
-
-async fn delete(
-    index_id: &Uuid,
-    dataset_path: &str,
-    rest_client: &mut FindexRestClient,
-) -> CliResult<()> {
-    IndexOrDeleteAction {
-        findex_parameters: FindexParameters {
-            key: "11223344556677889900AABBCCDDEEFF11223344556677889900AABBCCDDEEFF".to_owned(),
-            index_id: *index_id,
-        },
-        csv: PathBuf::from(dataset_path),
-    }
-    .delete(rest_client)
-    .await?;
-    Ok(())
-}
-
-async fn search(
-    index_id: &Uuid,
-    search_options: &SearchOptions,
-    rest_client: &mut FindexRestClient,
-) -> CliResult<String> {
-    let res = SearchAction {
-        findex_parameters: FindexParameters {
-            key: "11223344556677889900AABBCCDDEEFF11223344556677889900AABBCCDDEEFF".to_owned(),
-            index_id: *index_id,
-        },
-        keyword: search_options.keywords.clone(),
-    }
-    .run(rest_client)
-    .await?;
-    Ok(res)
-}
 
 /// Helper function for `parse_locations`, docs below
 fn parse_value_string(input: &str) -> Vec<Vec<u8>> {
@@ -138,6 +81,7 @@ fn parse_locations(input: &str, verbose: bool) -> (String, HashMap<String, HashS
 
 #[allow(clippy::panic_in_result_fn)]
 async fn add_search_delete(
+    key: String,
     cli_conf_path: &str,
     index_id: &Uuid,
     search_options: &SearchOptions,
@@ -145,10 +89,16 @@ async fn add_search_delete(
     let test_conf = FindexClientConfig::load(Some(PathBuf::from(cli_conf_path)))?;
     let mut rest_client = FindexRestClient::new(test_conf)?;
 
-    add(index_id, &search_options.dataset_path, &mut rest_client).await?;
+    add(
+        key.to_owned(),
+        index_id,
+        &search_options.dataset_path,
+        &mut rest_client,
+    )
+    .await?;
 
     // make sure searching returns the expected results
-    let search_results = search(index_id, search_options, &mut rest_client).await?;
+    let search_results = search(key.to_owned(), index_id, search_options, &mut rest_client).await?;
     debug!("Search results (as string): {:?}", search_results);
 
     // parse Values to their unicode representation
@@ -164,10 +114,16 @@ async fn add_search_delete(
         );
     }
 
-    delete(index_id, &search_options.dataset_path, &mut rest_client).await?;
+    delete(
+        key.to_owned(),
+        index_id,
+        &search_options.dataset_path,
+        &mut rest_client,
+    )
+    .await?;
 
     // make sure no results are returned after deletion
-    let search_results = search(index_id, search_options, &mut rest_client).await?;
+    let search_results = search(key, index_id, search_options, &mut rest_client).await?;
     for expected_result in &search_options.expected_results {
         assert!(
             !search_results.contains(expected_result),
@@ -182,6 +138,7 @@ async fn add_search_delete(
 pub(crate) async fn test_findex_no_auth() -> CliResult<()> {
     log_init(None);
     let ctx = start_default_test_findex_server().await;
+    let key = "55223344556677889900AABBCCDDEEFF11223344556677889900AABBCCDDEEFF".to_owned();
 
     // Search 2 entries in a small dataset. Expect 2 results.
     let search_options = SearchOptions {
@@ -190,6 +147,7 @@ pub(crate) async fn test_findex_no_auth() -> CliResult<()> {
         expected_results: vec!["States9686".to_owned(), "States14061".to_owned()],
     };
     add_search_delete(
+        key.to_owned(),
         &ctx.owner_client_conf_path,
         &Uuid::new_v4(),
         &search_options,
@@ -206,6 +164,7 @@ pub(crate) async fn test_findex_no_auth() -> CliResult<()> {
 pub(crate) async fn test_findex_no_auth_huge_dataset() -> CliResult<()> {
     log_init(None);
     let ctx = start_default_test_findex_server().await;
+    let key = "44223344556677889900AABBCCDDEEFF11223344556677889900AABBCCDDEEFF".to_owned();
 
     // Search 1 entry in a huge dataset
     let search_options = SearchOptions {
@@ -222,6 +181,7 @@ pub(crate) async fn test_findex_no_auth_huge_dataset() -> CliResult<()> {
         ],
     };
     add_search_delete(
+        key,
         &ctx.owner_client_conf_path,
         &Uuid::new_v4(),
         &search_options,
@@ -234,6 +194,9 @@ pub(crate) async fn test_findex_no_auth_huge_dataset() -> CliResult<()> {
 pub(crate) async fn test_findex_cert_auth() -> CliResult<()> {
     log_init(None);
     let ctx = start_default_test_findex_server_with_cert_auth().await;
+    let owner_conf = FindexClientConfig::load(Some(PathBuf::from(&ctx.owner_client_conf_path)))?;
+    let mut owner_rest_client = FindexRestClient::new(owner_conf)?;
+    let key = "33223344556677889900AABBCCDDEEFF11223344556677889900AABBCCDDEEFF".to_owned();
 
     let search_options = SearchOptions {
         dataset_path: SMALL_DATASET.into(),
@@ -241,10 +204,10 @@ pub(crate) async fn test_findex_cert_auth() -> CliResult<()> {
         expected_results: vec!["States9686".to_owned(), "States14061".to_owned()],
     };
 
-    let index_id = create_index_id_cmd(&ctx.owner_client_conf_path).await?;
+    let index_id = create_index_id(&mut owner_rest_client).await?;
     trace!("index_id: {index_id}");
 
-    add_search_delete(&ctx.owner_client_conf_path, &index_id, &search_options).await?;
+    add_search_delete(key, &ctx.owner_client_conf_path, &index_id, &search_options).await?;
     Ok(())
 }
 
@@ -253,6 +216,9 @@ pub(crate) async fn test_findex_cert_auth() -> CliResult<()> {
 pub(crate) async fn test_findex_grant_and_revoke_permission() -> CliResult<()> {
     log_init(None);
     let ctx = start_default_test_findex_server_with_cert_auth().await;
+    let owner_conf = FindexClientConfig::load(Some(PathBuf::from(&ctx.owner_client_conf_path)))?;
+    let mut owner_rest_client = FindexRestClient::new(owner_conf)?;
+    let key = "22223344556677889900AABBCCDDEEFF11223344556677889900AABBCCDDEEFF".to_owned();
 
     let search_options = SearchOptions {
         dataset_path: SMALL_DATASET.into(),
@@ -260,7 +226,7 @@ pub(crate) async fn test_findex_grant_and_revoke_permission() -> CliResult<()> {
         expected_results: vec!["States9686".to_owned(), "States14061".to_owned()],
     };
 
-    let index_id = create_index_id_cmd(&ctx.owner_client_conf_path).await?;
+    let index_id = create_index_id(&mut owner_rest_client).await?;
     trace!("index_id: {index_id}");
 
     let owner_conf = FindexClientConfig::load(Some(PathBuf::from(&ctx.owner_client_conf_path)))?;
@@ -269,20 +235,31 @@ pub(crate) async fn test_findex_grant_and_revoke_permission() -> CliResult<()> {
     let user_conf = FindexClientConfig::load(Some(PathBuf::from(&ctx.user_client_conf_path)))?;
     let mut user_rest_client = FindexRestClient::new(user_conf)?;
 
-    add(&index_id, SMALL_DATASET, &mut owner_rest_client).await?;
+    add(
+        key.to_owned(),
+        &index_id,
+        SMALL_DATASET,
+        &mut owner_rest_client,
+    )
+    .await?;
 
     // Grant read permission to the client
-    grant_permission_cmd(
-        &ctx.owner_client_conf_path,
-        &GrantPermission {
-            user: "user.client@acme.com".to_owned(),
-            index_id,
-            permission: Permission::Read,
-        },
-    )?;
+    grant_permission(
+        &mut owner_rest_client,
+        "user.client@acme.com".to_owned(),
+        &index_id,
+        Permission::Read,
+    )
+    .await?;
 
     // User can read...
-    let search_results = search(&index_id, &search_options, &mut user_rest_client).await?;
+    let search_results = search(
+        key.to_owned(),
+        &index_id,
+        &search_options,
+        &mut user_rest_client,
+    )
+    .await?;
     let (parsed_res, _) = parse_locations(&search_results, true);
 
     for expected_result in &search_options.expected_results {
@@ -293,29 +270,35 @@ pub(crate) async fn test_findex_grant_and_revoke_permission() -> CliResult<()> {
     }
 
     // ... but not write
-    assert!(add(&index_id, SMALL_DATASET, &mut user_rest_client)
-        .await
-        .is_err());
+    assert!(add(
+        key.to_owned(),
+        &index_id,
+        SMALL_DATASET,
+        &mut user_rest_client
+    )
+    .await
+    .is_err());
 
     // Grant write permission
-    grant_permission_cmd(
-        &ctx.owner_client_conf_path,
-        &GrantPermission {
-            user: "user.client@acme.com".to_owned(),
-            index_id,
-            permission: Permission::Write,
-        },
-    )?;
+    grant_permission(
+        &mut owner_rest_client,
+        "user.client@acme.com".to_owned(),
+        &index_id,
+        Permission::Write,
+    )
+    .await?;
 
-    list_permission_cmd(
-        &ctx.owner_client_conf_path,
-        &ListPermissions {
-            user: "user.client@acme.com".to_owned(),
-        },
-    )?;
+    let perm = list_permission(&mut owner_rest_client, "user.client@acme.com".to_owned()).await?;
+    debug!("User permission: {:?}", perm);
 
     // User can read...
-    let search_results = search(&index_id, &search_options, &mut user_rest_client).await?;
+    let search_results = search(
+        key.to_owned(),
+        &index_id,
+        &search_options,
+        &mut user_rest_client,
+    )
+    .await?;
     let (parsed_res, _) = parse_locations(&search_results, true);
     for expected_result in &search_options.expected_results {
         assert!(
@@ -325,28 +308,32 @@ pub(crate) async fn test_findex_grant_and_revoke_permission() -> CliResult<()> {
     }
 
     // ... and write
-    add(&index_id, SMALL_DATASET, &mut user_rest_client).await?;
+    add(
+        key.to_owned(),
+        &index_id,
+        SMALL_DATASET,
+        &mut user_rest_client,
+    )
+    .await?;
 
     // Try to escalade privileges from `read` to `admin`
-    grant_permission_cmd(
-        &ctx.user_client_conf_path,
-        &GrantPermission {
-            user: "user.client@acme.com".to_owned(),
-            index_id,
-            permission: Permission::Admin,
-        },
+    grant_permission(
+        &mut user_rest_client,
+        "user.client@acme.com".to_owned(),
+        &index_id,
+        Permission::Admin,
     )
+    .await
     .unwrap_err();
 
-    revoke_permission_cmd(
-        &ctx.owner_client_conf_path,
-        &RevokePermission {
-            user: "user.client@acme.com".to_owned(),
-            index_id,
-        },
-    )?;
+    revoke_permission(
+        &mut owner_rest_client,
+        "user.client@acme.com".to_owned(),
+        &index_id,
+    )
+    .await?;
 
-    let _search_results = search(&index_id, &search_options, &mut user_rest_client)
+    let _search_results = search(key, &index_id, &search_options, &mut user_rest_client)
         .await
         .unwrap_err();
 
@@ -358,6 +345,7 @@ pub(crate) async fn test_findex_grant_and_revoke_permission() -> CliResult<()> {
 pub(crate) async fn test_findex_no_permission() -> CliResult<()> {
     log_init(None);
     let ctx = start_default_test_findex_server_with_cert_auth().await;
+    let key = "11223344556677889900AABBCCDDEEFF11223344556677889900AABBCCDDEEFF".to_owned();
 
     let search_options = SearchOptions {
         dataset_path: SMALL_DATASET.into(),
@@ -365,10 +353,13 @@ pub(crate) async fn test_findex_no_permission() -> CliResult<()> {
         expected_results: vec!["States9686".to_owned(), "States14061".to_owned()],
     };
 
-    assert!(
-        add_search_delete(&ctx.user_client_conf_path, &Uuid::new_v4(), &search_options)
-            .await
-            .is_err()
-    );
+    assert!(add_search_delete(
+        key,
+        &ctx.user_client_conf_path,
+        &Uuid::new_v4(),
+        &search_options
+    )
+    .await
+    .is_err());
     Ok(())
 }

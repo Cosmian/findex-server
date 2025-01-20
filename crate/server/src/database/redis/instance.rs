@@ -14,7 +14,8 @@ impl<const WORD_LENGTH: usize> Redis<WORD_LENGTH> {
         let memory = RedisMemory::connect(redis_url).await?;
         if clear_database {
             info!("Warning: irreversible operation: clearing the database");
-            memory.clear_redis_db().await?;
+            // TODO: fix this
+            // memory.clear_redis_db().await?;
         }
         Ok(Self { memory })
     }

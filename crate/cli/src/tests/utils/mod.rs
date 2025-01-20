@@ -1,4 +1,3 @@
-#![allow(unused_imports)]
-pub(crate) use cmd_logs::recover_cmd_logs;
+mod add_delete_search;
 
-mod cmd_logs;
+pub(crate) use add_delete_search::{add, delete, search, SearchOptions};
