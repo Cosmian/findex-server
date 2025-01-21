@@ -62,5 +62,7 @@ url = "2.5.4"
 x509-parser = "0.16"
 zeroize = { version = "1.8", default-features = false }
 uuid = { version = "1.11", features = ["v4", "serde"] }
-cosmian_findex = { git = "https://github.com/Cosmian/findex", branch = "feat/findex-server-v7" }
+cosmian_findex = { git = "https://github.com/Cosmian/findex", branch = "feat/findex-server-v7", features = [
+  "redis-mem",
+] }
 cosmian_crypto_core = { version = "9.3.0", default-features = false }

@@ -8,10 +8,8 @@ use crate::{
     },
     InstantiatedFindex,
 };
-use cosmian_findex::{Address, Findex, MemoryADT, Secret, ADDRESS_LENGTH, KEY_LENGTH};
-use cosmian_findex_structs::{
-    decode_fn, encode_fn, Addresses, Guard, OptionalWords, Tasks, WORD_LENGTH,
-};
+use cosmian_findex::{Address, Findex, MemoryADT, Secret, ADDRESS_LENGTH, KEY_LENGTH, WORD_LENGTH};
+use cosmian_findex_structs::{decode_fn, encode_fn, Addresses, Guard, OptionalWords, Tasks};
 use cosmian_http_client::HttpClient;
 use reqwest::{Response, StatusCode};
 use serde::{Deserialize, Serialize};
@@ -80,12 +78,14 @@ impl FindexRestClient {
         key: &Secret<KEY_LENGTH>,
     ) -> Result<InstantiatedFindex, FindexClientError> {
         trace!("Instantiating a Findex rest client");
-        Ok(Findex::new(
+        let _a: Findex<WORD_LENGTH, cosmian_findex::Value, String, FindexRestClient> = Findex::new(
             key, // TODO(review): is cloning ok here ?
             self.new_memory(*index_id),
             encode_fn::<WORD_LENGTH, _>,
             decode_fn,
-        ))
+        );
+        trace!("insta OKL");
+        Ok(_a)
     }
 
     // #[instrument(ret(Display), err, skip(self))]

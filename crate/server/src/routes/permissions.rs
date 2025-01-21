@@ -1,5 +1,9 @@
-use std::{str::FromStr, sync::Arc};
-
+use crate::{
+    core::FindexServer,
+    database::database_traits::PermissionsTrait,
+    error::{result::FResult, server::FindexServerError},
+    routes::error::{ResponseBytes, SuccessResponse},
+};
 use actix_web::{
     post,
     web::{self, Data, Json},
@@ -7,15 +11,9 @@ use actix_web::{
 };
 use cosmian_crypto_core::bytes_ser_de::Serializable;
 use cosmian_findex_structs::Permission;
+use std::{str::FromStr, sync::Arc};
 use tracing::{debug, info};
 use uuid::Uuid;
-
-use crate::{
-    core::FindexServer,
-    database::database_traits::PermissionsTrait,
-    error::{result::FResult, server::FindexServerError},
-    routes::error::{ResponseBytes, SuccessResponse},
-};
 
 pub(crate) async fn check_permission(
     user: &str,

@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
 use cosmian_findex_client::FindexRestClient;
+use tracing::trace;
 use uuid::Uuid;
 
 use crate::{
@@ -16,15 +17,18 @@ pub(crate) async fn add(
     dataset_path: &str,
     rest_client: &mut FindexRestClient,
 ) -> CliResult<()> {
-    IndexOrDeleteAction {
+    let index_action = IndexOrDeleteAction {
         findex_parameters: FindexParameters {
             key,
             index_id: *index_id,
         },
         csv: PathBuf::from(dataset_path),
-    }
-    .add(rest_client)
-    .await?;
+    };
+    trace!("start indexofdeleteaction");
+    let _a = index_action.add(rest_client).await?;
+    // .add(rest_client)
+
+    trace!("end it"); // .await?;
     Ok(())
 }
 

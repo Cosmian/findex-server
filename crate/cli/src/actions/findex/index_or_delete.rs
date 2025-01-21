@@ -3,7 +3,7 @@ use std::{collections::HashMap, fs::File, path::PathBuf};
 use crate::actions::findex::structs::{Keyword, KeywordToDataSetsMap};
 use clap::Parser;
 
-use cosmian_findex::{IndexADT, Value};
+use cosmian_findex::{IndexADT, Value, WORD_LENGTH};
 use cosmian_findex_client::FindexRestClient;
 use tracing::{instrument, trace};
 
@@ -59,9 +59,10 @@ impl IndexOrDeleteAction {
             });
 
             // Log the CSV line for traceability
-            trace!("CSV line: {record:?}");
+            // trace!("CSV line: {record:?}");
         }
 
+        trace!("CSV lines are OK");
         // Return the resulting HashMap
         Ok(csv_in_memory)
     }
@@ -87,10 +88,11 @@ impl IndexOrDeleteAction {
     ) -> CliResult<String> {
         let bindings = self.to_indexed_value_keywords_map()?;
         let iterable_bindings = bindings.iter().map(|(k, v)| (k.clone(), v.clone()));
-        let findex = rest_client.instantiate_findex(
-            &self.findex_parameters.index_id,
-            &self.findex_parameters.user_key()?,
-        )?;
+        let findex: cosmian_findex::Findex<WORD_LENGTH, Value, String, FindexRestClient> =
+            rest_client.instantiate_findex(
+                &self.findex_parameters.index_id,
+                &self.findex_parameters.user_key()?,
+            )?;
         // TODO(hatem) : re - optimise below after exec
         for (key, value) in iterable_bindings.clone() {
             if is_insert {

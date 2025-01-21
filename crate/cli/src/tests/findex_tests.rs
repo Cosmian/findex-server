@@ -87,8 +87,9 @@ async fn add_search_delete(
     search_options: &SearchOptions,
 ) -> CliResult<()> {
     let test_conf = FindexClientConfig::load(Some(PathBuf::from(cli_conf_path)))?;
-    let mut rest_client = FindexRestClient::new(test_conf)?;
-
+    trace!("BEFORE rest client");
+    let mut rest_client: FindexRestClient = FindexRestClient::new(test_conf)?;
+    trace!("BEFORE ADD");
     add(
         key.to_owned(),
         index_id,
@@ -96,6 +97,7 @@ async fn add_search_delete(
         &mut rest_client,
     )
     .await?;
+    trace!("POST ADD");
 
     // make sure searching returns the expected results
     let search_results = search(key.to_owned(), index_id, search_options, &mut rest_client).await?;
@@ -147,7 +149,7 @@ pub(crate) async fn test_findex_no_auth() -> CliResult<()> {
         expected_results: vec!["States9686".to_owned(), "States14061".to_owned()],
     };
     add_search_delete(
-        key.to_owned(),
+        key,
         &ctx.owner_client_conf_path,
         &Uuid::new_v4(),
         &search_options,

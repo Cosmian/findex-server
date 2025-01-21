@@ -1,5 +1,4 @@
-use cosmian_findex::{Findex, Value};
-use cosmian_findex_structs::WORD_LENGTH;
+use cosmian_findex::{Findex, Value, WORD_LENGTH};
 
 mod config;
 mod datasets;

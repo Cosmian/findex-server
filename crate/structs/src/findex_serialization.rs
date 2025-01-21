@@ -301,10 +301,9 @@ impl<const WORD_LENGTH: usize> Tasks<WORD_LENGTH> {
 #[cfg(test)]
 mod tests {
     use crate::findex_serialization::Guard;
-    use crate::WORD_LENGTH;
 
     use super::{Addresses, OptionalWords, Tasks};
-    use cosmian_findex::{Address, ADDRESS_LENGTH};
+    use cosmian_findex::{Address, ADDRESS_LENGTH, WORD_LENGTH};
     use rand::rngs::StdRng;
     use rand::{Rng, SeedableRng};
 
@@ -333,7 +332,7 @@ mod tests {
         rng.fill(&mut word1[..]);
         rng.fill(&mut word2[..]);
 
-        let optional_words: OptionalWords<129> = OptionalWords(vec![None, Some(word1)]);
+        let optional_words: OptionalWords<{ WORD_LENGTH }> = OptionalWords(vec![None, Some(word1)]);
 
         let serialized = optional_words.serialize().expect("Serialization failed");
         let deserialized = OptionalWords::deserialize(&serialized).expect("Deserialization failed");

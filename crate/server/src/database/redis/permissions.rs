@@ -2,7 +2,8 @@ use std::future::Future;
 
 use async_trait::async_trait;
 use cosmian_crypto_core::bytes_ser_de::Serializable;
-use cosmian_findex_structs::{Permission, Permissions, WORD_LENGTH};
+use cosmian_findex::WORD_LENGTH;
+use cosmian_findex_structs::{Permission, Permissions};
 use redis::{
     aio::ConnectionLike, cmd, pipe, AsyncCommands, FromRedisValue, Pipeline, RedisError,
     ToRedisArgs,
