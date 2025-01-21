@@ -40,9 +40,9 @@ impl SearchAction {
             &self.findex_parameters.user_key()?,
         )?;
         let mut search_results: Vec<(_, HashSet<Value>)> = Vec::new();
-        for k in Keywords::from(self.keyword.clone()).0.iter() {
-            let _a = findex_instance.search(k).await?;
-            search_results.push((k.clone(), _a));
+        for k in &Keywords::from(self.keyword.clone()).0 {
+            let search_result = findex_instance.search(k).await?;
+            search_results.push((k.clone(), search_result));
         }
 
         let formatted_string = search_results

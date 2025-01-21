@@ -91,7 +91,7 @@ async fn add_search_delete(
     let mut rest_client: FindexRestClient = FindexRestClient::new(test_conf)?;
     trace!("BEFORE ADD");
     add(
-        key.to_owned(),
+        key.clone(),
         index_id,
         &search_options.dataset_path,
         &mut rest_client,
@@ -100,7 +100,7 @@ async fn add_search_delete(
     trace!("POST ADD");
 
     // make sure searching returns the expected results
-    let search_results = search(key.to_owned(), index_id, search_options, &mut rest_client).await?;
+    let search_results = search(key.clone(), index_id, search_options, &mut rest_client).await?;
     debug!("Search results (as string): {:?}", search_results);
 
     // parse Values to their unicode representation
@@ -117,7 +117,7 @@ async fn add_search_delete(
     }
 
     delete(
-        key.to_owned(),
+        key.clone(),
         index_id,
         &search_options.dataset_path,
         &mut rest_client,
@@ -197,7 +197,7 @@ pub(crate) async fn test_findex_cert_auth() -> CliResult<()> {
     log_init(None);
     let ctx = start_default_test_findex_server_with_cert_auth().await;
     let owner_conf = FindexClientConfig::load(Some(PathBuf::from(&ctx.owner_client_conf_path)))?;
-    let mut owner_rest_client = FindexRestClient::new(owner_conf)?;
+    let owner_rest_client = FindexRestClient::new(owner_conf)?;
     let key = "33223344556677889900AABBCCDDEEFF11223344556677889900AABBCCDDEEFF".to_owned();
 
     let search_options = SearchOptions {
@@ -206,7 +206,7 @@ pub(crate) async fn test_findex_cert_auth() -> CliResult<()> {
         expected_results: vec!["States9686".to_owned(), "States14061".to_owned()],
     };
 
-    let index_id = create_index_id(&mut owner_rest_client).await?;
+    let index_id = create_index_id(&owner_rest_client).await?;
     trace!("index_id: {index_id}");
 
     add_search_delete(key, &ctx.owner_client_conf_path, &index_id, &search_options).await?;
@@ -219,7 +219,7 @@ pub(crate) async fn test_findex_grant_and_revoke_permission() -> CliResult<()> {
     log_init(None);
     let ctx = start_default_test_findex_server_with_cert_auth().await;
     let owner_conf = FindexClientConfig::load(Some(PathBuf::from(&ctx.owner_client_conf_path)))?;
-    let mut owner_rest_client = FindexRestClient::new(owner_conf)?;
+    let owner_rest_client = FindexRestClient::new(owner_conf)?;
     let key = "22223344556677889900AABBCCDDEEFF11223344556677889900AABBCCDDEEFF".to_owned();
 
     let search_options = SearchOptions {
@@ -228,7 +228,7 @@ pub(crate) async fn test_findex_grant_and_revoke_permission() -> CliResult<()> {
         expected_results: vec!["States9686".to_owned(), "States14061".to_owned()],
     };
 
-    let index_id = create_index_id(&mut owner_rest_client).await?;
+    let index_id = create_index_id(&owner_rest_client).await?;
     trace!("index_id: {index_id}");
 
     let owner_conf = FindexClientConfig::load(Some(PathBuf::from(&ctx.owner_client_conf_path)))?;
@@ -238,7 +238,7 @@ pub(crate) async fn test_findex_grant_and_revoke_permission() -> CliResult<()> {
     let mut user_rest_client = FindexRestClient::new(user_conf)?;
 
     add(
-        key.to_owned(),
+        key.clone(),
         &index_id,
         SMALL_DATASET,
         &mut owner_rest_client,
@@ -247,7 +247,7 @@ pub(crate) async fn test_findex_grant_and_revoke_permission() -> CliResult<()> {
 
     // Grant read permission to the client
     grant_permission(
-        &mut owner_rest_client,
+        &owner_rest_client,
         "user.client@acme.com".to_owned(),
         &index_id,
         Permission::Read,
@@ -256,7 +256,7 @@ pub(crate) async fn test_findex_grant_and_revoke_permission() -> CliResult<()> {
 
     // User can read...
     let search_results = search(
-        key.to_owned(),
+        key.clone(),
         &index_id,
         &search_options,
         &mut user_rest_client,
@@ -272,30 +272,27 @@ pub(crate) async fn test_findex_grant_and_revoke_permission() -> CliResult<()> {
     }
 
     // ... but not write
-    assert!(add(
-        key.to_owned(),
-        &index_id,
-        SMALL_DATASET,
-        &mut user_rest_client
-    )
-    .await
-    .is_err());
+    assert!(
+        add(key.clone(), &index_id, SMALL_DATASET, &mut user_rest_client)
+            .await
+            .is_err()
+    );
 
     // Grant write permission
     grant_permission(
-        &mut owner_rest_client,
+        &owner_rest_client,
         "user.client@acme.com".to_owned(),
         &index_id,
         Permission::Write,
     )
     .await?;
 
-    let perm = list_permission(&mut owner_rest_client, "user.client@acme.com".to_owned()).await?;
+    let perm = list_permission(&owner_rest_client, "user.client@acme.com".to_owned()).await?;
     debug!("User permission: {:?}", perm);
 
     // User can read...
     let search_results = search(
-        key.to_owned(),
+        key.clone(),
         &index_id,
         &search_options,
         &mut user_rest_client,
@@ -310,17 +307,11 @@ pub(crate) async fn test_findex_grant_and_revoke_permission() -> CliResult<()> {
     }
 
     // ... and write
-    add(
-        key.to_owned(),
-        &index_id,
-        SMALL_DATASET,
-        &mut user_rest_client,
-    )
-    .await?;
+    add(key.clone(), &index_id, SMALL_DATASET, &mut user_rest_client).await?;
 
     // Try to escalade privileges from `read` to `admin`
     grant_permission(
-        &mut user_rest_client,
+        &user_rest_client,
         "user.client@acme.com".to_owned(),
         &index_id,
         Permission::Admin,
@@ -329,7 +320,7 @@ pub(crate) async fn test_findex_grant_and_revoke_permission() -> CliResult<()> {
     .unwrap_err();
 
     revoke_permission(
-        &mut owner_rest_client,
+        &owner_rest_client,
         "user.client@acme.com".to_owned(),
         &index_id,
     )

@@ -37,7 +37,7 @@ impl DatasetsTrait for Redis<WORD_LENGTH> {
             pipe.set(key, data);
         }
         pipe.atomic()
-            .query_async(&mut self.memory.manager.clone())
+            .query_async(&mut self.manager.clone())
             .await
             .map_err(FindexServerError::from)
     }
@@ -50,7 +50,7 @@ impl DatasetsTrait for Redis<WORD_LENGTH> {
             pipe.del(key);
         }
         pipe.atomic()
-            .query_async(&mut self.memory.manager.clone())
+            .query_async(&mut self.manager.clone())
             .await
             .map_err(FindexServerError::from)
     }
@@ -73,7 +73,7 @@ impl DatasetsTrait for Redis<WORD_LENGTH> {
         }
         let values: Vec<Vec<u8>> = pipe
             .atomic()
-            .query_async(&mut self.memory.manager.clone())
+            .query_async(&mut self.manager.clone())
             .await
             .map_err(FindexServerError::from)?;
 

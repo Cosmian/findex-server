@@ -52,7 +52,7 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
     async fn create_index_id(&self, user_id: &str) -> FResult<Uuid> {
         let redis_key = user_id.as_bytes();
 
-        let con_manager = self.memory.manager.clone();
+        let con_manager = self.manager.clone();
 
         let uuid = Uuid::new_v4();
 
@@ -116,7 +116,7 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
             .atomic()
             // .pipe
             .get(redis_key)
-            .query_async(&mut self.memory.manager.clone())
+            .query_async(&mut self.manager.clone())
             .await
             .map_err(FindexServerError::from)?;
 
@@ -168,7 +168,7 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
         let mut pipe = pipe();
         pipe.atomic()
             .set(redis_key.clone(), permissions.serialize()?.as_slice())
-            .query_async(&mut self.memory.manager.clone())
+            .query_async(&mut self.manager.clone())
             .await
             .map_err(FindexServerError::from)?;
         // Read back the data to ensure it's correct
@@ -176,7 +176,7 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
         let mut values: Vec<Vec<u8>> = pipe
             .atomic()
             .get(redis_key)
-            .query_async(&mut self.memory.manager.clone())
+            .query_async(&mut self.manager.clone())
             .await
             .map_err(FindexServerError::from)?;
 
@@ -204,7 +204,7 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
                 pipe.set::<_, _>(key, permissions.serialize()?.as_slice());
 
                 pipe.atomic()
-                    .query_async::<()>(&mut self.memory.manager.clone())
+                    .query_async::<()>(&mut self.manager.clone())
                     .await
                     .map_err(FindexServerError::from)?;
             }
