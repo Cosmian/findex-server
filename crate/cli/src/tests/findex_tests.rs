@@ -158,9 +158,6 @@ pub(crate) async fn test_findex_no_auth() -> CliResult<()> {
     Ok(())
 }
 
-// todo(review) : this test yields the following error :
-// Error: Default("ERROR: Memory(Conversion(\"insufficient bytes in a word to fit a value of length 146\"))\n")
-// Does this mean we should adapt the test to the word size, or fix the conversion mechanism leaving the test intact ?
 #[ignore]
 #[tokio::test]
 pub(crate) async fn test_findex_no_auth_huge_dataset() -> CliResult<()> {

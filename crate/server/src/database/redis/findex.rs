@@ -1,8 +1,9 @@
 use async_trait::async_trait;
+use cosmian_findex::WORD_LENGTH;
 
 use crate::database::database_traits::FindexMemoryTrait;
 
-use super::{Redis, WORD_LENGTH};
+use super::Redis;
 
 #[async_trait]
 impl FindexMemoryTrait for Redis<WORD_LENGTH> {}

@@ -1,12 +1,10 @@
-use std::collections::HashSet;
-
+use super::parameters::FindexParameters;
 use crate::{actions::findex::structs::Keywords, error::result::CliResult};
 use clap::Parser;
 use cosmian_findex::{IndexADT, Value};
 use cosmian_findex_client::FindexRestClient;
+use std::collections::HashSet;
 use tracing::trace;
-
-use super::parameters::FindexParameters;
 
 /// Findex: Search keywords.
 #[derive(Parser, Debug)]
@@ -14,7 +12,6 @@ use super::parameters::FindexParameters;
 pub struct SearchAction {
     #[clap(flatten)]
     pub(crate) findex_parameters: FindexParameters,
-
     /// The word to search. Can be repeated.
     #[clap(long)]
     pub(crate) keyword: Vec<String>,
@@ -32,9 +29,7 @@ impl SearchAction {
     ///
     /// Returns an error if the version query fails or if there is an issue
     /// writing to the console.
-    // #[allow(clippy::future_not_send)] // todo(manu): to remove this, changes must be done on `findex` repository
     pub async fn run(&self, rest_client: &mut FindexRestClient) -> CliResult<String> {
-        // tod(hatem) : optimise post findex pr
         let findex_instance = rest_client.instantiate_findex(
             &self.findex_parameters.index_id,
             &self.findex_parameters.user_key()?,

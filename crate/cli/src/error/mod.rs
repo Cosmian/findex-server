@@ -14,7 +14,6 @@ pub mod result;
 // Each error type must have a corresponding HTTP status code
 #[derive(Error, Debug)]
 pub enum CliError {
-    // TODO(hatem): shorten this
     #[error(transparent)]
     FindexError(#[from] cosmian_findex::Error<Address<ADDRESS_LENGTH>>),
     #[error(transparent)]

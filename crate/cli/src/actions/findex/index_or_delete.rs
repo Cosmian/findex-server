@@ -32,22 +32,14 @@ impl IndexOrDeleteAction {
     /// - There is an error reading the CSV records.
     /// - There is an error converting the CSV records to the expected data
     ///   types.
-    /// Reads a CSV file and maps each record to a set of keywords to HashSet<Data>.
     #[instrument(err, skip(self))]
     pub(crate) fn to_indexed_value_keywords_map(&self) -> CliResult<KeywordToDataSetsMap> {
-        // Initialize a HashMap to store CSV data in memory
-        let mut csv_in_memory: KeywordToDataSetsMap = KeywordToDataSetsMap(HashMap::new());
-
-        // Open the CSV file
+        let mut csv_in_memory = KeywordToDataSetsMap(HashMap::new());
         let file = File::open(self.csv.clone())?;
         let mut rdr = csv::Reader::from_reader(file);
 
-        // Iterate over each record in the CSV file
         for result in rdr.byte_records() {
-            // Check for errors in reading the record
             let record = result?;
-
-            // Convert the record into a Findex indexed value
             let indexed_value = Value::from(record.as_slice());
 
             // Extract keywords from the record and associate them with the indexed values
@@ -57,13 +49,8 @@ impl IndexOrDeleteAction {
                     .or_default()
                     .insert(indexed_value.clone());
             });
-
-            // Log the CSV line for traceability
-            // trace!("CSV line: {record:?}");
         }
-
         trace!("CSV lines are OK");
-        // Return the resulting HashMap
         Ok(csv_in_memory)
     }
 
@@ -87,18 +74,17 @@ impl IndexOrDeleteAction {
         is_insert: bool,
     ) -> CliResult<String> {
         let bindings = self.to_indexed_value_keywords_map()?;
-        let iterable_bindings = bindings.iter().map(|(k, v)| (k.clone(), v.clone()));
         let findex: cosmian_findex::Findex<WORD_LENGTH, Value, String, FindexRestClient> =
             rest_client.instantiate_findex(
                 &self.findex_parameters.index_id,
                 &self.findex_parameters.user_key()?,
             )?;
-        // TODO(hatem) : re - optimise below after exec
-        for (key, value) in iterable_bindings.clone() {
+        for (key, value) in bindings.iter() {
             if is_insert {
-                findex.insert(key, value).await
+                trace!("Attempt to insert ...");
+                findex.insert(key, value.clone()).await
             } else {
-                findex.delete(key, value).await
+                findex.delete(key, value.clone()).await
             }?;
         }
         let written_keywords = bindings.keys().collect::<Vec<_>>();

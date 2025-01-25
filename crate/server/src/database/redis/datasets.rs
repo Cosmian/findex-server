@@ -1,12 +1,13 @@
 use std::collections::HashMap;
 
 use async_trait::async_trait;
+use cosmian_findex::WORD_LENGTH;
 use cosmian_findex_structs::{EncryptedEntries, Uuids};
 use redis::pipe;
 use tracing::{instrument, trace};
 use uuid::Uuid;
 
-use super::{Redis, WORD_LENGTH};
+use super::Redis;
 use crate::{
     database::database_traits::DatasetsTrait,
     error::{result::FResult, server::FindexServerError},
