@@ -1,15 +1,13 @@
-use std::path::PathBuf;
-
-use cosmian_findex_client::FindexRestClient;
-use tracing::trace;
-use uuid::Uuid;
-
 use crate::{
     actions::findex::{
         index_or_delete::IndexOrDeleteAction, search::SearchAction, FindexParameters,
     },
     error::result::CliResult,
 };
+use cosmian_findex_client::FindexRestClient;
+use std::path::PathBuf;
+use tracing::trace;
+use uuid::Uuid;
 
 pub(crate) async fn add(
     key: String,
@@ -24,11 +22,8 @@ pub(crate) async fn add(
         },
         csv: PathBuf::from(dataset_path),
     };
-    trace!("start indexofdeleteaction");
-    let _a = index_action.add(rest_client).await?;
-    // .add(rest_client)
-
-    trace!("end it"); // .await?;
+    let _res = index_action.add(rest_client).await?;
+    trace!("Indexing of {} completed : {:?}", dataset_path, _res);
     Ok(())
 }
 
@@ -47,6 +42,7 @@ pub(crate) async fn delete(
     }
     .delete(rest_client)
     .await?;
+    trace!("Deletion of {} completed", dataset_path);
     Ok(())
 }
 
@@ -71,5 +67,10 @@ pub(crate) async fn search(
     }
     .run(rest_client)
     .await?;
+    trace!(
+        "Search of {} completed : {:?}",
+        search_options.dataset_path,
+        res
+    );
     Ok(res)
 }

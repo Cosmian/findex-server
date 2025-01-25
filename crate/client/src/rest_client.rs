@@ -1,5 +1,3 @@
-use std::fmt::Display;
-
 use crate::{
     config::FindexClientConfig,
     error::{
@@ -16,6 +14,7 @@ use cosmian_findex_structs::{Addresses, Guard, OptionalWords, Tasks};
 use cosmian_http_client::HttpClient;
 use reqwest::{Response, StatusCode};
 use serde::{Deserialize, Serialize};
+use std::fmt::Display;
 use tracing::{trace, warn};
 use uuid::Uuid;
 
@@ -62,7 +61,7 @@ impl FindexRestClient {
             index_id: None,
         })
     }
-    /// Instantiate a Findex REST client with a specific index. See below. Do not expose this.
+    /// Instantiate a Findex REST client with a specific index. See below. Not a public function.
     fn new_memory(&self, index_id: Uuid) -> FindexRestClient {
         Self {
             client: self.client.clone(), // TODO(review): is cloning ok  here ?
@@ -71,9 +70,7 @@ impl FindexRestClient {
         }
     }
     /// Instantiate a Findex REST client with a specific index.
-    /// Batch read and guarded write operations are defined in the findex crate and thus their signatures are not editable
-    /// Ideal way to access the Some(index_id) is by having it as a field in the FindexRestClient struct
-    /// In the cli crate, first instantiate a base FindexRestClient and that will be used to instantiate a FindexRestClient with a specific index
+    /// In the cli crate, first instantiate a base FindexRestClient and that will be used to instantiate a findex instance with a specific index
     /// each time a call for Findex is needed
     pub fn instantiate_findex(
         &self,
@@ -127,7 +124,6 @@ impl MemoryADT for FindexRestClient {
             index_id,
             server_url
         );
-        // Convert addresses to bytes
         let request_bytes = Addresses::new(addresses).serialize()?;
 
         let response = self

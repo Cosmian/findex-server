@@ -60,8 +60,6 @@ macro_rules! cli_error {
     };
 }
 
-// todo(review) : i deleted some non used code from here, is it ok ?
-
 #[cfg(test)]
 #[allow(clippy::unwrap_used)]
 mod tests {
