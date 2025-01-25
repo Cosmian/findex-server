@@ -33,7 +33,7 @@ impl Display for SuccessResponse {
 
 #[derive(Clone)]
 pub struct FindexRestClient {
-    pub client: HttpClient,
+    pub http_client: HttpClient,
     pub config: FindexClientConfig,
     index_id: Option<String>,
 }
@@ -56,7 +56,7 @@ impl FindexRestClient {
         })?;
 
         Ok(Self {
-            client,
+            http_client: client,
             config,
             index_id: None,
         })
@@ -64,7 +64,7 @@ impl FindexRestClient {
     /// Instantiate a Findex REST client with a specific index. See below. Not a public function.
     fn new_memory(&self, index_id: Uuid) -> FindexRestClient {
         Self {
-            client: self.client.clone(), // TODO(review): is cloning ok  here ?
+            http_client: self.http_client.clone(), // TODO(review): is cloning ok  here ?
             config: self.config.clone(),
             index_id: Some(index_id.to_string()),
         }
@@ -91,8 +91,8 @@ impl FindexRestClient {
     // #[instrument(ret(Display), err, skip(self))]
     pub async fn version(&self) -> FindexClientResult<String> {
         let endpoint = "/version";
-        let server_url = format!("{}{endpoint}", self.client.server_url);
-        let response = self.client.client.get(server_url).send().await?;
+        let server_url = format!("{}{endpoint}", self.http_client.server_url);
+        let response = self.http_client.client.get(server_url).send().await?;
         let status_code = response.status();
         if status_code.is_success() {
             return Ok(response.json::<String>().await?);
@@ -117,7 +117,7 @@ impl MemoryADT for FindexRestClient {
             "Unexpected error : this function should never be called while from base instance",
         );
         let endpoint = format!("/indexes/{}/batch_read", index_id);
-        let server_url = format!("{}{}", self.client.server_url, endpoint);
+        let server_url = format!("{}{}", self.http_client.server_url, endpoint);
         trace!(
             "Initiating batch_read of {} addresses for index {} at server_url: {}",
             addresses.len(),
@@ -127,7 +127,7 @@ impl MemoryADT for FindexRestClient {
         let request_bytes = Addresses::new(addresses).serialize()?;
 
         let response = self
-            .client
+            .http_client
             .client
             .post(server_url.clone())
             .body(request_bytes)
@@ -161,7 +161,7 @@ impl MemoryADT for FindexRestClient {
             "Unexpected error : this function should never be called while from base instance",
         );
         let endpoint = format!("/indexes/{}/guarded_write", index_id);
-        let server_url = format!("{}{}", self.client.server_url, endpoint.clone());
+        let server_url = format!("{}{}", self.http_client.server_url, endpoint.clone());
         trace!(
             "Initiating guarded_write of {} values for index {} at server_url: {}",
             tasks.len(),
@@ -179,7 +179,7 @@ impl MemoryADT for FindexRestClient {
         request_bytes.extend_from_slice(&task_bytes);
 
         let response = self
-            .client
+            .http_client
             .client
             .post(server_url.clone())
             .body(request_bytes)

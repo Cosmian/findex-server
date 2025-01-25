@@ -18,11 +18,11 @@ impl FindexRestClient {
         encrypted_entries: &EncryptedEntries,
     ) -> FindexClientResult<SuccessResponse> {
         let endpoint = format!("/datasets/{index_id}/add_entries");
-        let server_url = format!("{}{endpoint}", self.client.server_url);
+        let server_url = format!("{}{endpoint}", self.http_client.server_url);
         trace!("POST: {server_url}");
         let encrypted_entries = encrypted_entries.serialize()?;
         let response = self
-            .client
+            .http_client
             .client
             .post(server_url)
             .body(encrypted_entries.to_vec())
@@ -39,12 +39,12 @@ impl FindexRestClient {
         uuids: &[Uuid],
     ) -> FindexClientResult<SuccessResponse> {
         let endpoint = format!("/datasets/{index_id}/delete_entries");
-        let server_url = format!("{}{endpoint}", self.client.server_url);
+        let server_url = format!("{}{endpoint}", self.http_client.server_url);
         trace!("POST: {server_url}");
 
         let uuids = Uuids::from(uuids).serialize()?;
         let response = self
-            .client
+            .http_client
             .client
             .post(server_url)
             .body(uuids.to_vec())
@@ -61,12 +61,12 @@ impl FindexRestClient {
         uuids: &[Uuid],
     ) -> FindexClientResult<EncryptedEntries> {
         let endpoint = format!("/datasets/{index_id}/get_entries");
-        let server_url = format!("{}{endpoint}", self.client.server_url);
+        let server_url = format!("{}{endpoint}", self.http_client.server_url);
         trace!("POST: {server_url}");
 
         let uuids = Uuids::from(uuids).serialize()?;
         let response = self
-            .client
+            .http_client
             .client
             .post(server_url)
             .body(uuids.to_vec())

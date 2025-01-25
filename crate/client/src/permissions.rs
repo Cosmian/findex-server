@@ -14,9 +14,9 @@ impl FindexRestClient {
     #[instrument(ret(Display), err, skip(self), level = "trace")]
     pub async fn create_index_id(&self) -> FindexClientResult<SuccessResponse> {
         let endpoint = "/create/index";
-        let server_url = format!("{}{endpoint}", self.client.server_url);
+        let server_url = format!("{}{endpoint}", self.http_client.server_url);
         trace!("POST: {server_url}");
-        let response = self.client.client.post(server_url).send().await?;
+        let response = self.http_client.client.post(server_url).send().await?;
 
         handle_status_code(response, endpoint).await
     }
@@ -29,9 +29,9 @@ impl FindexRestClient {
         index_id: &Uuid,
     ) -> FindexClientResult<SuccessResponse> {
         let endpoint = format!("/permission/grant/{user_id}/{permission}/{index_id}");
-        let server_url = format!("{}{endpoint}", self.client.server_url);
+        let server_url = format!("{}{endpoint}", self.http_client.server_url);
         trace!("POST: {server_url}");
-        let response = self.client.client.post(server_url).send().await?;
+        let response = self.http_client.client.post(server_url).send().await?;
 
         handle_status_code(response, &endpoint).await
     }
@@ -39,9 +39,9 @@ impl FindexRestClient {
     #[instrument(ret(Display), err, skip(self), level = "trace")]
     pub async fn list_permission(&self, user_id: &str) -> FindexClientResult<Permissions> {
         let endpoint = format!("/permission/list/{user_id}");
-        let server_url = format!("{}{endpoint}", self.client.server_url);
+        let server_url = format!("{}{endpoint}", self.http_client.server_url);
         trace!("POST: {server_url}");
-        let response = self.client.client.post(server_url).send().await?;
+        let response = self.http_client.client.post(server_url).send().await?;
         let status_code = response.status();
         if status_code.is_success() {
             let response_bytes = response.bytes().await.map(|r| r.to_vec())?;
@@ -60,9 +60,9 @@ impl FindexRestClient {
         index_id: &Uuid,
     ) -> FindexClientResult<SuccessResponse> {
         let endpoint = format!("/permission/revoke/{user_id}/{index_id}");
-        let server_url = format!("{}{endpoint}", self.client.server_url);
+        let server_url = format!("{}{endpoint}", self.http_client.server_url);
         trace!("POST: {server_url}");
-        let response = self.client.client.post(server_url).send().await?;
+        let response = self.http_client.client.post(server_url).send().await?;
 
         handle_status_code(response, &endpoint).await
     }

@@ -22,8 +22,8 @@ pub(crate) async fn add(
         },
         csv: PathBuf::from(dataset_path),
     };
-    let _res = index_action.add(rest_client).await?;
-    trace!("Indexing of {} completed : {:?}", dataset_path, _res);
+    let res = index_action.add(rest_client).await?;
+    trace!("Indexing of {} completed : {:?}", dataset_path, res);
     Ok(())
 }
 
