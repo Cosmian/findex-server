@@ -75,7 +75,8 @@ impl IndexOrDeleteAction {
     ) -> CliResult<String> {
         let bindings = self.to_indexed_value_keywords_map()?;
         let findex: cosmian_findex::Findex<WORD_LENGTH, Value, String, FindexRestClient> =
-            rest_client.instantiate_findex(
+        // cloning will be elimniated in the future, cf https://github.com/Cosmian/findex-server/issues/28
+            rest_client.clone().instantiate_findex(
                 &self.findex_parameters.index_id,
                 &self.findex_parameters.user_key()?,
             )?;

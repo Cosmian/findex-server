@@ -35,7 +35,7 @@ impl Display for SuccessResponse {
 pub struct FindexRestClient {
     pub http_client: HttpClient,
     pub config: FindexClientConfig,
-    index_id: Option<String>,
+    index_id: Option<Uuid>,
 }
 
 impl FindexRestClient {
@@ -62,25 +62,25 @@ impl FindexRestClient {
         })
     }
     /// Instantiate a Findex REST client with a specific index. See below. Not a public function.
-    fn new_memory(&self, index_id: Uuid) -> FindexRestClient {
+    fn new_memory(self, index_id: Uuid) -> FindexRestClient {
         Self {
-            http_client: self.http_client.clone(), // TODO(review): is cloning ok  here ?
-            config: self.config.clone(),
-            index_id: Some(index_id.to_string()),
+            http_client: self.http_client, // TODO(review): is cloning ok  here ?
+            config: self.config,
+            index_id: Some(index_id),
         }
     }
     /// Instantiate a Findex REST client with a specific index.
     /// In the cli crate, first instantiate a base FindexRestClient and that will be used to instantiate a findex instance with a specific index
     /// each time a call for Findex is needed
     pub fn instantiate_findex(
-        &self,
+        self,
         index_id: &Uuid,
         key: &Secret<KEY_LENGTH>,
     ) -> Result<InstantiatedFindex, FindexClientError> {
         trace!("Instantiating a Findex rest client");
         let _a: Findex<WORD_LENGTH, cosmian_findex::Value, String, FindexRestClient> = Findex::new(
-            key, // TODO(review): is cloning ok here ?
-            self.new_memory(*index_id),
+            key,
+            self.new_memory(*index_id), // CLONING
             dummy_encode::<WORD_LENGTH, Value>,
             dummy_decode::<WORD_LENGTH, _, Value>,
         );
@@ -113,7 +113,7 @@ impl MemoryADT for FindexRestClient {
         &self,
         addresses: Vec<Self::Address>,
     ) -> Result<Vec<Option<[u8; WORD_LENGTH]>>, FindexClientError> {
-        let index_id = self.index_id.clone().expect(
+        let index_id = self.index_id.expect(
             "Unexpected error : this function should never be called while from base instance",
         );
         let endpoint = format!("/indexes/{}/batch_read", index_id);
@@ -129,7 +129,7 @@ impl MemoryADT for FindexRestClient {
         let response = self
             .http_client
             .client
-            .post(server_url.clone())
+            .post(&server_url)
             .body(request_bytes)
             .send()
             .await?;
@@ -140,7 +140,7 @@ impl MemoryADT for FindexRestClient {
             let result = OptionalWords::<WORD_LENGTH>::deserialize(&bytes)?;
             trace!(
                 "batch_read successful on server url {:?}. result: {:?}",
-                server_url.clone(),
+                &server_url,
                 result
             );
             return Ok(result.into_inner());
@@ -157,16 +157,16 @@ impl MemoryADT for FindexRestClient {
         guard: (Self::Address, Option<Self::Word>),
         tasks: Vec<(Self::Address, Self::Word)>,
     ) -> Result<Option<[u8; WORD_LENGTH]>, FindexClientError> {
-        let index_id = self.index_id.clone().expect(
+        let index_id = self.index_id.expect(
             "Unexpected error : this function should never be called while from base instance",
         );
         let endpoint = format!("/indexes/{}/guarded_write", index_id);
-        let server_url = format!("{}{}", self.http_client.server_url, endpoint.clone());
+        let server_url = format!("{}{}", self.http_client.server_url, &endpoint);
         trace!(
             "Initiating guarded_write of {} values for index {} at server_url: {}",
             tasks.len(),
             index_id,
-            server_url.clone()
+            &server_url
         );
 
         // code the request body
@@ -181,7 +181,7 @@ impl MemoryADT for FindexRestClient {
         let response = self
             .http_client
             .client
-            .post(server_url.clone())
+            .post(&server_url)
             .body(request_bytes)
             .send()
             .await?;
@@ -200,7 +200,7 @@ impl MemoryADT for FindexRestClient {
             } else {
                 trace!(
                     "guarded_write successful on server url {:?}. result_word: {:?}",
-                    server_url.clone(),
+                    &server_url,
                     result_word
                 );
                 return Ok(result_word[0]);
