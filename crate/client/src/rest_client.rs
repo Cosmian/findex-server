@@ -93,8 +93,7 @@ impl FindexRestClient {
         let endpoint = "/version";
         let server_url = format!("{}{endpoint}", self.http_client.server_url);
         let response = self.http_client.client.get(server_url).send().await?;
-        let status_code = response.status();
-        if status_code.is_success() {
+        if response.status().is_success() {
             return Ok(response.json::<String>().await?);
         }
 
@@ -133,9 +132,8 @@ impl MemoryADT for FindexRestClient {
             .body(request_bytes)
             .send()
             .await?;
-        let status_code = response.status();
-        if status_code.is_success() {
-            // request successful, decode the response using same encoding protocol
+        if response.status().is_success() {
+            // request successful, decode the response using same encoding protocol defined in crate/server/src/routes/findex.rs
             let bytes = response.bytes().await?.to_vec();
             let result = OptionalWords::<WORD_LENGTH>::deserialize(&bytes)?;
             trace!(
@@ -143,7 +141,7 @@ impl MemoryADT for FindexRestClient {
                 &server_url,
                 result
             );
-            return Ok(result.into_inner());
+            return Ok(result.into());
         }
 
         // process error
@@ -186,12 +184,11 @@ impl MemoryADT for FindexRestClient {
             .send()
             .await?;
 
-        let status_code = response.status();
-
-        if status_code.is_success() {
+        if response.status().is_success() {
             // request successful, decode the response using same encoding protocol defined in crate/server/src/routes/findex.rs
             let bytes = response.bytes().await?;
-            let result_word = OptionalWords::<WORD_LENGTH>::deserialize(&bytes)?.into_inner();
+            let result_word: Vec<Option<[u8; WORD_LENGTH]>> =
+                OptionalWords::<WORD_LENGTH>::deserialize(&bytes)?.into();
             if result_word.len() != 1 {
                 return Err(FindexClientError::RequestFailed(format!(
                     "Unexpected response from server. Expected 1 word, got {}",

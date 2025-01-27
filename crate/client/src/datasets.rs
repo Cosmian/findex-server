@@ -72,8 +72,7 @@ impl FindexRestClient {
             .body(uuids.to_vec())
             .send()
             .await?;
-        let status_code = response.status();
-        if status_code.is_success() {
+        if response.status().is_success() {
             let response_bytes = response.bytes().await.map(|r| r.to_vec())?;
             let encrypted_entries = EncryptedEntries::deserialize(&response_bytes)?;
             return Ok(encrypted_entries);

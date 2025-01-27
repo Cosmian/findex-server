@@ -106,6 +106,12 @@ fn deser_optional_word<const WORD_LENGTH: usize>(
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct OptionalWords<const WORD_LENGTH: usize>(Vec<Option<[u8; WORD_LENGTH]>>);
 
+impl<const WORD_LENGTH: usize> From<OptionalWords<WORD_LENGTH>> for Vec<Option<[u8; WORD_LENGTH]>> {
+    fn from(words: OptionalWords<WORD_LENGTH>) -> Self {
+        words.0
+    }
+}
+
 impl<const WORD_LENGTH: usize> OptionalWords<WORD_LENGTH> {
     /// Creates a new `OptionalWords` instance.
     #[must_use]
@@ -113,7 +119,6 @@ impl<const WORD_LENGTH: usize> OptionalWords<WORD_LENGTH> {
         Self(words)
     }
 
-    // Public method to access the inner vector
     #[must_use]
     pub fn into_inner(self) -> Vec<Option<[u8; WORD_LENGTH]>> {
         self.0

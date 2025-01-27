@@ -42,8 +42,7 @@ impl FindexRestClient {
         let server_url = format!("{}{endpoint}", self.http_client.server_url);
         trace!("POST: {server_url}");
         let response = self.http_client.client.post(server_url).send().await?;
-        let status_code = response.status();
-        if status_code.is_success() {
+        if response.status().is_success() {
             let response_bytes = response.bytes().await.map(|r| r.to_vec())?;
             let permissions = Permissions::deserialize(&response_bytes)?;
             return Ok(permissions);
