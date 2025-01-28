@@ -8,7 +8,7 @@ use tracing::info;
 use crate::{
     actions::{
         datasets::DatasetsAction,
-        findex::{index_or_delete::IndexOrDeleteAction, search::SearchAction},
+        findex::{insert_or_delete::IndexOrDeleteAction, search::SearchAction},
         login::LoginAction,
         logout::LogoutAction,
         permissions::PermissionsAction,
@@ -85,14 +85,14 @@ impl CoreFindexActions {
     /// Process the command line arguments
     /// # Errors
     /// - If the configuration file is not found or invalid
-    #[allow(clippy::future_not_send, clippy::unit_arg)] // println! does return () but it prints the output of action.run() beforehand, nothing is "lost" and hence this lint will only cause useless boilerplate code
+    #[allow(clippy::unit_arg)] // println! does return () but it prints the output of action.run() beforehand, nothing is "lost" and hence this lint will only cause useless boilerplate code
     pub async fn run(&self, findex_client: &mut FindexRestClient) -> CliResult<()> {
         let action = self;
         {
             let result = match action {
                 Self::Datasets(action) => action.run(findex_client).await,
                 Self::Delete(action) => action.delete(findex_client).await,
-                Self::Index(action) => action.add(findex_client).await,
+                Self::Index(action) => action.insert(findex_client).await,
                 Self::Permissions(action) => action.run(findex_client).await,
                 Self::Login(action) => action.run(&mut findex_client.config).await,
                 Self::Logout(action) => action.run(&mut findex_client.config),

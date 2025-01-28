@@ -16,7 +16,7 @@ use crate::{
     error::result::CliResult,
     tests::{
         permissions::{create_index_id, grant_permission, list_permission, revoke_permission},
-        utils::{add, delete, search},
+        utils::{delete, insert, search},
     },
 };
 
@@ -80,7 +80,7 @@ fn parse_locations(input: &str, verbose: bool) -> (String, HashMap<String, HashS
 }
 
 #[allow(clippy::panic_in_result_fn)]
-async fn add_search_delete(
+async fn insert_search_delete(
     key: String,
     cli_conf_path: &str,
     index_id: &Uuid,
@@ -90,7 +90,7 @@ async fn add_search_delete(
     trace!("BEFORE rest client");
     let mut rest_client: FindexRestClient = FindexRestClient::new(test_conf)?;
     trace!("BEFORE ADD");
-    add(
+    insert(
         key.clone(),
         index_id,
         &search_options.dataset_path,
@@ -148,7 +148,7 @@ pub(crate) async fn test_findex_no_auth() -> CliResult<()> {
         keywords: vec!["Southborough".to_owned(), "Northbridge".to_owned()],
         expected_results: vec!["States9686".to_owned(), "States14061".to_owned()],
     };
-    add_search_delete(
+    insert_search_delete(
         key,
         &ctx.owner_client_conf_path,
         &Uuid::new_v4(),
@@ -179,7 +179,7 @@ pub(crate) async fn test_findex_no_auth_huge_dataset() -> CliResult<()> {
                 .to_owned(),
         ],
     };
-    add_search_delete(
+    insert_search_delete(
         key,
         &ctx.owner_client_conf_path,
         &Uuid::new_v4(),
@@ -206,7 +206,7 @@ pub(crate) async fn test_findex_cert_auth() -> CliResult<()> {
     let index_id = create_index_id(&owner_rest_client).await?;
     trace!("index_id: {index_id}");
 
-    add_search_delete(key, &ctx.owner_client_conf_path, &index_id, &search_options).await?;
+    insert_search_delete(key, &ctx.owner_client_conf_path, &index_id, &search_options).await?;
     Ok(())
 }
 
@@ -234,7 +234,7 @@ pub(crate) async fn test_findex_grant_and_revoke_permission() -> CliResult<()> {
     let user_conf = FindexClientConfig::load(Some(PathBuf::from(&ctx.user_client_conf_path)))?;
     let mut user_rest_client = FindexRestClient::new(user_conf)?;
 
-    add(
+    insert(
         key.clone(),
         &index_id,
         SMALL_DATASET,
@@ -270,7 +270,7 @@ pub(crate) async fn test_findex_grant_and_revoke_permission() -> CliResult<()> {
 
     // ... but not write
     assert!(
-        add(key.clone(), &index_id, SMALL_DATASET, &mut user_rest_client)
+        insert(key.clone(), &index_id, SMALL_DATASET, &mut user_rest_client)
             .await
             .is_err()
     );
@@ -304,7 +304,7 @@ pub(crate) async fn test_findex_grant_and_revoke_permission() -> CliResult<()> {
     }
 
     // ... and write
-    add(key.clone(), &index_id, SMALL_DATASET, &mut user_rest_client).await?;
+    insert(key.clone(), &index_id, SMALL_DATASET, &mut user_rest_client).await?;
 
     // Try to escalade privileges from `read` to `admin`
     grant_permission(
@@ -343,7 +343,7 @@ pub(crate) async fn test_findex_no_permission() -> CliResult<()> {
         expected_results: vec!["States9686".to_owned(), "States14061".to_owned()],
     };
 
-    assert!(add_search_delete(
+    assert!(insert_search_delete(
         key,
         &ctx.user_client_conf_path,
         &Uuid::new_v4(),

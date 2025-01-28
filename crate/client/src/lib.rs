@@ -43,7 +43,7 @@
     clippy::multiple_crate_versions,
     clippy::redundant_pub_crate
 )]
-use cosmian_findex::{Findex, Value, WORD_LENGTH};
+use cosmian_findex::{Findex, Value};
 
 mod config;
 mod datasets;
@@ -52,6 +52,7 @@ mod permissions;
 mod rest_client;
 
 pub use config::{FindexClientConfig, FINDEX_CLI_CONF_ENV};
+use cosmian_findex_structs::WORD_LENGTH;
 pub use error::{result::FindexClientResult, FindexClientError};
 pub use rest_client::{handle_error, FindexRestClient};
 

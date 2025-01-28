@@ -3,7 +3,7 @@ mod findex;
 mod instance;
 mod permissions;
 
-use cosmian_findex::WORD_LENGTH;
+use cosmian_findex_structs::WORD_LENGTH;
 pub(crate) use instance::Redis;
 
 use crate::database::database_traits::DatabaseTraits;

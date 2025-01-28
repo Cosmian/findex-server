@@ -3,8 +3,9 @@ use std::{collections::HashMap, fs::File, path::PathBuf};
 use crate::actions::findex::structs::{Keyword, KeywordToDataSetsMap};
 use clap::Parser;
 
-use cosmian_findex::{IndexADT, Value, WORD_LENGTH};
+use cosmian_findex::{IndexADT, Value};
 use cosmian_findex_client::FindexRestClient;
+use cosmian_findex_structs::WORD_LENGTH;
 use tracing::{instrument, trace};
 
 use crate::error::result::CliResult;
@@ -54,21 +55,8 @@ impl IndexOrDeleteAction {
         Ok(csv_in_memory)
     }
 
-    /// Processes the add or delete operation using the provided REST client
-    ///
-    /// # Arguments
-    /// * `rest_client` - The Findex REST client to use for operations
-    /// * `is_insert` - Boolean flag indicating whether to insert (true) or delete (false)
-    ///
-    /// # Errors
-    /// * Returns `CliError` if:
-    ///   - Failed to create indexed value keywords map
-    ///   - Failed to instantiate Findex
-    ///   - Failed to insert or delete records
-    ///
-    /// # Returns
-    /// * `CliResult<()>` - Ok if operation succeeds, Error otherwise
-    async fn add_or_delete(
+    /// Insert or delete indexes
+    async fn insert_or_delete(
         &self,
         rest_client: &FindexRestClient,
         is_insert: bool,
@@ -97,34 +85,19 @@ impl IndexOrDeleteAction {
         Ok(output)
     }
 
-    #[allow(clippy::future_not_send)]
-    /// Adds the data from the CSV file to the Findex index.
+    /// Insert new indexes
     ///
     /// # Errors
-    ///
-    /// This function will return an error if:
-    /// - There is an error instantiating the Findex client.
-    /// - (deprecated) There is an error retrieving the user key or label from the Findex
-    ///   parameters.
-    /// - There is an error converting the CSV file to a hashmap.
-    /// - There is an error adding the data to the Findex index.
-    /// - There is an error writing the result to the console.
-    pub async fn add(&self, rest_client: &mut FindexRestClient) -> CliResult<String> {
-        Self::add_or_delete(self, rest_client, true).await
+    /// - If insert new indexes fails
+    pub async fn insert(&self, rest_client: &mut FindexRestClient) -> CliResult<String> {
+        Self::insert_or_delete(self, rest_client, true).await
     }
 
-    /// Deletes the data from the CSV file from the Findex index.
+    /// Deletes indexes
     ///
     /// # Errors
-    ///
-    /// This function will return an error if:
-    /// - There is an error instantiating the Findex client.
-    /// - (deprecated) There is an error retrieving the user key or label from the Findex
-    ///   parameters.
-    /// - There is an error converting the CSV file to a hashmap.
-    /// - There is an error deleting the data from the Findex index.
-    /// - There is an error writing the result to the console.
+    /// - If deleting indexes fails
     pub async fn delete(&self, rest_client: &mut FindexRestClient) -> CliResult<String> {
-        Self::add_or_delete(self, rest_client, false).await
+        Self::insert_or_delete(self, rest_client, false).await
     }
 }

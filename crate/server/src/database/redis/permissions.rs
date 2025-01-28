@@ -2,8 +2,7 @@ use std::future::Future;
 
 use async_trait::async_trait;
 use cosmian_crypto_core::bytes_ser_de::Serializable;
-use cosmian_findex::WORD_LENGTH;
-use cosmian_findex_structs::{Permission, Permissions};
+use cosmian_findex_structs::{Permission, Permissions, WORD_LENGTH};
 use redis::{
     aio::ConnectionLike, cmd, pipe, AsyncCommands, FromRedisValue, Pipeline, RedisError,
     ToRedisArgs,
@@ -19,11 +18,11 @@ use crate::{
 
 // TODO(hatem) : change this to smth with compare and swapb
 async fn transaction_async<
-    C: ConnectionLike + Clone,
-    K: ToRedisArgs,
-    T: FromRedisValue,
-    F: Fn(C, Pipeline) -> Fut,
-    Fut: Future<Output = Result<Option<T>, RedisError>>,
+    C: ConnectionLike + Send + Clone,
+    K: ToRedisArgs + Send + Sync,
+    T: FromRedisValue + Send,
+    F: Fn(C, Pipeline) -> Fut + Send + Sync,
+    Fut: Future<Output = Result<Option<T>, RedisError>> + Send,
 >(
     mut connection: C,
     keys: &[K],

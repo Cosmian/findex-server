@@ -1,3 +1,3 @@
-mod add_delete_search;
+mod insert_delete_search;
 
-pub(crate) use add_delete_search::{add, delete, search, SearchOptions};
+pub(crate) use insert_delete_search::{delete, insert, search, SearchOptions};

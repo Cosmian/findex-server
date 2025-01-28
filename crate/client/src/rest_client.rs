@@ -4,11 +4,11 @@ use crate::{
         result::{FindexClientResult, FindexRestClientResultHelper},
         FindexClientError,
     },
-    InstantiatedFindex,
+    InstantiatedFindex, WORD_LENGTH,
 };
 use cosmian_findex::{
-    dummy_decode, dummy_encode, Address, Findex, MemoryADT, Secret, Value, ADDRESS_LENGTH,
-    KEY_LENGTH, WORD_LENGTH,
+    generic_decode, generic_encode, Address, Findex, MemoryADT, Secret, Value, ADDRESS_LENGTH,
+    KEY_LENGTH,
 };
 use cosmian_findex_structs::{Addresses, Guard, OptionalWords, Tasks};
 use cosmian_http_client::HttpClient;
@@ -84,8 +84,8 @@ impl FindexRestClient {
         Ok(Findex::new(
             key,
             self.new_memory(*index_id),
-            dummy_encode::<WORD_LENGTH, Value>,
-            dummy_decode::<WORD_LENGTH, _, Value>,
+            generic_encode::<WORD_LENGTH, Value>,
+            generic_decode::<WORD_LENGTH, _, Value>,
         ))
     }
 

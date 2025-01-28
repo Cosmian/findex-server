@@ -1,6 +1,5 @@
 use actix_web::{HttpMessage, HttpRequest};
-use cosmian_findex::WORD_LENGTH;
-use cosmian_findex_structs::Permission;
+use cosmian_findex_structs::{Permission, WORD_LENGTH};
 use tracing::{debug, instrument, trace};
 use uuid::Uuid;
 

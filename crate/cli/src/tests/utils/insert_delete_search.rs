@@ -1,6 +1,6 @@
 use crate::{
     actions::findex::{
-        index_or_delete::IndexOrDeleteAction, search::SearchAction, FindexParameters,
+        insert_or_delete::IndexOrDeleteAction, parameters::FindexParameters, search::SearchAction,
     },
     error::result::CliResult,
 };
@@ -9,7 +9,7 @@ use std::path::PathBuf;
 use tracing::trace;
 use uuid::Uuid;
 
-pub(crate) async fn add(
+pub(crate) async fn insert(
     key: String,
     index_id: &Uuid,
     dataset_path: &str,
@@ -17,12 +17,12 @@ pub(crate) async fn add(
 ) -> CliResult<()> {
     let index_action = IndexOrDeleteAction {
         findex_parameters: FindexParameters {
-            key,
+            seed: key,
             index_id: *index_id,
         },
         csv: PathBuf::from(dataset_path),
     };
-    let res = index_action.add(rest_client).await?;
+    let res = index_action.insert(rest_client).await?;
     trace!("Indexing of {} completed : {:?}", dataset_path, res);
     Ok(())
 }
@@ -35,7 +35,7 @@ pub(crate) async fn delete(
 ) -> CliResult<()> {
     IndexOrDeleteAction {
         findex_parameters: FindexParameters {
-            key,
+            seed: key,
             index_id: *index_id,
         },
         csv: PathBuf::from(dataset_path),
@@ -60,7 +60,7 @@ pub(crate) async fn search(
 ) -> CliResult<String> {
     let res = SearchAction {
         findex_parameters: FindexParameters {
-            key,
+            seed: key,
             index_id: *index_id,
         },
         keyword: search_options.keywords.clone(),

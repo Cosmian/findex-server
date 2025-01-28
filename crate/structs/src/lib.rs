@@ -56,3 +56,5 @@ pub use error::StructsError;
 pub use findex_serialization::{Addresses, Guard, OptionalWords, SerializationResult, Tasks};
 pub use permissions::{Permission, Permissions};
 pub use uuids::Uuids;
+
+pub const WORD_LENGTH: usize = 200;

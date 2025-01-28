@@ -1,8 +1,7 @@
 use std::collections::HashMap;
 
 use async_trait::async_trait;
-use cosmian_findex::WORD_LENGTH;
-use cosmian_findex_structs::{EncryptedEntries, Uuids};
+use cosmian_findex_structs::{EncryptedEntries, Uuids, WORD_LENGTH};
 use redis::pipe;
 use tracing::{instrument, trace};
 use uuid::Uuid;

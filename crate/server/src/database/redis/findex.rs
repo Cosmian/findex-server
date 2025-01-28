@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use cosmian_findex::WORD_LENGTH;
+use cosmian_findex_structs::WORD_LENGTH;
 
 use crate::database::database_traits::FindexMemoryTrait;
 
