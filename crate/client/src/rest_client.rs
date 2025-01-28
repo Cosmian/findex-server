@@ -132,22 +132,21 @@ impl MemoryADT for FindexRestClient {
             .body(request_bytes)
             .send()
             .await?;
-        if response.status().is_success() {
-            // request successful, decode the response using same encoding protocol defined in crate/server/src/routes/findex.rs
-            let bytes = response.bytes().await?.to_vec();
-            let result = OptionalWords::<WORD_LENGTH>::deserialize(&bytes)?;
-            trace!(
-                "batch_read successful on server url {:?}. result: {:?}",
-                &server_url,
-                result
-            );
-            return Ok(result.into());
+        if !(response.status().is_success()) {
+            // exit on error
+            warn!("batch_read failed on server url {:?}.", server_url);
+            let p = handle_error(&endpoint, response).await?;
+            return Err(FindexClientError::RequestFailed(p));
         }
-
-        // process error
-        warn!("batch_read failed on server url {:?}.", server_url);
-        let p = handle_error(&endpoint, response).await?;
-        Err(FindexClientError::RequestFailed(p))
+        // request successful, decode the response using same encoding protocol defined in crate/server/src/routes/findex.rs
+        let bytes = response.bytes().await?.to_vec();
+        let result = OptionalWords::<WORD_LENGTH>::deserialize(&bytes)?;
+        trace!(
+            "batch_read successful on server url {:?}. result: {:?}",
+            &server_url,
+            result
+        );
+        Ok(result.into())
     }
 
     async fn guarded_write(
@@ -184,29 +183,28 @@ impl MemoryADT for FindexRestClient {
             .send()
             .await?;
 
-        if response.status().is_success() {
-            // request successful, decode the response using same encoding protocol defined in crate/server/src/routes/findex.rs
-            let bytes = response.bytes().await?;
-            let result_word: Vec<Option<[u8; WORD_LENGTH]>> =
-                OptionalWords::<WORD_LENGTH>::deserialize(&bytes)?.into();
-            if result_word.len() != 1 {
-                return Err(FindexClientError::RequestFailed(format!(
-                    "Unexpected response from server. Expected 1 word, got {}",
-                    result_word.len()
-                )));
-            } else {
-                trace!(
-                    "guarded_write successful on server url {:?}. result_word: {:?}",
-                    &server_url,
-                    result_word
-                );
-                return Ok(result_word[0]);
-            }
+        if !(response.status().is_success()) {
+            // request failed, exit on error
+            warn!("guarded_write failed on server url {}.", server_url);
+            let p = handle_error(&endpoint, response).await?;
+            return Err(FindexClientError::RequestFailed(p));
         }
-        // process error
-        warn!("guarded_write failed on server url {}.", server_url);
-        let p = handle_error(&endpoint, response).await?;
-        Err(FindexClientError::RequestFailed(p))
+        // request successful, decode the response using same encoding protocol defined in crate/server/src/routes/findex.rs
+        let bytes = response.bytes().await?;
+        let result_word: Vec<Option<[u8; WORD_LENGTH]>> =
+            OptionalWords::<WORD_LENGTH>::deserialize(&bytes)?.into();
+        if result_word.len() != 1 {
+            return Err(FindexClientError::RequestFailed(format!(
+                "Unexpected response from server. Expected 1 word, got {}",
+                result_word.len()
+            )));
+        }
+        trace!(
+            "guarded_write successful on server url {:?}. result_word: {:?}",
+            &server_url,
+            result_word
+        );
+        Ok(result_word[0])
     }
 }
 

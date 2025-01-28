@@ -26,7 +26,7 @@ impl Display for DbParams {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Redis(url) => {
-                write!(f, "redis : {}", redact_url(url))
+                write!(f, "redis: {}", redact_url(url))
             }
         }
     }

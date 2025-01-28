@@ -40,9 +40,7 @@ pub(crate) trait DatasetsTrait: Sync + Send {
 #[allow(dead_code)] // TODO : code is actually used, find why compiler thinks it's not
 #[async_trait]
 pub(crate) trait FindexMemoryTrait:
-    Send
-    + Sync
-    + MemoryADT<Address = Address<ADDRESS_LENGTH>, Word = [u8; WORD_LENGTH], Error = MemoryError>
+    MemoryADT<Address = Address<ADDRESS_LENGTH>, Word = [u8; WORD_LENGTH], Error = MemoryError>
 {
     //
     // Memory R/W ops

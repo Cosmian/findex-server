@@ -1,4 +1,5 @@
 /// this module contains serialization and deserialization functions needed for the Findex server
+/// cf: <https://github.com/Cosmian/findex-server/issues/29>
 use crate::StructsError;
 use cosmian_crypto_core::bytes_ser_de::{Deserializer, Serializer};
 use cosmian_findex::{Address, ADDRESS_LENGTH};

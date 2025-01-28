@@ -2,23 +2,22 @@ use crate::error::result::FResult;
 use cosmian_findex::{Address, MemoryADT, MemoryError, RedisMemory, ADDRESS_LENGTH};
 use redis::aio::ConnectionManager;
 use tracing::info;
-type RedisAdrType = Address<ADDRESS_LENGTH>;
-type RedisWordType<const WORD_LENGTH: usize> = [u8; WORD_LENGTH];
 
 pub(crate) struct Redis<const WORD_LENGTH: usize> {
-    pub(crate) memory: RedisMemory<RedisAdrType, RedisWordType<WORD_LENGTH>>,
+    pub(crate) memory: RedisMemory<Address<ADDRESS_LENGTH>, [u8; WORD_LENGTH]>,
     pub(crate) manager: ConnectionManager,
 }
 
 impl<const WORD_LENGTH: usize> Redis<WORD_LENGTH> {
+    #[allow(dependency_on_unit_never_type_fallback)] // TODO: should be fixed before rust compiler update
     pub(crate) async fn instantiate(redis_url: &str, clear_database: bool) -> FResult<Self> {
         let client = redis::Client::open(redis_url)?;
-        let manager = client.get_connection_manager().await?;
+        let mut manager = client.get_connection_manager().await?;
         let memory = RedisMemory::connect_with_manager(manager.clone()).await?;
         if clear_database {
+            // TODO: unit test this
             info!("Warning: irreversible operation: clearing the database");
-            // TODO: fix this
-            // memory.clear_redis_db().await?;
+            redis::cmd("FLUSHDB").query_async(&mut manager).await?;
         }
         Ok(Self { memory, manager })
     }
