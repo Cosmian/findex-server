@@ -113,7 +113,6 @@ impl DeleteEntries {
     /// # Errors
     ///
     /// Returns an error if the query execution on the Findex server fails.
-    #[allow(clippy::print_stdout)] // printed by design
     pub async fn run(&self, rest_client: &FindexRestClient) -> CliResult<String> {
         let response = rest_client
             .delete_entries(&self.index_id, &self.uuids)

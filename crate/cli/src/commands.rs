@@ -87,15 +87,22 @@ impl CoreFindexActions {
     /// - If the configuration file is not found or invalid
     #[allow(clippy::future_not_send, clippy::unit_arg)] // println! does return () but it prints the output of action.run() beforehand, nothing is "lost" and hence this lint will only cause useless boilerplate code
     pub async fn run(&self, findex_client: &mut FindexRestClient) -> CliResult<()> {
-        match self {
-            Self::Datasets(action) => Ok(println!("{}", action.run(findex_client).await?)),
-            Self::Delete(action) => Ok(println!("{}", action.delete(findex_client).await?)),
-            Self::Index(action) => Ok(println!("{}", action.add(findex_client).await?)),
-            Self::Permissions(action) => Ok(println!("{}", action.run(findex_client).await?)),
-            Self::Login(action) => action.run(&mut findex_client.config).await, // Login is the only action that needs an intermediary URL output, thus we leave printing to stdout handled internally
-            Self::Logout(action) => Ok(println!("{}", action.run(&mut findex_client.config)?)),
-            Self::Search(action) => Ok(println!("{}", action.run(findex_client).await?)),
-            Self::ServerVersion(action) => Ok(println!("{}", action.run(findex_client).await?)),
+        let action = self;
+        {
+            let result = match action {
+                Self::Datasets(action) => action.run(findex_client).await,
+                Self::Delete(action) => action.delete(findex_client).await,
+                Self::Index(action) => action.add(findex_client).await,
+                Self::Permissions(action) => action.run(findex_client).await,
+                Self::Login(action) => action.run(&mut findex_client.config).await,
+                Self::Logout(action) => action.run(&mut findex_client.config),
+                Self::Search(action) => action.run(findex_client).await,
+                Self::ServerVersion(action) => action.run(findex_client).await,
+            };
+            match result {
+                Ok(output) => Ok(println!("{output}")),
+                Err(e) => Err(e),
+            }
         }
     }
 }
