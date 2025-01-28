@@ -62,7 +62,7 @@ impl FindexRestClient {
         })
     }
     /// Instantiate a Findex REST client with a specific index. See below. Not a public function.
-    fn new_memory(self, index_id: Uuid) -> FindexRestClient {
+    fn new_memory(self, index_id: Uuid) -> Self {
         Self {
             http_client: self.http_client, // TODO(review): is cloning ok  here ?
             config: self.config,
@@ -70,25 +70,28 @@ impl FindexRestClient {
         }
     }
     /// Instantiate a Findex REST client with a specific index.
-    /// In the cli crate, first instantiate a base FindexRestClient and that will be used to instantiate a findex instance with a specific index
+    /// In the cli crate, first instantiate a base `FindexRestClient` and that will be used to instantiate a findex instance with a specific index
     /// each time a call for Findex is needed
+    ///
+    /// # Errors
+    /// Return an error if the Findex cannot be instantiated.
     pub fn instantiate_findex(
         self,
         index_id: &Uuid,
         key: &Secret<KEY_LENGTH>,
     ) -> Result<InstantiatedFindex, FindexClientError> {
         trace!("Instantiating a Findex rest client");
-        let _a: Findex<WORD_LENGTH, cosmian_findex::Value, String, FindexRestClient> = Findex::new(
+        Ok(Findex::new(
             key,
-            self.new_memory(*index_id), // CLONING
+            self.new_memory(*index_id),
             dummy_encode::<WORD_LENGTH, Value>,
             dummy_decode::<WORD_LENGTH, _, Value>,
-        );
-        trace!("instantiation ok");
-        Ok(_a)
+        ))
     }
 
     // #[instrument(ret(Display), err, skip(self))]
+    /// # Errors
+    /// Return an error if the request fails.
     pub async fn version(&self) -> FindexClientResult<String> {
         let endpoint = "/version";
         let server_url = format!("{}{endpoint}", self.http_client.server_url);
@@ -115,7 +118,7 @@ impl MemoryADT for FindexRestClient {
         let index_id = self.index_id.expect(
             "Unexpected error : this function should never be called while from base instance",
         );
-        let endpoint = format!("/indexes/{}/batch_read", index_id);
+        let endpoint = format!("/indexes/{index_id}/batch_read");
         let server_url = format!("{}{}", self.http_client.server_url, endpoint);
         trace!(
             "Initiating batch_read of {} addresses for index {} at server_url: {}",
@@ -157,7 +160,7 @@ impl MemoryADT for FindexRestClient {
         let index_id = self.index_id.expect(
             "Unexpected error : this function should never be called while from base instance",
         );
-        let endpoint = format!("/indexes/{}/guarded_write", index_id);
+        let endpoint = format!("/indexes/{index_id}/guarded_write");
         let server_url = format!("{}{}", self.http_client.server_url, &endpoint);
         trace!(
             "Initiating guarded_write of {} values for index {} at server_url: {}",

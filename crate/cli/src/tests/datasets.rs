@@ -6,26 +6,9 @@ use base64::{engine::general_purpose, Engine};
 use cosmian_findex_client::{FindexClientConfig, FindexRestClient};
 use cosmian_findex_structs::EncryptedEntries;
 use cosmian_logger::log_init;
-use std::{collections::HashMap, ops::Deref, path::PathBuf};
+use std::{ops::Deref, path::PathBuf};
 use test_findex_server::start_default_test_findex_server;
 use uuid::Uuid;
-
-#[allow(clippy::indexing_slicing)]
-fn parse_entries(s: &str) -> CliResult<EncryptedEntries> {
-    let mut entries_map = HashMap::new();
-    for line in s.lines() {
-        let parts: Vec<&str> = line.split(", Entry Value: ").collect();
-        if parts.len() == 2 {
-            let index_id = parts[0].replace("Entry ID: ", "");
-            let entry = parts[1].to_owned();
-            entries_map.insert(
-                Uuid::parse_str(&index_id)?,
-                general_purpose::STANDARD.decode(entry)?,
-            );
-        }
-    }
-    Ok(EncryptedEntries::from(entries_map))
-}
 
 // TODO : should return type be string or void ?
 async fn dataset_add_entries(
@@ -63,13 +46,12 @@ async fn dataset_get_entries(
     index_id: &Uuid,
     uuids: Vec<Uuid>,
 ) -> CliResult<EncryptedEntries> {
-    let res = GetEntries {
+    GetEntries {
         index_id: *index_id,
         uuids,
     }
     .run(rest_client)
-    .await?;
-    parse_entries(&res)
+    .await
 }
 
 #[tokio::test]

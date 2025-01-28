@@ -29,7 +29,10 @@ impl DatasetsAction {
         let res = match self {
             Self::Add(action) => action.run(rest_client).await?,
             Self::Delete(action) => action.run(rest_client).await?,
-            Self::Get(action) => action.run(rest_client).await?,
+            Self::Get(action) => {
+                let entries = action.run(rest_client).await?;
+                entries.to_string()
+            }
         };
 
         Ok(res)
@@ -73,7 +76,6 @@ impl AddEntries {
     /// Returns an error if the query execution on the Findex server fails.
     /// Returns an error if the base64 decoding fails.
     /// Returns an error if the UUID parsing fails.
-    #[allow(clippy::print_stdout)] // printed by design
     pub async fn run(&self, rest_client: &FindexRestClient) -> CliResult<String> {
         let encrypted_entries = self.entries.iter().try_fold(
             HashMap::with_capacity(self.entries.len()),
@@ -142,13 +144,12 @@ impl GetEntries {
     ///
     /// Returns an error if the query execution on the Findex server fails.
     /// Returns an error if the UUID parsing fails.
-    #[allow(clippy::print_stdout)] // printed by design
-    pub async fn run(&self, rest_client: &FindexRestClient) -> CliResult<String> {
+    pub async fn run(&self, rest_client: &FindexRestClient) -> CliResult<EncryptedEntries> {
         let encrypted_entries = rest_client
             .get_entries(&self.index_id, &self.uuids)
             .await
             .with_context(|| "Can't execute the get entries query on the findex server")?;
 
-        Ok(encrypted_entries.to_string())
+        Ok(encrypted_entries)
     }
 }
