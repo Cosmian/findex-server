@@ -16,8 +16,8 @@ doctest = false
 
 [dependencies]
 base64 = { workspace = true }
-thiserror = { workspace = true }
-uuid = { workspace = true }
 cosmian_crypto_core = { workspace = true, features = ["ser"] }
 cosmian_findex = { workspace = true }
 rand = "0.8.5"
+thiserror = { workspace = true }
+uuid = { workspace = true }
