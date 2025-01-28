@@ -830,7 +830,7 @@ dependencies = [
 [[package]]
 name = "cosmian_findex"
 version = "7.0.0"
-source = "git+https://www.github.com/Cosmian/findex?branch=feat%2Fadd-encoding-test#43ad7378168a80a56e390bd991b970f6a35a0e96"
+source = "git+https://www.github.com/Cosmian/findex?branch=feat%2Fadd-encoding-test#f9f465dfc91a7ce60404c30f9c3596af8c1783f6"
 dependencies = [
  "aes",
  "rand",

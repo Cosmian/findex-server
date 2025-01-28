@@ -111,13 +111,16 @@ impl MemoryADT for FindexRestClient {
     type Word = [u8; WORD_LENGTH];
     type Error = FindexClientError;
 
+    #[allow(clippy::renamed_function_params)] // original name (a) is less clear
     async fn batch_read(
         &self,
         addresses: Vec<Self::Address>,
     ) -> Result<Vec<Option<[u8; WORD_LENGTH]>>, FindexClientError> {
-        let index_id = self.index_id.expect(
-            "Unexpected error : this function should never be called while from base instance",
-        );
+        let index_id = self.index_id.ok_or_else(|| {
+            FindexClientError::UnexpectedError(
+                "This function should never be called while from base instance".to_owned(),
+            )
+        })?;
         let endpoint = format!("/indexes/{index_id}/batch_read");
         let server_url = format!("{}{}", self.http_client.server_url, endpoint);
         trace!(
@@ -157,9 +160,11 @@ impl MemoryADT for FindexRestClient {
         guard: (Self::Address, Option<Self::Word>),
         tasks: Vec<(Self::Address, Self::Word)>,
     ) -> Result<Option<[u8; WORD_LENGTH]>, FindexClientError> {
-        let index_id = self.index_id.expect(
-            "Unexpected error : this function should never be called while from base instance",
-        );
+        let index_id = self.index_id.ok_or_else(|| {
+            FindexClientError::UnexpectedError(
+                "This function should never be called while from base instance".to_owned(),
+            )
+        })?;
         let endpoint = format!("/indexes/{index_id}/guarded_write");
         let server_url = format!("{}{}", self.http_client.server_url, &endpoint);
         trace!(
@@ -207,6 +212,8 @@ impl MemoryADT for FindexRestClient {
             &server_url,
             result_word
         );
+        #[allow(clippy::indexing_slicing)]
+        // we are sure that the length is 1, escaping this lint causes enormous boilerplate that is not necessary
         Ok(result_word[0])
     }
 }
