@@ -47,9 +47,8 @@ base64 = "0.22"
 clap = { version = "4.5", default-features = false }
 cosmian_config_utils = { git = "https://www.github.com/Cosmian/http_client_server", branch = "develop" }
 cosmian_crypto_core = { version = "9.3.0", default-features = false }
-cosmian_findex = { git = "https://www.github.com/Cosmian/findex", branch = "feat/good_encode", features = [
+cosmian_findex = { git = "https://www.github.com/Cosmian/findex", branch = "feat/add-encoding-test", features = [
   "redis-mem",
-  "test-utils",
 ] }
 cosmian_http_client = { git = "https://www.github.com/Cosmian/http_client_server", branch = "develop" }
 cosmian_logger = { git = "https://www.github.com/Cosmian/http_client_server", branch = "develop" }
