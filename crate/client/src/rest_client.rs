@@ -117,7 +117,7 @@ impl MemoryADT for FindexRestClient {
         addresses: Vec<Self::Address>,
     ) -> Result<Vec<Option<[u8; WORD_LENGTH]>>, FindexClientError> {
         let index_id = self.index_id.ok_or_else(|| {
-            FindexClientError::UnexpectedError(
+            FindexClientError::Default(
                 "This function should never be called while from base instance".to_owned(),
             )
         })?;
@@ -161,7 +161,7 @@ impl MemoryADT for FindexRestClient {
         tasks: Vec<(Self::Address, Self::Word)>,
     ) -> Result<Option<[u8; WORD_LENGTH]>, FindexClientError> {
         let index_id = self.index_id.ok_or_else(|| {
-            FindexClientError::UnexpectedError(
+            FindexClientError::Default(
                 "This function should never be called while from base instance".to_owned(),
             )
         })?;
@@ -212,9 +212,12 @@ impl MemoryADT for FindexRestClient {
             &server_url,
             result_word
         );
-        #[allow(clippy::indexing_slicing)]
+        let result_word = result_word
+            .into_iter()
+            .next()
+            .ok_or_else(|| FindexClientError::Default("Expected 1 word, got none".to_owned()))?;
         // we are sure that the length is 1, escaping this lint causes enormous boilerplate that is not necessary
-        Ok(result_word[0])
+        Ok(result_word)
     }
 }
 

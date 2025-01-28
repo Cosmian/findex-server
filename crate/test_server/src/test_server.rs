@@ -162,7 +162,7 @@ fn start_test_findex_server(
             .enable_all()
             .build()?
             .block_on(start_findex_server(server_params, Some(tx)))
-            .map_err(|e| FindexClientError::UnexpectedError(e.to_string()))
+            .map_err(|e| FindexClientError::Default(e.to_string()))
     });
     trace!("Waiting for test Findex server to start...");
     let server_handle = rx
