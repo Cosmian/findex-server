@@ -74,25 +74,29 @@ pub(crate) async fn findex_guarded_write(
         format!("Invalid {OPERATION_NAME} request by {user} on index {index_id}.");
 
     let discriminant_flag = bytes.get(ADDRESS_LENGTH); // 0 or 1. 0 means None, 1 means Some. Assumes the first ADDRESS_LENGTH bytes are the address
-    #[allow(clippy::unwrap_used)]
-    // unwrap() is safe here because we checked if discriminant_flag is Some just above
-    if discriminant_flag.is_none()
-        || (discriminant_flag.is_some()
-            && !(*discriminant_flag.unwrap() == 0 || *discriminant_flag.unwrap() == 1))
-    {
-        return Err(FindexServerError::InvalidRequest(format!(
-            "{error_prefix} Invalid discriminant flag. Expected 0 or 1, found {:?}",
-            discriminant_flag.map_or_else(|| "None".to_owned(), ToString::to_string)
-        )));
-    }
 
-    #[allow(clippy::unwrap_used)] // same as above, already checked to be Some
-    let discriminant_flag = *discriminant_flag.unwrap();
-    let guard_len = if discriminant_flag == 0 {
-        ADDRESS_LENGTH + 1
+    let flag = if let Some(f) = discriminant_flag {
+        match *f {
+            0 => false,
+            1 => true,
+            invalid => {
+                return Err(FindexServerError::InvalidRequest(format!(
+                    "{error_prefix} Invalid discriminant flag. Expected 0 or 1, found {invalid}"
+                )))
+            }
+        }
     } else {
-        ADDRESS_LENGTH + 1 + WORD_LENGTH
+        return Err(FindexServerError::InvalidRequest(format!(
+            "{error_prefix} Invalid discriminant flag. Expected 0 or 1, found None"
+        )));
     };
+
+    let guard_len = if flag {
+        ADDRESS_LENGTH + 1 + WORD_LENGTH
+    } else {
+        ADDRESS_LENGTH + 1
+    };
+
     let guard = bytes.get(..guard_len);
     if guard.is_none() {
         return Err(FindexServerError::InvalidRequest(format!(
