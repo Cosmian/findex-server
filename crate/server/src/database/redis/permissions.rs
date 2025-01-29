@@ -1,5 +1,8 @@
-use std::future::Future;
-
+use super::Redis;
+use crate::{
+    database::database_traits::PermissionsTrait,
+    error::{result::FResult, server::FindexServerError},
+};
 use async_trait::async_trait;
 use cosmian_crypto_core::bytes_ser_de::Serializable;
 use cosmian_findex_structs::{Permission, Permissions, WORD_LENGTH};
@@ -7,16 +10,10 @@ use redis::{
     aio::ConnectionLike, cmd, pipe, AsyncCommands, FromRedisValue, Pipeline, RedisError,
     ToRedisArgs,
 };
+use std::future::Future;
 use tracing::{debug, instrument, trace, warn};
 use uuid::Uuid;
 
-use super::Redis;
-use crate::{
-    database::database_traits::PermissionsTrait,
-    error::{result::FResult, server::FindexServerError},
-};
-
-// TODO(hatem) : change this to smth with compare and swapb
 async fn transaction_async<
     C: ConnectionLike + Send + Clone,
     K: ToRedisArgs + Send + Sync,

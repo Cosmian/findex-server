@@ -37,7 +37,6 @@ pub(crate) trait DatasetsTrait: Sync + Send {
     ) -> FResult<EncryptedEntries>;
 }
 
-#[allow(dead_code)] // TODO : code is actually used, find why compiler thinks it's not
 #[async_trait]
 pub(crate) trait FindexMemoryTrait:
     MemoryADT<Address = Address<ADDRESS_LENGTH>, Word = [u8; WORD_LENGTH], Error = MemoryError>

@@ -10,19 +10,18 @@ use std::{ops::Deref, path::PathBuf};
 use test_findex_server::start_default_test_findex_server;
 use uuid::Uuid;
 
-// TODO : should return type be string or void ?
 async fn dataset_add_entries(
     rest_client: &FindexRestClient,
     index_id: &Uuid,
     entries: Vec<(Uuid, String)>,
 ) -> CliResult<()> {
-    let _res = AddEntries {
+    // we don't need the output of this in the test, hence it's discarded
+    AddEntries {
         index_id: *index_id,
         entries,
     }
     .run(rest_client)
     .await?;
-
     Ok(())
 }
 
@@ -31,13 +30,12 @@ async fn dataset_delete_entries(
     index_id: &Uuid,
     uuids: Vec<Uuid>,
 ) -> CliResult<()> {
-    let _res = DeleteEntries {
+    DeleteEntries {
         index_id: *index_id,
         uuids,
     }
     .run(rest_client)
     .await?;
-
     Ok(())
 }
 

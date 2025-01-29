@@ -1,23 +1,27 @@
-use crate::error::result::FResult;
+use crate::error::{result::FResult, server::FindexServerError};
 use cosmian_findex::{Address, MemoryADT, MemoryError, RedisMemory, ADDRESS_LENGTH};
 use redis::aio::ConnectionManager;
 use tracing::info;
-
 pub(crate) struct Redis<const WORD_LENGTH: usize> {
     pub(crate) memory: RedisMemory<Address<ADDRESS_LENGTH>, [u8; WORD_LENGTH]>,
     pub(crate) manager: ConnectionManager,
 }
 
 impl<const WORD_LENGTH: usize> Redis<WORD_LENGTH> {
-    #[allow(dependency_on_unit_never_type_fallback)] // TODO: should be fixed before rust compiler update
     pub(crate) async fn instantiate(redis_url: &str, clear_database: bool) -> FResult<Self> {
         let client = redis::Client::open(redis_url)?;
         let mut manager = client.get_connection_manager().await?;
         let memory = RedisMemory::connect_with_manager(manager.clone()).await?;
         if clear_database {
-            // TODO: unit test this
-            info!("Warning: irreversible operation: clearing the database");
-            redis::cmd("FLUSHDB").query_async(&mut manager).await?;
+            info!("Warning: proceeding to clear the database, this operation is irreversible.");
+            let deletion_result: String = redis::cmd("FLUSHDB").query_async(&mut manager).await?;
+            if deletion_result.as_str() == "OK" {
+                info!("Database cleared");
+            } else {
+                return Err(FindexServerError::DatabaseError(
+                    "Database not cleared, Redis DB returned {deletion_result}".to_owned(),
+                ));
+            }
         }
         Ok(Self { memory, manager })
     }

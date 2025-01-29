@@ -64,7 +64,7 @@ impl FindexRestClient {
     /// Instantiate a Findex REST client with a specific index. See below. Not a public function.
     fn new_memory(self, index_id: Uuid) -> Self {
         Self {
-            http_client: self.http_client, // TODO(review): is cloning ok  here ?
+            http_client: self.http_client,
             config: self.config,
             index_id: Some(index_id),
         }
