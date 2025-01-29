@@ -12,7 +12,7 @@ use actix_web::{
 use cosmian_crypto_core::bytes_ser_de::Serializable;
 use cosmian_findex_structs::Permission;
 use std::{str::FromStr, sync::Arc};
-use tracing::{debug, info};
+use tracing::{info, trace};
 use uuid::Uuid;
 
 pub(crate) async fn check_permission(
@@ -22,7 +22,7 @@ pub(crate) async fn check_permission(
     findex_server: &FindexServer,
 ) -> FResult<()> {
     let permission = findex_server.get_permission(user, index_id).await?;
-    debug!("check_permission: user {user} has permission {permission} on index {index_id}");
+    trace!("check_permission: user {user} has permission {permission} on index {index_id}");
     if permission < expected_permission {
         return Err(FindexServerError::Unauthorized(format!(
             "User {user} with permission {permission} is not allowed to write on index {index_id}",

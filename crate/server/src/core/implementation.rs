@@ -1,6 +1,6 @@
 use actix_web::{HttpMessage, HttpRequest};
 use cosmian_findex_structs::{Permission, WORD_LENGTH};
-use tracing::{debug, instrument, trace};
+use tracing::{debug, trace};
 use uuid::Uuid;
 
 use crate::{
@@ -54,11 +54,11 @@ impl FindexServer {
             },
             |claim| claim.email.clone(),
         );
-        debug!("Authenticated user: {}", user);
+        trace!("Authenticated user: {}", user);
         user
     }
 
-    #[instrument(ret(Display), err, skip(self))]
+    // #[instrument(ret(Display), err, skip(self))]
     pub(crate) async fn get_permission(
         &self,
         user_id: &str,
