@@ -46,8 +46,8 @@ impl Addresses {
         let length = <usize>::try_from(de.read_leb128_u64()?)?;
         let mut items = Vec::with_capacity(length);
         for _ in 0..length {
-            let key: Address<ADDRESS_LENGTH> = de.read_array()?.into();
-            items.push(key);
+            let seed: Address<ADDRESS_LENGTH> = de.read_array()?.into();
+            items.push(seed);
         }
         Ok(Self(items))
     }

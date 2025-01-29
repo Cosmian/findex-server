@@ -1,8 +1,6 @@
-use std::{
-    collections::{HashMap, HashSet},
-    path::PathBuf,
-};
+use std::path::PathBuf;
 
+use cosmian_findex::Value;
 use cosmian_findex_client::{FindexClientConfig, FindexRestClient};
 use cosmian_findex_structs::Permission;
 use cosmian_logger::log_init;
@@ -25,99 +23,37 @@ use super::utils::SearchOptions;
 const SMALL_DATASET: &str = "../../test_data/datasets/smallpop.csv";
 const HUGE_DATASET: &str = "../../test_data/datasets/business-employment.csv";
 
-/// Helper function for `parse_locations`, docs below
-fn parse_value_string(input: &str) -> Vec<Vec<u8>> {
-    if input == "{}" {
-        return vec![];
-    }
-    let values: Vec<Vec<u8>> = input
-        .split("Value([")
-        .skip(1)
-        .map(|s| {
-            s.split("])")
-                .next()
-                .unwrap_or("")
-                .split(", ")
-                .filter_map(|num| num.parse().ok())
-                .collect()
-        })
-        .collect();
-
-    values
-}
-
-/// This is a helper function
-/// Findex v7 returns a string with a format similar to :
-/// "Location1: Value([1, 2, 3])\nLocation2: Value([4, 5, 6])\n"
-/// This function parses this string into a hashmap, where the key is the location and the value is a set of values.
-/// It returns a tuple with the adequate string representation of the hashmap and the hashmap itself.
-#[allow(clippy::cognitive_complexity)] // function is already simplified and usage is obvious, no need to simplify further
-fn parse_locations(input: &str, verbose: bool) -> (String, HashMap<String, HashSet<String>>) {
-    let mut result_set: HashMap<String, HashSet<String>> = HashMap::new();
-    for part in input.split('\n') {
-        if let Some((location, values)) = part.split_once(": ") {
-            let location = location.trim();
-
-            debug!("Location: {:?}", location);
-            let values: Vec<Vec<u8>> = parse_value_string(values);
-            for value in &values {
-                if let Ok(s) = String::from_utf8(value.clone()) {
-                    result_set.entry(location.to_owned()).or_default().insert(s);
-                }
-            }
-        }
-    }
-    if verbose {
-        debug!("Parsing results :\n");
-        for (loc, vals) in &result_set {
-            debug!("Location: {:?}", loc);
-            for val in vals {
-                debug!("Value: {:?}", val);
-            }
-        }
-    }
-    (format!("{result_set:?}"), result_set)
-}
-
 #[allow(clippy::panic_in_result_fn)]
 async fn insert_search_delete(
-    key: String,
+    seed: String,
     cli_conf_path: &str,
     index_id: &Uuid,
     search_options: &SearchOptions,
 ) -> CliResult<()> {
     let test_conf = FindexClientConfig::load(Some(PathBuf::from(cli_conf_path)))?;
-    trace!("BEFORE rest client");
     let mut rest_client: FindexRestClient = FindexRestClient::new(test_conf)?;
-    trace!("BEFORE ADD");
+
     insert(
-        key.clone(),
+        seed.clone(),
         index_id,
         &search_options.dataset_path,
         &mut rest_client,
     )
     .await?;
-    trace!("POST ADD");
 
     // make sure searching returns the expected results
-    let search_results = search(key.clone(), index_id, search_options, &mut rest_client).await?;
-    debug!("Search results (as string): {:?}", search_results);
+    let search_results = search(seed.clone(), index_id, search_options, &mut rest_client).await?;
+    // for value in &search_results {
+    //     debug!(
+    //         "value: {}",
+    //         String::from_utf8(value.as_ref().to_vec()).unwrap()
+    //     );
+    // }
 
-    // parse Values to their unicode representation
-    let (parsed_res, _) = parse_locations(&search_results, true);
-
-    // check that the results are ok
-    for expected_result in &search_options.expected_results {
-        assert!(
-            parsed_res.contains(expected_result),
-            "Error after search. Expected {}, got {}",
-            expected_result.as_str(),
-            &search_results.as_str()
-        );
-    }
+    assert_eq!(search_options.expected_results, search_results);
 
     delete(
-        key.clone(),
+        seed.clone(),
         index_id,
         &search_options.dataset_path,
         &mut rest_client,
@@ -125,13 +61,8 @@ async fn insert_search_delete(
     .await?;
 
     // make sure no results are returned after deletion
-    let search_results = search(key, index_id, search_options, &mut rest_client).await?;
-    for expected_result in &search_options.expected_results {
-        assert!(
-            !search_results.contains(expected_result),
-            "Error after the post deletion search. Expected {expected_result}, got {search_results}",
-        );
-    }
+    let search_results = search(seed, index_id, search_options, &mut rest_client).await?;
+    assert!(search_results.is_empty());
 
     Ok(())
 }
@@ -146,7 +77,14 @@ pub(crate) async fn test_findex_no_auth() -> CliResult<()> {
     let search_options = SearchOptions {
         dataset_path: SMALL_DATASET.into(),
         keywords: vec!["Southborough".to_owned(), "Northbridge".to_owned()],
-        expected_results: vec!["States9686".to_owned(), "States14061".to_owned()],
+        expected_results: {
+            vec![
+                Value::from("SouthboroughMAUnited States9686"),
+                Value::from("NorthbridgeMAUnited States14061"),
+            ]
+            .into_iter()
+            .collect()
+        },
     };
     insert_search_delete(
         key,
@@ -163,7 +101,7 @@ pub(crate) async fn test_findex_no_auth() -> CliResult<()> {
 pub(crate) async fn test_findex_no_auth_huge_dataset() -> CliResult<()> {
     log_init(None);
     let ctx = start_default_test_findex_server().await;
-    let key = "44223344556677889900AABBCCDDEEFF11223344556677889900AABBCCDDEEFF".to_owned();
+    let key = "11223344556677889900AABBCCDDEEFF11223344556677889900AABBCCDDEEFF".to_owned();
 
     // Search 1 entry in a huge dataset
     let search_options = SearchOptions {
@@ -173,11 +111,14 @@ pub(crate) async fn test_findex_no_auth_huge_dataset() -> CliResult<()> {
             "2011.06".to_owned(),
             "80078".to_owned(),
         ],
-        expected_results: vec![
-            "80078FNumber0Business Data Collection - BDCIndustry by employment variableFilled \
-             jobsAgriculture, Forestry and FishingActual'"
-                .to_owned(),
-        ],
+        expected_results: {
+            vec![
+                Value::from("BDCQ.SEA1AA2011.0680078FNumber0Business Data Collection - BDCIndustry by employment variableFilled jobsAgriculture, Forestry and FishingActual"),
+                Value::from("BDCQ.SEA1AA2011.0978324FNumber0Business Data Collection - BDCIndustry by employment variableFilled jobsAgriculture, Forestry and FishingActual"),
+            ]
+            .into_iter()
+            .collect()
+        },
     };
     insert_search_delete(
         key,
@@ -200,7 +141,14 @@ pub(crate) async fn test_findex_cert_auth() -> CliResult<()> {
     let search_options = SearchOptions {
         dataset_path: SMALL_DATASET.into(),
         keywords: vec!["Southborough".to_owned(), "Northbridge".to_owned()],
-        expected_results: vec!["States9686".to_owned(), "States14061".to_owned()],
+        expected_results: {
+            vec![
+                Value::from("SouthboroughMAUnited States9686"),
+                Value::from("NorthbridgeMAUnited States14061"),
+            ]
+            .into_iter()
+            .collect()
+        },
     };
 
     let index_id = create_index_id(&owner_rest_client).await?;
@@ -222,7 +170,14 @@ pub(crate) async fn test_findex_grant_and_revoke_permission() -> CliResult<()> {
     let search_options = SearchOptions {
         dataset_path: SMALL_DATASET.into(),
         keywords: vec!["Southborough".to_owned(), "Northbridge".to_owned()],
-        expected_results: vec!["States9686".to_owned(), "States14061".to_owned()],
+        expected_results: {
+            vec![
+                Value::from("SouthboroughMAUnited States9686"),
+                Value::from("NorthbridgeMAUnited States14061"),
+            ]
+            .into_iter()
+            .collect()
+        },
     };
 
     let index_id = create_index_id(&owner_rest_client).await?;
@@ -259,14 +214,7 @@ pub(crate) async fn test_findex_grant_and_revoke_permission() -> CliResult<()> {
         &mut user_rest_client,
     )
     .await?;
-    let (parsed_res, _) = parse_locations(&search_results, true);
-
-    for expected_result in &search_options.expected_results {
-        assert!(
-            parsed_res.contains(expected_result),
-            "Error during search : expected {expected_result}, got {parsed_res}",
-        );
-    }
+    assert_eq!(search_options.expected_results, search_results);
 
     // ... but not write
     assert!(
@@ -295,13 +243,7 @@ pub(crate) async fn test_findex_grant_and_revoke_permission() -> CliResult<()> {
         &mut user_rest_client,
     )
     .await?;
-    let (parsed_res, _) = parse_locations(&search_results, true);
-    for expected_result in &search_options.expected_results {
-        assert!(
-            parsed_res.contains(expected_result),
-            "Error during search, Expected {expected_result}, Got {parsed_res}",
-        );
-    }
+    assert_eq!(search_options.expected_results, search_results);
 
     // ... and write
     insert(key.clone(), &index_id, SMALL_DATASET, &mut user_rest_client).await?;
@@ -340,7 +282,14 @@ pub(crate) async fn test_findex_no_permission() -> CliResult<()> {
     let search_options = SearchOptions {
         dataset_path: SMALL_DATASET.into(),
         keywords: vec!["Southborough".to_owned(), "Northbridge".to_owned()],
-        expected_results: vec!["States9686".to_owned(), "States14061".to_owned()],
+        expected_results: {
+            vec![
+                Value::from("SouthboroughMAUnited States9686"),
+                Value::from("NorthbridgeMAUnited States14061"),
+            ]
+            .into_iter()
+            .collect()
+        },
     };
 
     assert!(insert_search_delete(

@@ -4,20 +4,22 @@ use crate::{
     },
     error::result::CliResult,
 };
+
+use cosmian_findex::Value;
 use cosmian_findex_client::FindexRestClient;
-use std::path::PathBuf;
+use std::{collections::HashSet, path::PathBuf};
 use tracing::trace;
 use uuid::Uuid;
 
 pub(crate) async fn insert(
-    key: String,
+    seed: String,
     index_id: &Uuid,
     dataset_path: &str,
     rest_client: &mut FindexRestClient,
 ) -> CliResult<()> {
     let index_action = IndexOrDeleteAction {
         findex_parameters: FindexParameters {
-            seed: key,
+            seed,
             index_id: *index_id,
         },
         csv: PathBuf::from(dataset_path),
@@ -28,14 +30,14 @@ pub(crate) async fn insert(
 }
 
 pub(crate) async fn delete(
-    key: String,
+    seed: String,
     index_id: &Uuid,
     dataset_path: &str,
     rest_client: &mut FindexRestClient,
 ) -> CliResult<()> {
     IndexOrDeleteAction {
         findex_parameters: FindexParameters {
-            seed: key,
+            seed,
             index_id: *index_id,
         },
         csv: PathBuf::from(dataset_path),
@@ -49,18 +51,18 @@ pub(crate) async fn delete(
 pub(crate) struct SearchOptions {
     pub(crate) dataset_path: String,
     pub(crate) keywords: Vec<String>,
-    pub(crate) expected_results: Vec<String>,
+    pub(crate) expected_results: HashSet<Value>,
 }
 
 pub(crate) async fn search(
-    key: String,
+    seed: String,
     index_id: &Uuid,
     search_options: &SearchOptions,
     rest_client: &mut FindexRestClient,
-) -> CliResult<String> {
+) -> CliResult<HashSet<Value>> {
     let res = SearchAction {
         findex_parameters: FindexParameters {
-            seed: key,
+            seed,
             index_id: *index_id,
         },
         keyword: search_options.keywords.clone(),

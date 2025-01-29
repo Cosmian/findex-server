@@ -8,7 +8,7 @@ use std::ops::{Deref, DerefMut};
 /// A [`Keyword`] is a byte vector used to index other values.
 #[must_use]
 #[derive(Clone, Debug, Hash, PartialEq, Eq)]
-pub(crate) struct Keyword(Vec<u8>);
+pub struct Keyword(Vec<u8>);
 
 impl AsRef<[u8]> for Keyword {
     fn as_ref(&self) -> &[u8] {
@@ -47,7 +47,7 @@ impl std::fmt::Display for Keyword {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub(crate) struct KeywordToDataSetsMap(pub HashMap<Keyword, HashSet<Value>>);
+pub struct KeywordToDataSetsMap(pub HashMap<Keyword, HashSet<Value>>);
 
 impl Deref for KeywordToDataSetsMap {
     type Target = HashMap<Keyword, HashSet<Value>>;
@@ -64,7 +64,7 @@ impl DerefMut for KeywordToDataSetsMap {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
-pub(crate) struct Keywords(pub Vec<Keyword>);
+pub struct Keywords(pub Vec<Keyword>);
 
 impl From<Vec<String>> for Keywords {
     fn from(strings: Vec<String>) -> Self {

@@ -49,11 +49,14 @@
 mod encrypted_entries;
 mod error;
 mod findex_serialization;
+mod findex_structs;
 mod permissions;
 mod uuids;
+
 pub use encrypted_entries::EncryptedEntries;
 pub use error::StructsError;
 pub use findex_serialization::{Addresses, Guard, OptionalWords, SerializationResult, Tasks};
+pub use findex_structs::{Keyword, KeywordToDataSetsMap, Keywords};
 pub use permissions::{Permission, Permissions};
 pub use uuids::Uuids;
 

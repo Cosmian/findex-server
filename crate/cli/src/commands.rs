@@ -96,7 +96,10 @@ impl CoreFindexActions {
                 Self::Permissions(action) => action.run(findex_client).await,
                 Self::Login(action) => action.run(&mut findex_client.config).await,
                 Self::Logout(action) => action.run(&mut findex_client.config),
-                Self::Search(action) => action.run(findex_client).await,
+                Self::Search(action) => {
+                    let a = action.run(findex_client).await?;
+                    Ok(format!("{a:?}")) //TODO(manu)
+                }
                 Self::ServerVersion(action) => action.run(findex_client).await,
             };
             match result {

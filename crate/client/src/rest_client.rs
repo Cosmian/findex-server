@@ -78,11 +78,11 @@ impl FindexRestClient {
     pub fn instantiate_findex(
         self,
         index_id: &Uuid,
-        key: &Secret<KEY_LENGTH>,
+        seed: &Secret<KEY_LENGTH>,
     ) -> Result<InstantiatedFindex, FindexClientError> {
         trace!("Instantiating a Findex rest client");
         Ok(Findex::new(
-            key,
+            seed,
             self.new_memory(*index_id),
             generic_encode::<WORD_LENGTH, Value>,
             generic_decode::<WORD_LENGTH, _, Value>,

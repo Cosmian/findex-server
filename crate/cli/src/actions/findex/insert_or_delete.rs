@@ -1,11 +1,10 @@
 use std::{collections::HashMap, fs::File, path::PathBuf};
 
-use crate::actions::findex::structs::{Keyword, KeywordToDataSetsMap};
 use clap::Parser;
 
-use cosmian_findex::{IndexADT, Value};
+use cosmian_findex::{Findex, IndexADT, Value};
 use cosmian_findex_client::FindexRestClient;
-use cosmian_findex_structs::WORD_LENGTH;
+use cosmian_findex_structs::{Keyword, KeywordToDataSetsMap, WORD_LENGTH};
 use tracing::{instrument, trace};
 
 use crate::error::result::CliResult;
@@ -62,11 +61,11 @@ impl IndexOrDeleteAction {
         is_insert: bool,
     ) -> CliResult<String> {
         let bindings = self.to_indexed_value_keywords_map()?;
-        let findex: cosmian_findex::Findex<WORD_LENGTH, Value, String, FindexRestClient> =
+        let findex: Findex<WORD_LENGTH, Value, String, FindexRestClient> =
         // cloning will be eliminated in the future, cf https://github.com/Cosmian/findex-server/issues/28
             rest_client.clone().instantiate_findex(
                 &self.findex_parameters.index_id,
-                &self.findex_parameters.user_key()?,
+                &self.findex_parameters.seed()?,
             )?;
         for (key, value) in bindings.iter() {
             if is_insert {
