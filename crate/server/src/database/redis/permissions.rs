@@ -11,7 +11,7 @@ use redis::{
     ToRedisArgs,
 };
 use std::future::Future;
-use tracing::{debug, instrument, trace, warn};
+use tracing::{debug, instrument, trace};
 use uuid::Uuid;
 
 async fn transaction_async<
@@ -110,7 +110,6 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
 
         let mut values: Vec<Vec<u8>> = pipe
             .atomic()
-            // .pipe
             .get(redis_key)
             .query_async(&mut self.manager.clone())
             .await
@@ -123,10 +122,8 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
         Permissions::deserialize(serialized_value).map_err(FindexServerError::from)
     }
 
-    // so far the error is here
     async fn get_permission(&self, user_id: &str, index_id: &Uuid) -> FResult<Permission> {
         let permissions = self.get_permissions(user_id).await?;
-        // warn!("WARNING : permissions that were digged out are : {permissions:?}",);
         let permission = permissions.get_permission(index_id).ok_or_else(|| {
             FindexServerError::Unauthorized(format!(
                 "No permission for {user_id} on index {index_id}"
@@ -136,7 +133,6 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
         Ok(permission.clone())
     }
 
-    // #[instrument(ret, err, skip(self), level = "trace")]
     #[allow(dependency_on_unit_never_type_fallback)]
     async fn grant_permission(
         &self,
@@ -145,29 +141,24 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
         index_id: &Uuid,
     ) -> FResult<()> {
         let redis_key = user_id.as_bytes().to_vec();
-        warn!("WARNING redis_key: {redis_key:?}",);
-        warn!("WARNING LA PERMISSION: {permission:?}",);
         let _p = self.get_permissions(user_id).await;
 
         let permissions = match _p {
             Ok(mut permissions) => {
-                warn!("WARNING : permissions that are going to be set: {permissions:?}",);
+                debug!("permissions that are going to be set: {permissions:?}",);
                 permissions.grant_permission(*index_id, permission); // adds the "new" permission to the existing ones
                 permissions
             }
             Err(_) => Permissions::new(*index_id, permission),
         };
-        warn!("WARNING : permissions after we added the new one: {permissions:?}",);
-        // so far this is correct
 
-        // in other terms, the error happens here
         let mut pipe = pipe();
         pipe.atomic()
-            .set(redis_key.clone(), permissions.serialize()?.as_slice())
+            .set(&redis_key, permissions.serialize()?.as_slice())
             .query_async(&mut self.manager.clone())
             .await
             .map_err(FindexServerError::from)?;
-        // Read back the data to ensure it's correct
+
         let mut pipe = redis::pipe();
         let mut values: Vec<Vec<u8>> = pipe
             .atomic()
@@ -176,16 +167,10 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
             .await
             .map_err(FindexServerError::from)?;
 
-        let serialized_value = &values.pop().ok_or_else(|| {
+        let _ = &values.pop().ok_or_else(|| {
             FindexServerError::Unauthorized(format!("No permission found for {user_id}"))
         })?;
 
-        let deserialized_permissions =
-            Permissions::deserialize(serialized_value).map_err(FindexServerError::from)?;
-        warn!(
-            "WARNING Deserialized permissions: {:?}",
-            deserialized_permissions
-        );
         Ok(())
     }
 
