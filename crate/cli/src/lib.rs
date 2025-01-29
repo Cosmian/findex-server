@@ -53,5 +53,6 @@ pub mod reexports {
     pub use cosmian_findex_client;
     pub use cosmian_findex_structs;
 }
+#[allow(clippy::panic_in_result_fn, clippy::unwrap_used)]
 #[cfg(test)]
 mod tests;

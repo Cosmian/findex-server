@@ -53,7 +53,6 @@ async fn dataset_get_entries(
 }
 
 #[tokio::test]
-#[allow(clippy::panic_in_result_fn)] // tests are allowed to panic, clippy seems to miss this is a tokio test
 pub(crate) async fn test_datasets() -> CliResult<()> {
     log_init(None);
     let ctx = start_default_test_findex_server().await;

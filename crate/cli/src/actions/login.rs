@@ -32,7 +32,6 @@ impl LoginAction {
     /// # Errors
     /// Fails if the configuration file is missing or if the `oauth2_conf` object
     /// Fails if credentials are invalid. No access token could be retrieved.
-    #[allow(clippy::print_stdout)]
     pub async fn run(&self, config: &mut FindexClientConfig) -> CliResult<String> {
         let login_config = config.http_config.oauth2_conf.as_ref().ok_or_else(|| {
             CliError::Default(format!(

@@ -24,7 +24,6 @@ const SMALL_DATASET: &str = "../../test_data/datasets/smallpop.csv";
 const HUGE_DATASET: &str = "../../test_data/datasets/business-employment.csv";
 const TESTS_KEY: &str = "11223344556677889900AABBCCDDEEFF11223344556677889900AABBCCDDEEFF";
 
-#[allow(clippy::panic_in_result_fn)]
 async fn insert_search_delete(
     seed: String,
     cli_conf_path: &str,
@@ -50,7 +49,7 @@ async fn insert_search_delete(
         &mut rest_client,
     )
     .await?;
-    debug!("Search results (as a string): {:?}", search_results);
+    debug!("Search results (as a HashSet<Value>): {:?}", search_results);
 
     assert_eq!(search_options.expected_results, search_results);
 
@@ -163,7 +162,6 @@ pub(crate) async fn test_findex_cert_auth() -> CliResult<()> {
     Ok(())
 }
 
-#[allow(clippy::panic_in_result_fn, clippy::unwrap_used)]
 #[tokio::test]
 pub(crate) async fn test_findex_grant_and_revoke_permission() -> CliResult<()> {
     log_init(None);
@@ -291,7 +289,6 @@ pub(crate) async fn test_findex_grant_and_revoke_permission() -> CliResult<()> {
     Ok(())
 }
 
-#[allow(clippy::panic_in_result_fn)]
 #[tokio::test]
 pub(crate) async fn test_findex_no_permission() -> CliResult<()> {
     log_init(None);

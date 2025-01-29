@@ -61,7 +61,6 @@ macro_rules! cli_error {
 }
 
 #[cfg(test)]
-#[allow(clippy::unwrap_used)]
 mod tests {
 
     #[test]

@@ -28,7 +28,7 @@ impl Default for FindexClientConfig {
     }
 }
 
-#[allow(clippy::print_stdout)]
+#[allow(clippy::print_stdout)] // expected behavior
 impl FindexClientConfig {
     /// Load the configuration from the given path
     ///
@@ -95,7 +95,7 @@ mod tests {
     use crate::{config::FINDEX_CLI_CONF_PATH, FindexClientResult};
 
     #[test]
-    #[allow(clippy::panic_in_result_fn, clippy::unwrap_used)]
+    #[allow(clippy::panic_in_result_fn, clippy::unwrap_used)] // this is a test
     pub(crate) fn test_load() -> FindexClientResult<()> {
         log_init(None);
         // valid conf

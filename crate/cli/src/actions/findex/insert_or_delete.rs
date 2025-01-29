@@ -1,15 +1,12 @@
-use std::{collections::HashMap, fs::File, path::PathBuf};
-
+use super::parameters::FindexParameters;
+use crate::error::result::CliResult;
 use clap::Parser;
-
 use cosmian_findex::{Findex, IndexADT, Value};
 use cosmian_findex_client::FindexRestClient;
 use cosmian_findex_structs::{Keyword, KeywordToDataSetsMap, WORD_LENGTH};
+use std::{collections::HashMap, fs::File, path::PathBuf};
 use tracing::{instrument, trace};
 
-use crate::error::result::CliResult;
-
-use super::parameters::FindexParameters;
 #[derive(Parser, Debug)]
 #[clap(verbatim_doc_comment)]
 pub struct InsertOrDeleteAction {
