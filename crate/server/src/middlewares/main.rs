@@ -15,7 +15,7 @@ use futures::{
     future::{ok, Ready},
     Future,
 };
-use tracing::debug;
+use tracing::{debug, trace};
 
 use super::{manage_jwt_request, PeerCommonName};
 use crate::middlewares::jwt::JwtConfig;
@@ -88,7 +88,7 @@ where
             Box::pin(async move { manage_jwt_request(service, configurations, req).await })
         } else {
             Box::pin(async move {
-                debug!("No JWT configuration found, passing request without authentication...");
+                trace!("No JWT configuration found, passing request without authentication...");
                 let res = service.call(req).await?;
                 Ok(res.map_into_left_body())
             })

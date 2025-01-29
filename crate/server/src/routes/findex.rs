@@ -7,7 +7,7 @@ use actix_web::{
 };
 use cosmian_findex::{MemoryADT, ADDRESS_LENGTH};
 use cosmian_findex_structs::{Addresses, Guard, OptionalWords, Permission, Tasks, WORD_LENGTH};
-use tracing::{info, trace};
+use tracing::trace;
 
 use crate::{
     core::FindexServer,
@@ -25,7 +25,7 @@ pub(crate) async fn findex_batch_read(
     findex_server: Data<Arc<FindexServer>>,
 ) -> ResponseBytes {
     let user = findex_server.get_user(&req);
-    info!("user {user}: POST /indexes/{index_id}/batch_read");
+    trace!("user {user}: POST /indexes/{index_id}/batch_read");
 
     check_permission(&user, &index_id, Permission::Read, &findex_server).await?;
 
@@ -66,7 +66,7 @@ pub(crate) async fn findex_guarded_write(
     const OPERATION_NAME: &str = "guarded_write";
     let user = findex_server.get_user(&req);
 
-    info!("user {user}: POST /indexes/{index_id}/guarded_write");
+    trace!("user {user}: POST /indexes/{index_id}/guarded_write");
 
     check_permission(&user, &index_id, Permission::Write, &findex_server).await?;
 
