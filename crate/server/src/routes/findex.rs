@@ -5,9 +5,10 @@ use actix_web::{
     web::{self, Bytes, Data},
     HttpRequest, HttpResponse,
 };
-use cosmian_findex::{MemoryADT, ADDRESS_LENGTH};
+use cosmian_findex::{Address, MemoryADT, ADDRESS_LENGTH};
 use cosmian_findex_structs::{Addresses, Guard, OptionalWords, Permission, Tasks, WORD_LENGTH};
-use tracing::trace;
+use openssl::sha::Sha256;
+use tracing::{info, trace};
 
 use crate::{
     core::FindexServer,
@@ -16,6 +17,16 @@ use crate::{
 };
 
 // todo(hatem): reduce cloning
+
+fn hash_address(a: Address<ADDRESS_LENGTH>, index_id: &str) -> Address<ADDRESS_LENGTH> {
+    let mut hasher = Sha256::default();
+    hasher.update(&*a);
+    hasher.update(index_id.as_bytes());
+    let bytes = hasher.finish();
+    let mut a = Address::default();
+    a.copy_from_slice(&bytes[..ADDRESS_LENGTH]);
+    a
+}
 
 #[post("/indexes/{index_id}/batch_read")]
 pub(crate) async fn findex_batch_read(
@@ -30,15 +41,15 @@ pub(crate) async fn findex_batch_read(
     check_permission(&user, &index_id, Permission::Read, &findex_server).await?;
 
     let bytes_slice = bytes.as_ref();
-    let addresses = Addresses::deserialize(bytes_slice)?;
+    let addresses = Addresses::deserialize(bytes_slice)?
+        .into_inner()
+        .into_iter()
+        .map(|a| hash_address(a, &index_id))
+        .collect::<Vec<_>>();
 
-    trace!(
-        "batch_read: number of addresses {}:",
-        addresses.clone().into_inner().len()
-    );
+    trace!("batch_read: number of addresses {}:", addresses.len());
 
-    let result_words =
-        OptionalWords::new(findex_server.db.batch_read(addresses.into_inner()).await?);
+    let result_words = OptionalWords::new(findex_server.db.batch_read(addresses).await?);
     trace!(
         "batch_read successful. Number of non null words: {}.",
         result_words
@@ -115,24 +126,17 @@ pub(crate) async fn findex_guarded_write(
     #[allow(clippy::unwrap_used)] // same as above, already checked to be Some
     let tasks = Tasks::deserialize(tasks.unwrap())?;
 
+    let (a_g, w_g) = guard.into_inner();
+    let bindings = tasks
+        .into_inner()
+        .into_iter()
+        .map(|(a, w)| (hash_address(a, &index_id), w))
+        .collect::<Vec<_>>();
+
     let result_word = findex_server
         .db
-        .guarded_write(guard.clone().into_inner(), tasks.clone().into_inner())
+        .guarded_write((hash_address(a_g, &index_id), w_g), bindings)
         .await?;
-
-    trace!(
-        "{}",
-        if result_word == guard.clone().into_inner().1 {
-            format!(
-                "Guarded_write SUCCESS. Expected guard value matched. {} words written.",
-                tasks.into_inner().len()
-            )
-        } else {
-            format!(
-                "Guarded_write FAILED. Guard mismatch: expected={guard:?}, found={result_word:?}",
-            )
-        }
-    );
 
     let response_bytes = Bytes::from(OptionalWords::new(vec![result_word]).serialize()?);
 
