@@ -1,11 +1,18 @@
-use super::parameters::FindexParameters;
-use crate::error::result::CliResult;
+use std::{
+    collections::{HashMap, HashSet},
+    fs::File,
+    path::PathBuf,
+};
+
 use clap::Parser;
 use cosmian_findex::{Findex, IndexADT, Value};
 use cosmian_findex_client::FindexRestClient;
 use cosmian_findex_structs::{Keyword, KeywordToDataSetsMap, WORD_LENGTH};
-use std::{collections::HashMap, fs::File, path::PathBuf};
 use tracing::{instrument, trace};
+
+use crate::error::result::CliResult;
+
+use super::parameters::FindexParameters;
 
 #[derive(Parser, Debug)]
 #[clap(verbatim_doc_comment)]
@@ -30,24 +37,26 @@ impl InsertOrDeleteAction {
     ///   types.
     #[instrument(err, skip(self))]
     pub(crate) fn to_indexed_value_keywords_map(&self) -> CliResult<KeywordToDataSetsMap> {
-        let mut csv_in_memory = KeywordToDataSetsMap(HashMap::new());
         let file = File::open(self.csv.clone())?;
-        let mut rdr = csv::Reader::from_reader(file);
 
-        for result in rdr.byte_records() {
-            let record = result?;
-            let indexed_value = Value::from(record.as_slice());
-
-            // Extract keywords from the record and associate them with the indexed values
-            record.iter().map(Keyword::from).for_each(|k| {
-                csv_in_memory
-                    .entry(k)
-                    .or_default()
-                    .insert(indexed_value.clone());
-            });
-        }
+        let csv_in_memory = csv::Reader::from_reader(file).byte_records().fold(
+            HashMap::new(),
+            |mut acc: HashMap<Keyword, HashSet<Value>>, result| {
+                if let Ok(record) = result {
+                    let indexed_value = Value::from(record.as_slice());
+                    // Extract keywords from the record and associate them with the indexed values
+                    let keywords = record.iter().map(Keyword::from).collect::<HashSet<_>>();
+                    for keyword in keywords {
+                        acc.entry(keyword)
+                            .or_default()
+                            .insert(indexed_value.clone());
+                    }
+                }
+                acc
+            },
+        );
         trace!("CSV lines are OK");
-        Ok(csv_in_memory)
+        Ok(KeywordToDataSetsMap(csv_in_memory))
     }
 
     /// Insert or delete indexes

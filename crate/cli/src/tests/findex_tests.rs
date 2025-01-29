@@ -76,14 +76,11 @@ pub(crate) async fn test_findex_no_auth() -> CliResult<()> {
     // Search 2 entries in a small dataset. Expect 2 results.
     let search_options = SearchOptions {
         dataset_path: SMALL_DATASET.into(),
-        keywords: vec!["Southborough".to_owned(), "Northbridge".to_owned()],
+        keywords: vec!["Southborough".to_owned()],
         expected_results: {
-            vec![
-                Value::from("SouthboroughMAUnited States9686"),
-                Value::from("NorthbridgeMAUnited States14061"),
-            ]
-            .into_iter()
-            .collect()
+            vec![Value::from("SouthboroughMAUnited States9686")]
+                .into_iter()
+                .collect()
         },
     };
     insert_search_delete(
@@ -113,7 +110,6 @@ pub(crate) async fn test_findex_no_auth_huge_dataset() -> CliResult<()> {
         expected_results: {
             vec![
                 Value::from("BDCQ.SEA1AA2011.0680078FNumber0Business Data Collection - BDCIndustry by employment variableFilled jobsAgriculture, Forestry and FishingActual"),
-                Value::from("BDCQ.SEA1AA2011.0978324FNumber0Business Data Collection - BDCIndustry by employment variableFilled jobsAgriculture, Forestry and FishingActual"),
             ]
             .into_iter()
             .collect()
@@ -138,14 +134,11 @@ pub(crate) async fn test_findex_cert_auth() -> CliResult<()> {
 
     let search_options = SearchOptions {
         dataset_path: SMALL_DATASET.into(),
-        keywords: vec!["Southborough".to_owned(), "Northbridge".to_owned()],
+        keywords: vec!["Southborough".to_owned()],
         expected_results: {
-            vec![
-                Value::from("SouthboroughMAUnited States9686"),
-                Value::from("NorthbridgeMAUnited States14061"),
-            ]
-            .into_iter()
-            .collect()
+            vec![Value::from("SouthboroughMAUnited States9686")]
+                .into_iter()
+                .collect()
         },
     };
 
@@ -172,14 +165,11 @@ pub(crate) async fn test_findex_grant_and_revoke_permission() -> CliResult<()> {
 
     let search_options = SearchOptions {
         dataset_path: SMALL_DATASET.into(),
-        keywords: vec!["Southborough".to_owned(), "Northbridge".to_owned()],
+        keywords: vec!["Southborough".to_owned()],
         expected_results: {
-            vec![
-                Value::from("SouthboroughMAUnited States9686"),
-                Value::from("NorthbridgeMAUnited States14061"),
-            ]
-            .into_iter()
-            .collect()
+            vec![Value::from("SouthboroughMAUnited States9686")]
+                .into_iter()
+                .collect()
         },
     };
 
@@ -296,14 +286,11 @@ pub(crate) async fn test_findex_no_permission() -> CliResult<()> {
 
     let search_options = SearchOptions {
         dataset_path: SMALL_DATASET.into(),
-        keywords: vec!["Southborough".to_owned(), "Northbridge".to_owned()],
+        keywords: vec!["Southborough".to_owned()],
         expected_results: {
-            vec![
-                Value::from("SouthboroughMAUnited States9686"),
-                Value::from("NorthbridgeMAUnited States14061"),
-            ]
-            .into_iter()
-            .collect()
+            vec![Value::from("SouthboroughMAUnited States9686")]
+                .into_iter()
+                .collect()
         },
     };
 

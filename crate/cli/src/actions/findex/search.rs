@@ -1,4 +1,4 @@
-use crate::error::result::CliResult;
+use crate::error::{result::CliResult, CliError};
 use clap::Parser;
 use cosmian_findex::{IndexADT, Value};
 use cosmian_findex_client::FindexRestClient;
@@ -31,11 +31,20 @@ impl SearchAction {
             &self.findex_parameters.index_id,
             &self.findex_parameters.seed()?,
         )?;
-        let mut search_results: HashSet<Value> = HashSet::new();
+
+        // First accumulate all search results in a vector
+        let mut all_results = Vec::new();
         for k in Keywords::from(self.keyword.clone()).0 {
             let search_result = findex_instance.search(&k).await?;
-            search_results.extend(search_result);
+            all_results.push(search_result);
         }
+
+        // Then take the intersection of all search results
+        let search_results = all_results
+            .into_iter()
+            .reduce(|acc, results| acc.intersection(&results).cloned().collect())
+            .ok_or_else(|| CliError::Default("No search results found".to_owned()))?;
+
         Ok(search_results)
     }
 }

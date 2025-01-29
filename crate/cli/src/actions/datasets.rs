@@ -123,8 +123,7 @@ impl DeleteEntries {
     }
 }
 
-/// Get datasets entries using corresponding entries UUID.
-/// Returns the entries.
+/// Return datasets entries matching given UUID.
 #[derive(Parser, Debug)]
 pub struct GetEntries {
     /// The index id
