@@ -43,13 +43,8 @@ async fn insert_search_delete(
     .await?;
 
     // make sure searching returns the expected results
-    let search_results = search(seed.clone(), index_id, search_options, &mut rest_client).await?;
-    // for value in &search_results {
-    //     debug!(
-    //         "value: {}",
-    //         String::from_utf8(value.as_ref().to_vec()).unwrap()
-    //     );
-    // }
+    let search_results = search(key.clone(), index_id, search_options, &mut rest_client).await?;
+    debug!("Search results (as a string): {:?}", search_results);
 
     assert_eq!(search_options.expected_results, search_results);
 

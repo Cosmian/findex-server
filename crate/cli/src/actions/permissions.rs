@@ -22,7 +22,7 @@ impl PermissionsAction {
     /// Returns an error if there was a problem running the action.
     pub async fn run(&self, rest_client: &FindexRestClient) -> CliResult<String> {
         let stdout = match self {
-            Self::Create(action) => format!("Index ID: {}", action.run(rest_client).await?),
+            Self::Create(action) => format!("Created Index ID: {}", action.run(rest_client).await?),
             Self::List(action) => format!("Permissions: {}", action.run(rest_client).await?),
             Self::Grant(action) => action.run(rest_client).await?,
             Self::Revoke(action) => action.run(rest_client).await?,

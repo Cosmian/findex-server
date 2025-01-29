@@ -8,7 +8,7 @@ use tracing::info;
 use crate::{
     actions::{
         datasets::DatasetsAction,
-        findex::{insert_or_delete::IndexOrDeleteAction, search::SearchAction},
+        findex::{insert_or_delete::InsertOrDeleteAction, search::SearchAction},
         login::LoginAction,
         logout::LogoutAction,
         permissions::PermissionsAction,
@@ -70,9 +70,9 @@ pub enum CoreFindexActions {
     #[command(subcommand)]
     Datasets(DatasetsAction),
     /// Delete indexed keywords
-    Delete(IndexOrDeleteAction),
-    /// Index new keywords.
-    Index(IndexOrDeleteAction),
+    Delete(InsertOrDeleteAction),
+    /// Insert new keywords.
+    Insert(InsertOrDeleteAction),
     Login(LoginAction),
     Logout(LogoutAction),
     #[command(subcommand)]
@@ -92,7 +92,7 @@ impl CoreFindexActions {
             let result = match action {
                 Self::Datasets(action) => action.run(findex_client).await,
                 Self::Delete(action) => action.delete(findex_client).await,
-                Self::Index(action) => action.insert(findex_client).await,
+                Self::Insert(action) => action.insert(findex_client).await,
                 Self::Permissions(action) => action.run(findex_client).await,
                 Self::Login(action) => action.run(&mut findex_client.config).await,
                 Self::Logout(action) => action.run(&mut findex_client.config),
@@ -114,7 +114,6 @@ impl CoreFindexActions {
 /// # Errors
 /// - If the configuration file is not found or invalid
 /// - If the command line arguments are invalid
-#[allow(clippy::future_not_send)]
 pub async fn findex_cli_main() -> CliResult<()> {
     log_init(None);
     let cli_opts = FindexCli::parse();

@@ -1,6 +1,6 @@
 use crate::{
     actions::findex::{
-        insert_or_delete::IndexOrDeleteAction, parameters::FindexParameters, search::SearchAction,
+        insert_or_delete::InsertOrDeleteAction, parameters::FindexParameters, search::SearchAction,
     },
     error::result::CliResult,
 };
@@ -17,7 +17,7 @@ pub(crate) async fn insert(
     dataset_path: &str,
     rest_client: &mut FindexRestClient,
 ) -> CliResult<()> {
-    let index_action = IndexOrDeleteAction {
+    let index_action = InsertOrDeleteAction {
         findex_parameters: FindexParameters {
             seed,
             index_id: *index_id,
@@ -35,7 +35,7 @@ pub(crate) async fn delete(
     dataset_path: &str,
     rest_client: &mut FindexRestClient,
 ) -> CliResult<()> {
-    IndexOrDeleteAction {
+    InsertOrDeleteAction {
         findex_parameters: FindexParameters {
             seed,
             index_id: *index_id,

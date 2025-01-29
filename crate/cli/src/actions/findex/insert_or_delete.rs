@@ -12,7 +12,7 @@ use crate::error::result::CliResult;
 use super::parameters::FindexParameters;
 #[derive(Parser, Debug)]
 #[clap(verbatim_doc_comment)]
-pub struct IndexOrDeleteAction {
+pub struct InsertOrDeleteAction {
     #[clap(flatten)]
     pub(crate) findex_parameters: FindexParameters,
 
@@ -21,7 +21,7 @@ pub struct IndexOrDeleteAction {
     pub(crate) csv: PathBuf,
 }
 
-impl IndexOrDeleteAction {
+impl InsertOrDeleteAction {
     /// Converts a CSV file to a hashmap where the keys are keywords and
     /// the values are sets of indexed values (Data).
     ///
@@ -79,7 +79,7 @@ impl IndexOrDeleteAction {
         let operation_name = if is_insert { "Indexing" } else { "Deleting" };
         trace!("{} done: keywords: {:?}", operation_name, written_keywords);
 
-        let output = format!("indexing done: keywords: {written_keywords:?}",);
+        let output = format!("Indexing done: keywords: {written_keywords:?}",);
 
         Ok(output)
     }
