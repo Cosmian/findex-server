@@ -53,7 +53,8 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
         let uuid = Uuid::new_v4();
 
         // run the transaction block.
-        let (mut returned_permissions_by_redis,): (Vec<Vec<u8>>,) =
+        let (mut returned_permissions_by_redis,): (Vec<Vec<u8>>,) = {
+            let _guard = self.lock.lock().await;
             transaction_async(con_manager, &[redis_key], |mut con, mut pipe| async move {
                 // load the old value, so we know what to increment.
                 let mut values: Vec<Vec<u8>> = con.get(redis_key).await?;
@@ -87,7 +88,8 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
                     .query_async(&mut con)
                     .await
             })
-            .await?;
+            .await?
+        };
 
         // Deserialize permissions
         let serialized_value = returned_permissions_by_redis.pop().ok_or_else(|| {
@@ -141,6 +143,8 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
         index_id: &Uuid,
     ) -> FResult<()> {
         let redis_key = user_id.as_bytes().to_vec();
+
+        let _guard = self.lock.lock().await;
         let _p = self.get_permissions(user_id).await;
 
         let permissions = match _p {
@@ -177,6 +181,7 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
     #[instrument(ret, err, skip(self), level = "trace")]
     async fn revoke_permission(&self, user_id: &str, index_id: &Uuid) -> FResult<()> {
         let key = user_id.as_bytes();
+        let _guard = self.lock.lock().await;
         match self.get_permissions(user_id).await {
             Ok(mut permissions) => {
                 permissions.revoke_permission(index_id);
