@@ -15,7 +15,6 @@ use super::parameters::FindexParameters;
 pub struct InsertOrDeleteAction {
     #[clap(flatten)]
     pub(crate) findex_parameters: FindexParameters,
-
     /// The path to the CSV file containing the data to index
     #[clap(long)]
     pub(crate) csv: PathBuf,
