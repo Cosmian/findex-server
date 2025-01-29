@@ -43,7 +43,13 @@ async fn insert_search_delete(
     .await?;
 
     // make sure searching returns the expected results
-    let search_results = search(key.clone(), index_id, search_options, &mut rest_client).await?;
+    let search_results = search(
+        TESTS_KEY.to_owned(),
+        index_id,
+        search_options,
+        &mut rest_client,
+    )
+    .await?;
     debug!("Search results (as a string): {:?}", search_results);
 
     assert_eq!(search_options.expected_results, search_results);
@@ -96,7 +102,6 @@ pub(crate) async fn test_findex_no_auth() -> CliResult<()> {
 pub(crate) async fn test_findex_no_auth_huge_dataset() -> CliResult<()> {
     log_init(None);
     let ctx = start_default_test_findex_server().await;
-    let key = "11223344556677889900AABBCCDDEEFF11223344556677889900AABBCCDDEEFF".to_owned();
 
     // Search 1 entry in a huge dataset
     let search_options = SearchOptions {
