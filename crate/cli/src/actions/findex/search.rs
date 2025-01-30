@@ -1,13 +1,12 @@
 use crate::error::{result::CliResult, CliError};
 use clap::Parser;
-use cosmian_findex::{IndexADT, Value};
+use cosmian_findex::IndexADT;
 use cosmian_findex_client::FindexRestClient;
-use cosmian_findex_structs::Keywords;
-use std::collections::HashSet;
+use cosmian_findex_structs::{Keywords, SearchResults};
 
 use super::parameters::FindexParameters;
 
-/// Findex: Search keywords.
+/// Search words.
 #[derive(Parser, Debug)]
 #[clap(verbatim_doc_comment)]
 pub struct SearchAction {
@@ -25,7 +24,7 @@ impl SearchAction {
     ///
     /// Returns an error if the version query fails or if there is an issue
     /// writing to the console.
-    pub async fn run(&self, rest_client: &mut FindexRestClient) -> CliResult<HashSet<Value>> {
+    pub async fn run(&self, rest_client: &mut FindexRestClient) -> CliResult<SearchResults> {
         // cloning will be eliminated in the future, cf https://github.com/Cosmian/findex-server/issues/28
         let findex_instance = rest_client.clone().instantiate_findex(
             self.findex_parameters.index_id,
@@ -45,6 +44,6 @@ impl SearchAction {
             .reduce(|acc, results| acc.intersection(&results).cloned().collect())
             .ok_or_else(|| CliError::Default("No search results found".to_owned()))?;
 
-        Ok(search_results)
+        Ok(SearchResults(search_results))
     }
 }

@@ -97,8 +97,8 @@ impl CoreFindexActions {
                 Self::Login(action) => action.run(&mut findex_client.config).await,
                 Self::Logout(action) => action.run(&mut findex_client.config),
                 Self::Search(action) => {
-                    let a = action.run(findex_client).await?;
-                    Ok(format!("{a:?}")) //TODO(manu)
+                    let search_results = action.run(findex_client).await?;
+                    Ok(format!("Search results: {search_results}"))
                 }
                 Self::ServerVersion(action) => action.run(findex_client).await,
             };

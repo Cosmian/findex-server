@@ -45,7 +45,7 @@ The [Cosmian CLI](../cosmian_cli/index.md) allows to interact both with the **KM
     Using this command:
 
     ```sh
-    cosmian findex-server encrypt-and-index --seed "11223344556677889900AABBCCDDEEFF" --index-id 13348510-75cd-436e-a9ff-60de66cac0d0 --csv test_data/datasets/smallpop.csv --kek-id 55629c83-5184-4e54-9839-9b686a6f2850
+    cosmian findex-server encrypt-and-index --seed "11223344556677889900AABBCCDDEEFF11223344556677889900AABBCCDDEEFF" --index-id 13348510-75cd-436e-a9ff-60de66cac0d0 --csv test_data/datasets/smallpop.csv --kek-id 55629c83-5184-4e54-9839-9b686a6f2850
 
     Data behind those UUIDS were encrypted and indexed: UUID: 7059592d-9cd7-46d6-9e4d-b26436430942
     UUID: d9eee59c-f9df-4edd-97bc-ba5952ce63af
@@ -63,7 +63,7 @@ The [Cosmian CLI](../cosmian_cli/index.md) allows to interact both with the **KM
 
     ```sh
 
-    cosmian findex-server search-and-decrypt --seed "11223344556677889900AABBCCDDEEFF" --index-id 13348510-75cd-436e-a9ff-60de66cac0d0 --kek-id 55629c83-5184-4e54-9839-9b686a6f2850 --keyword Southborough
+    cosmian findex-server search-and-decrypt --seed "11223344556677889900AABBCCDDEEFF11223344556677889900AABBCCDDEEFF" --index-id 13348510-75cd-436e-a9ff-60de66cac0d0 --kek-id 55629c83-5184-4e54-9839-9b686a6f2850 --keyword Southborough
 
     Decrypted record: SouthboroughMAUnited States9686
     ```

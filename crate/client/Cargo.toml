@@ -15,6 +15,7 @@ doctest = false
 [features]
 
 [dependencies]
+base64 = { workspace = true }
 cosmian_config_utils = { workspace = true }
 cosmian_crypto_core = { workspace = true }
 cosmian_findex = { workspace = true }

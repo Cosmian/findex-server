@@ -86,8 +86,7 @@ pub(crate) async fn findex_guarded_write(
 
     let index_id = Uuid::parse_str(&index_id)?;
 
-    let error_prefix: String =
-        format!("Invalid {OPERATION_NAME} request by {user} on index {index_id}.");
+    let error_prefix = format!("Invalid {OPERATION_NAME} request by {user} on index {index_id}.");
 
     // 0 or 1. 0 means None, 1 means Some. Assumes the first ADDRESS_LENGTH
     // bytes are the address

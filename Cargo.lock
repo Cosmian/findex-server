@@ -877,6 +877,7 @@ dependencies = [
 name = "cosmian_findex_client"
 version = "0.1.1"
 dependencies = [
+ "base64 0.22.1",
  "cosmian_config_utils",
  "cosmian_crypto_core",
  "cosmian_findex",

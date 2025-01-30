@@ -7,7 +7,7 @@ use std::{
 use clap::Parser;
 use cosmian_findex::{Findex, IndexADT, Value};
 use cosmian_findex_client::FindexRestClient;
-use cosmian_findex_structs::{Keyword, KeywordToDataSetsMap, WORD_LENGTH};
+use cosmian_findex_structs::{Keyword, KeywordToDataSetsMap, Keywords, WORD_LENGTH};
 use tracing::{instrument, trace};
 
 use crate::error::result::CliResult;
@@ -82,9 +82,10 @@ impl InsertOrDeleteAction {
         }
         let written_keywords = bindings.keys().collect::<Vec<_>>();
         let operation_name = if is_insert { "Indexing" } else { "Deleting" };
-        trace!("{} done: keywords: {:?}", operation_name, written_keywords);
+        let written_keywords = Keywords::from(written_keywords);
+        trace!("{} done: keywords: {}", operation_name, written_keywords);
 
-        let output = format!("Indexing done: keywords: {written_keywords:?}",);
+        let output = format!("Indexing done: keywords: {written_keywords}",);
 
         Ok(output)
     }
