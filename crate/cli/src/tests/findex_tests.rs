@@ -163,7 +163,7 @@ pub(crate) async fn test_findex_grant_and_revoke_permission() -> CliResult<()> {
     let ctx = start_default_test_findex_server_with_cert_auth().await;
     let owner_conf = FindexClientConfig::load(Some(PathBuf::from(&ctx.owner_client_conf_path)))?;
     let owner_rest_client = FindexRestClient::new(owner_conf)?;
-    let key = "22223344556677889900AABBCCDDEEFF11223344556677889900AABBCCDDEEFF";
+    let key = TESTS_KEY;
 
     let search_options = SearchOptions {
         dataset_path: SMALL_DATASET.into(),
