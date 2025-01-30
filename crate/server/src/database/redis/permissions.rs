@@ -212,14 +212,13 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
     clippy::panic,
     clippy::indexing_slicing,
     clippy::get_unwrap
-)]
+)] // this is test code, we want to panic if something goes wrong
 mod tests {
-
-    use std::{collections::HashMap, env, sync::Arc};
 
     use super::*;
     use crate::config::{DBConfig, DatabaseType};
-
+    use rand::{thread_rng, Rng};
+    use std::{collections::HashMap, env, sync::Arc};
     use tokio;
     use uuid::Uuid;
 
@@ -408,7 +407,7 @@ mod tests {
         permission: u8,
         index: Uuid,
     ) -> HashMap<Uuid, Permission> {
-        let mut updated_state = previous_state.clone();
+        let mut updated_state = previous_state;
         match operation {
             0 => {
                 // create new index
@@ -428,40 +427,64 @@ mod tests {
         updated_state
     }
 
-    use rand::{thread_rng, Rng};
-    /// The testing strategy will be the following :
+    /// The testing strategy will be the following:
     ///
-    /// Ininitialization:
-    /// - u random users are created where u is a random number between 1 and 100 (inclusive)
-    /// - (test will be documented later on)
+    /// Initialization:
+    /// - u random users are created where u is a random number between 1 and MAX_USERS (inclusive)
+    /// - A fixed set of MAX_INDEXES random UUIDs is generated to represent available indexes
+    ///
+    /// Assumption:
+    /// - Each user starts with no permissions
+    /// - The function "grant_permission" is correct, for practical purposes, we will simulate its usage to ensure predictable test outcomes
+    ///
+    /// For each user:
+    /// - MAX_OPS random operations are generated, where each operation is one of:
+    ///   0: Create new index (grants Admin permission)
+    ///   1: Grant new permission (Read, Write, or Admin)
+    ///   2: Revoke permission
+    /// - The expected permission state is tracked after each operation
+    ///
+    /// Concurrent Execution:
+    /// - Each user's operations run concurrently in separate tasks
+    /// - After each operation:
+    ///   - The actual permissions are retrieved from the database
+    ///   - The actual state is compared with the expected state
+    ///   - Any mismatch fails the test
     #[tokio::test]
     async fn test_permissions_concurrent_grand_revoque_permissions() {
         const MAX_USERS: usize = 1;
-        const MAX_INDEXES: usize = 100;
         const MAX_OPS: usize = 20;
         let mut rng = thread_rng();
 
         let users: Vec<String> = (0..rng.gen_range(1..=MAX_USERS))
-            .map(|i| format!("user_{}", i))
+            .map(|i| format!("user_{i}"))
             .collect();
-
-        let indexes: Vec<Uuid> = (0..=MAX_INDEXES).map(|_| Uuid::new_v4()).collect();
 
         let mut operations: HashMap<&str, Vec<(usize, u8, Uuid)>> = HashMap::new();
         let mut expected_state: HashMap<&str, Vec<HashMap<Uuid, Permission>>> = HashMap::new();
         // Initialize empty vectors for each user
-        for user in users.iter() {
+        for user in &users {
             operations.insert(user.as_str(), Vec::new());
             expected_state.insert(user.as_str(), Vec::new());
         }
         for user in users.clone() {
+            let user_str = user.as_str();
             for i in 0..MAX_OPS {
-                let user_str = user.as_str();
-                let op = (
-                    rng.gen_range(0..=2), // 0: create new index, 1: grant new permission, 2: revoke permission
-                    rng.gen_range(0..=2), // If the operation is to grant a new permission, the permission is either Read 0, Write 1 or Admin 2
-                    indexes[rng.gen_range(0..indexes.len())], // Get UUID directly from indexes
-                );
+                let mut op = if i == 0 {
+                    // First operation is always to create a new index
+                    (0, 0, Uuid::new_v4())
+                } else {
+                    (
+                        rng.gen_range(0..=2), // 0: create new index, 1: grant new permission, 2: revoke permission
+                        rng.gen_range(0..=2), // If the operation is to grant a new permission, the permission is either Read 0, Write 1 or Admin 2
+                        Uuid::new_v4(),       // Get UUID directly from indexes
+                    )
+                };
+                if op.0 > 0 && i > 0 {
+                    // if operation is not "create", rather use one of the created indexes to stay realistic
+                    let chosen_index = rng.gen_range(0..i);
+                    op.2 = operations.get(user_str).expect("User should exist")[chosen_index].2;
+                }
 
                 // Append the operation to the user's vector
                 operations
@@ -496,17 +519,16 @@ mod tests {
             let user = user.clone();
             let ops = operations[user.as_str()].clone();
             let expected_states = expected_state[user.as_str()].clone();
-            // let db = Arc::clone(&db);
 
             handles.push(tokio::spawn(async move {
                 for (op_idx, op) in ops.iter().enumerate() {
                     // Execute operation
                     match op.0 {
                         0 => {
-                            // Create index operation
-                            db.create_index_id(&user)
+                            // Simulate new index creation
+                            db.grant_permission(&user, Permission::Admin, &op.2)
                                 .await
-                                .expect("Failed to create index");
+                                .expect("Failed to grant permission");
                         }
                         1 => {
                             // Grant permission
