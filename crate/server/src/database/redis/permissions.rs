@@ -220,7 +220,7 @@ mod tests {
             |_| "redis://localhost:6379".to_owned(),
             |var_env| format!("redis://{var_env}:6379"),
         );
-        Redis::instantiate(url.as_str(), true)
+        Redis::instantiate(url.as_str(), false)
             .await
             .expect("Test failed to instantiate Redis")
     }
@@ -287,7 +287,7 @@ mod tests {
 
     #[tokio::test]
     #[allow(clippy::unwrap_used, clippy::assertions_on_result_states)]
-    async fn test_revoque_permission() {
+    async fn test_revoke_permission() {
         let db = setup_test_db().await;
         let other_user_id = "another_user";
         let test_user_id = "main_user";
