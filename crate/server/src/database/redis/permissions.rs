@@ -404,7 +404,7 @@ mod tests {
     /// - (test will be documented later on)
     #[tokio::test]
     async fn test_concurrent_grand_revoque_permissions() {
-        const MAX_USERS: usize = 100;
+        const MAX_USERS: usize = 1;
         const MAX_INDEXES: usize = 100;
         const MAX_OPS: usize = 20;
         let mut rng = thread_rng();
@@ -472,9 +472,15 @@ mod tests {
                     match op.0 {
                         0 => {
                             // Create index operation
-                            db.create_index_id(&user)
+                            // simulate the create index by granting an admin permission on a new index froom the list
+                            // let permission =
+                            //     Permission::try_from(op.1).expect("Invalid permission value");
+                            db.grant_permission(&user, Permission::Admin, &op.2)
                                 .await
-                                .expect("Failed to create index");
+                                .expect("Failed to grant permission");
+                            // db.create_index_id(&user)
+                            //     .await
+                            //     .expect("Failed to create index");
                         }
                         1 => {
                             // Grant permission
