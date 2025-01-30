@@ -204,22 +204,47 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
 }
 
 #[cfg(test)]
-#[allow(clippy::unwrap_used, clippy::expect_used)]
+#[allow(
+    clippy::unwrap_used,
+    clippy::expect_used,
+    clippy::match_same_arms,
+    clippy::option_if_let_else
+)]
 mod tests {
 
     use std::{env, sync::Arc};
 
     use super::*;
-    use crate::database::redis::Redis;
+    use crate::config::{DBConfig, DatabaseType};
 
     use tokio;
     use uuid::Uuid;
 
+    fn redis_db_config() -> DBConfig {
+        let url = if let Ok(var_env) = env::var("REDIS_HOST") {
+            format!("redis://{var_env}:6379")
+        } else {
+            "redis://localhost:6379".to_owned()
+        };
+        trace!("TESTS: using redis on {url}");
+        DBConfig {
+            database_type: DatabaseType::Redis,
+            clear_database: false,
+            database_url: url,
+        }
+    }
+
+    fn get_db_config() -> DBConfig {
+        env::var_os("FINDEX_TEST_DB").map_or_else(redis_db_config, |v| {
+            match v.to_str().unwrap_or("") {
+                "redis" => redis_db_config(),
+                _ => redis_db_config(),
+            }
+        })
+    }
+
     async fn setup_test_db() -> Redis<WORD_LENGTH> {
-        let url = env::var("REDIS_HOST").map_or_else(
-            |_| "redis://localhost:6379".to_owned(),
-            |var_env| format!("redis://{var_env}:6379"),
-        );
+        let url = get_db_config().database_url;
         Redis::instantiate(url.as_str(), false)
             .await
             .expect("Test failed to instantiate Redis")
