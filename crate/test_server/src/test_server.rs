@@ -1,4 +1,5 @@
 use cosmian_config_utils::ConfigUtils;
+use cosmian_logger::log_init;
 use std::{
     env,
     path::PathBuf,
@@ -23,6 +24,9 @@ use tracing::{info, trace};
 
 use crate::test_jwt::{get_auth0_jwt_config, AUTH0_TOKEN};
 
+const REDIS_DEFAULT_PORT: u16 = 6379;
+const REDIS_CUSTOM_PORT: u16 = 6380;
+
 /// In order to run most tests in parallel,
 /// we use that to avoid to try to start N Findex servers (one per test)
 /// with a default configuration.
@@ -31,11 +35,11 @@ use crate::test_jwt::{get_auth0_jwt_config, AUTH0_TOKEN};
 pub(crate) static ONCE: OnceCell<TestsContext> = OnceCell::const_new();
 pub(crate) static ONCE_SERVER_WITH_AUTH: OnceCell<TestsContext> = OnceCell::const_new();
 
-fn redis_db_config() -> DBConfig {
+fn redis_db_config(port: u16) -> DBConfig {
     let url = if let Ok(var_env) = env::var("REDIS_HOST") {
-        format!("redis://{var_env}:6379")
+        format!("redis://{var_env}:{port}")
     } else {
-        "redis://localhost:6379".to_owned()
+        format!("redis://localhost:{port}")
     };
     trace!("TESTS: using redis on {url}");
     DBConfig {
@@ -45,11 +49,14 @@ fn redis_db_config() -> DBConfig {
     }
 }
 
-fn get_db_config() -> DBConfig {
-    env::var_os("FINDEX_TEST_DB").map_or_else(redis_db_config, |v| match v.to_str().unwrap_or("") {
-        "redis" => redis_db_config(),
-        _ => redis_db_config(),
-    })
+fn get_db_config(port: u16) -> DBConfig {
+    env::var_os("FINDEX_TEST_DB").map_or_else(
+        || redis_db_config(port),
+        |v| match v.to_str().unwrap_or("") {
+            "redis" => redis_db_config(port),
+            _ => redis_db_config(port),
+        },
+    )
 }
 
 /// Start a test Findex server in a thread with the default options:
@@ -58,7 +65,7 @@ pub async fn start_default_test_findex_server() -> &'static TestsContext {
     trace!("Starting default test server");
     ONCE.get_or_try_init(|| {
         start_test_server_with_options(
-            get_db_config(),
+            get_db_config(REDIS_DEFAULT_PORT),
             6668,
             AuthenticationOptions {
                 use_jwt_token: false,
@@ -76,7 +83,7 @@ pub async fn start_default_test_findex_server_with_cert_auth() -> &'static Tests
     ONCE_SERVER_WITH_AUTH
         .get_or_try_init(|| {
             start_test_server_with_options(
-                get_db_config(),
+                get_db_config(REDIS_CUSTOM_PORT),
                 6660,
                 AuthenticationOptions {
                     use_jwt_token: false,
@@ -118,7 +125,7 @@ pub async fn start_test_server_with_options(
     port: u16,
     authentication_options: AuthenticationOptions,
 ) -> Result<TestsContext, FindexClientError> {
-    cosmian_logger::log_init(None);
+    log_init(None);
     let server_params = generate_server_params(db_config.clone(), port, &authentication_options)?;
 
     // Create a (object owner) conf
@@ -363,7 +370,9 @@ mod test {
     use tracing::trace;
 
     use crate::{
-        start_test_server_with_options, test_server::redis_db_config, AuthenticationOptions,
+        start_test_server_with_options,
+        test_server::{redis_db_config, REDIS_DEFAULT_PORT},
+        AuthenticationOptions,
     };
 
     #[tokio::test]
@@ -378,7 +387,7 @@ mod test {
         for (use_https, use_jwt_token, use_client_cert, description) in test_cases {
             trace!("Running test case: {}", description);
             let context = start_test_server_with_options(
-                redis_db_config(),
+                redis_db_config(REDIS_DEFAULT_PORT),
                 6667,
                 AuthenticationOptions {
                     use_https,

@@ -8,7 +8,7 @@ use actix_web::{
 use cosmian_findex::{Address, MemoryADT, ADDRESS_LENGTH};
 use cosmian_findex_structs::{Addresses, Guard, OptionalWords, Permission, Tasks, WORD_LENGTH};
 use openssl::sha::Sha256;
-use tracing::{info, trace};
+use tracing::trace;
 
 use crate::{
     core::FindexServer,
@@ -18,9 +18,9 @@ use crate::{
 
 // todo(hatem): reduce cloning
 
-fn hash_address(a: Address<ADDRESS_LENGTH>, index_id: &str) -> Address<ADDRESS_LENGTH> {
+fn hash_address(a: &Address<ADDRESS_LENGTH>, index_id: &str) -> Address<ADDRESS_LENGTH> {
     let mut hasher = Sha256::default();
-    hasher.update(&*a);
+    hasher.update(&**a);
     hasher.update(index_id.as_bytes());
     let bytes = hasher.finish();
     let mut a = Address::default();
@@ -44,7 +44,7 @@ pub(crate) async fn findex_batch_read(
     let addresses = Addresses::deserialize(bytes_slice)?
         .into_inner()
         .into_iter()
-        .map(|a| hash_address(a, &index_id))
+        .map(|a| hash_address(&a, &index_id))
         .collect::<Vec<_>>();
 
     trace!("batch_read: number of addresses {}:", addresses.len());
@@ -130,12 +130,12 @@ pub(crate) async fn findex_guarded_write(
     let bindings = tasks
         .into_inner()
         .into_iter()
-        .map(|(a, w)| (hash_address(a, &index_id), w))
+        .map(|(a, w)| (hash_address(&a, &index_id), w))
         .collect::<Vec<_>>();
 
     let result_word = findex_server
         .db
-        .guarded_write((hash_address(a_g, &index_id), w_g), bindings)
+        .guarded_write((hash_address(&a_g, &index_id), w_g), bindings)
         .await?;
 
     let response_bytes = Bytes::from(OptionalWords::new(vec![result_word]).serialize()?);

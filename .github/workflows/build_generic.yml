@@ -38,7 +38,7 @@ jobs:
           toolchain: ${{ inputs.toolchain }}
           components: rustfmt, clippy
 
-      - name: Run Redis, KMS and Findex servers containers
+      - name: Run Redis container
         if: ${{ inputs.docker_compose }}
         run: |
           docker compose -h
