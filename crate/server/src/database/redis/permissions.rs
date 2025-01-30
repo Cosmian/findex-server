@@ -204,23 +204,56 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
 }
 
 #[cfg(test)]
+#[allow(
+    clippy::unwrap_used,
+    clippy::expect_used,
+    clippy::match_same_arms,
+    clippy::option_if_let_else,
+    clippy::panic,
+    clippy::indexing_slicing,
+    clippy::get_unwrap
+)] // this is test code, we want to panic if something goes wrong
 mod tests {
-    use std::{collections::HashMap, sync::Arc};
 
     use super::*;
-    use crate::database::redis::Redis;
-
+    use crate::config::{DBConfig, DatabaseType};
+    use rand::{thread_rng, Rng};
+    use std::{collections::HashMap, env, sync::Arc};
     use tokio;
     use uuid::Uuid;
 
+    fn redis_db_config() -> DBConfig {
+        let url = if let Ok(var_env) = env::var("REDIS_HOST") {
+            format!("redis://{var_env}:6379")
+        } else {
+            "redis://localhost:6379".to_owned()
+        };
+        trace!("TESTS: using redis on {url}");
+        DBConfig {
+            database_type: DatabaseType::Redis,
+            clear_database: false,
+            database_url: url,
+        }
+    }
+
+    fn get_db_config() -> DBConfig {
+        env::var_os("FINDEX_TEST_DB").map_or_else(redis_db_config, |v| {
+            match v.to_str().unwrap_or("") {
+                "redis" => redis_db_config(),
+                _ => redis_db_config(),
+            }
+        })
+    }
+
     async fn setup_test_db() -> Redis<WORD_LENGTH> {
-        Redis::instantiate("redis://localhost:6379", true)
+        let url = get_db_config().database_url;
+        Redis::instantiate(url.as_str(), false)
             .await
             .expect("Test failed to instantiate Redis")
     }
 
     #[tokio::test]
-    async fn test_create_index_id() {
+    async fn test_permissions_create_index_id() {
         let db = setup_test_db().await;
         let user_id = "test_user";
 
@@ -230,15 +263,11 @@ mod tests {
             .await
             .expect("Failed to create index");
 
-        println!("index_id: {:?}", index_id);
-
         // Verify permissions were created
         let permissions = db
             .get_permissions(user_id)
             .await
             .expect("Failed to get permissions");
-
-        println!("permissions: {:?}", permissions);
 
         assert!(permissions.get_permission(&index_id).is_some());
         assert_eq!(
@@ -248,7 +277,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_grant_and_revoke_permissions() {
+    async fn test_permissions_grant_and_revoke_permissions() {
         let db = setup_test_db().await;
         let user_id = "test_user_2";
         let index_id = Uuid::new_v4();
@@ -280,24 +309,25 @@ mod tests {
 
         // Verify permission was revoked
         let result = db.get_permission(user_id, &index_id).await;
-        assert!(result.is_err());
+        result.unwrap_err();
     }
 
     #[tokio::test]
-    async fn test_revoque_permission() {
+    #[allow(clippy::unwrap_used, clippy::assertions_on_result_states)]
+    async fn test_permissions_revoke_permission() {
         let db = setup_test_db().await;
-        let user_id_boss = "user_boss";
-        let user_id_subbordinate = "user_subbordinate";
+        let other_user_id = "another_user";
+        let test_user_id = "main_user";
 
-        // Create new index by BOSS
+        // Create new index by another user
         let (admin_index_id, write_index_id, read_index_id) = (
-            db.create_index_id(&user_id_boss)
+            db.create_index_id(other_user_id)
                 .await
                 .expect("Failed to create index"),
-            db.create_index_id(&user_id_boss)
+            db.create_index_id(other_user_id)
                 .await
                 .expect("Failed to create index"),
-            db.create_index_id(&user_id_boss)
+            db.create_index_id(other_user_id)
                 .await
                 .expect("Failed to create index"),
         );
@@ -307,76 +337,77 @@ mod tests {
             .zip(permission_kinds.into_iter())
         {
             // Grant permission
-            db.grant_permission(user_id_subbordinate, permission_kind.clone(), &index_id)
+            db.grant_permission(test_user_id, permission_kind.clone(), &index_id)
                 .await
                 .expect("Failed to grant permission {permission_kind}");
 
             // Verify permission was granted
             let permission = db
-                .get_permission(user_id_subbordinate, &index_id)
+                .get_permission(test_user_id, &index_id)
                 .await
                 .expect("Failed to get permission {permission_kind}");
             assert_eq!(permission, permission_kind);
 
             // Revoke permission
-            db.revoke_permission(user_id_subbordinate, &index_id)
+            db.revoke_permission(test_user_id, &index_id)
                 .await
                 .expect("Failed to revoke permission {permission_kind}");
 
             // Verify permission was revoked
-            let result = db.get_permission(user_id_subbordinate, &index_id).await;
-            assert!(result.is_err());
+            let result = db.get_permission(test_user_id, &index_id).await;
+            result.unwrap_err();
         }
 
-        // Now, we create two indexes for the subbordinate, we revoke the permission for one of them and we check that the other one is still there
+        // Now, we create two indexes for the test_user, we revoke the permission for one of them and we check that the other one is still there
         let (index_id1, index_id2) = (
-            db.create_index_id(&user_id_subbordinate)
+            db.create_index_id(test_user_id)
                 .await
                 .expect("Failed to create index"),
-            db.create_index_id(&user_id_subbordinate)
+            db.create_index_id(test_user_id)
                 .await
                 .expect("Failed to create index"),
         );
 
         // revoke permission for index_id1
-        db.revoke_permission(user_id_subbordinate, &index_id1)
+        db.revoke_permission(test_user_id, &index_id1)
             .await
             .expect("Failed to revoke permission");
 
         // Verify permission of index_id2 is still there
         let permission = db
-            .get_permission(user_id_subbordinate, &index_id2)
+            .get_permission(test_user_id, &index_id2)
             .await
             .expect("Failed to get permission");
         assert_eq!(permission, Permission::Admin);
     }
 
     #[tokio::test]
-    async fn test_nonexistent_user_and_permission() {
+    async fn test_permissions_nonexistent_user_and_permission() {
         let db = setup_test_db().await;
         let user_id = "nonexistent_user";
         let index_id = Uuid::new_v4();
 
         // Try to get permissions for nonexistent user
         let result = db.get_permissions(user_id).await;
-        assert!(result.is_err());
+        result.unwrap_err();
 
         // Try to get specific permission
         let result = db.get_permission(user_id, &index_id).await;
-        assert!(result.is_err());
+        result.unwrap_err();
 
         // Revoke a non existent permission, should not fail
         db.revoke_permission("someone", &Uuid::new_v4())
             .await
             .unwrap();
     }
+
     fn update_expected_results(
         previous_state: HashMap<Uuid, Permission>,
         operation: usize,
         permission: u8,
         index: Uuid,
     ) -> HashMap<Uuid, Permission> {
-        let mut updated_state = previous_state.clone();
+        let mut updated_state = previous_state;
         match operation {
             0 => {
                 // create new index
@@ -396,40 +427,64 @@ mod tests {
         updated_state
     }
 
-    use rand::{thread_rng, Rng};
-    /// The testing strategy will be the following :
+    /// The testing strategy will be the following:
     ///
-    /// Ininitialization:
-    /// - u random users are created where u is a random number between 1 and 100 (inclusive)
-    /// - (test will be documented later on)
+    /// Initialization:
+    /// - u random users are created where u is a random number between 1 and MAX_USERS (inclusive)
+    /// - A fixed set of MAX_INDEXES random UUIDs is generated to represent available indexes
+    ///
+    /// Assumption:
+    /// - Each user starts with no permissions
+    /// - The function "grant_permission" is correct, for practical purposes, we will simulate its usage to ensure predictable test outcomes
+    ///
+    /// For each user:
+    /// - MAX_OPS random operations are generated, where each operation is one of:
+    ///   0: Create new index (grants Admin permission)
+    ///   1: Grant new permission (Read, Write, or Admin)
+    ///   2: Revoke permission
+    /// - The expected permission state is tracked after each operation
+    ///
+    /// Concurrent Execution:
+    /// - Each user's operations run concurrently in separate tasks
+    /// - After each operation:
+    ///   - The actual permissions are retrieved from the database
+    ///   - The actual state is compared with the expected state
+    ///   - Any mismatch fails the test
     #[tokio::test]
-    async fn test_concurrent_grand_revoque_permissions() {
+    async fn test_permissions_concurrent_grand_revoque_permissions() {
         const MAX_USERS: usize = 1;
-        const MAX_INDEXES: usize = 100;
         const MAX_OPS: usize = 20;
         let mut rng = thread_rng();
 
         let users: Vec<String> = (0..rng.gen_range(1..=MAX_USERS))
-            .map(|i| format!("user_{}", i))
+            .map(|i| format!("user_{i}"))
             .collect();
-
-        let indexes: Vec<Uuid> = (0..=MAX_INDEXES).map(|_| Uuid::new_v4()).collect();
 
         let mut operations: HashMap<&str, Vec<(usize, u8, Uuid)>> = HashMap::new();
         let mut expected_state: HashMap<&str, Vec<HashMap<Uuid, Permission>>> = HashMap::new();
         // Initialize empty vectors for each user
-        for user in users.iter() {
+        for user in &users {
             operations.insert(user.as_str(), Vec::new());
             expected_state.insert(user.as_str(), Vec::new());
         }
         for user in users.clone() {
+            let user_str = user.as_str();
             for i in 0..MAX_OPS {
-                let user_str = user.as_str();
-                let op = (
-                    rng.gen_range(0..=2), // 0: create new index, 1: grant new permission, 2: revoke permission
-                    rng.gen_range(0..=2), // If the operation is to grant a new permission, the permission is either Read 0, Write 1 or Admin 2
-                    indexes[rng.gen_range(0..indexes.len())], // Get UUID directly from indexes
-                );
+                let mut op = if i == 0 {
+                    // First operation is always to create a new index
+                    (0, 0, Uuid::new_v4())
+                } else {
+                    (
+                        rng.gen_range(0..=2), // 0: create new index, 1: grant new permission, 2: revoke permission
+                        rng.gen_range(0..=2), // If the operation is to grant a new permission, the permission is either Read 0, Write 1 or Admin 2
+                        Uuid::new_v4(),       // Get UUID directly from indexes
+                    )
+                };
+                if op.0 > 0 && i > 0 {
+                    // if operation is not "create", rather use one of the created indexes to stay realistic
+                    let chosen_index = rng.gen_range(0..i);
+                    op.2 = operations.get(user_str).expect("User should exist")[chosen_index].2;
+                }
 
                 // Append the operation to the user's vector
                 operations
@@ -464,23 +519,16 @@ mod tests {
             let user = user.clone();
             let ops = operations[user.as_str()].clone();
             let expected_states = expected_state[user.as_str()].clone();
-            // let db = Arc::clone(&db);
 
             handles.push(tokio::spawn(async move {
                 for (op_idx, op) in ops.iter().enumerate() {
                     // Execute operation
                     match op.0 {
                         0 => {
-                            // Create index operation
-                            // simulate the create index by granting an admin permission on a new index froom the list
-                            // let permission =
-                            //     Permission::try_from(op.1).expect("Invalid permission value");
+                            // Simulate new index creation
                             db.grant_permission(&user, Permission::Admin, &op.2)
                                 .await
                                 .expect("Failed to grant permission");
-                            // db.create_index_id(&user)
-                            //     .await
-                            //     .expect("Failed to create index");
                         }
                         1 => {
                             // Grant permission
@@ -512,8 +560,7 @@ mod tests {
 
                     assert_eq!(
                         current_permissions, expected_permissions,
-                        "Permissions mismatch for user {} after operation {}",
-                        user, op_idx
+                        "Permissions mismatch for user {user} after operation {op_idx}",
                     );
                 }
             }));
@@ -521,9 +568,7 @@ mod tests {
 
         // Wait for all tasks to complete
         for handle in handles {
-            handle.await.unwrap(); //.expect("Task failed");
+            handle.await.unwrap();
         }
-
-        println!("All tasks completed successfully");
     }
 }

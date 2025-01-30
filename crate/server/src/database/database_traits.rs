@@ -1,6 +1,8 @@
 use async_trait::async_trait;
-use cosmian_findex::{Address, MemoryADT, MemoryError, ADDRESS_LENGTH};
-use cosmian_findex_structs::{EncryptedEntries, Permission, Permissions, Uuids, WORD_LENGTH};
+use cosmian_findex::{Address, MemoryADT, MemoryError};
+use cosmian_findex_structs::{
+    EncryptedEntries, Permission, Permissions, Uuids, SERVER_ADDRESS_LENGTH, WORD_LENGTH,
+};
 use uuid::Uuid;
 
 use crate::error::result::FResult;
@@ -39,7 +41,7 @@ pub(crate) trait DatasetsTrait: Sync + Send {
 
 #[async_trait]
 pub(crate) trait FindexMemoryTrait:
-    MemoryADT<Address = Address<ADDRESS_LENGTH>, Word = [u8; WORD_LENGTH], Error = MemoryError>
+    MemoryADT<Address = Address<SERVER_ADDRESS_LENGTH>, Word = [u8; WORD_LENGTH], Error = MemoryError>
 {
     //
     // Memory R/W ops

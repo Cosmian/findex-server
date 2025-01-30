@@ -27,6 +27,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - distribution: ubuntu-20.04
+            archive-name: ubuntu_20_04
+            target: x86_64-unknown-linux-gnu
           - distribution: ubuntu-22.04
             archive-name: ubuntu_22_04
             target: x86_64-unknown-linux-gnu
@@ -61,7 +64,7 @@ jobs:
       archive-name: ${{ matrix.archive-name }}
       target: ${{ matrix.target }}
       debug_or_release: ${{ inputs.debug_or_release }}
-      skip_services_tests: --skip test_findex --skip test_all_authentications --skip test_server_auth_matrix --skip test_datasets
+      skip_services_tests: --skip test_findex --skip test_all_authentications --skip test_server_auth_matrix --skip test_datasets --skip test_permissions
 
   windows-2022:
     if: inputs.debug_or_release == 'release'

@@ -40,8 +40,13 @@ pub(crate) async fn findex_batch_read(
 
     check_permission(&user, &index_id, Permission::Read, &findex_server).await?;
 
+    // Parse index_id
+    let index_id = Uuid::parse_str(&index_id)?;
+
     let bytes_slice = bytes.as_ref();
-    let addresses = Addresses::deserialize(bytes_slice)?
+    let addresses = Addresses::deserialize(bytes_slice)?;
+
+    let addresses = addresses
         .into_inner()
         .into_iter()
         .map(|a| hash_address(&a, &index_id))
@@ -81,6 +86,9 @@ pub(crate) async fn findex_guarded_write(
     trace!("user {user}: POST /indexes/{index_id}/guarded_write");
 
     check_permission(&user, &index_id, Permission::Write, &findex_server).await?;
+
+    // Parse index_id
+    let index_id = Uuid::parse_str(&index_id)?;
 
     let error_prefix: String =
         format!("Invalid {OPERATION_NAME} request by {user} on index {index_id}.");

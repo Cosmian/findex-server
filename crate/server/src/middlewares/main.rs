@@ -15,7 +15,7 @@ use futures::{
     future::{ok, Ready},
     Future,
 };
-use tracing::{debug, trace};
+use tracing::trace;
 
 use super::{manage_jwt_request, PeerCommonName};
 use crate::middlewares::jwt::JwtConfig;
@@ -73,7 +73,7 @@ where
         let service = self.service.clone();
 
         if req.extensions().contains::<PeerCommonName>() {
-            debug!(
+            trace!(
                 "Request extension PeerCommonName found! Certificate client authentication has \
                  already been done in success, no need to authenticate twice..."
             );

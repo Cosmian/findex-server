@@ -1,10 +1,11 @@
 use crate::error::{result::FResult, server::FindexServerError};
-use cosmian_findex::{Address, MemoryADT, MemoryError, RedisMemory, ADDRESS_LENGTH};
+use cosmian_findex::{Address, MemoryADT, MemoryError, RedisMemory};
+use cosmian_findex_structs::SERVER_ADDRESS_LENGTH;
 use redis::aio::ConnectionManager;
 use tokio::sync::Mutex;
 use tracing::info;
 pub(crate) struct Redis<const WORD_LENGTH: usize> {
-    pub(crate) memory: RedisMemory<Address<ADDRESS_LENGTH>, [u8; WORD_LENGTH]>,
+    pub(crate) memory: RedisMemory<Address<SERVER_ADDRESS_LENGTH>, [u8; WORD_LENGTH]>,
     pub(crate) manager: ConnectionManager,
     pub(crate) lock: Mutex<()>,
 }
@@ -34,13 +35,13 @@ impl<const WORD_LENGTH: usize> Redis<WORD_LENGTH> {
 }
 
 impl<const WORD_LENGTH: usize> MemoryADT for Redis<WORD_LENGTH> {
-    type Address = Address<ADDRESS_LENGTH>;
+    type Address = Address<SERVER_ADDRESS_LENGTH>;
     type Word = [u8; WORD_LENGTH];
     type Error = MemoryError;
 
     async fn batch_read(
         &self,
-        a: Vec<Address<ADDRESS_LENGTH>>,
+        a: Vec<Address<SERVER_ADDRESS_LENGTH>>,
     ) -> Result<Vec<Option<Self::Word>>, MemoryError> {
         self.memory.batch_read(a).await
     }
