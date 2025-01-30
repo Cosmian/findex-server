@@ -417,7 +417,11 @@ mod tests {
 
         let mut operations: HashMap<&str, Vec<(usize, u8, Uuid)>> = HashMap::new();
         let mut expected_state: HashMap<&str, Vec<HashMap<Uuid, Permission>>> = HashMap::new();
-
+        // Initialize empty vectors for each user
+        for user in users.iter() {
+            operations.insert(user.as_str(), Vec::new());
+            expected_state.insert(user.as_str(), Vec::new());
+        }
         for user in users.clone() {
             for i in 0..MAX_OPS {
                 let user_str = user.as_str();
@@ -453,10 +457,10 @@ mod tests {
 
         let mut handles = vec![];
         let dba = setup_test_db().await;
-        let dbe = Arc::new(dba);
+        let be = Arc::new(dba);
 
         for user in &users {
-            let db = Arc::clone(&dbe);
+            let db = Arc::clone(&be);
             let user = user.clone();
             let ops = operations[user.as_str()].clone();
             let expected_states = expected_state[user.as_str()].clone();
