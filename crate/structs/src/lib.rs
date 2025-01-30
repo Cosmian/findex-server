@@ -48,16 +48,17 @@
 
 mod encrypted_entries;
 mod error;
-mod findex_serialization;
-mod findex_structs;
+mod findex;
 mod permissions;
 mod uuids;
 
 use cosmian_findex::ADDRESS_LENGTH;
 pub use encrypted_entries::EncryptedEntries;
 pub use error::StructsError;
-pub use findex_serialization::{Addresses, Guard, OptionalWords, SerializationResult, Tasks};
-pub use findex_structs::{Keyword, KeywordToDataSetsMap, Keywords};
+pub use findex::{
+    Addresses, Guard, Keyword, KeywordToDataSetsMap, Keywords, OptionalWords, SearchResults,
+    SerializationResult, Tasks,
+};
 pub use permissions::{Permission, Permissions};
 pub use uuids::Uuids;
 

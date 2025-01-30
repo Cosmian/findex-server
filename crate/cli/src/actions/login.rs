@@ -3,8 +3,7 @@ use cosmian_findex_client::{reexport::cosmian_http_client::LoginState, FindexCli
 
 use crate::error::{result::CliResult, CliError};
 
-/// Login to the Identity Provider of the Findex server using the `OAuth2`
-/// authorization code flow.
+/// Login to the Identity Provider of the Findex server using the `OAuth2` authorization code flow.
 ///
 /// This command will open a browser window and ask you to login to the Identity
 /// Provider. Once you have logged in, the access token will be saved in the

@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{ops::Deref, path::PathBuf};
 
 use cosmian_findex::Value;
 use cosmian_findex_client::{FindexClientConfig, FindexRestClient};
@@ -22,10 +22,10 @@ use super::utils::SearchOptions;
 
 const SMALL_DATASET: &str = "../../test_data/datasets/smallpop.csv";
 const HUGE_DATASET: &str = "../../test_data/datasets/business-employment.csv";
-const TESTS_KEY: &str = "11223344556677889900AABBCCDDEEFF11223344556677889900AABBCCDDEEFF";
+const TESTS_SEED: &str = "11223344556677889900AABBCCDDEEFF11223344556677889900AABBCCDDEEFF";
 
 async fn insert_search_delete(
-    seed: String,
+    seed: &str,
     cli_conf_path: &str,
     index_id: &Uuid,
     search_options: SearchOptions,
@@ -42,16 +42,13 @@ async fn insert_search_delete(
     .await?;
 
     // make sure searching returns the expected results
-    let search_results = search(
-        TESTS_KEY.to_owned(),
-        *index_id,
-        search_options.clone(),
-        &mut rest_client,
-    )
-    .await?;
-    debug!("Search results (as a HashSet<Value>): {:?}", search_results);
+    let search_results = search(seed, *index_id, search_options.clone(), &mut rest_client).await?;
+    assert_eq!(
+        search_options.expected_results,
+        search_results.deref().clone()
+    );
 
-    assert_eq!(search_options.expected_results, search_results);
+    debug!("Search results: {}", search_results);
 
     delete(
         seed.clone(),
@@ -84,7 +81,7 @@ pub(crate) async fn test_findex_no_auth() -> CliResult<()> {
         },
     };
     insert_search_delete(
-        TESTS_KEY.to_owned(),
+        TESTS_SEED,
         &ctx.owner_client_conf_path,
         &Uuid::new_v4(),
         search_options,
@@ -116,7 +113,7 @@ pub(crate) async fn test_findex_no_auth_huge_dataset() -> CliResult<()> {
         },
     };
     insert_search_delete(
-        TESTS_KEY.to_owned(),
+        TESTS_SEED,
         &ctx.owner_client_conf_path,
         &Uuid::new_v4(),
         search_options,
@@ -147,7 +144,7 @@ pub(crate) async fn test_findex_cert_auth() -> CliResult<()> {
     trace!("index_id: {index_id}");
 
     insert_search_delete(
-        TESTS_KEY.to_owned(),
+        TESTS_SEED,
         &ctx.owner_client_conf_path,
         &index_id,
         search_options,
@@ -163,7 +160,6 @@ pub(crate) async fn test_findex_grant_and_revoke_permission() -> CliResult<()> {
     let ctx = start_default_test_findex_server_with_cert_auth().await;
     let owner_conf = FindexClientConfig::load(Some(PathBuf::from(&ctx.owner_client_conf_path)))?;
     let owner_rest_client = FindexRestClient::new(owner_conf)?;
-    let key = TESTS_KEY;
 
     let search_options = SearchOptions {
         dataset_path: SMALL_DATASET.into(),
@@ -184,13 +180,7 @@ pub(crate) async fn test_findex_grant_and_revoke_permission() -> CliResult<()> {
     let user_conf = FindexClientConfig::load(Some(PathBuf::from(&ctx.user_client_conf_path)))?;
     let mut user_rest_client = FindexRestClient::new(user_conf)?;
 
-    insert(
-        key.to_owned(),
-        index_id,
-        SMALL_DATASET,
-        &mut owner_rest_client,
-    )
-    .await?;
+    insert(TESTS_SEED, &index_id, SMALL_DATASET, &mut owner_rest_client).await?;
 
     // Grant read permission to the client
     grant_permission(
@@ -203,23 +193,23 @@ pub(crate) async fn test_findex_grant_and_revoke_permission() -> CliResult<()> {
 
     // User can read...
     let search_results = search(
-        key.to_owned(),
-        index_id,
-        search_options.clone(),
+        TESTS_SEED,
+        &index_id,
+        &search_options,
         &mut user_rest_client,
     )
     .await?;
-    assert_eq!(search_options.expected_results, search_results);
+    assert_eq!(
+        search_options.expected_results,
+        search_results.deref().clone()
+    );
 
     // ... but not write
-    assert!(insert(
-        key.to_owned(),
-        index_id,
-        SMALL_DATASET,
-        &mut user_rest_client
-    )
-    .await
-    .is_err());
+    assert!(
+        insert(TESTS_SEED, &index_id, SMALL_DATASET, &mut user_rest_client)
+            .await
+            .is_err()
+    );
 
     // Grant write permission
     grant_permission(
@@ -235,23 +225,19 @@ pub(crate) async fn test_findex_grant_and_revoke_permission() -> CliResult<()> {
 
     // User can read...
     let search_results = search(
-        key.to_owned(),
-        index_id,
-        search_options.clone(),
+        TESTS_SEED,
+        &index_id,
+        &search_options,
         &mut user_rest_client,
     )
     .await?;
-
-    assert_eq!(search_options.expected_results, search_results);
+    assert_eq!(
+        search_options.expected_results,
+        search_results.deref().clone()
+    );
 
     // ... and write
-    insert(
-        key.to_owned(),
-        index_id,
-        SMALL_DATASET,
-        &mut user_rest_client,
-    )
-    .await?;
+    insert(TESTS_SEED, &index_id, SMALL_DATASET, &mut user_rest_client).await?;
 
     // Try to escalade privileges from `read` to `admin`
     grant_permission(
@@ -271,9 +257,9 @@ pub(crate) async fn test_findex_grant_and_revoke_permission() -> CliResult<()> {
     .await?;
 
     let _search_results = search(
-        key.to_owned(),
-        index_id,
-        search_options,
+        TESTS_SEED,
+        &index_id,
+        &search_options,
         &mut user_rest_client,
     )
     .await
@@ -298,7 +284,7 @@ pub(crate) async fn test_findex_no_permission() -> CliResult<()> {
     };
 
     assert!(insert_search_delete(
-        TESTS_KEY.to_owned(),
+        TESTS_SEED,
         &ctx.user_client_conf_path,
         &Uuid::new_v4(),
         search_options

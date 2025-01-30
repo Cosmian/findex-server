@@ -6,6 +6,7 @@ use crate::{
     },
     InstantiatedFindex, WORD_LENGTH,
 };
+use base64::{engine::general_purpose, Engine};
 use cosmian_findex::{
     generic_decode, generic_encode, Address, Findex, MemoryADT, Secret, ADDRESS_LENGTH, KEY_LENGTH,
 };
@@ -147,15 +148,16 @@ impl MemoryADT for FindexRestClient {
             return Err(FindexClientError::RequestFailed(err));
         }
 
-        let words = OptionalWords::deserialize(&response.bytes().await?)?.into();
+        let words: OptionalWords<WORD_LENGTH> =
+            OptionalWords::deserialize(&response.bytes().await?)?.into();
 
         trace!(
-            "batch_read successful on server url {:?}. result: {:?}",
+            "batch_read successful on server url {}. result: {}",
             &server_url,
             words
         );
 
-        Ok(words)
+        Ok(words.into_inner())
     }
 
     async fn guarded_write(
@@ -212,9 +214,9 @@ impl MemoryADT for FindexRestClient {
         }?;
 
         trace!(
-            "guarded_write successful on server url {:?}. result_word: {:?}",
-            &server_url,
-            guard
+            "guarded_write successful on server url {}. guard: {}",
+            server_url,
+            guard.map_or("None".to_string(), |g| general_purpose::STANDARD.encode(g))
         );
 
         Ok(guard)

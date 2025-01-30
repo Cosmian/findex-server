@@ -7,6 +7,7 @@ use crate::{
 
 use cosmian_findex::Value;
 use cosmian_findex_client::FindexRestClient;
+use cosmian_findex_structs::SearchResults;
 use std::{collections::HashSet, path::PathBuf};
 use tracing::trace;
 use uuid::Uuid;
@@ -24,7 +25,7 @@ pub(crate) async fn insert(
     .insert(rest_client)
     .await?;
 
-    trace!("Indexing of {} completed : {:?}", dataset_path, res);
+    trace!("Indexing of {} completed : {}", dataset_path, res);
 
     Ok(())
 }
@@ -70,9 +71,9 @@ pub(crate) async fn search(
     .await?;
 
     trace!(
-        "Search of {} completed : {:?}",
+        "Search of {} completed : {}",
         search_options.dataset_path,
-        res
+        results
     );
 
     Ok(res)
