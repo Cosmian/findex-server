@@ -307,13 +307,50 @@ impl<const WORD_LENGTH: usize> Tasks<WORD_LENGTH> {
 #[cfg(test)]
 mod tests {
     use crate::findex_serialization::Guard;
+    use crate::WORD_LENGTH;
 
     use super::{Addresses, OptionalWords, Tasks};
-    use cosmian_findex::{Address, ADDRESS_LENGTH, WORD_LENGTH};
+    use cosmian_findex::{Address, ADDRESS_LENGTH};
     use rand::rngs::StdRng;
     use rand::{Rng, SeedableRng};
 
     const SEED: [u8; 32] = [1_u8; 32]; // arbitrary seed for the RNG
+
+    #[test]
+    fn test_empty_collections() {
+        // Test empty Addresses
+        let empty_addresses = Addresses(vec![]);
+        let serialized = empty_addresses
+            .serialize()
+            .expect("Empty Addresses serialization failed");
+        let deserialized =
+            Addresses::deserialize(&serialized).expect("Empty Addresses deserialization failed");
+        assert_eq!(
+            empty_addresses, deserialized,
+            "Empty Addresses do not match"
+        );
+
+        // Test empty OptionalWords
+        let empty_words: OptionalWords<{ WORD_LENGTH }> = OptionalWords(vec![]);
+        let serialized = empty_words
+            .serialize()
+            .expect("Empty OptionalWords serialization failed");
+        let deserialized = OptionalWords::deserialize(&serialized)
+            .expect("Empty OptionalWords deserialization failed");
+        assert_eq!(
+            empty_words, deserialized,
+            "Empty OptionalWords do not match"
+        );
+
+        // Test empty Tasks
+        let empty_tasks: Tasks<{ WORD_LENGTH }> = Tasks(vec![]);
+        let serialized = empty_tasks
+            .serialize()
+            .expect("Empty Tasks serialization failed");
+        let deserialized =
+            Tasks::deserialize(&serialized).expect("Empty Tasks deserialization failed");
+        assert_eq!(empty_tasks, deserialized, "Empty Tasks do not match");
+    }
 
     #[test]
     fn test_ser_deser_addresses() {

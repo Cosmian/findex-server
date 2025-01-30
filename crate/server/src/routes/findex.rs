@@ -19,7 +19,7 @@ use crate::{
     routes::{check_permission, error::ResponseBytes},
 };
 
-// todo(hatem): reduce cloning
+// TODO(hatem): reduce cloning
 
 #[allow(clippy::indexing_slicing)]
 fn prepend_index_id(
@@ -84,6 +84,7 @@ pub(crate) async fn findex_guarded_write(
     findex_server: Data<Arc<FindexServer>>,
 ) -> ResponseBytes {
     const OPERATION_NAME: &str = "guarded_write";
+    const INVALID_REQUEST: &str = "Invalid request.";
     let user = findex_server.get_user(&req);
 
     trace!("user {user}: POST /indexes/{index_id}/guarded_write");
@@ -103,15 +104,19 @@ pub(crate) async fn findex_guarded_write(
             0 => false,
             1 => true,
             invalid => {
-                return Err(FindexServerError::InvalidRequest(format!(
+                trace!(
                     "{error_prefix} Invalid discriminant flag. Expected 0 or 1, found {invalid}"
-                )))
+                );
+                return Err(FindexServerError::InvalidRequest(
+                    INVALID_REQUEST.to_owned(),
+                ));
             }
         }
     } else {
-        return Err(FindexServerError::InvalidRequest(format!(
-            "{error_prefix} Invalid discriminant flag. Expected 0 or 1, found None"
-        )));
+        trace!("{error_prefix} Invalid discriminant flag. Expected 0 or 1, found None");
+        return Err(FindexServerError::InvalidRequest(
+            INVALID_REQUEST.to_owned(),
+        ));
     };
 
     let guard_len = if flag {
@@ -122,19 +127,21 @@ pub(crate) async fn findex_guarded_write(
 
     let guard = bytes.get(..guard_len);
     if guard.is_none() {
-        return Err(FindexServerError::InvalidRequest(format!(
-            "{error_prefix} Could not parse guard.",
-        )));
+        trace!("{error_prefix} Could not parse guard.");
+        return Err(FindexServerError::InvalidRequest(
+            INVALID_REQUEST.to_owned(),
+        ));
     }
-    let tasks = bytes.get(guard_len..);
-    if tasks.is_none() {
-        return Err(FindexServerError::InvalidRequest(format!(
-            "{error_prefix} Could not parse tasks to be written.",
-        )));
-    }
-
     #[allow(clippy::unwrap_used)] // guard and tasks are checked to be Some just above
     let guard = Guard::deserialize(guard.unwrap())?;
+
+    let tasks = bytes.get(guard_len..);
+    if tasks.is_none() {
+        trace!("{error_prefix} Could not parse tasks to be written.");
+        return Err(FindexServerError::InvalidRequest(
+            INVALID_REQUEST.to_owned(),
+        ));
+    }
     #[allow(clippy::unwrap_used)] // same as above, already checked to be Some
     let tasks = Tasks::deserialize(tasks.unwrap())?;
 
