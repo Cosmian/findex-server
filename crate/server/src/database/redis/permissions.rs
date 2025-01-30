@@ -207,7 +207,7 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
 #[allow(clippy::unwrap_used, clippy::expect_used)]
 mod tests {
 
-    use std::sync::Arc;
+    use std::{env, sync::Arc};
 
     use super::*;
     use crate::database::redis::Redis;
@@ -216,7 +216,11 @@ mod tests {
     use uuid::Uuid;
 
     async fn setup_test_db() -> Redis<WORD_LENGTH> {
-        Redis::instantiate("redis://localhost:6379", true)
+        let url = env::var("REDIS_HOST").map_or_else(
+            |_| "redis://localhost:6379".to_owned(),
+            |var_env| format!("redis://{var_env}:6379"),
+        );
+        Redis::instantiate(url.as_str(), true)
             .await
             .expect("Test failed to instantiate Redis")
     }
