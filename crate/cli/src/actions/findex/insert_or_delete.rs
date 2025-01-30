@@ -2,15 +2,16 @@ use std::{
     collections::{HashMap, HashSet},
     fs::File,
     path::PathBuf,
+    sync::Arc,
 };
 
 use clap::Parser;
-use cosmian_findex::{Findex, IndexADT, Value};
+use cosmian_findex::{IndexADT, Value};
 use cosmian_findex_client::FindexRestClient;
-use cosmian_findex_structs::{Keyword, KeywordToDataSetsMap, WORD_LENGTH};
+use cosmian_findex_structs::{Keyword, KeywordToDataSetsMap};
 use tracing::{instrument, trace};
 
-use crate::error::result::CliResult;
+use crate::error::{result::CliResult, CliError};
 
 use super::parameters::FindexParameters;
 
@@ -59,32 +60,44 @@ impl InsertOrDeleteAction {
         Ok(KeywordToDataSetsMap(csv_in_memory))
     }
 
-    /// Insert or delete indexes
     async fn insert_or_delete(
         &self,
         rest_client: &FindexRestClient,
         is_insert: bool,
     ) -> CliResult<String> {
-        let bindings = self.to_indexed_value_keywords_map()?;
-        let findex: Findex<WORD_LENGTH, Value, String, FindexRestClient> =
         // cloning will be eliminated in the future, cf https://github.com/Cosmian/findex-server/issues/28
-            rest_client.clone().instantiate_findex(
-                &self.findex_parameters.index_id,
-                &self.findex_parameters.seed()?,
-            )?;
-        for (key, value) in bindings.iter() {
-            if is_insert {
-                trace!("Attempt to insert ...");
-                findex.insert(key, value.clone()).await
-            } else {
-                findex.delete(key, value.clone()).await
-            }?;
-        }
-        let written_keywords = bindings.keys().collect::<Vec<_>>();
-        let operation_name = if is_insert { "Indexing" } else { "Deleting" };
-        trace!("{} done: keywords: {:?}", operation_name, written_keywords);
+        let findex = Arc::new(rest_client.clone().instantiate_findex(
+            self.findex_parameters.index_id,
+            &self.findex_parameters.seed()?,
+        )?);
 
-        let output = format!("Indexing done: keywords: {written_keywords:?}",);
+        let bindings = self.to_indexed_value_keywords_map()?;
+
+        let written_keywords = format!(
+            "Indexing done: keywords: {:?}",
+            bindings.keys().collect::<Vec<_>>()
+        );
+        let operation_name = if is_insert { "Indexing" } else { "Deleting" };
+        let output = format!("Indexing done: keywords: {written_keywords:?}");
+
+        let handles = bindings
+            .0
+            .into_iter()
+            .map(|(kw, vs)| {
+                let findex = findex.clone();
+                if is_insert {
+                    tokio::spawn(async move { findex.insert(kw, vs).await })
+                } else {
+                    tokio::spawn(async move { findex.delete(kw, vs).await })
+                }
+            })
+            .collect::<Vec<_>>();
+
+        for h in handles {
+            h.await.map_err(|e| CliError::Default(e.to_string()))??;
+        }
+
+        trace!("{} done: keywords: {:?}", operation_name, written_keywords);
 
         Ok(output)
     }
