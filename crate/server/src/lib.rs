@@ -60,6 +60,6 @@ pub mod findex_server;
 pub mod middlewares;
 pub mod routes;
 
-#[allow(clippy::panic, clippy::unwrap_used, clippy::expect_used, unsafe_code)]
+#[allow(clippy::panic, clippy::unwrap_used, clippy::expect_used)]
 #[cfg(test)]
 mod tests;

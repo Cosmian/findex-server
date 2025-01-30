@@ -135,7 +135,6 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
         Ok(permission.clone())
     }
 
-    #[allow(dependency_on_unit_never_type_fallback)]
     async fn grant_permission(
         &self,
         user_id: &str,
@@ -157,7 +156,8 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
         };
 
         let mut pipe = pipe();
-        pipe.atomic()
+        let () = pipe
+            .atomic()
             .set(&redis_key, permissions.serialize()?.as_slice())
             .query_async(&mut self.manager.clone())
             .await

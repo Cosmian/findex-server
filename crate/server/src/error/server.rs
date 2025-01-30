@@ -117,7 +117,7 @@ macro_rules! findex_server_bail {
     };
 }
 
-#[allow(clippy::expect_used)]
+#[allow(clippy::expect_used)] // ok in tests
 #[cfg(test)]
 mod tests {
     use super::FindexServerError;
