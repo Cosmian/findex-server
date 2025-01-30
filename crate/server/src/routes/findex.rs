@@ -6,9 +6,12 @@ use actix_web::{
     HttpRequest, HttpResponse,
 };
 use cosmian_findex::{Address, MemoryADT, ADDRESS_LENGTH};
-use cosmian_findex_structs::{Addresses, Guard, OptionalWords, Permission, Tasks, WORD_LENGTH};
-use openssl::sha::Sha256;
-use tracing::{info, trace};
+use cosmian_findex_structs::{
+    Addresses, Guard, OptionalWords, Permission, Tasks, SERVER_ADDRESS_LENGTH, UID_LENGTH,
+    WORD_LENGTH,
+};
+use tracing::trace;
+use uuid::Uuid;
 
 use crate::{
     core::FindexServer,
@@ -18,14 +21,15 @@ use crate::{
 
 // todo(hatem): reduce cloning
 
-fn hash_address(a: Address<ADDRESS_LENGTH>, index_id: &str) -> Address<ADDRESS_LENGTH> {
-    let mut hasher = Sha256::default();
-    hasher.update(&*a);
-    hasher.update(index_id.as_bytes());
-    let bytes = hasher.finish();
-    let mut a = Address::default();
-    a.copy_from_slice(&bytes[..ADDRESS_LENGTH]);
-    a
+#[allow(clippy::indexing_slicing)]
+fn prepend_index_id(
+    address: &Address<ADDRESS_LENGTH>,
+    index_id: &Uuid,
+) -> Address<SERVER_ADDRESS_LENGTH> {
+    let mut server_address = Address::<{ SERVER_ADDRESS_LENGTH }>::default();
+    server_address[..UID_LENGTH].copy_from_slice(index_id.as_bytes());
+    server_address[UID_LENGTH..].copy_from_slice(&**address);
+    server_address
 }
 
 #[post("/indexes/{index_id}/batch_read")]
@@ -40,11 +44,16 @@ pub(crate) async fn findex_batch_read(
 
     check_permission(&user, &index_id, Permission::Read, &findex_server).await?;
 
+    // Parse index_id
+    let index_id = Uuid::parse_str(&index_id)?;
+
     let bytes_slice = bytes.as_ref();
-    let addresses = Addresses::deserialize(bytes_slice)?
+    let addresses = Addresses::deserialize(bytes_slice)?;
+
+    let addresses = addresses
         .into_inner()
         .into_iter()
-        .map(|a| hash_address(a, &index_id))
+        .map(|a| prepend_index_id(&a, &index_id))
         .collect::<Vec<_>>();
 
     trace!("batch_read: number of addresses {}:", addresses.len());
@@ -80,6 +89,9 @@ pub(crate) async fn findex_guarded_write(
     trace!("user {user}: POST /indexes/{index_id}/guarded_write");
 
     check_permission(&user, &index_id, Permission::Write, &findex_server).await?;
+
+    // Parse index_id
+    let index_id = Uuid::parse_str(&index_id)?;
 
     let error_prefix: String =
         format!("Invalid {OPERATION_NAME} request by {user} on index {index_id}.");
@@ -130,12 +142,12 @@ pub(crate) async fn findex_guarded_write(
     let bindings = tasks
         .into_inner()
         .into_iter()
-        .map(|(a, w)| (hash_address(a, &index_id), w))
+        .map(|(a, w)| (prepend_index_id(&a, &index_id), w))
         .collect::<Vec<_>>();
 
     let result_word = findex_server
         .db
-        .guarded_write((hash_address(a_g, &index_id), w_g), bindings)
+        .guarded_write((prepend_index_id(&a_g, &index_id), w_g), bindings)
         .await?;
 
     let response_bytes = Bytes::from(OptionalWords::new(vec![result_word]).serialize()?);
