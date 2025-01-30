@@ -39,7 +39,7 @@ fn redis_db_config(port: u16) -> DBConfig {
     let url = if let Ok(var_env) = env::var("REDIS_HOST") {
         format!("redis://{var_env}:{port}")
     } else {
-        format!("redis://localhost:{port}")
+        format!("redis://0.0.0.0:{port}")
     };
     trace!("TESTS: using redis on {url}");
     DBConfig {
