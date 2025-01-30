@@ -39,7 +39,6 @@ pub(crate) async fn create_index_id(
     let user = findex_server.get_user(&req);
     trace!("user {user}: POST /permission/create");
 
-    // Check if the user has the right to grant permission: only admins can do that
     let index_id = findex_server.db.create_index_id(&user).await?;
 
     Ok(Json(SuccessResponse {
@@ -96,6 +95,7 @@ pub(crate) async fn list_permission(
 ) -> ResponseBytes {
     let request_user = findex_server.get_user(&req);
     let requested_user_id = params.into_inner();
+
     trace!("user {request_user}: POST /permission/list/{requested_user_id}");
 
     let request_user_permissions = findex_server.db.get_permissions(&request_user).await?;
@@ -119,10 +119,12 @@ pub(crate) async fn revoke_permission(
 ) -> FResult<Json<SuccessResponse>> {
     let user = findex_server.get_user(&req);
     let (user_id, index_id) = params.into_inner();
+
     trace!("user {user}: POST /permission/revoke/{user_id}/{index_id}");
 
     // Check if the user has the right to revoke permission: only admins can do that
     let user_permission = findex_server.get_permission(&user, &index_id).await?;
+
     if Permission::Admin != user_permission {
         return Err(FindexServerError::Unauthorized(format!(
             "Revoking permission to an index requires an admin permission. User {user} with \
@@ -130,7 +132,6 @@ pub(crate) async fn revoke_permission(
         )));
     }
 
-    // Parse index_id
     let index_id = Uuid::parse_str(&index_id)?;
 
     findex_server

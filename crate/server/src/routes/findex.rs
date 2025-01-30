@@ -6,6 +6,7 @@ use actix_web::{
     HttpRequest, HttpResponse,
 };
 use cosmian_findex::{Address, MemoryADT, ADDRESS_LENGTH};
+
 use cosmian_findex_structs::{
     Addresses, Guard, OptionalWords, Permission, Tasks, SERVER_ADDRESS_LENGTH, UID_LENGTH,
     WORD_LENGTH,

@@ -119,7 +119,7 @@ pub async fn start_test_server_with_options(
     authentication_options: AuthenticationOptions,
 ) -> Result<TestsContext, FindexClientError> {
     cosmian_logger::log_init(None);
-    let server_params = generate_server_params(db_config.clone(), port, &authentication_options)?;
+    let server_params = generate_server_params(db_config, port, &authentication_options)?;
 
     // Create a (object owner) conf
     let (owner_client_conf_path, owner_client_conf) = generate_owner_conf(&server_params)?;
@@ -176,32 +176,23 @@ fn start_test_findex_server(
 async fn wait_for_server_to_start(
     findex_client: &FindexRestClient,
 ) -> Result<(), FindexClientError> {
-    // Depending on the running environment, the server could take a bit of time to
-    // start We try to query it with a dummy request until be sure it is
-    // started.
-    let mut retry = true;
-    let mut timeout = 5;
-    let mut waiting = 1;
-    while retry {
+    // Depending on the running environment, the server could take a bit of time
+    // to start. We try to querying it with a dummy request until it is started.
+    for i in 1..=5 {
         info!("...checking if the server is up...");
-        let result = findex_client.version().await;
-        if result.is_err() {
-            timeout -= 1;
-            retry = timeout >= 0;
-            if retry {
-                info!("The server is not up yet, retrying in {waiting}s... ({result:?}) ",);
-                thread::sleep(Duration::from_secs(waiting));
-                waiting *= 2;
-            } else {
-                info!("The server is still not up, stop trying");
-                findex_client_bail!("Can't start the Findex server to run tests");
-            }
+        if let Err(err) = findex_client.version().await {
+            info!(
+                "The server is not up yet, retrying in {}s... ({err:?}) ",
+                2 * i
+            );
+            thread::sleep(Duration::from_secs(2 * i));
         } else {
             info!("UP!");
-            retry = false;
+            return Ok(());
         }
     }
-    Ok(())
+    info!("The server is still not up, stop trying");
+    findex_client_bail!("Can't start the Findex server to run tests");
 }
 
 fn generate_http_config(port: u16, use_https: bool, use_client_cert: bool) -> HttpConfig {

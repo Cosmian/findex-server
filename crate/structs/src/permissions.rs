@@ -70,7 +70,7 @@ const INDEX_ID_LENGTH: usize = 16;
 /// | Index ID (UUID) | Permission |
 /// |-----------------|------------|
 /// | 16 bytes        | 1 byte     |
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Default, PartialEq, Eq)]
 pub struct Permissions {
     pub permissions: HashMap<Uuid, Permission>,
 }

@@ -6,36 +6,27 @@ use crate::{
 use async_trait::async_trait;
 use cosmian_crypto_core::bytes_ser_de::Serializable;
 use cosmian_findex_structs::{Permission, Permissions, WORD_LENGTH};
-use redis::{
-    aio::ConnectionLike, cmd, pipe, AsyncCommands, FromRedisValue, Pipeline, RedisError,
-    ToRedisArgs,
-};
+use redis::{aio::ConnectionLike, cmd, pipe, AsyncCommands, Pipeline, RedisError, ToRedisArgs};
 use std::future::Future;
 use tracing::{debug, instrument, trace};
 use uuid::Uuid;
 
 async fn transaction_async<
-    C: ConnectionLike + Send + Clone,
-    K: ToRedisArgs + Send + Sync,
-    T: FromRedisValue + Send,
-    F: Fn(C, Pipeline) -> Fut + Send + Sync,
+    C: ConnectionLike + Clone,
+    K: ToRedisArgs,
+    T: Send,
+    F: Fn(C, Pipeline) -> Fut,
     Fut: Future<Output = Result<Option<T>, RedisError>> + Send,
 >(
-    mut connection: C,
-    keys: &[K],
-    func: F,
+    mut cnx: C,
+    guards: &[K],
+    transaction: F,
 ) -> Result<T, RedisError> {
     loop {
-        cmd("WATCH").arg(keys).exec_async(&mut connection).await?;
-
-        let mut p = pipe();
-        let response = func(connection.clone(), p.atomic().to_owned()).await?;
-
-        match response {
+        cmd("WATCH").arg(guards).exec_async(&mut cnx).await?;
+        match transaction(cnx.clone(), pipe().atomic().to_owned()).await? {
             None => continue,
             Some(response) => {
-                cmd("UNWATCH").exec_async(&mut connection).await?;
-
                 return Ok(response);
             }
         }
