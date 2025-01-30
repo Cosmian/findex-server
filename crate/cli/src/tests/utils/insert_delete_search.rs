@@ -13,41 +13,41 @@ use uuid::Uuid;
 
 pub(crate) async fn insert(
     seed: String,
-    index_id: &Uuid,
+    index_id: Uuid,
     dataset_path: &str,
     rest_client: &mut FindexRestClient,
 ) -> CliResult<()> {
-    let index_action = InsertOrDeleteAction {
-        findex_parameters: FindexParameters {
-            seed,
-            index_id: *index_id,
-        },
+    let res = InsertOrDeleteAction {
+        findex_parameters: FindexParameters { seed, index_id },
         csv: PathBuf::from(dataset_path),
-    };
-    let res = index_action.insert(rest_client).await?;
+    }
+    .insert(rest_client)
+    .await?;
+
     trace!("Indexing of {} completed : {:?}", dataset_path, res);
+
     Ok(())
 }
 
 pub(crate) async fn delete(
     seed: String,
-    index_id: &Uuid,
+    index_id: Uuid,
     dataset_path: &str,
     rest_client: &mut FindexRestClient,
 ) -> CliResult<()> {
     InsertOrDeleteAction {
-        findex_parameters: FindexParameters {
-            seed,
-            index_id: *index_id,
-        },
+        findex_parameters: FindexParameters { seed, index_id },
         csv: PathBuf::from(dataset_path),
     }
     .delete(rest_client)
     .await?;
+
     trace!("Deletion of {} completed", dataset_path);
+
     Ok(())
 }
 
+#[derive(Clone)]
 pub(crate) struct SearchOptions {
     /// The path to the CSV file containing the data to search in
     pub(crate) dataset_path: String,
@@ -58,23 +58,22 @@ pub(crate) struct SearchOptions {
 
 pub(crate) async fn search(
     seed: String,
-    index_id: &Uuid,
-    search_options: &SearchOptions,
+    index_id: Uuid,
+    search_options: SearchOptions,
     rest_client: &mut FindexRestClient,
 ) -> CliResult<HashSet<Value>> {
     let res = SearchAction {
-        findex_parameters: FindexParameters {
-            seed,
-            index_id: *index_id,
-        },
-        keyword: search_options.keywords.clone(),
+        findex_parameters: FindexParameters { seed, index_id },
+        keyword: search_options.keywords,
     }
     .run(rest_client)
     .await?;
+
     trace!(
         "Search of {} completed : {:?}",
         search_options.dataset_path,
         res
     );
+
     Ok(res)
 }
