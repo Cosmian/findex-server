@@ -202,3 +202,171 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+
+    use super::*;
+    use crate::database::redis::Redis;
+
+    use tokio;
+    use uuid::Uuid;
+
+    async fn setup_test_db() -> Redis<WORD_LENGTH> {
+        Redis::instantiate("redis://localhost:6379", true)
+            .await
+            .expect("Test failed to instantiate Redis")
+    }
+
+    #[tokio::test]
+    async fn test_create_index_id() {
+        let db = setup_test_db().await;
+        let user_id = "test_user";
+
+        // Create new index
+        let index_id = db
+            .create_index_id(user_id)
+            .await
+            .expect("Failed to create index");
+
+        println!("index_id: {:?}", index_id);
+
+        // Verify permissions were created
+        let permissions = db
+            .get_permissions(user_id)
+            .await
+            .expect("Failed to get permissions");
+
+        println!("permissions: {:?}", permissions);
+
+        assert!(permissions.get_permission(&index_id).is_some());
+        assert_eq!(
+            permissions.get_permission(&index_id).unwrap(),
+            &Permission::Admin
+        );
+    }
+
+    #[tokio::test]
+    async fn test_grant_and_revoke_permissions() {
+        let db = setup_test_db().await;
+        let user_id = "test_user_2";
+        let index_id = Uuid::new_v4();
+
+        // Grant Read permission
+        db.grant_permission(user_id, Permission::Read, &index_id)
+            .await
+            .expect("Failed to grant permission");
+
+        // Verify permission was granted
+        let permission = db
+            .get_permission(user_id, &index_id)
+            .await
+            .expect("Failed to get permission");
+        assert_eq!(permission, Permission::Read);
+
+        // Grant Read, then update to Admin
+        db.grant_permission(user_id, Permission::Admin, &index_id)
+            .await
+            .unwrap();
+
+        let permission = db.get_permission(user_id, &index_id).await.unwrap();
+        assert_eq!(permission, Permission::Admin);
+
+        // Revoke permission
+        db.revoke_permission(user_id, &index_id)
+            .await
+            .expect("Failed to revoke permission");
+
+        // Verify permission was revoked
+        let result = db.get_permission(user_id, &index_id).await;
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_revoque_permission() {
+        let db = setup_test_db().await;
+        let user_id_boss = "user_boss";
+        let user_id_subbordinate = "user_subbordinate";
+
+        // Create new index by BOSS
+        let (admin_index_id, write_index_id, read_index_id) = (
+            db.create_index_id(&user_id_boss)
+                .await
+                .expect("Failed to create index"),
+            db.create_index_id(&user_id_boss)
+                .await
+                .expect("Failed to create index"),
+            db.create_index_id(&user_id_boss)
+                .await
+                .expect("Failed to create index"),
+        );
+        let permission_kinds = [Permission::Admin, Permission::Write, Permission::Read];
+        for (index_id, permission_kind) in vec![admin_index_id, write_index_id, read_index_id]
+            .into_iter()
+            .zip(permission_kinds.into_iter())
+        {
+            // Grant permission
+            db.grant_permission(user_id_subbordinate, permission_kind.clone(), &index_id)
+                .await
+                .expect("Failed to grant permission {permission_kind}");
+
+            // Verify permission was granted
+            let permission = db
+                .get_permission(user_id_subbordinate, &index_id)
+                .await
+                .expect("Failed to get permission {permission_kind}");
+            assert_eq!(permission, permission_kind);
+
+            // Revoke permission
+            db.revoke_permission(user_id_subbordinate, &index_id)
+                .await
+                .expect("Failed to revoke permission {permission_kind}");
+
+            // Verify permission was revoked
+            let result = db.get_permission(user_id_subbordinate, &index_id).await;
+            assert!(result.is_err());
+        }
+
+        // Now, we create two indexes for the subbordinate, we revoke the permission for one of them and we check that the other one is still there
+        let (index_id1, index_id2) = (
+            db.create_index_id(&user_id_subbordinate)
+                .await
+                .expect("Failed to create index"),
+            db.create_index_id(&user_id_subbordinate)
+                .await
+                .expect("Failed to create index"),
+        );
+
+        // revoke permission for index_id1
+        db.revoke_permission(user_id_subbordinate, &index_id1)
+            .await
+            .expect("Failed to revoke permission");
+
+        // Verify permission of index_id2 is still there
+        let permission = db
+            .get_permission(user_id_subbordinate, &index_id2)
+            .await
+            .expect("Failed to get permission");
+        assert_eq!(permission, Permission::Admin);
+    }
+
+    #[tokio::test]
+    async fn test_nonexistent_user_and_permission() {
+        let db = setup_test_db().await;
+        let user_id = "nonexistent_user";
+        let index_id = Uuid::new_v4();
+
+        // Try to get permissions for nonexistent user
+        let result = db.get_permissions(user_id).await;
+        assert!(result.is_err());
+
+        // Try to get specific permission
+        let result = db.get_permission(user_id, &index_id).await;
+        assert!(result.is_err());
+
+        // Revoke a non existent permission, should not fail
+        db.revoke_permission("someone", &Uuid::new_v4())
+            .await
+            .unwrap();
+    }
+}
