@@ -208,11 +208,14 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
     clippy::unwrap_used,
     clippy::expect_used,
     clippy::match_same_arms,
-    clippy::option_if_let_else
+    clippy::option_if_let_else,
+    clippy::panic,
+    clippy::indexing_slicing,
+    clippy::get_unwrap
 )]
 mod tests {
 
-    use std::{env, sync::Arc};
+    use std::{collections::HashMap, env, sync::Arc};
 
     use super::*;
     use crate::config::{DBConfig, DatabaseType};
@@ -251,7 +254,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_create_index_id() {
+    async fn test_permissions_create_index_id() {
         let db = setup_test_db().await;
         let user_id = "test_user";
 
@@ -275,7 +278,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_grant_and_revoke_permissions() {
+    async fn test_permissions_grant_and_revoke_permissions() {
         let db = setup_test_db().await;
         let user_id = "test_user_2";
         let index_id = Uuid::new_v4();
@@ -312,7 +315,7 @@ mod tests {
 
     #[tokio::test]
     #[allow(clippy::unwrap_used, clippy::assertions_on_result_states)]
-    async fn test_revoke_permission() {
+    async fn test_permissions_revoke_permission() {
         let db = setup_test_db().await;
         let other_user_id = "another_user";
         let test_user_id = "main_user";
@@ -380,7 +383,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_nonexistent_user_and_permission() {
+    async fn test_permissions_nonexistent_user_and_permission() {
         let db = setup_test_db().await;
         let user_id = "nonexistent_user";
         let index_id = Uuid::new_v4();
@@ -399,50 +402,151 @@ mod tests {
             .unwrap();
     }
 
+    fn update_expected_results(
+        previous_state: HashMap<Uuid, Permission>,
+        operation: usize,
+        permission: u8,
+        index: Uuid,
+    ) -> HashMap<Uuid, Permission> {
+        let mut updated_state = previous_state.clone();
+        match operation {
+            0 => {
+                // create new index
+                updated_state.insert(index, Permission::Admin);
+            }
+            1 => {
+                // grant new permission
+                // won't panic because permission is either 0, 1 or 2
+                updated_state.insert(index, Permission::try_from(permission).unwrap());
+            }
+            2 => {
+                // revoke permission
+                updated_state.remove(&index);
+            }
+            _ => panic!("Invalid operation"),
+        }
+        updated_state
+    }
+
+    use rand::{thread_rng, Rng};
+    /// The testing strategy will be the following :
+    ///
+    /// Ininitialization:
+    /// - u random users are created where u is a random number between 1 and 100 (inclusive)
+    /// - (test will be documented later on)
     #[tokio::test]
-    async fn test_concurrent_permission_operations() {
-        /*
-           Only one user
-        */
-        let db_init = setup_test_db().await;
-        let db_arc = Arc::new(db_init);
-        let user_id = "concurrent_user";
-        let num_tasks = 10;
-        let mut handles = vec![];
+    async fn test_permissions_concurrent_grand_revoque_permissions() {
+        const MAX_USERS: usize = 1;
+        const MAX_INDEXES: usize = 100;
+        const MAX_OPS: usize = 20;
+        let mut rng = thread_rng();
 
-        for _ in 0..num_tasks {
-            let db = Arc::clone(&db_arc);
-            let user_id_clone = user_id.to_owned();
-            let handle = tokio::spawn(async move {
-                let index_id = db
-                    .create_index_id(&user_id_clone)
-                    .await
-                    .expect("Failed to create index");
+        let users: Vec<String> = (0..rng.gen_range(1..=MAX_USERS))
+            .map(|i| format!("user_{}", i))
+            .collect();
 
-                db.grant_permission(&user_id_clone, Permission::Read, &index_id)
-                    .await
-                    .expect("Failed to grant permission");
+        let indexes: Vec<Uuid> = (0..=MAX_INDEXES).map(|_| Uuid::new_v4()).collect();
 
-                let permission = db
-                    .get_permission(&user_id_clone, &index_id)
-                    .await
-                    .expect("Failed to get permission");
+        let mut operations: HashMap<&str, Vec<(usize, u8, Uuid)>> = HashMap::new();
+        let mut expected_state: HashMap<&str, Vec<HashMap<Uuid, Permission>>> = HashMap::new();
+        // Initialize empty vectors for each user
+        for user in users.iter() {
+            operations.insert(user.as_str(), Vec::new());
+            expected_state.insert(user.as_str(), Vec::new());
+        }
+        for user in users.clone() {
+            for i in 0..MAX_OPS {
+                let user_str = user.as_str();
+                let op = (
+                    rng.gen_range(0..=2), // 0: create new index, 1: grant new permission, 2: revoke permission
+                    rng.gen_range(0..=2), // If the operation is to grant a new permission, the permission is either Read 0, Write 1 or Admin 2
+                    indexes[rng.gen_range(0..indexes.len())], // Get UUID directly from indexes
+                );
 
-                assert_eq!(permission, Permission::Read);
+                // Append the operation to the user's vector
+                operations
+                    .get_mut(user_str)
+                    .expect("User should exist")
+                    .push(op);
 
-                db.revoke_permission(&user_id_clone, &index_id)
-                    .await
-                    .expect("Failed to revoke permission");
+                // Get the previous state
+                let previous_state: HashMap<Uuid, Permission> = if i == 0 {
+                    HashMap::new()
+                } else {
+                    expected_state.get(user_str).unwrap()[i - 1].clone()
+                };
 
-                let result = db.get_permission(&user_id_clone, &index_id).await;
+                // Update the expected state
+                let updated_state = update_expected_results(previous_state, op.0, op.1, op.2);
 
-                result.unwrap_err();
-            });
-            handles.push(handle);
+                // Append the updated state to the user's vector
+                expected_state
+                    .get_mut(user_str)
+                    .expect("User should exist")
+                    .push(updated_state);
+            }
         }
 
+        let mut handles = vec![];
+        let dba = setup_test_db().await;
+        let be = Arc::new(dba);
+
+        for user in &users {
+            let db = Arc::clone(&be);
+            let user = user.clone();
+            let ops = operations[user.as_str()].clone();
+            let expected_states = expected_state[user.as_str()].clone();
+            // let db = Arc::clone(&db);
+
+            handles.push(tokio::spawn(async move {
+                for (op_idx, op) in ops.iter().enumerate() {
+                    // Execute operation
+                    match op.0 {
+                        0 => {
+                            // Create index operation
+                            db.create_index_id(&user)
+                                .await
+                                .expect("Failed to create index");
+                        }
+                        1 => {
+                            // Grant permission
+                            let permission =
+                                Permission::try_from(op.1).expect("Invalid permission value");
+                            db.grant_permission(&user, permission, &op.2)
+                                .await
+                                .expect("Failed to grant permission");
+                        }
+                        2 => {
+                            // Revoke permission
+                            db.revoke_permission(&user, &op.2)
+                                .await
+                                .expect("Failed to revoke permission");
+                        }
+                        _ => panic!("Invalid operation type"),
+                    }
+
+                    // Validate permissions after operation
+                    let current_permissions = db
+                        .get_permissions(&user)
+                        .await
+                        .expect("Failed to get permissions");
+
+                    // Convert expected state to Permissions struct
+                    let expected_permissions = Permissions {
+                        permissions: expected_states[op_idx].clone(),
+                    };
+
+                    assert_eq!(
+                        current_permissions, expected_permissions,
+                        "Permissions mismatch for user {user} after operation {op_idx}",
+                    );
+                }
+            }));
+        }
+
+        // Wait for all tasks to complete
         for handle in handles {
-            handle.await.expect("Task panicked");
+            handle.await.unwrap();
         }
     }
 }
