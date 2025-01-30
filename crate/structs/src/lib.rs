@@ -53,6 +53,7 @@ mod findex_structs;
 mod permissions;
 mod uuids;
 
+use cosmian_findex::ADDRESS_LENGTH;
 pub use encrypted_entries::EncryptedEntries;
 pub use error::StructsError;
 pub use findex_serialization::{Addresses, Guard, OptionalWords, SerializationResult, Tasks};
@@ -60,4 +61,9 @@ pub use findex_structs::{Keyword, KeywordToDataSetsMap, Keywords};
 pub use permissions::{Permission, Permissions};
 pub use uuids::Uuids;
 
+// UID length
+pub const UID_LENGTH: usize = 16;
+
+// Findex specializations
 pub const WORD_LENGTH: usize = 200;
+pub const SERVER_ADDRESS_LENGTH: usize = ADDRESS_LENGTH + UID_LENGTH;
