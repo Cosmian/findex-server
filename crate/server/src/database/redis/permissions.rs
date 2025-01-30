@@ -6,7 +6,10 @@ use crate::{
 use async_trait::async_trait;
 use cosmian_crypto_core::bytes_ser_de::Serializable;
 use cosmian_findex_structs::{Permission, Permissions, WORD_LENGTH};
-use redis::{aio::ConnectionLike, cmd, pipe, AsyncCommands, Pipeline, RedisError, ToRedisArgs};
+use redis::{
+    aio::{ConnectionLike, ConnectionManager},
+    cmd, pipe, AsyncCommands, Pipeline, RedisError, ToRedisArgs,
+};
 use std::future::Future;
 use tracing::{debug, instrument, trace};
 use uuid::Uuid;

@@ -80,7 +80,7 @@ impl FindexRestClient {
     /// Return an error if the Findex cannot be instantiated.
     pub fn instantiate_findex(
         self,
-        index_id: &Uuid,
+        index_id: Uuid,
         seed: &Secret<KEY_LENGTH>,
     ) -> Result<InstantiatedFindex, FindexClientError> {
         trace!("Instantiating a Findex rest client");
