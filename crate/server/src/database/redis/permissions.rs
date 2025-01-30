@@ -204,6 +204,7 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::expect_used)]
 mod tests {
 
     use std::sync::Arc;
@@ -277,10 +278,11 @@ mod tests {
 
         // Verify permission was revoked
         let result = db.get_permission(user_id, &index_id).await;
-        assert!(result.is_err());
+        result.unwrap_err();
     }
 
     #[tokio::test]
+    #[allow(clippy::unwrap_used, clippy::assertions_on_result_states)]
     async fn test_revoque_permission() {
         let db = setup_test_db().await;
         let other_user_id = "another_user";
@@ -288,13 +290,13 @@ mod tests {
 
         // Create new index by another user
         let (admin_index_id, write_index_id, read_index_id) = (
-            db.create_index_id(&other_user_id)
+            db.create_index_id(other_user_id)
                 .await
                 .expect("Failed to create index"),
-            db.create_index_id(&other_user_id)
+            db.create_index_id(other_user_id)
                 .await
                 .expect("Failed to create index"),
-            db.create_index_id(&other_user_id)
+            db.create_index_id(other_user_id)
                 .await
                 .expect("Failed to create index"),
         );
@@ -322,15 +324,15 @@ mod tests {
 
             // Verify permission was revoked
             let result = db.get_permission(test_user_id, &index_id).await;
-            assert!(result.is_err());
+            result.unwrap_err();
         }
 
         // Now, we create two indexes for the test_user, we revoke the permission for one of them and we check that the other one is still there
         let (index_id1, index_id2) = (
-            db.create_index_id(&test_user_id)
+            db.create_index_id(test_user_id)
                 .await
                 .expect("Failed to create index"),
-            db.create_index_id(&test_user_id)
+            db.create_index_id(test_user_id)
                 .await
                 .expect("Failed to create index"),
         );
@@ -356,11 +358,11 @@ mod tests {
 
         // Try to get permissions for nonexistent user
         let result = db.get_permissions(user_id).await;
-        assert!(result.is_err());
+        result.unwrap_err();
 
         // Try to get specific permission
         let result = db.get_permission(user_id, &index_id).await;
-        assert!(result.is_err());
+        result.unwrap_err();
 
         // Revoke a non existent permission, should not fail
         db.revoke_permission("someone", &Uuid::new_v4())
@@ -381,7 +383,7 @@ mod tests {
 
         for _ in 0..num_tasks {
             let db = Arc::clone(&db_arc);
-            let user_id_clone = user_id.to_string();
+            let user_id_clone = user_id.to_owned();
             let handle = tokio::spawn(async move {
                 let index_id = db
                     .create_index_id(&user_id_clone)
@@ -405,7 +407,7 @@ mod tests {
 
                 let result = db.get_permission(&user_id_clone, &index_id).await;
 
-                assert!(result.is_err());
+                result.unwrap_err();
             });
             handles.push(handle);
         }
