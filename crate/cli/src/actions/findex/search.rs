@@ -28,7 +28,7 @@ impl SearchAction {
     pub async fn run(&self, rest_client: &mut FindexRestClient) -> CliResult<HashSet<Value>> {
         // cloning will be eliminated in the future, cf https://github.com/Cosmian/findex-server/issues/28
         let findex_instance = rest_client.clone().instantiate_findex(
-            &self.findex_parameters.index_id,
+            self.findex_parameters.index_id,
             &self.findex_parameters.seed()?,
         )?;
 

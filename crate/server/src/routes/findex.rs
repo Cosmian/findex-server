@@ -6,6 +6,7 @@ use actix_web::{
     HttpRequest, HttpResponse,
 };
 use cosmian_findex::{Address, MemoryADT, ADDRESS_LENGTH};
+
 use cosmian_findex_structs::{
     Addresses, Guard, OptionalWords, Permission, Tasks, SERVER_ADDRESS_LENGTH, UID_LENGTH,
     WORD_LENGTH,
@@ -40,17 +41,13 @@ pub(crate) async fn findex_batch_read(
     findex_server: Data<Arc<FindexServer>>,
 ) -> ResponseBytes {
     let user = findex_server.get_user(&req);
+
     trace!("user {user}: POST /indexes/{index_id}/batch_read");
 
     check_permission(&user, &index_id, Permission::Read, &findex_server).await?;
 
-    // Parse index_id
     let index_id = Uuid::parse_str(&index_id)?;
-
-    let bytes_slice = bytes.as_ref();
-    let addresses = Addresses::deserialize(bytes_slice)?;
-
-    let addresses = addresses
+    let addresses = Addresses::deserialize(&bytes)?
         .into_inner()
         .into_iter()
         .map(|a| prepend_index_id(&a, &index_id))
@@ -58,18 +55,15 @@ pub(crate) async fn findex_batch_read(
 
     trace!("batch_read: number of addresses {}:", addresses.len());
 
-    let result_words = OptionalWords::new(findex_server.db.batch_read(addresses).await?);
+    let words = findex_server.db.batch_read(addresses).await?;
+
     trace!(
         "batch_read successful. Number of non null words: {}.",
-        result_words
-            .clone()
-            .into_inner()
-            .iter()
-            .fold(0, |acc, x| acc + i32::from(x.is_some()))
+        words.iter().filter(|w| w.is_some()).count()
     );
 
     // Convert Vec<Option<[u8; WORD_LENGTH]>> to Vec<u8>
-    let response_bytes = Bytes::from(result_words.serialize()?);
+    let response_bytes = Bytes::from(OptionalWords::new(words).serialize()?);
 
     Ok(HttpResponse::Ok()
         .content_type("application/octet-stream")
@@ -90,21 +84,20 @@ pub(crate) async fn findex_guarded_write(
 
     check_permission(&user, &index_id, Permission::Write, &findex_server).await?;
 
-    // Parse index_id
     let index_id = Uuid::parse_str(&index_id)?;
 
     let error_prefix: String =
         format!("Invalid {OPERATION_NAME} request by {user} on index {index_id}.");
 
-    let discriminant_flag = bytes.get(ADDRESS_LENGTH); // 0 or 1. 0 means None, 1 means Some. Assumes the first ADDRESS_LENGTH bytes are the address
-
-    let flag = if let Some(f) = discriminant_flag {
+    // 0 or 1. 0 means None, 1 means Some. Assumes the first ADDRESS_LENGTH
+    // bytes are the address
+    let guard_len = if let Some(f) = bytes.get(ADDRESS_LENGTH) {
         match *f {
-            0 => false,
-            1 => true,
-            invalid => {
+            0 => ADDRESS_LENGTH + 1,
+            1 => ADDRESS_LENGTH + 1 + WORD_LENGTH,
+            _ => {
                 return Err(FindexServerError::InvalidRequest(format!(
-                    "{error_prefix} Invalid discriminant flag. Expected 0 or 1, found {invalid}"
+                    "{error_prefix} Invalid discriminant flag. Expected 0 or 1, found {f}"
                 )))
             }
         }
@@ -114,29 +107,15 @@ pub(crate) async fn findex_guarded_write(
         )));
     };
 
-    let guard_len = if flag {
-        ADDRESS_LENGTH + 1 + WORD_LENGTH
-    } else {
-        ADDRESS_LENGTH + 1
-    };
+    let guard = Guard::deserialize(bytes.get(..guard_len).ok_or_else(|| {
+        FindexServerError::InvalidRequest(format!("{error_prefix} Could not parse guard."))
+    })?)?;
 
-    let guard = bytes.get(..guard_len);
-    if guard.is_none() {
-        return Err(FindexServerError::InvalidRequest(format!(
-            "{error_prefix} Could not parse guard.",
-        )));
-    }
-    let tasks = bytes.get(guard_len..);
-    if tasks.is_none() {
-        return Err(FindexServerError::InvalidRequest(format!(
+    let tasks = Tasks::deserialize(bytes.get(guard_len..).ok_or_else(|| {
+        FindexServerError::InvalidRequest(format!(
             "{error_prefix} Could not parse tasks to be written.",
-        )));
-    }
-
-    #[allow(clippy::unwrap_used)] // guard and tasks are checked to be Some just above
-    let guard = Guard::deserialize(guard.unwrap())?;
-    #[allow(clippy::unwrap_used)] // same as above, already checked to be Some
-    let tasks = Tasks::deserialize(tasks.unwrap())?;
+        ))
+    })?)?;
 
     let (a_g, w_g) = guard.into_inner();
     let bindings = tasks

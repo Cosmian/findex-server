@@ -7,8 +7,7 @@ use crate::{
     InstantiatedFindex, WORD_LENGTH,
 };
 use cosmian_findex::{
-    generic_decode, generic_encode, Address, Findex, MemoryADT, Secret, Value, ADDRESS_LENGTH,
-    KEY_LENGTH,
+    generic_decode, generic_encode, Address, Findex, MemoryADT, Secret, ADDRESS_LENGTH, KEY_LENGTH,
 };
 use cosmian_findex_structs::{Addresses, Guard, OptionalWords, Tasks};
 use cosmian_http_client::HttpClient;
@@ -35,6 +34,7 @@ impl Display for SuccessResponse {
 pub struct FindexRestClient {
     pub http_client: HttpClient,
     pub config: FindexClientConfig,
+    // TODO: why is it an option?
     index_id: Option<Uuid>,
 }
 
@@ -61,31 +61,34 @@ impl FindexRestClient {
             index_id: None,
         })
     }
-    /// Instantiate a Findex REST client with a specific index. See below. Not a public function.
-    fn new_memory(self, index_id: Uuid) -> Self {
+
+    /// Instantiate a Findex REST client with a specific index.
+    fn new_with_index_id(self, index_id: Uuid) -> Self {
         Self {
             http_client: self.http_client,
             config: self.config,
             index_id: Some(index_id),
         }
     }
-    /// Instantiate a Findex REST client with a specific index.
-    /// In the cli crate, first instantiate a base `FindexRestClient` and that will be used to instantiate a findex instance with a specific index
-    /// each time a call for Findex is needed
+
+    /// Instantiate a Findex REST client with a specific index. In the CLI
+    /// crate, first instantiate a base `FindexRestClient` and that will be used
+    /// to instantiate a findex instance with a specific index each time a call
+    /// for Findex is needed
     ///
     /// # Errors
     /// Return an error if the Findex cannot be instantiated.
     pub fn instantiate_findex(
         self,
-        index_id: &Uuid,
+        index_id: Uuid,
         seed: &Secret<KEY_LENGTH>,
     ) -> Result<InstantiatedFindex, FindexClientError> {
         trace!("Instantiating a Findex rest client");
         Ok(Findex::new(
             seed,
-            self.new_memory(*index_id),
-            generic_encode::<WORD_LENGTH, Value>,
-            generic_decode::<WORD_LENGTH, _, Value>,
+            self.new_with_index_id(index_id),
+            generic_encode,
+            generic_decode,
         ))
     }
 
@@ -116,43 +119,43 @@ impl MemoryADT for FindexRestClient {
         &self,
         addresses: Vec<Self::Address>,
     ) -> Result<Vec<Option<[u8; WORD_LENGTH]>>, FindexClientError> {
-        let index_id = self.index_id.ok_or_else(|| {
-            FindexClientError::Default(
-                "This function should never be called while from base instance".to_owned(),
-            )
-        })?;
+        let index_id = self
+            .index_id
+            .ok_or_else(|| FindexClientError::Default("index ID is missing".to_owned()))?;
+
         let endpoint = format!("/indexes/{index_id}/batch_read");
         let server_url = format!("{}{}", self.http_client.server_url, endpoint);
+
         trace!(
             "Initiating batch_read of {} addresses for index {} at server_url: {}",
             addresses.len(),
             index_id,
             server_url
         );
-        let request_bytes = Addresses::new(addresses).serialize()?;
 
         let response = self
             .http_client
             .client
             .post(&server_url)
-            .body(request_bytes)
+            .body(Addresses::new(addresses).serialize()?)
             .send()
             .await?;
-        if !(response.status().is_success()) {
-            // exit on error
+
+        if !response.status().is_success() {
             warn!("batch_read failed on server url {:?}.", server_url);
-            let p = handle_error(&endpoint, response).await?;
-            return Err(FindexClientError::RequestFailed(p));
+            let err = handle_error(&endpoint, response).await?;
+            return Err(FindexClientError::RequestFailed(err));
         }
-        // request successful, decode the response using same encoding protocol defined in crate/server/src/routes/findex.rs
-        let bytes = response.bytes().await?.to_vec();
-        let result = OptionalWords::<WORD_LENGTH>::deserialize(&bytes)?;
+
+        let words = OptionalWords::deserialize(&response.bytes().await?)?.into();
+
         trace!(
             "batch_read successful on server url {:?}. result: {:?}",
             &server_url,
-            result
+            words
         );
-        Ok(result.into())
+
+        Ok(words)
     }
 
     async fn guarded_write(
@@ -160,13 +163,13 @@ impl MemoryADT for FindexRestClient {
         guard: (Self::Address, Option<Self::Word>),
         tasks: Vec<(Self::Address, Self::Word)>,
     ) -> Result<Option<[u8; WORD_LENGTH]>, FindexClientError> {
-        let index_id = self.index_id.ok_or_else(|| {
-            FindexClientError::Default(
-                "This function should never be called while from base instance".to_owned(),
-            )
-        })?;
+        let index_id = self
+            .index_id
+            .ok_or_else(|| FindexClientError::Default("index ID is missing".to_owned()))?;
+
         let endpoint = format!("/indexes/{index_id}/guarded_write");
         let server_url = format!("{}{}", self.http_client.server_url, &endpoint);
+
         trace!(
             "Initiating guarded_write of {} values for index {} at server_url: {}",
             tasks.len(),
@@ -174,14 +177,14 @@ impl MemoryADT for FindexRestClient {
             &server_url
         );
 
-        // code the request body
+        // BEGIN TODO: using `Serializable` avoids re-coding vector
+        // concatenation. Anyway, this should be abstracted away in a function.
         let guard_bytes = Guard::new(guard.0, guard.1).serialize()?;
         let task_bytes = Tasks::new(tasks).serialize()?;
-
-        // Merge the two vectors into one
         let mut request_bytes = Vec::with_capacity(guard_bytes.len() + task_bytes.len());
         request_bytes.extend_from_slice(&guard_bytes);
         request_bytes.extend_from_slice(&task_bytes);
+        // END TODO
 
         let response = self
             .http_client
@@ -191,33 +194,30 @@ impl MemoryADT for FindexRestClient {
             .send()
             .await?;
 
-        if !(response.status().is_success()) {
-            // request failed, exit on error
+        if !response.status().is_success() {
             warn!("guarded_write failed on server url {}.", server_url);
-            let p = handle_error(&endpoint, response).await?;
-            return Err(FindexClientError::RequestFailed(p));
+            let err = handle_error(&endpoint, response).await?;
+            return Err(FindexClientError::RequestFailed(err));
         }
-        // request successful, decode the response using same encoding protocol defined in crate/server/src/routes/findex.rs
-        let bytes = response.bytes().await?;
-        let result_word: Vec<Option<[u8; WORD_LENGTH]>> =
-            OptionalWords::<WORD_LENGTH>::deserialize(&bytes)?.into();
-        if result_word.len() != 1 {
-            return Err(FindexClientError::RequestFailed(format!(
-                "Unexpected response from server. Expected 1 word, got {}",
-                result_word.len()
-            )));
-        }
+
+        let guard = {
+            let bytes = response.bytes().await?;
+            let words: Vec<_> = OptionalWords::deserialize(&bytes)?.into();
+            words.first().copied().ok_or_else(|| {
+                FindexClientError::RequestFailed(format!(
+                    "Unexpected response from server. Expected 1 word, got {}",
+                    words.len()
+                ))
+            })
+        }?;
+
         trace!(
             "guarded_write successful on server url {:?}. result_word: {:?}",
             &server_url,
-            result_word
+            guard
         );
-        let result_word = result_word
-            .into_iter()
-            .next()
-            .ok_or_else(|| FindexClientError::Default("Expected 1 word, got none".to_owned()))?;
-        // we are sure that the length is 1, escaping this lint causes enormous boilerplate that is not necessary
-        Ok(result_word)
+
+        Ok(guard)
     }
 }
 

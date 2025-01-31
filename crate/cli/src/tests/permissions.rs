@@ -21,12 +21,12 @@ pub(crate) async fn list_permission(
 pub(crate) async fn grant_permission(
     rest_client: &FindexRestClient,
     user: String,
-    index_id: &Uuid,
+    index_id: Uuid,
     permission: Permission,
 ) -> CliResult<String> {
     GrantPermission {
         user,
-        index_id: *index_id,
+        index_id,
         permission,
     }
     .run(rest_client)
@@ -36,12 +36,7 @@ pub(crate) async fn grant_permission(
 pub(crate) async fn revoke_permission(
     rest_client: &FindexRestClient,
     user: String,
-    index_id: &Uuid,
+    index_id: Uuid,
 ) -> CliResult<String> {
-    RevokePermission {
-        user,
-        index_id: *index_id,
-    }
-    .run(rest_client)
-    .await
+    RevokePermission { user, index_id }.run(rest_client).await
 }
