@@ -48,7 +48,7 @@ pub(crate) trait FindexMemoryTrait:
     //
 }
 
-#[allow(dead_code)] // code is actually used
+#[allow(dead_code)] // false positive, used in crate/server/src/database/redis/mod.rs
 #[async_trait]
 pub(crate) trait DatabaseTraits:
     PermissionsTrait + DatasetsTrait + FindexMemoryTrait
