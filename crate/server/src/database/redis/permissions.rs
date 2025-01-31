@@ -249,7 +249,8 @@ mod tests {
     #[tokio::test]
     async fn test_permissions_create_index_id() {
         let db = setup_test_db().await;
-        let user_id = "test_user";
+        let binding = Uuid::new_v4().to_string(); // we need a long lived string to be used as a &str
+        let user_id = binding.as_str();
 
         // Create new index
         let index_id = db
@@ -273,6 +274,7 @@ mod tests {
     #[tokio::test]
     async fn test_permissions_grant_and_revoke_permissions() {
         let db = setup_test_db().await;
+
         let user_id = "test_user_2";
         let index_id = Uuid::new_v4();
 
@@ -310,8 +312,9 @@ mod tests {
     #[allow(clippy::unwrap_used, clippy::assertions_on_result_states)]
     async fn test_permissions_revoke_permission() {
         let db = setup_test_db().await;
-        let other_user_id = "another_user";
-        let test_user_id = "main_user";
+        let (binding1, binding2) = (Uuid::new_v4().to_string(), Uuid::new_v4().to_string()); // we need a long lived string to be used as a &str
+        let other_user_id = binding1.as_str();
+        let test_user_id = binding2.as_str();
 
         // Create new index by another user
         let (admin_index_id, write_index_id, read_index_id) = (
@@ -378,19 +381,20 @@ mod tests {
     #[tokio::test]
     async fn test_permissions_nonexistent_user_and_permission() {
         let db = setup_test_db().await;
-        let user_id = "nonexistent_user";
+        let binding = Uuid::new_v4().to_string(); // we need a long lived string to be used as a &str
+        let new_random_user = binding.as_str();
         let index_id = Uuid::new_v4();
 
         // Try to get permissions for nonexistent user
-        let result = db.get_permissions(user_id).await;
+        let result = db.get_permissions(new_random_user).await;
         assert!(result.unwrap().permissions.is_empty());
 
         // Try to get specific permission
-        let result = db.get_permission(user_id, &index_id).await;
+        let result = db.get_permission(new_random_user, &index_id).await;
         result.unwrap_err();
 
         // Revoke a non existent permission, should not fail
-        db.revoke_permission("someone", &Uuid::new_v4())
+        db.revoke_permission(new_random_user, &Uuid::new_v4())
             .await
             .unwrap();
     }
