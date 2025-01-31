@@ -446,8 +446,8 @@ mod tests {
     ///   - Any mismatch fails the test
     #[tokio::test]
     async fn test_permissions_concurrent_grand_revoke_permissions() {
-        const MAX_USERS: usize = 1;
-        const MAX_OPS: usize = 20;
+        const MAX_USERS: usize = 100;
+        const MAX_OPS: usize = 100;
         let mut rng = thread_rng();
 
         let users: Vec<String> = (0..rng.gen_range(1..=MAX_USERS))
@@ -529,7 +529,6 @@ mod tests {
                             db.grant_permission(&user, Permission::Admin, &op.2)
                                 .await
                                 .expect("Failed to grant permission");
-                            println!("Created new index {0} for user {user}", op.2);
                         }
                         1 => {
                             // Grant permission
@@ -538,18 +537,12 @@ mod tests {
                             db.grant_permission(&user, permission.clone(), &op.2)
                                 .await
                                 .expect("Failed to grant permission");
-                            print!(
-                                "Granted permission {0} for index {1} to user {user}",
-                                permission.clone(),
-                                op.2
-                            );
                         }
                         2 => {
                             // Revoke permission
                             db.revoke_permission(&user, &op.2)
                                 .await
                                 .expect("Failed to revoke permission");
-                            println!("Revoked permission for index {0} from user {user}", op.2);
                         }
                         _ => panic!("Invalid operation type"),
                     }
