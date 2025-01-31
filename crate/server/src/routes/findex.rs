@@ -20,7 +20,7 @@ use crate::{
     routes::{check_permission, error::ResponseBytes},
 };
 
-// todo(hatem): reduce cloning
+// TODO(hatem): reduce cloning
 
 #[allow(clippy::indexing_slicing)]
 fn prepend_index_id(
@@ -78,6 +78,7 @@ pub(crate) async fn findex_guarded_write(
     findex_server: Data<Arc<FindexServer>>,
 ) -> ResponseBytes {
     const OPERATION_NAME: &str = "guarded_write";
+    const INVALID_REQUEST: &str = "Invalid request.";
     let user = findex_server.get_user(&req);
 
     trace!("user {user}: POST /indexes/{index_id}/guarded_write");
@@ -101,9 +102,10 @@ pub(crate) async fn findex_guarded_write(
             }
         }
     } else {
-        return Err(FindexServerError::InvalidRequest(format!(
-            "{error_prefix} Invalid discriminant flag. Expected 0 or 1, found None"
-        )));
+        trace!("{error_prefix} Invalid discriminant flag. Expected 0 or 1, found None");
+        return Err(FindexServerError::InvalidRequest(
+            INVALID_REQUEST.to_owned(),
+        ));
     };
 
     let guard = Guard::deserialize(bytes.get(..guard_len).ok_or_else(|| {

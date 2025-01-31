@@ -127,7 +127,6 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
         Ok(permission.clone())
     }
 
-    #[allow(dependency_on_unit_never_type_fallback)]
     async fn grant_permission(
         &self,
         user_id: &str,
@@ -149,7 +148,8 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
         };
 
         let mut pipe = pipe();
-        pipe.atomic()
+        let () = pipe
+            .atomic()
             .set(&redis_key, permissions.serialize()?.as_slice())
             .query_async(&mut self.manager.clone())
             .await
@@ -192,5 +192,247 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
         };
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+#[allow(
+    clippy::unwrap_used,
+    clippy::expect_used,
+    clippy::match_same_arms,
+    clippy::option_if_let_else
+)]
+mod tests {
+
+    use std::{env, sync::Arc};
+
+    use super::*;
+    use crate::config::{DBConfig, DatabaseType};
+
+    use tokio;
+    use uuid::Uuid;
+
+    fn redis_db_config() -> DBConfig {
+        let url = if let Ok(var_env) = env::var("REDIS_HOST") {
+            format!("redis://{var_env}:6379")
+        } else {
+            "redis://localhost:6379".to_owned()
+        };
+        trace!("TESTS: using redis on {url}");
+        DBConfig {
+            database_type: DatabaseType::Redis,
+            clear_database: false,
+            database_url: url,
+        }
+    }
+
+    fn get_db_config() -> DBConfig {
+        env::var_os("FINDEX_TEST_DB").map_or_else(redis_db_config, |v| {
+            match v.to_str().unwrap_or("") {
+                "redis" => redis_db_config(),
+                _ => redis_db_config(),
+            }
+        })
+    }
+
+    async fn setup_test_db() -> Redis<WORD_LENGTH> {
+        let url = get_db_config().database_url;
+        Redis::instantiate(url.as_str(), false)
+            .await
+            .expect("Test failed to instantiate Redis")
+    }
+
+    #[tokio::test]
+    async fn test_permissions_create_index_id() {
+        let db = setup_test_db().await;
+        let user_id = "test_user";
+
+        // Create new index
+        let index_id = db
+            .create_index_id(user_id)
+            .await
+            .expect("Failed to create index");
+
+        // Verify permissions were created
+        let permissions = db
+            .get_permissions(user_id)
+            .await
+            .expect("Failed to get permissions");
+
+        assert!(permissions.get_permission(&index_id).is_some());
+        assert_eq!(
+            permissions.get_permission(&index_id).unwrap(),
+            &Permission::Admin
+        );
+    }
+
+    #[tokio::test]
+    async fn test_permissions_grant_and_revoke_permissions() {
+        let db = setup_test_db().await;
+        let user_id = "test_user_2";
+        let index_id = Uuid::new_v4();
+
+        // Grant Read permission
+        db.grant_permission(user_id, Permission::Read, &index_id)
+            .await
+            .expect("Failed to grant permission");
+
+        // Verify permission was granted
+        let permission = db
+            .get_permission(user_id, &index_id)
+            .await
+            .expect("Failed to get permission");
+        assert_eq!(permission, Permission::Read);
+
+        // Grant Read, then update to Admin
+        db.grant_permission(user_id, Permission::Admin, &index_id)
+            .await
+            .unwrap();
+
+        let permission = db.get_permission(user_id, &index_id).await.unwrap();
+        assert_eq!(permission, Permission::Admin);
+
+        // Revoke permission
+        db.revoke_permission(user_id, &index_id)
+            .await
+            .expect("Failed to revoke permission");
+
+        // Verify permission was revoked
+        let result = db.get_permission(user_id, &index_id).await;
+        result.unwrap_err();
+    }
+
+    #[tokio::test]
+    #[allow(clippy::unwrap_used, clippy::assertions_on_result_states)]
+    async fn test_permissions_revoke_permission() {
+        let db = setup_test_db().await;
+        let other_user_id = "another_user";
+        let test_user_id = "main_user";
+
+        // Create new index by another user
+        let (admin_index_id, write_index_id, read_index_id) = (
+            db.create_index_id(other_user_id)
+                .await
+                .expect("Failed to create index"),
+            db.create_index_id(other_user_id)
+                .await
+                .expect("Failed to create index"),
+            db.create_index_id(other_user_id)
+                .await
+                .expect("Failed to create index"),
+        );
+        let permission_kinds = [Permission::Admin, Permission::Write, Permission::Read];
+        for (index_id, permission_kind) in vec![admin_index_id, write_index_id, read_index_id]
+            .into_iter()
+            .zip(permission_kinds.into_iter())
+        {
+            // Grant permission
+            db.grant_permission(test_user_id, permission_kind.clone(), &index_id)
+                .await
+                .expect("Failed to grant permission {permission_kind}");
+
+            // Verify permission was granted
+            let permission = db
+                .get_permission(test_user_id, &index_id)
+                .await
+                .expect("Failed to get permission {permission_kind}");
+            assert_eq!(permission, permission_kind);
+
+            // Revoke permission
+            db.revoke_permission(test_user_id, &index_id)
+                .await
+                .expect("Failed to revoke permission {permission_kind}");
+
+            // Verify permission was revoked
+            let result = db.get_permission(test_user_id, &index_id).await;
+            result.unwrap_err();
+        }
+
+        // Now, we create two indexes for the test_user, we revoke the permission for one of them and we check that the other one is still there
+        let (index_id1, index_id2) = (
+            db.create_index_id(test_user_id)
+                .await
+                .expect("Failed to create index"),
+            db.create_index_id(test_user_id)
+                .await
+                .expect("Failed to create index"),
+        );
+
+        // revoke permission for index_id1
+        db.revoke_permission(test_user_id, &index_id1)
+            .await
+            .expect("Failed to revoke permission");
+
+        // Verify permission of index_id2 is still there
+        let permission = db
+            .get_permission(test_user_id, &index_id2)
+            .await
+            .expect("Failed to get permission");
+        assert_eq!(permission, Permission::Admin);
+    }
+
+    #[tokio::test]
+    async fn test_permissions_nonexistent_user_and_permission() {
+        let db = setup_test_db().await;
+        let user_id = "nonexistent_user";
+        let index_id = Uuid::new_v4();
+
+        // Try to get permissions for nonexistent user
+        let result = db.get_permissions(user_id).await;
+        assert!(result.unwrap().permissions.is_empty());
+
+        // Try to get specific permission
+        let result = db.get_permission(user_id, &index_id).await;
+        result.unwrap_err();
+
+        // Revoke a non existent permission, should not fail
+        db.revoke_permission("someone", &Uuid::new_v4())
+            .await
+            .unwrap();
+    }
+
+    /// Test that concurrent permission operations of the same user on different indexes work correctly
+    #[tokio::test]
+    async fn test_permissions_concurrent_permission_operations() {
+        let db_init = setup_test_db().await;
+        let db_arc = Arc::new(db_init);
+        let user_id = "concurrent_user";
+        let num_tasks = 10;
+        let mut handles = vec![];
+
+        for _ in 0..num_tasks {
+            let db = Arc::clone(&db_arc);
+            let user_id_clone = user_id.to_owned();
+            let handle = tokio::spawn(async move {
+                let index_id = db
+                    .create_index_id(&user_id_clone)
+                    .await
+                    .expect("Failed to create index");
+
+                db.grant_permission(&user_id_clone, Permission::Read, &index_id)
+                    .await
+                    .expect("Failed to grant permission");
+
+                let permission = db
+                    .get_permission(&user_id_clone, &index_id)
+                    .await
+                    .expect("Failed to get permission");
+
+                assert_eq!(permission, Permission::Read);
+
+                db.revoke_permission(&user_id_clone, &index_id)
+                    .await
+                    .expect("Failed to revoke permission");
+
+                let result = db.get_permission(&user_id_clone, &index_id).await;
+
+                result.unwrap_err();
+            });
+            handles.push(handle);
+        }
+
+        for handle in handles {
+            handle.await.expect("Task panicked");
+        }
     }
 }
