@@ -216,6 +216,7 @@ mod tests {
     use super::*;
     use crate::config::{DBConfig, DatabaseType};
 
+    use futures::future::join_all;
     use rand::{thread_rng, Rng};
     use tokio;
     use uuid::Uuid;
@@ -248,6 +249,109 @@ mod tests {
         Redis::instantiate(url.as_str(), false)
             .await
             .expect("Test failed to instantiate Redis")
+    }
+
+    #[tokio::test]
+    async fn test_transaction() {
+        const N_ITER: usize = 10;
+        const N_WORKERS: usize = 10;
+
+        let db = setup_test_db().await;
+        let manager = db.manager.clone();
+        let user_id = Uuid::new_v4();
+
+        // Each concurrent worker grant this user admin rights for N_ITER new
+        // indexes.
+        let worker = || async move {
+            let mut added_index_ids = Vec::new();
+            for _ in 0..N_ITER {
+                // The following code is mostly taken from create_index_id: it
+                // adds the admin rights for a new index_id to the user.
+                let index_id = Uuid::new_v4();
+                let tx = |mut con: ConnectionManager, mut pipe: Pipeline| async move {
+                    let permissions = if let Some(permissions) = con
+                        .get::<_, Vec<Vec<u8>>>(user_id.as_bytes())
+                        .await?
+                        .first()
+                    {
+                        let mut permissions =
+                            Permissions::deserialize(permissions).map_err(|e| {
+                                RedisError::from((
+                                    redis::ErrorKind::TypeError,
+                                    "Failed to deserialize permissions",
+                                    format!("{e}"),
+                                ))
+                            })?;
+                        permissions.grant_permission(index_id, Permission::Admin);
+                        permissions
+                    } else {
+                        Permissions::new(index_id, Permission::Admin)
+                    };
+
+                    let permissions_bytes = permissions.serialize().map_err(|e| {
+                        RedisError::from((
+                            redis::ErrorKind::TypeError,
+                            "Failed to serialize permissions",
+                            format!("{e}"),
+                        ))
+                    })?;
+
+                    pipe.set(user_id.as_bytes(), permissions_bytes.as_slice())
+                        .query_async::<()>(&mut con)
+                        .await?;
+
+                    Ok(Some(permissions))
+                };
+
+                transaction_async(manager.clone(), &[user_id.as_bytes()], tx)
+                    .await
+                    .unwrap();
+                added_index_ids.push(index_id);
+            }
+
+            // Returns the list of all IDs granted for verification.
+            added_index_ids
+        };
+
+        let handles = (0..N_WORKERS)
+            .map(|_| tokio::spawn(worker.clone()()))
+            .collect::<Vec<_>>();
+
+        let added_ids = join_all(handles)
+            .await
+            .into_iter()
+            .collect::<Result<Vec<_>, _>>()
+            .unwrap();
+
+        let expected_permissions = Permissions {
+            permissions: added_ids
+                .into_iter()
+                .flatten()
+                .map(|id| (id, Permission::Admin))
+                .collect::<HashMap<_, _>>(),
+        };
+
+        let permissions = db
+            .manager
+            .clone()
+            .get::<_, Vec<Vec<u8>>>(user_id.as_bytes())
+            .await
+            .unwrap()
+            .first()
+            .map(|permissions| {
+                Permissions::deserialize(permissions)
+                    .map_err(|e| {
+                        RedisError::from((
+                            redis::ErrorKind::TypeError,
+                            "Failed to deserialize permissions",
+                            format!("{e}"),
+                        ))
+                    })
+                    .unwrap()
+            })
+            .unwrap_or_default();
+
+        assert_eq!(permissions, expected_permissions);
     }
 
     #[tokio::test]
