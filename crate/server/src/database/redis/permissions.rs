@@ -207,7 +207,11 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
 )]
 mod tests {
 
-    use std::{collections::HashMap, env, sync::Arc};
+    use std::{
+        collections::{HashMap, HashSet},
+        env,
+        sync::Arc,
+    };
 
     use super::*;
     use crate::config::{DBConfig, DatabaseType};
@@ -425,6 +429,52 @@ mod tests {
         updated_state
     }
 
+    #[tokio::test]
+    async fn test_permissions_concurrent_create_index_id() {
+        let db = setup_test_db().await;
+        let user_id = Uuid::new_v4().to_string();
+        let dba = Arc::new(db);
+        let tasks_count = 10;
+
+        // Create multiple concurrent tasks to create index IDs
+        let tasks: Vec<_> = (0..tasks_count)
+            .map(|_| {
+                let dba = Arc::clone(&dba);
+                let user_id = user_id.clone();
+                tokio::spawn(async move { dba.create_index_id(&user_id).await })
+            })
+            .collect();
+
+        // Wait for all tasks to complete
+        let results: Vec<_> = futures::future::join_all(tasks)
+            .await
+            .into_iter()
+            .collect::<Result<Vec<_>, _>>()
+            .expect("Failed to join tasks");
+
+        // Verify that all tasks succeeded
+        assert_eq!(results.len(), tasks_count, "Not all tasks completed");
+
+        // Verify that the IDs were actually stored in the db
+        let current_permissions = dba
+            .get_permissions(user_id.as_str())
+            .await
+            .unwrap()
+            .permissions;
+
+        // Collect the unique IDs and permissions in Hashes
+        // Verify that the number of unique IDs is equal to the number of tasks
+        let unique_ids: HashSet<_> = current_permissions.keys().collect();
+        assert_eq!(unique_ids.len(), tasks_count, "Not all IDs were stored");
+
+        // Verify that all permissions are Admin
+        let _ = current_permissions.values().map(|perm| match perm {
+            Permission::Read => panic!("Unexpected permission"),
+            Permission::Write => panic!("Unexpected permission"),
+            Permission::Admin => 2_u8,
+        });
+    }
+
     /// The testing strategy will be the following:
     ///
     /// Initialization:
@@ -515,11 +565,11 @@ mod tests {
         }
 
         let mut handles = vec![];
-        let dba = setup_test_db().await;
-        let be = Arc::new(dba);
+        let db_instance = setup_test_db().await;
+        let db_arc = Arc::new(db_instance);
 
         for user in &users {
-            let db = Arc::clone(&be);
+            let db = Arc::clone(&db_arc);
             let user = user.clone();
             let ops = operations.get(user.as_str()).unwrap().clone();
 
