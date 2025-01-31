@@ -2,7 +2,9 @@ use crate::error::{result::CliResult, CliError};
 use clap::Parser;
 use cosmian_findex::IndexADT;
 use cosmian_findex_client::FindexRestClient;
-use cosmian_findex_structs::{Keywords, SearchResults};
+use cosmian_findex_structs::Keywords;
+use cosmian_findex_structs::SearchResults;
+use std::sync::Arc;
 
 use super::parameters::FindexParameters;
 
@@ -18,7 +20,7 @@ pub struct SearchAction {
 }
 
 impl SearchAction {
-    /// Search indexed keywords.
+    /// Returns the intersection of the values bound to the searched keywords.
     ///
     /// # Errors
     ///
@@ -26,23 +28,42 @@ impl SearchAction {
     /// writing to the console.
     pub async fn run(&self, rest_client: &mut FindexRestClient) -> CliResult<SearchResults> {
         // cloning will be eliminated in the future, cf https://github.com/Cosmian/findex-server/issues/28
-        let findex_instance = rest_client.clone().instantiate_findex(
+        let findex_instance = Arc::new(rest_client.clone().instantiate_findex(
             self.findex_parameters.index_id,
             &self.findex_parameters.seed()?,
-        )?;
+        )?);
 
-        // First accumulate all search results in a vector
-        let mut all_results = Vec::new();
-        for k in Keywords::from(self.keyword.clone()).0 {
-            let search_result = findex_instance.search(&k).await?;
-            all_results.push(search_result);
-        }
+        // Execute all queries in parallel.
+        let all_results = {
+            let mut handles = Vec::with_capacity(self.keyword.len());
+            for k in Keywords::from(self.keyword.clone()).0 {
+                let findex = findex_instance.clone();
+                handles.push(tokio::spawn(async move { findex.search(&k).await }));
+            }
 
-        // Then take the intersection of all search results
+            let mut res = Vec::with_capacity(handles.len());
+            for h in handles {
+                res.push(h.await.map_err(|e| CliError::Default(e.to_string()))??);
+            }
+            res
+        };
+
+        // Compute the intersection of the results.
+        #[allow(clippy::pedantic)] // contradicting lints
         let search_results = all_results
-            .into_iter()
-            .reduce(|acc, results| acc.intersection(&results).cloned().collect())
-            .ok_or_else(|| CliError::Default("No search results found".to_owned()))?;
+            .first()
+            .map(|result| {
+                all_results
+                    .get(1..)
+                    .map(|res| {
+                        res.iter().fold(result.clone(), |mut acc, results| {
+                            acc.retain(|v| results.contains(v));
+                            acc
+                        })
+                    })
+                    .unwrap_or_else(|| result.clone())
+            })
+            .unwrap_or_default();
 
         Ok(SearchResults(search_results))
     }
