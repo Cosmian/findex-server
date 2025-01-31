@@ -21,7 +21,7 @@ impl FindexParameters {
     /// Returns the user key decoded from hex.
     /// # Errors
     /// This function will return an error if the key is not a valid hex string.
-    pub(crate) fn seed(&self) -> CliResult<Secret<BYTE_KEY_LENGTH>> {
+    pub fn seed(&self) -> CliResult<Secret<BYTE_KEY_LENGTH>> {
         let mut seed: [u8; BYTE_KEY_LENGTH] =
             hex::decode(self.seed.clone())?.try_into().map_err(|_err| {
                 cli_error!(format!(
