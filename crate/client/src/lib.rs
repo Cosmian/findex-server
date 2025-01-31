@@ -59,5 +59,6 @@ pub use rest_client::{handle_error, FindexRestClient};
 pub type InstantiatedFindex = Findex<WORD_LENGTH, Value, String, FindexRestClient>;
 
 pub mod reexport {
+    pub use cosmian_findex;
     pub use cosmian_http_client;
 }

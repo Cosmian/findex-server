@@ -1,8 +1,6 @@
-use std::env;
-
 use cosmian_logger::log_init;
 use test_findex_server::{
-    start_test_server_with_options, AuthenticationOptions, DBConfig, DatabaseType,
+    get_redis_url, start_test_server_with_options, AuthenticationOptions, DBConfig, DatabaseType,
 };
 use tracing::{info, trace};
 
@@ -14,10 +12,7 @@ const PORT: u16 = 6667;
 #[tokio::test]
 pub(crate) async fn test_all_authentications() -> CliResult<()> {
     log_init(None);
-    let url = env::var("REDIS_HOST").map_or_else(
-        |_| "redis://localhost:6379".to_owned(),
-        |var_env| format!("redis://{var_env}:6379"),
-    );
+    let url = get_redis_url("REDIS_URL");
     trace!("TESTS: using redis on {url}");
     // plaintext no auth
     info!("Testing server with no auth");

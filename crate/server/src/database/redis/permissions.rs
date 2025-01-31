@@ -212,12 +212,12 @@ mod tests {
     use tokio;
     use uuid::Uuid;
 
+    fn get_redis_url(redis_url_var_env: &str) -> String {
+        env::var(redis_url_var_env).unwrap_or_else(|_| "redis://localhost:6379".to_string())
+    }
+
     fn redis_db_config() -> DBConfig {
-        let url = if let Ok(var_env) = env::var("REDIS_HOST") {
-            format!("redis://{var_env}:6379")
-        } else {
-            "redis://localhost:6379".to_owned()
-        };
+        let url = get_redis_url("REDIS_URL");
         trace!("TESTS: using redis on {url}");
         DBConfig {
             database_type: DatabaseType::Redis,
