@@ -1,9 +1,8 @@
 use crate::error::{result::CliResult, CliError};
 use clap::Parser;
-use cosmian_findex::IndexADT;
+use cosmian_findex::{Findex, IndexADT, Value};
 use cosmian_findex_client::FindexRestClient;
-use cosmian_findex_structs::Keywords;
-use cosmian_findex_structs::SearchResults;
+use cosmian_findex_structs::{Keywords, SearchResults, WORD_LENGTH};
 use std::sync::Arc;
 
 use super::parameters::FindexParameters;
@@ -28,10 +27,12 @@ impl SearchAction {
     /// writing to the console.
     pub async fn run(&self, rest_client: &mut FindexRestClient) -> CliResult<SearchResults> {
         // cloning will be eliminated in the future, cf https://github.com/Cosmian/findex-server/issues/28
-        let findex_instance = Arc::new(rest_client.clone().instantiate_findex(
-            self.findex_parameters.index_id,
-            &self.findex_parameters.seed()?,
-        )?);
+        let findex_instance = Arc::<Findex<WORD_LENGTH, Value, String, FindexRestClient>>::new(
+            rest_client.clone().instantiate_findex(
+                self.findex_parameters.index_id,
+                &self.findex_parameters.seed()?,
+            )?,
+        );
 
         // Execute all queries in parallel.
         let all_results = {

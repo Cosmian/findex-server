@@ -6,9 +6,9 @@ use std::{
 };
 
 use clap::Parser;
-use cosmian_findex::{IndexADT, Value};
+use cosmian_findex::{Findex, IndexADT, Value};
 use cosmian_findex_client::FindexRestClient;
-use cosmian_findex_structs::{Keyword, KeywordToDataSetsMap};
+use cosmian_findex_structs::{Keyword, KeywordToDataSetsMap, WORD_LENGTH};
 use tracing::{instrument, trace};
 
 use crate::error::{result::CliResult, CliError};
@@ -66,10 +66,12 @@ impl InsertOrDeleteAction {
         is_insert: bool,
     ) -> CliResult<String> {
         // cloning will be eliminated in the future, cf https://github.com/Cosmian/findex-server/issues/28
-        let findex = Arc::new(rest_client.clone().instantiate_findex(
-            self.findex_parameters.index_id,
-            &self.findex_parameters.seed()?,
-        )?);
+        let findex = Arc::<Findex<WORD_LENGTH, Value, String, FindexRestClient>>::new(
+            rest_client.clone().instantiate_findex(
+                self.findex_parameters.index_id,
+                &self.findex_parameters.seed()?,
+            )?,
+        );
 
         let bindings = self.to_indexed_value_keywords_map()?;
 
