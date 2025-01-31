@@ -203,7 +203,9 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
     clippy::option_if_let_else,
     clippy::panic,
     clippy::indexing_slicing,
-    clippy::get_unwrap
+    clippy::get_unwrap,
+    clippy::match_wildcard_for_single_variants,
+    clippy::too_many_lines
 )]
 mod tests {
 
@@ -216,7 +218,7 @@ mod tests {
     use super::*;
     use crate::config::{DBConfig, DatabaseType};
 
-    use rand::{thread_rng, Rng};
+    use rand::{rng, Rng};
     use tokio;
     use uuid::Uuid;
 
@@ -405,28 +407,60 @@ mod tests {
 
     fn update_expected_results(
         previous_state: HashMap<Uuid, Permission>,
-        operation: usize,
-        permission: u8,
-        index: Uuid,
+        operation: &Operation,
     ) -> HashMap<Uuid, Permission> {
         let mut updated_state = previous_state;
         match operation {
-            0 => {
+            Operation::CreateIndex { index_id } => {
                 // create new index
-                updated_state.insert(index, Permission::Admin);
+                updated_state.insert(*index_id, Permission::Admin);
             }
-            1 => {
+            Operation::GrantPermission {
+                permission,
+                index_id,
+            } => {
                 // grant new permission
                 // won't panic because permission is either 0, 1 or 2
-                updated_state.insert(index, Permission::try_from(permission).unwrap());
+                updated_state.insert(*index_id, permission.clone());
             }
-            2 => {
+            Operation::RevokePermission { index_id } => {
                 // revoke permission
-                updated_state.remove(&index);
+                updated_state.remove(index_id);
             }
-            _ => panic!("Invalid operation"),
         }
         updated_state
+    }
+
+    /// In the next test, we will simulate concurrent operations
+    /// An operation can be one of the following:
+    #[derive(Debug, Clone, Eq, PartialEq)]
+    enum Operation {
+        CreateIndex {
+            index_id: Uuid,
+        },
+        GrantPermission {
+            permission: Permission,
+            index_id: Uuid,
+        },
+        RevokePermission {
+            index_id: Uuid,
+        },
+    }
+
+    fn generate_random_operation(rng: &mut impl Rng) -> Operation {
+        match rng.random_range(0..3) {
+            0 => Operation::CreateIndex {
+                index_id: Uuid::new_v4(),
+            },
+            1 => Operation::GrantPermission {
+                permission: Permission::try_from(rng.random_range(0..=2)).unwrap(),
+                index_id: Uuid::new_v4(),
+            },
+            2 => Operation::RevokePermission {
+                index_id: Uuid::new_v4(),
+            },
+            _ => panic!("Invalid operation"),
+        }
     }
 
     #[tokio::test]
@@ -502,75 +536,83 @@ mod tests {
     async fn test_permissions_concurrent_grand_revoke_permissions() {
         const MAX_USERS: usize = 100;
         const MAX_OPS: usize = 100;
-        let mut rng = thread_rng();
+        let mut rng = rng();
 
-        let users: Vec<String> = (0..rng.gen_range(1..=MAX_USERS))
+        let users: Vec<String> = (0..rng.random_range(1..=MAX_USERS))
             .map(|_| Uuid::new_v4().to_string())
             .collect();
 
-        let mut operations: HashMap<&str, Vec<(usize, u8, Uuid)>> = HashMap::new();
+        let mut operations: HashMap<&str, Vec<Operation>> = HashMap::new();
         let mut expected_state: HashMap<&str, Vec<HashMap<Uuid, Permission>>> = HashMap::new();
         // Initialize empty vectors for each user
         for user in &users {
             operations.insert(user.as_str(), Vec::new());
             expected_state.insert(user.as_str(), Vec::new());
         }
-        for user in users.clone() {
+        for user in &users {
             let user_str = user.as_str();
-            for i in 0..MAX_OPS {
-                let mut op = if i == 0 {
-                    // First operation is always to create a new index
-                    (0, 0, Uuid::new_v4())
-                } else {
-                    (
-                        rng.gen_range(0..=2), // 0: create new index, 1: grant new permission, 2: revoke permission
-                        rng.gen_range(0..=2), // If the operation is to grant a new permission, the permission is either Read 0, Write 1 or Admin 2
-                        Uuid::new_v4(),
-                    )
-                };
-                // Get the previous state
-                let previous_state: HashMap<Uuid, Permission> = if i == 0 {
-                    HashMap::new()
-                } else {
-                    expected_state.get(user_str).unwrap()[i - 1].clone()
-                };
 
-                if op.0 > 0 && i > 0 {
+            // init the first op to be always create index
+            let op0 = Operation::CreateIndex {
+                index_id: Uuid::new_v4(),
+            };
+            expected_state
+                .get_mut(user_str)
+                .expect("User should exist")
+                .push(update_expected_results(HashMap::new(), &op0));
+            operations
+                .get_mut(user_str)
+                .expect("User should exist")
+                .push(op0);
+
+            for i in 1..MAX_OPS {
+                let mut op = generate_random_operation(&mut rng);
+
+                // Get the previous state
+                let previous_state: HashMap<Uuid, Permission> =
+                    expected_state.get(user_str).unwrap()[i - 1].clone();
+
+                if !matches!(op, Operation::CreateIndex { .. }) {
                     // if operation is not "create", rather use one of the created indexes to stay realistic
                     let available_indexes = previous_state.keys().collect::<Vec<&Uuid>>();
                     if available_indexes.is_empty() {
                         // If there are no available indexes, we can't grant or revoke permissions, change the operation to create a new index
-                        op.0 = 0;
+                        op = Operation::CreateIndex {
+                            index_id: Uuid::new_v4(),
+                        };
                     } else {
-                        let chosen_index = rng.gen_range(0..available_indexes.len());
-                        op.2 = *available_indexes[chosen_index];
+                        let chosen_index = rng.random_range(0..available_indexes.len());
+                        match &mut op {
+                            Operation::GrantPermission { index_id, .. } => {
+                                *index_id = *available_indexes[chosen_index];
+                            }
+                            Operation::RevokePermission { index_id } => {
+                                *index_id = *available_indexes[chosen_index];
+                            }
+                            _ => panic!("Invalid operation type"),
+                        }
                     }
                 }
-
-                // Append the operation to the user's vector
-                operations
-                    .get_mut(user_str)
-                    .expect("User should exist")
-                    .push(op);
-
-                // Update the expected state
-                let updated_state = update_expected_results(previous_state, op.0, op.1, op.2);
 
                 // Append the updated state to the user's vector
                 expected_state
                     .get_mut(user_str)
                     .expect("User should exist")
-                    .push(updated_state);
+                    .push(update_expected_results(previous_state, &op));
+
+                // Append the operation to the user's vector to reproduce in the real concurrent scenario
+                operations
+                    .get_mut(user_str)
+                    .expect("User should exist")
+                    .push(op);
             }
         }
 
         let mut handles = vec![];
-        let db_instance = setup_test_db().await;
-        let db_arc = Arc::new(db_instance);
+        let db_arc = Arc::new(setup_test_db().await);
 
         for user in &users {
             let db = Arc::clone(&db_arc);
-            let user = user.clone();
             let ops = operations.get(user.as_str()).unwrap().clone();
 
             for (op_idx, op) in ops.into_iter().enumerate() {
@@ -580,28 +622,27 @@ mod tests {
 
                 handles.push(tokio::spawn(async move {
                     // Execute operation
-                    match op.0 {
-                        0 => {
+                    match op {
+                        Operation::CreateIndex { index_id } => {
                             // Simulate new index creation
-                            db.grant_permission(&user, Permission::Admin, &op.2)
+                            db.grant_permission(&user, Permission::Admin, &index_id)
                                 .await
                                 .expect("Failed to grant permission");
                         }
-                        1 => {
-                            // Grant permission
-                            let permission =
-                                Permission::try_from(op.1).expect("Invalid permission value");
-                            db.grant_permission(&user, permission.clone(), &op.2)
+                        Operation::GrantPermission {
+                            permission,
+                            index_id,
+                        } => {
+                            db.grant_permission(&user, permission.clone(), &index_id)
                                 .await
                                 .expect("Failed to grant permission");
                         }
-                        2 => {
+                        Operation::RevokePermission { index_id } => {
                             // Revoke permission
-                            db.revoke_permission(&user, &op.2)
+                            db.revoke_permission(&user, &index_id)
                                 .await
                                 .expect("Failed to revoke permission");
                         }
-                        _ => panic!("Invalid operation type"),
                     }
 
                     // Validate permissions after operation
