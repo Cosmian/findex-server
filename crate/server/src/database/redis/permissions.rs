@@ -451,7 +451,7 @@ mod tests {
         let mut rng = thread_rng();
 
         let users: Vec<String> = (0..rng.gen_range(1..=MAX_USERS))
-            .map(|i| format!("user_{i}"))
+            .map(|_| Uuid::new_v4().to_string())
             .collect();
 
         let mut operations: HashMap<&str, Vec<(usize, u8, Uuid)>> = HashMap::new();
