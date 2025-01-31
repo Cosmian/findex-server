@@ -518,10 +518,13 @@ mod tests {
             let db = Arc::clone(&be);
             let user = user.clone();
             let ops = operations.get(user.as_str()).unwrap().clone();
-            let expected_states = expected_state[user.as_str()].clone();
 
-            handles.push(tokio::spawn(async move {
-                for (op_idx, op) in ops.iter().enumerate() {
+            for (op_idx, op) in ops.into_iter().enumerate() {
+                let db = Arc::clone(&db); // This is the only clone we need
+                let user = user.clone();
+                let expected_states = expected_state[user.as_str()].clone();
+
+                handles.push(tokio::spawn(async move {
                     // Execute operation
                     match op.0 {
                         0 => {
@@ -562,8 +565,8 @@ mod tests {
                         current_permissions, expected_permissions,
                         "Permissions mismatch for user {user} after operation {op_idx}",
                     );
-                }
-            }));
+                }));
+            }
         }
 
         // Wait for all tasks to complete
