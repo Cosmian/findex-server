@@ -49,6 +49,12 @@ impl From<Vec<String>> for Keywords {
     }
 }
 
+impl From<Vec<&Keyword>> for Keywords {
+    fn from(keywords: Vec<&Keyword>) -> Self {
+        Self(keywords.into_iter().cloned().collect())
+    }
+}
+
 impl std::fmt::Display for Keywords {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let base64_keywords: Vec<String> = self
@@ -57,11 +63,5 @@ impl std::fmt::Display for Keywords {
             .map(|keyword| String::from_utf8_lossy(&keyword.0).to_string())
             .collect();
         write!(f, "{base64_keywords:?}")
-    }
-}
-
-impl From<Vec<&Keyword>> for Keywords {
-    fn from(keywords: Vec<&Keyword>) -> Self {
-        Self(keywords.into_iter().cloned().collect())
     }
 }

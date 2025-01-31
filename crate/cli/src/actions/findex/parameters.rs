@@ -7,7 +7,7 @@ use crate::{cli_error, error::result::CliResult};
 
 #[derive(Parser, Debug)]
 #[clap(verbatim_doc_comment)]
-pub(crate) struct FindexParameters {
+pub struct FindexParameters {
     /// The user findex seed used (to insert, search and delete).
     /// The seed is a 32 bytes hex string.
     #[clap(long, short = 's')]

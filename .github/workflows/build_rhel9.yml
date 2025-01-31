@@ -30,8 +30,17 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-        ports:
-          - 6379:6379
+        # ports: # not required since docker in docker
+        #   - 6379:6379
+      redis2:
+        image: redis
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        # ports: # not required since docker in docker
+        #   - 6380:6379
 
     name: ${{ inputs.archive-name }}
     runs-on: ubuntu-22.04
@@ -51,12 +60,19 @@ jobs:
 
           yum -y install openssl-devel openssl
           yum -y install python-devel
-          yum -y install wget
+          yum -y install wget nc
           yum -y install perl-IPC-Cmd perl-Digest-SHA1 perl-CPAN perl-devel
+
+      - name: check opened ports
+        run: |
+          set -ex
+          nc -zv redis 6379
+          nc -zv redis2 6379
 
       - name: Build and tests
         env:
-          REDIS_HOST: redis
+          REDIS_URL: redis://redis:6379
+          REDIS_URL2: redis://redis2:6379
 
           # Google variables
           TEST_GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.TEST_GOOGLE_OAUTH_CLIENT_ID }}
