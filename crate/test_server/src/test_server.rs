@@ -359,9 +359,7 @@ mod test {
     use tracing::trace;
 
     use crate::{
-        start_test_server_with_options,
-        test_server::{redis_db_config, REDIS_DEFAULT_URL},
-        AuthenticationOptions,
+        start_test_server_with_options, test_server::redis_db_config, AuthenticationOptions,
     };
 
     #[tokio::test]
@@ -376,7 +374,7 @@ mod test {
         for (use_https, use_jwt_token, use_client_cert, description) in test_cases {
             trace!("Running test case: {}", description);
             let context = start_test_server_with_options(
-                redis_db_config(REDIS_DEFAULT_URL),
+                redis_db_config("REDIS_URL"),
                 6667,
                 AuthenticationOptions {
                     use_https,

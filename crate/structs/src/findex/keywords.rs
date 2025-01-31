@@ -36,8 +36,8 @@ impl DerefMut for KeywordToDataSetsMap {
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
-pub struct Keywords(pub Vec<Keyword>);
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct Keywords(pub HashSet<Keyword>);
 
 impl From<Vec<String>> for Keywords {
     fn from(strings: Vec<String>) -> Self {

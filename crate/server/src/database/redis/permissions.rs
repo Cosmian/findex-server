@@ -213,7 +213,7 @@ mod tests {
     use uuid::Uuid;
 
     fn get_redis_url(redis_url_var_env: &str) -> String {
-        env::var(redis_url_var_env).unwrap_or_else(|_| "redis://localhost:6379".to_string())
+        env::var(redis_url_var_env).unwrap_or_else(|_| "redis://localhost:6379".to_owned())
     }
 
     fn redis_db_config() -> DBConfig {
