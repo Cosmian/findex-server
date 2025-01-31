@@ -911,6 +911,7 @@ dependencies = [
  "dotenvy",
  "futures",
  "openssl",
+ "rand",
  "redis",
  "reqwest",
  "serde",

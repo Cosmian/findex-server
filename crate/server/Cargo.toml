@@ -77,7 +77,7 @@ uuid = { workspace = true, features = ["v4"] }
 
 [dev-dependencies]
 tempfile = { workspace = true }
-
+rand = { workspace = true }
 # ------------------------------------------------------------------------------
 # START DEBIAN PACKAGING
 [package.metadata.deb]
