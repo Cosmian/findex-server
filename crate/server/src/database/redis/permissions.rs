@@ -471,13 +471,26 @@ mod tests {
                     (
                         rng.gen_range(0..=2), // 0: create new index, 1: grant new permission, 2: revoke permission
                         rng.gen_range(0..=2), // If the operation is to grant a new permission, the permission is either Read 0, Write 1 or Admin 2
-                        Uuid::new_v4(),       // Get UUID directly from indexes
+                        Uuid::new_v4(),
                     )
                 };
+                // Get the previous state
+                let previous_state: HashMap<Uuid, Permission> = if i == 0 {
+                    HashMap::new()
+                } else {
+                    expected_state.get(user_str).unwrap()[i - 1].clone()
+                };
+
                 if op.0 > 0 && i > 0 {
                     // if operation is not "create", rather use one of the created indexes to stay realistic
-                    let chosen_index = rng.gen_range(0..i);
-                    op.2 = operations.get(user_str).expect("User should exist")[chosen_index].2;
+                    let available_indexes = previous_state.keys().collect::<Vec<&Uuid>>();
+                    if available_indexes.is_empty() {
+                        // If there are no available indexes, we can't grant or revoke permissions, change the operation to create a new index
+                        op.0 = 0;
+                    } else {
+                        let chosen_index = rng.gen_range(0..available_indexes.len());
+                        op.2 = *available_indexes[chosen_index];
+                    }
                 }
 
                 // Append the operation to the user's vector
@@ -485,13 +498,6 @@ mod tests {
                     .get_mut(user_str)
                     .expect("User should exist")
                     .push(op);
-
-                // Get the previous state
-                let previous_state: HashMap<Uuid, Permission> = if i == 0 {
-                    HashMap::new()
-                } else {
-                    expected_state.get(user_str).unwrap()[i - 1].clone()
-                };
 
                 // Update the expected state
                 let updated_state = update_expected_results(previous_state, op.0, op.1, op.2);
@@ -523,20 +529,27 @@ mod tests {
                             db.grant_permission(&user, Permission::Admin, &op.2)
                                 .await
                                 .expect("Failed to grant permission");
+                            println!("Created new index {0} for user {user}", op.2);
                         }
                         1 => {
                             // Grant permission
                             let permission =
                                 Permission::try_from(op.1).expect("Invalid permission value");
-                            db.grant_permission(&user, permission, &op.2)
+                            db.grant_permission(&user, permission.clone(), &op.2)
                                 .await
                                 .expect("Failed to grant permission");
+                            print!(
+                                "Granted permission {0} for index {1} to user {user}",
+                                permission.clone(),
+                                op.2
+                            );
                         }
                         2 => {
                             // Revoke permission
                             db.revoke_permission(&user, &op.2)
                                 .await
                                 .expect("Failed to revoke permission");
+                            println!("Revoked permission for index {0} from user {user}", op.2);
                         }
                         _ => panic!("Invalid operation type"),
                     }
