@@ -64,7 +64,7 @@ impl InsertOrDeleteAction {
         &self,
         rest_client: &FindexRestClient,
         is_insert: bool,
-    ) -> CliResult<String> {
+    ) -> CliResult<Keywords> {
         let bindings = self.to_indexed_value_keywords_map()?;
         let findex: Findex<WORD_LENGTH, Value, String, FindexRestClient> =
         // cloning will be eliminated in the future, cf https://github.com/Cosmian/findex-server/issues/28
@@ -83,18 +83,16 @@ impl InsertOrDeleteAction {
         let written_keywords = bindings.keys().collect::<Vec<_>>();
         let operation_name = if is_insert { "Indexing" } else { "Deleting" };
         let written_keywords = Keywords::from(written_keywords);
+
         trace!("{} done: keywords: {}", operation_name, written_keywords);
-
-        let output = format!("Indexing done: keywords: {written_keywords}",);
-
-        Ok(output)
+        Ok(written_keywords)
     }
 
     /// Insert new indexes
     ///
     /// # Errors
     /// - If insert new indexes fails
-    pub async fn insert(&self, rest_client: &mut FindexRestClient) -> CliResult<String> {
+    pub async fn insert(&self, rest_client: &mut FindexRestClient) -> CliResult<Keywords> {
         Self::insert_or_delete(self, rest_client, true).await
     }
 
@@ -102,7 +100,7 @@ impl InsertOrDeleteAction {
     ///
     /// # Errors
     /// - If deleting indexes fails
-    pub async fn delete(&self, rest_client: &mut FindexRestClient) -> CliResult<String> {
+    pub async fn delete(&self, rest_client: &mut FindexRestClient) -> CliResult<Keywords> {
         Self::insert_or_delete(self, rest_client, false).await
     }
 }

@@ -83,6 +83,7 @@ pub enum CoreFindexActions {
 
 impl CoreFindexActions {
     /// Process the command line arguments
+    ///
     /// # Errors
     /// - If the configuration file is not found or invalid
     #[allow(clippy::unit_arg)] // println! does return () but it prints the output of action.run() beforehand, nothing is "lost" and hence this lint will only cause useless boilerplate code
@@ -91,8 +92,14 @@ impl CoreFindexActions {
         {
             let result = match action {
                 Self::Datasets(action) => action.run(findex_client).await,
-                Self::Delete(action) => action.delete(findex_client).await,
-                Self::Insert(action) => action.insert(findex_client).await,
+                Self::Delete(action) => {
+                    let deleted_keywords = action.delete(findex_client).await?;
+                    Ok(format!("Deleted keywords: {deleted_keywords}"))
+                }
+                Self::Insert(action) => {
+                    let inserted_keywords = action.insert(findex_client).await?;
+                    Ok(format!("Inserted keywords: {inserted_keywords}"))
+                }
                 Self::Permissions(action) => action.run(findex_client).await,
                 Self::Login(action) => action.run(&mut findex_client.config).await,
                 Self::Logout(action) => action.run(&mut findex_client.config),

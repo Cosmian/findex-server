@@ -11,14 +11,14 @@ use tracing::{debug, trace};
 use uuid::Uuid;
 
 use crate::{
-    error::result::CliResult,
-    tests::{
-        permissions::{create_index_id, grant_permission, list_permission, revoke_permission},
-        utils::{delete, insert, search},
+    actions::findex::{
+        insert_or_delete::InsertOrDeleteAction, parameters::FindexParameters, search::SearchAction,
     },
+    error::result::CliResult,
+    tests::permissions::{create_index_id, grant_permission, list_permission, revoke_permission},
 };
 
-use super::utils::SearchOptions;
+use super::search_options::SearchOptions;
 
 const SMALL_DATASET: &str = "../../test_data/datasets/smallpop.csv";
 const HUGE_DATASET: &str = "../../test_data/datasets/business-employment.csv";
@@ -30,36 +30,57 @@ async fn insert_search_delete(
     index_id: &Uuid,
     search_options: SearchOptions,
 ) -> CliResult<()> {
-    let test_conf = FindexClientConfig::load(Some(PathBuf::from(cli_conf_path)))?;
-    let mut rest_client: FindexRestClient = FindexRestClient::new(test_conf)?;
+    let mut rest_client = FindexRestClient::new(FindexClientConfig::load(Some(PathBuf::from(
+        cli_conf_path,
+    )))?)?;
 
-    insert(
-        seed.clone(),
-        *index_id,
-        &search_options.dataset_path,
-        &mut rest_client,
-    )
+    // Index the dataset
+    InsertOrDeleteAction {
+        findex_parameters: FindexParameters {
+            seed: seed.to_owned(),
+            index_id: *index_id,
+        },
+        csv: PathBuf::from(&search_options.dataset_path),
+    }
+    .insert(&mut rest_client)
     .await?;
 
-    // make sure searching returns the expected results
-    let search_results = search(seed, *index_id, search_options.clone(), &mut rest_client).await?;
+    // Ensure searching returns the expected results
+    let search_results = SearchAction {
+        findex_parameters: FindexParameters {
+            seed: seed.to_owned(),
+            index_id: *index_id,
+        },
+        keyword: search_options.keywords.clone(),
+    }
+    .run(&mut rest_client)
+    .await?;
     assert_eq!(
         search_options.expected_results,
         search_results.deref().clone()
     );
 
-    debug!("Search results: {}", search_results);
-
-    delete(
-        seed.clone(),
-        *index_id,
-        &search_options.dataset_path,
-        &mut rest_client,
-    )
+    // Delete the dataset
+    InsertOrDeleteAction {
+        findex_parameters: FindexParameters {
+            seed: seed.to_owned(),
+            index_id: *index_id,
+        },
+        csv: PathBuf::from(search_options.dataset_path),
+    }
+    .delete(&mut rest_client)
     .await?;
 
-    // make sure no results are returned after deletion
-    let search_results = search(seed, *index_id, search_options, &mut rest_client).await?;
+    // Ensure no results are returned after deletion
+    let search_results = SearchAction {
+        findex_parameters: FindexParameters {
+            seed: seed.to_owned(),
+            index_id: *index_id,
+        },
+        keyword: search_options.keywords,
+    }
+    .run(&mut rest_client)
+    .await?;
     assert!(search_results.is_empty());
 
     Ok(())
@@ -180,7 +201,16 @@ pub(crate) async fn test_findex_grant_and_revoke_permission() -> CliResult<()> {
     let user_conf = FindexClientConfig::load(Some(PathBuf::from(&ctx.user_client_conf_path)))?;
     let mut user_rest_client = FindexRestClient::new(user_conf)?;
 
-    insert(TESTS_SEED, &index_id, SMALL_DATASET, &mut owner_rest_client).await?;
+    // Index the dataset as admin
+    InsertOrDeleteAction {
+        findex_parameters: FindexParameters {
+            seed: TESTS_SEED.to_owned(),
+            index_id,
+        },
+        csv: PathBuf::from(SMALL_DATASET),
+    }
+    .insert(&mut owner_rest_client)
+    .await?;
 
     // Grant read permission to the client
     grant_permission(
@@ -192,12 +222,14 @@ pub(crate) async fn test_findex_grant_and_revoke_permission() -> CliResult<()> {
     .await?;
 
     // User can read...
-    let search_results = search(
-        TESTS_SEED,
-        &index_id,
-        &search_options,
-        &mut user_rest_client,
-    )
+    let search_results = SearchAction {
+        findex_parameters: FindexParameters {
+            seed: TESTS_SEED.to_owned(),
+            index_id,
+        },
+        keyword: search_options.keywords.clone(),
+    }
+    .run(&mut user_rest_client)
     .await?;
     assert_eq!(
         search_options.expected_results,
@@ -205,11 +237,16 @@ pub(crate) async fn test_findex_grant_and_revoke_permission() -> CliResult<()> {
     );
 
     // ... but not write
-    assert!(
-        insert(TESTS_SEED, &index_id, SMALL_DATASET, &mut user_rest_client)
-            .await
-            .is_err()
-    );
+    InsertOrDeleteAction {
+        findex_parameters: FindexParameters {
+            seed: TESTS_SEED.to_owned(),
+            index_id,
+        },
+        csv: PathBuf::from(SMALL_DATASET),
+    }
+    .insert(&mut user_rest_client)
+    .await
+    .unwrap_err();
 
     // Grant write permission
     grant_permission(
@@ -224,12 +261,14 @@ pub(crate) async fn test_findex_grant_and_revoke_permission() -> CliResult<()> {
     debug!("User permission: {:?}", perm);
 
     // User can read...
-    let search_results = search(
-        TESTS_SEED,
-        &index_id,
-        &search_options,
-        &mut user_rest_client,
-    )
+    let search_results = SearchAction {
+        findex_parameters: FindexParameters {
+            seed: TESTS_SEED.to_owned(),
+            index_id,
+        },
+        keyword: search_options.keywords.clone(),
+    }
+    .run(&mut user_rest_client)
     .await?;
     assert_eq!(
         search_options.expected_results,
@@ -237,7 +276,15 @@ pub(crate) async fn test_findex_grant_and_revoke_permission() -> CliResult<()> {
     );
 
     // ... and write
-    insert(TESTS_SEED, &index_id, SMALL_DATASET, &mut user_rest_client).await?;
+    InsertOrDeleteAction {
+        findex_parameters: FindexParameters {
+            seed: TESTS_SEED.to_owned(),
+            index_id,
+        },
+        csv: PathBuf::from(SMALL_DATASET),
+    }
+    .insert(&mut user_rest_client)
+    .await?;
 
     // Try to escalade privileges from `read` to `admin`
     grant_permission(
@@ -256,12 +303,14 @@ pub(crate) async fn test_findex_grant_and_revoke_permission() -> CliResult<()> {
     )
     .await?;
 
-    let _search_results = search(
-        TESTS_SEED,
-        &index_id,
-        &search_options,
-        &mut user_rest_client,
-    )
+    let _search_results = SearchAction {
+        findex_parameters: FindexParameters {
+            seed: TESTS_SEED.to_owned(),
+            index_id,
+        },
+        keyword: search_options.keywords.clone(),
+    }
+    .run(&mut user_rest_client)
     .await
     .unwrap_err();
 

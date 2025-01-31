@@ -149,7 +149,7 @@ impl MemoryADT for FindexRestClient {
         }
 
         let words: OptionalWords<WORD_LENGTH> =
-            OptionalWords::deserialize(&response.bytes().await?)?.into();
+            OptionalWords::deserialize(&response.bytes().await?)?;
 
         trace!(
             "batch_read successful on server url {}. result: {}",
@@ -216,7 +216,7 @@ impl MemoryADT for FindexRestClient {
         trace!(
             "guarded_write successful on server url {}. guard: {}",
             server_url,
-            guard.map_or("None".to_string(), |g| general_purpose::STANDARD.encode(g))
+            guard.map_or("None".to_owned(), |g| general_purpose::STANDARD.encode(g))
         );
 
         Ok(guard)
