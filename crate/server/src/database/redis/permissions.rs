@@ -199,12 +199,9 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
 #[allow(
     clippy::unwrap_used,
     clippy::expect_used,
-    clippy::match_same_arms,
-    clippy::option_if_let_else,
     clippy::panic,
     clippy::indexing_slicing,
     clippy::get_unwrap,
-    clippy::match_wildcard_for_single_variants,
     clippy::too_many_lines
 )]
 mod tests {
@@ -236,17 +233,8 @@ mod tests {
         }
     }
 
-    fn get_db_config() -> DBConfig {
-        env::var_os("FINDEX_TEST_DB").map_or_else(redis_db_config, |v| {
-            match v.to_str().unwrap_or("") {
-                "redis" => redis_db_config(),
-                _ => redis_db_config(),
-            }
-        })
-    }
-
     async fn setup_test_db() -> Redis<WORD_LENGTH> {
-        let url = get_db_config().database_url;
+        let url = redis_db_config().database_url;
         Redis::instantiate(url.as_str(), false)
             .await
             .expect("Test failed to instantiate Redis")
@@ -255,18 +243,17 @@ mod tests {
     #[tokio::test]
     async fn test_permissions_create_index_id() {
         let db = setup_test_db().await;
-        let binding = Uuid::new_v4().to_string(); // we need a long lived string to be used as a &str
-        let user_id = binding.as_str();
+        let user_id = Uuid::new_v4().to_string();
 
         // Create new index
         let index_id = db
-            .create_index_id(user_id)
+            .create_index_id(&user_id)
             .await
             .expect("Failed to create index");
 
         // Verify permissions were created
         let permissions = db
-            .get_permissions(user_id)
+            .get_permissions(&user_id)
             .await
             .expect("Failed to get permissions");
 
@@ -318,67 +305,66 @@ mod tests {
     #[allow(clippy::unwrap_used, clippy::assertions_on_result_states)]
     async fn test_permissions_revoke_permission() {
         let db = setup_test_db().await;
-        let (binding1, binding2) = (Uuid::new_v4().to_string(), Uuid::new_v4().to_string()); // we need a long lived string to be used as a &str
-        let other_user_id = binding1.as_str();
-        let test_user_id = binding2.as_str();
+        let (other_user_id, test_user_id) =
+            (Uuid::new_v4().to_string(), Uuid::new_v4().to_string());
 
         // Create new index by another user
         let (admin_index_id, write_index_id, read_index_id) = (
-            db.create_index_id(other_user_id)
+            db.create_index_id(&other_user_id)
                 .await
                 .expect("Failed to create index"),
-            db.create_index_id(other_user_id)
+            db.create_index_id(&other_user_id)
                 .await
                 .expect("Failed to create index"),
-            db.create_index_id(other_user_id)
+            db.create_index_id(&other_user_id)
                 .await
                 .expect("Failed to create index"),
         );
-        let permission_kinds = [Permission::Admin, Permission::Write, Permission::Read];
-        for (index_id, permission_kind) in vec![admin_index_id, write_index_id, read_index_id]
-            .into_iter()
-            .zip(permission_kinds.into_iter())
-        {
+        for (index_id, permission_kind) in [
+            (admin_index_id, Permission::Admin),
+            (write_index_id, Permission::Write),
+            (read_index_id, Permission::Read),
+        ] {
             // Grant permission
-            db.grant_permission(test_user_id, permission_kind.clone(), &index_id)
+            db.grant_permission(&test_user_id, permission_kind.clone(), &index_id)
                 .await
                 .expect("Failed to grant permission {permission_kind}");
 
             // Verify permission was granted
             let permission = db
-                .get_permission(test_user_id, &index_id)
+                .get_permission(&test_user_id, &index_id)
                 .await
                 .expect("Failed to get permission {permission_kind}");
             assert_eq!(permission, permission_kind);
 
             // Revoke permission
-            db.revoke_permission(test_user_id, &index_id)
+            db.revoke_permission(&test_user_id, &index_id)
                 .await
                 .expect("Failed to revoke permission {permission_kind}");
 
             // Verify permission was revoked
-            let result = db.get_permission(test_user_id, &index_id).await;
+            let result = db.get_permission(&test_user_id, &index_id).await;
             result.unwrap_err();
         }
 
         // Now, we create two indexes for the test_user, we revoke the permission for one of them and we check that the other one is still there
         let (index_id1, index_id2) = (
-            db.create_index_id(test_user_id)
+            db.create_index_id(&test_user_id)
                 .await
                 .expect("Failed to create index"),
-            db.create_index_id(test_user_id)
+            db.create_index_id(&test_user_id)
                 .await
                 .expect("Failed to create index"),
         );
 
         // revoke permission for index_id1
-        db.revoke_permission(test_user_id, &index_id1)
+        db.revoke_permission(&test_user_id, &index_id1)
             .await
             .expect("Failed to revoke permission");
 
         // Verify permission of index_id2 is still there
         let permission = db
-            .get_permission(test_user_id, &index_id2)
+            .get_permission(&test_user_id, &index_id2)
             .await
             .expect("Failed to get permission");
         assert_eq!(permission, Permission::Admin);
@@ -387,20 +373,19 @@ mod tests {
     #[tokio::test]
     async fn test_permissions_nonexistent_user_and_permission() {
         let db = setup_test_db().await;
-        let binding = Uuid::new_v4().to_string(); // we need a long lived string to be used as a &str
-        let new_random_user = binding.as_str();
+        let new_random_user = Uuid::new_v4().to_string();
         let index_id = Uuid::new_v4();
 
         // Try to get permissions for nonexistent user
-        let result = db.get_permissions(new_random_user).await;
+        let result = db.get_permissions(&new_random_user).await;
         assert!(result.unwrap().permissions.is_empty());
 
         // Try to get specific permission
-        let result = db.get_permission(new_random_user, &index_id).await;
+        let result = db.get_permission(&new_random_user, &index_id).await;
         result.unwrap_err();
 
         // Revoke a non existent permission, should not fail
-        db.revoke_permission(new_random_user, &Uuid::new_v4())
+        db.revoke_permission(&new_random_user, &Uuid::new_v4())
             .await
             .unwrap();
     }
@@ -465,15 +450,14 @@ mod tests {
 
     #[tokio::test]
     async fn test_permissions_concurrent_create_index_id() {
-        let db = setup_test_db().await;
+        let db = Arc::new(setup_test_db().await);
         let user_id = Uuid::new_v4().to_string();
-        let dba = Arc::new(db);
-        let tasks_count = 10;
+        let tasks_count = 20;
 
         // Create multiple concurrent tasks to create index IDs
         let tasks: Vec<_> = (0..tasks_count)
             .map(|_| {
-                let dba = Arc::clone(&dba);
+                let dba = Arc::clone(&db);
                 let user_id = user_id.clone();
                 tokio::spawn(async move { dba.create_index_id(&user_id).await })
             })
@@ -490,11 +474,7 @@ mod tests {
         assert_eq!(results.len(), tasks_count, "Not all tasks completed");
 
         // Verify that the IDs were actually stored in the db
-        let current_permissions = dba
-            .get_permissions(user_id.as_str())
-            .await
-            .unwrap()
-            .permissions;
+        let current_permissions = db.get_permissions(&user_id).await.unwrap().permissions;
 
         // Collect the unique IDs and permissions in Hashes
         // Verify that the number of unique IDs is equal to the number of tasks
@@ -502,11 +482,9 @@ mod tests {
         assert_eq!(unique_ids.len(), tasks_count, "Not all IDs were stored");
 
         // Verify that all permissions are Admin
-        let _ = current_permissions.values().map(|perm| match perm {
-            Permission::Read => panic!("Unexpected permission"),
-            Permission::Write => panic!("Unexpected permission"),
-            Permission::Admin => 2_u8,
-        });
+        for perm in current_permissions.values() {
+            assert_eq!(perm, &Permission::Admin, "Unexpected permission found");
+        }
     }
 
     /// The testing strategy will be the following:
@@ -546,22 +524,20 @@ mod tests {
         let mut expected_state: HashMap<&str, Vec<HashMap<Uuid, Permission>>> = HashMap::new();
         // Initialize empty vectors for each user
         for user in &users {
-            operations.insert(user.as_str(), Vec::new());
-            expected_state.insert(user.as_str(), Vec::new());
+            operations.insert(user, Vec::new());
+            expected_state.insert(user, Vec::new());
         }
         for user in &users {
-            let user_str = user.as_str();
-
             // init the first op to be always create index
             let op0 = Operation::CreateIndex {
                 index_id: Uuid::new_v4(),
             };
             expected_state
-                .get_mut(user_str)
+                .get_mut(user.as_str())
                 .expect("User should exist")
                 .push(update_expected_results(HashMap::new(), &op0));
             operations
-                .get_mut(user_str)
+                .get_mut(user.as_str())
                 .expect("User should exist")
                 .push(op0);
 
@@ -570,7 +546,7 @@ mod tests {
 
                 // Get the previous state
                 let previous_state: HashMap<Uuid, Permission> =
-                    expected_state.get(user_str).unwrap()[i - 1].clone();
+                    expected_state.get(user.as_str()).unwrap()[i - 1].clone();
 
                 if !matches!(op, Operation::CreateIndex { .. }) {
                     // if operation is not "create", rather use one of the created indexes to stay realistic
@@ -583,26 +559,24 @@ mod tests {
                     } else {
                         let chosen_index = rng.random_range(0..available_indexes.len());
                         match &mut op {
-                            Operation::GrantPermission { index_id, .. } => {
+                            Operation::GrantPermission { index_id, .. }
+                            | Operation::RevokePermission { index_id } => {
                                 *index_id = *available_indexes[chosen_index];
                             }
-                            Operation::RevokePermission { index_id } => {
-                                *index_id = *available_indexes[chosen_index];
-                            }
-                            _ => panic!("Invalid operation type"),
+                            Operation::CreateIndex { .. } => panic!("Invalid operation type"),
                         }
                     }
                 }
 
                 // Append the updated state to the user's vector
                 expected_state
-                    .get_mut(user_str)
+                    .get_mut(user.as_str())
                     .expect("User should exist")
                     .push(update_expected_results(previous_state, &op));
 
                 // Append the operation to the user's vector to reproduce in the real concurrent scenario
                 operations
-                    .get_mut(user_str)
+                    .get_mut(user.as_str())
                     .expect("User should exist")
                     .push(op);
             }
