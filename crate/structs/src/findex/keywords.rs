@@ -36,8 +36,8 @@ impl DerefMut for KeywordToDataSetsMap {
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
-pub struct Keywords(pub Vec<Keyword>);
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct Keywords(pub HashSet<Keyword>);
 
 impl From<Vec<String>> for Keywords {
     fn from(strings: Vec<String>) -> Self {
@@ -49,6 +49,12 @@ impl From<Vec<String>> for Keywords {
     }
 }
 
+impl From<Vec<&Keyword>> for Keywords {
+    fn from(keywords: Vec<&Keyword>) -> Self {
+        Self(keywords.into_iter().cloned().collect())
+    }
+}
+
 impl std::fmt::Display for Keywords {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let base64_keywords: Vec<String> = self
@@ -57,11 +63,5 @@ impl std::fmt::Display for Keywords {
             .map(|keyword| String::from_utf8_lossy(&keyword.0).to_string())
             .collect();
         write!(f, "{base64_keywords:?}")
-    }
-}
-
-impl From<Vec<&Keyword>> for Keywords {
-    fn from(keywords: Vec<&Keyword>) -> Self {
-        Self(keywords.into_iter().cloned().collect())
     }
 }

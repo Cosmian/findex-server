@@ -23,6 +23,8 @@ use tracing::{info, trace};
 
 use crate::test_jwt::{get_auth0_jwt_config, AUTH0_TOKEN};
 
+const REDIS_DEFAULT_URL: &str = "redis://localhost:6379";
+
 /// In order to run most tests in parallel,
 /// we use that to avoid to try to start N Findex servers (one per test)
 /// with a default configuration.
@@ -31,12 +33,12 @@ use crate::test_jwt::{get_auth0_jwt_config, AUTH0_TOKEN};
 pub(crate) static ONCE: OnceCell<TestsContext> = OnceCell::const_new();
 pub(crate) static ONCE_SERVER_WITH_AUTH: OnceCell<TestsContext> = OnceCell::const_new();
 
-fn redis_db_config() -> DBConfig {
-    let url = if let Ok(var_env) = env::var("REDIS_HOST") {
-        format!("redis://{var_env}:6379")
-    } else {
-        "redis://localhost:6379".to_owned()
-    };
+pub fn get_redis_url(redis_url_var_env: &str) -> String {
+    env::var(redis_url_var_env).unwrap_or_else(|_| REDIS_DEFAULT_URL.to_string())
+}
+
+fn redis_db_config(redis_url_var_env: &str) -> DBConfig {
+    let url = get_redis_url(redis_url_var_env);
     trace!("TESTS: using redis on {url}");
     DBConfig {
         database_type: DatabaseType::Redis,
@@ -45,11 +47,14 @@ fn redis_db_config() -> DBConfig {
     }
 }
 
-fn get_db_config() -> DBConfig {
-    env::var_os("FINDEX_TEST_DB").map_or_else(redis_db_config, |v| match v.to_str().unwrap_or("") {
-        "redis" => redis_db_config(),
-        _ => redis_db_config(),
-    })
+fn get_db_config(redis_url_var_env: &str) -> DBConfig {
+    env::var_os("FINDEX_TEST_DB").map_or_else(
+        || redis_db_config(redis_url_var_env),
+        |v| match v.to_str().unwrap_or("") {
+            "redis" => redis_db_config(redis_url_var_env),
+            _ => redis_db_config(redis_url_var_env),
+        },
+    )
 }
 
 /// Start a test Findex server in a thread with the default options:
@@ -58,7 +63,7 @@ pub async fn start_default_test_findex_server() -> &'static TestsContext {
     trace!("Starting default test server");
     ONCE.get_or_try_init(|| {
         start_test_server_with_options(
-            get_db_config(),
+            get_db_config("REDIS_URL"),
             6668,
             AuthenticationOptions {
                 use_jwt_token: false,
@@ -76,7 +81,7 @@ pub async fn start_default_test_findex_server_with_cert_auth() -> &'static Tests
     ONCE_SERVER_WITH_AUTH
         .get_or_try_init(|| {
             start_test_server_with_options(
-                get_db_config(),
+                get_db_config("REDIS_URL2"),
                 6660,
                 AuthenticationOptions {
                     use_jwt_token: false,
@@ -369,7 +374,7 @@ mod test {
         for (use_https, use_jwt_token, use_client_cert, description) in test_cases {
             trace!("Running test case: {}", description);
             let context = start_test_server_with_options(
-                redis_db_config(),
+                redis_db_config("REDIS_URL"),
                 6667,
                 AuthenticationOptions {
                     use_https,

@@ -3,7 +3,7 @@ use std::{fmt::Display, ops::Deref};
 use cosmian_crypto_core::bytes_ser_de::{self, to_leb128_len, Serializable};
 use uuid::Uuid;
 
-use crate::{encrypted_entries::UUID_LENGTH, StructsError};
+use crate::{encrypted_entries::UUID_LENGTH, SearchResults, StructsError};
 
 #[derive(Debug)]
 pub struct Uuids {
@@ -38,6 +38,17 @@ impl From<&[Uuid]> for Uuids {
         Self {
             uuids: uuids.to_vec(),
         }
+    }
+}
+
+impl TryFrom<SearchResults> for Uuids {
+    type Error = StructsError;
+    fn try_from(search_results: SearchResults) -> Result<Self, Self::Error> {
+        let uuids = search_results
+            .iter()
+            .map(|value| Uuid::from_slice(value.as_ref()))
+            .collect::<Result<Vec<Uuid>, _>>()?;
+        Ok(Self { uuids })
     }
 }
 

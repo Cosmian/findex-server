@@ -36,7 +36,7 @@ impl InsertOrDeleteAction {
     /// - There is an error converting the CSV records to the expected data
     ///   types.
     #[instrument(err, skip(self))]
-    pub(crate) fn to_indexed_value_keywords_map(&self) -> CliResult<KeywordToDataSetsMap> {
+    pub(crate) fn to_keywords_indexed_value_map(&self) -> CliResult<KeywordToDataSetsMap> {
         let file = File::open(self.csv.clone())?;
 
         let csv_in_memory = csv::Reader::from_reader(file).byte_records().fold(
@@ -65,7 +65,7 @@ impl InsertOrDeleteAction {
         rest_client: &FindexRestClient,
         is_insert: bool,
     ) -> CliResult<Keywords> {
-        let bindings = self.to_indexed_value_keywords_map()?;
+        let bindings = self.to_keywords_indexed_value_map()?;
         let findex: Findex<WORD_LENGTH, Value, String, FindexRestClient> =
         // cloning will be eliminated in the future, cf https://github.com/Cosmian/findex-server/issues/28
             rest_client.clone().instantiate_findex(
