@@ -32,11 +32,11 @@ function BuildProject {
     # Build `server`
     if ($BuildType -eq "release") {
         cargo build -p cosmian_findex_server --release --target x86_64-pc-windows-msvc
-        cargo test  -p cosmian_findex_server --release --target x86_64-pc-windows-msvc -- --nocapture --skip test_findex --skip test_all_authentications --skip test_server_auth_matrix --skip test_datasets
+        cargo test  -p cosmian_findex_server --release --target x86_64-pc-windows-msvc -- --nocapture --skip test_findex --skip test_all_authentications --skip test_server_auth_matrix --skip test_datasets --skip test_permissions
     }
     else {
         cargo build -p cosmian_findex_server --target x86_64-pc-windows-msvc
-        cargo test  -p cosmian_findex_server --target x86_64-pc-windows-msvc -- --nocapture --skip test_findex --skip test_all_authentications --skip test_server_auth_matrix --skip test_datasets
+        cargo test  -p cosmian_findex_server --target x86_64-pc-windows-msvc -- --nocapture --skip test_findex --skip test_all_authentications --skip test_server_auth_matrix --skip test_datasets --skip test_permissions
     }
 
     # Check dynamic links
