@@ -26,16 +26,14 @@ impl DatasetsAction {
     ///
     /// Returns an error if one of Add, Delete of Get actions fails
     pub async fn run(&self, rest_client: &FindexRestClient) -> CliResult<String> {
-        let res = match self {
-            Self::Add(action) => action.run(rest_client).await?,
-            Self::Delete(action) => action.run(rest_client).await?,
-            Self::Get(action) => {
-                let entries = action.run(rest_client).await?;
-                entries.to_string()
-            }
-        };
-
-        Ok(res)
+        match self {
+            Self::Add(action) => action.run(rest_client).await,
+            Self::Delete(action) => action.run(rest_client).await,
+            Self::Get(action) => action
+                .run(rest_client)
+                .await
+                .map(|entries| entries.to_string()),
+        }
     }
 }
 
