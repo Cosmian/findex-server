@@ -1,6 +1,8 @@
 # Using the Cosmian CLI
 
-The [Cosmian CLI](../cosmian_cli/index.md) allows to interact both with the **KMS server** and **Findex server**. Then you can realize the following operations illustrated in [encrypted database](./database.md#how-to-securely-index-new-data).
+The [Cosmian CLI](../cosmian_cli/index.md) allows to interact both with the
+**KMS server** and **Findex server**. Then you can realize the following operations
+illustrated in [encrypted database](./database.md#how-to-securely-index-new-data).
 
 1. To encrypt and store a dataset:
 

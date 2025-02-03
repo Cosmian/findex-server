@@ -45,8 +45,7 @@ impl InsertOrDeleteAction {
                 if let Ok(record) = result {
                     let indexed_value = Value::from(record.as_slice());
                     // Extract keywords from the record and associate them with the indexed values
-                    let keywords = record.iter().map(Keyword::from).collect::<HashSet<_>>();
-                    for keyword in keywords {
+                    for keyword in record.iter().map(Keyword::from) {
                         acc.entry(keyword)
                             .or_default()
                             .insert(indexed_value.clone());
@@ -65,14 +64,14 @@ impl InsertOrDeleteAction {
         rest_client: &FindexRestClient,
         is_insert: bool,
     ) -> CliResult<Keywords> {
-        let bindings = self.to_keywords_indexed_value_map()?;
+        let keywords_indexed_value = self.to_keywords_indexed_value_map()?;
         let findex: Findex<WORD_LENGTH, Value, String, FindexRestClient> =
         // cloning will be eliminated in the future, cf https://github.com/Cosmian/findex-server/issues/28
             rest_client.clone().instantiate_findex(
                 self.findex_parameters.index_id,
                 &self.findex_parameters.seed()?,
             )?;
-        for (key, value) in bindings.iter() {
+        for (key, value) in keywords_indexed_value.iter() {
             if is_insert {
                 trace!("Attempt to insert ...");
                 findex.insert(key, value.clone()).await
@@ -80,7 +79,7 @@ impl InsertOrDeleteAction {
                 findex.delete(key, value.clone()).await
             }?;
         }
-        let written_keywords = bindings.keys().collect::<Vec<_>>();
+        let written_keywords = keywords_indexed_value.keys().collect::<Vec<_>>();
         let operation_name = if is_insert { "Indexing" } else { "Deleting" };
         let written_keywords = Keywords::from(written_keywords);
 
