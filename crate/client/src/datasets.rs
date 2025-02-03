@@ -1,4 +1,4 @@
-use cloudproof_findex::reexport::cosmian_crypto_core::bytes_ser_de::Serializable;
+use cosmian_crypto_core::bytes_ser_de::Serializable;
 use cosmian_findex_structs::{EncryptedEntries, Uuids};
 use tracing::{instrument, trace};
 use uuid::Uuid;
@@ -18,11 +18,11 @@ impl FindexRestClient {
         encrypted_entries: &EncryptedEntries,
     ) -> FindexClientResult<SuccessResponse> {
         let endpoint = format!("/datasets/{index_id}/add_entries");
-        let server_url = format!("{}{endpoint}", self.client.server_url);
+        let server_url = format!("{}{endpoint}", self.http_client.server_url);
         trace!("POST: {server_url}");
         let encrypted_entries = encrypted_entries.serialize()?;
         let response = self
-            .client
+            .http_client
             .client
             .post(server_url)
             .body(encrypted_entries.to_vec())
@@ -39,12 +39,12 @@ impl FindexRestClient {
         uuids: &[Uuid],
     ) -> FindexClientResult<SuccessResponse> {
         let endpoint = format!("/datasets/{index_id}/delete_entries");
-        let server_url = format!("{}{endpoint}", self.client.server_url);
+        let server_url = format!("{}{endpoint}", self.http_client.server_url);
         trace!("POST: {server_url}");
 
         let uuids = Uuids::from(uuids).serialize()?;
         let response = self
-            .client
+            .http_client
             .client
             .post(server_url)
             .body(uuids.to_vec())
@@ -61,19 +61,18 @@ impl FindexRestClient {
         uuids: &[Uuid],
     ) -> FindexClientResult<EncryptedEntries> {
         let endpoint = format!("/datasets/{index_id}/get_entries");
-        let server_url = format!("{}{endpoint}", self.client.server_url);
+        let server_url = format!("{}{endpoint}", self.http_client.server_url);
         trace!("POST: {server_url}");
 
         let uuids = Uuids::from(uuids).serialize()?;
         let response = self
-            .client
+            .http_client
             .client
             .post(server_url)
             .body(uuids.to_vec())
             .send()
             .await?;
-        let status_code = response.status();
-        if status_code.is_success() {
+        if response.status().is_success() {
             let response_bytes = response.bytes().await.map(|r| r.to_vec())?;
             let encrypted_entries = EncryptedEntries::deserialize(&response_bytes)?;
             return Ok(encrypted_entries);

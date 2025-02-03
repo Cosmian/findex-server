@@ -8,7 +8,7 @@ use tracing::info;
 use crate::{
     actions::{
         datasets::DatasetsAction,
-        findex::{index_or_delete::IndexOrDeleteAction, search::SearchAction},
+        findex::{insert_or_delete::InsertOrDeleteAction, search::SearchAction},
         login::LoginAction,
         logout::LogoutAction,
         permissions::PermissionsAction,
@@ -70,9 +70,9 @@ pub enum CoreFindexActions {
     #[command(subcommand)]
     Datasets(DatasetsAction),
     /// Delete indexed keywords
-    Delete(IndexOrDeleteAction),
-    /// Index new keywords.
-    Index(IndexOrDeleteAction),
+    Delete(InsertOrDeleteAction),
+    /// Insert new keywords.
+    Insert(InsertOrDeleteAction),
     Login(LoginAction),
     Logout(LogoutAction),
     #[command(subcommand)]
@@ -83,19 +83,36 @@ pub enum CoreFindexActions {
 
 impl CoreFindexActions {
     /// Process the command line arguments
+    ///
     /// # Errors
     /// - If the configuration file is not found or invalid
-    #[allow(clippy::future_not_send)]
+    #[allow(clippy::unit_arg)] // println! does return () but it prints the output of action.run() beforehand, nothing is "lost" and hence this lint will only cause useless boilerplate code
     pub async fn run(&self, findex_client: &mut FindexRestClient) -> CliResult<()> {
-        match self {
-            Self::Datasets(action) => action.run(findex_client).await,
-            Self::Delete(action) => action.delete(findex_client).await,
-            Self::Index(action) => action.add(findex_client).await,
-            Self::Permissions(action) => action.run(findex_client).await,
-            Self::Login(action) => action.run(&mut findex_client.config).await,
-            Self::Logout(action) => action.run(&mut findex_client.config),
-            Self::Search(action) => action.run(findex_client).await,
-            Self::ServerVersion(action) => action.run(findex_client).await,
+        let action = self;
+        {
+            let result = match action {
+                Self::Datasets(action) => action.run(findex_client).await,
+                Self::Delete(action) => {
+                    let deleted_keywords = action.delete(findex_client).await?;
+                    Ok(format!("Deleted keywords: {deleted_keywords}"))
+                }
+                Self::Insert(action) => {
+                    let inserted_keywords = action.insert(findex_client).await?;
+                    Ok(format!("Inserted keywords: {inserted_keywords}"))
+                }
+                Self::Permissions(action) => action.run(findex_client).await,
+                Self::Login(action) => action.run(&mut findex_client.config).await,
+                Self::Logout(action) => action.run(&mut findex_client.config),
+                Self::Search(action) => {
+                    let search_results = action.run(findex_client).await?;
+                    Ok(format!("Search results: {search_results}"))
+                }
+                Self::ServerVersion(action) => action.run(findex_client).await,
+            };
+            match result {
+                Ok(output) => Ok(println!("{output}")),
+                Err(e) => Err(e),
+            }
         }
     }
 }
@@ -104,7 +121,6 @@ impl CoreFindexActions {
 /// # Errors
 /// - If the configuration file is not found or invalid
 /// - If the command line arguments are invalid
-#[allow(clippy::future_not_send)]
 pub async fn findex_cli_main() -> CliResult<()> {
     log_init(None);
     let cli_opts = FindexCli::parse();

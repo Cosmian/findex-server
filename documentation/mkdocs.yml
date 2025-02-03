@@ -1,7 +1,7 @@
 ---
 site_name: Findex server
 site_url: https://docs.cosmian.com/
-copyright: © Copyright 2018-2024 Cosmian. All rights reserved
+copyright: © Copyright 2018-2025 Cosmian. All rights reserved
 dev_addr: localhost:8003
 theme:
   name: material
@@ -29,7 +29,7 @@ markdown_extensions:
         - name: mermaid
           class: mermaid
           # uncomment this only to test locally the mermaid rendering
-          # format: !%21python/name:mermaid2.fence_mermaid_custom
+          # format: !!python/name:mermaid2.fence_mermaid_custom
   - pymdownx.tabbed:
       alternate_style: true
   - pymdownx.emoji

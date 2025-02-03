@@ -1,0 +1,11 @@
+default_username = "admin"
+force_default_username = false
+
+[db]
+database_type = "Redis"
+database_url = "redis://localhost:6379"
+clear_database = false
+
+[http]
+port = 6668
+hostname = "0.0.0.0"

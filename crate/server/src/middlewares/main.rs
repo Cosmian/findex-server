@@ -15,7 +15,7 @@ use futures::{
     future::{ok, Ready},
     Future,
 };
-use tracing::debug;
+use tracing::trace;
 
 use super::{manage_jwt_request, PeerCommonName};
 use crate::middlewares::jwt::JwtConfig;
@@ -62,7 +62,6 @@ where
     S::Future: 'static,
 {
     type Error = Error;
-    #[allow(clippy::type_complexity)]
     type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>>>>;
     type Response = ServiceResponse<EitherBody<B, BoxBody>>;
 
@@ -74,7 +73,7 @@ where
         let service = self.service.clone();
 
         if req.extensions().contains::<PeerCommonName>() {
-            debug!(
+            trace!(
                 "Request extension PeerCommonName found! Certificate client authentication has \
                  already been done in success, no need to authenticate twice..."
             );
@@ -88,7 +87,7 @@ where
             Box::pin(async move { manage_jwt_request(service, configurations, req).await })
         } else {
             Box::pin(async move {
-                debug!("No JWT configuration found, passing request without authentication...");
+                trace!("No JWT configuration found, passing request without authentication...");
                 let res = service.call(req).await?;
                 Ok(res.map_into_left_body())
             })

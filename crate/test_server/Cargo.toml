@@ -14,6 +14,7 @@ doctest = false
 
 [dependencies]
 actix-server = { workspace = true }
+cosmian_config_utils = { workspace = true }
 cosmian_findex_client = { path = "../client" }
 cosmian_findex_server = { path = "../server", features = [
   "insecure",

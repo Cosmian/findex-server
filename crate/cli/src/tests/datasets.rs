@@ -1,122 +1,63 @@
-use std::{collections::HashMap, ops::Deref, process::Command};
-
-use assert_cmd::prelude::*;
+use crate::{
+    actions::datasets::{AddEntries, DeleteEntries, GetEntries},
+    error::result::CliResult,
+};
 use base64::{engine::general_purpose, Engine};
-use cosmian_findex_client::FINDEX_CLI_CONF_ENV;
+use cosmian_findex_client::{FindexClientConfig, FindexRestClient};
 use cosmian_findex_structs::EncryptedEntries;
 use cosmian_logger::log_init;
+use std::{ops::Deref, path::PathBuf};
 use test_findex_server::start_default_test_findex_server;
 use uuid::Uuid;
 
-use crate::{
-    actions::datasets::{AddEntries, DeleteEntries, GetEntries},
-    error::{result::CliResult, CliError},
-    tests::{utils::recover_cmd_logs, PROG_NAME},
-};
-
-pub(crate) fn dataset_add_entries_cmd(
-    cli_conf_path: &str,
-    action: &AddEntries,
-) -> CliResult<String> {
-    let mut cmd = Command::cargo_bin(PROG_NAME)?;
-    let mut args = vec![
-        "add".to_owned(),
-        "--index-id".to_owned(),
-        action.index_id.to_string(),
-    ];
-    for (entry_id, data) in &action.entries {
-        args.push("-D".to_owned());
-        args.push(format!("{entry_id}={data}"));
+async fn dataset_add_entries(
+    rest_client: &FindexRestClient,
+    index_id: &Uuid,
+    entries: Vec<(Uuid, String)>,
+) -> CliResult<()> {
+    // we don't need the output of this in the test, hence it's discarded
+    AddEntries {
+        index_id: *index_id,
+        entries,
     }
-    cmd.env(FINDEX_CLI_CONF_ENV, cli_conf_path);
-
-    cmd.arg("datasets").args(args);
-    let output = recover_cmd_logs(&mut cmd);
-    if output.status.success() {
-        let findex_output = std::str::from_utf8(&output.stdout)?;
-        return Ok(findex_output.to_owned());
-    }
-    Err(CliError::Default(
-        std::str::from_utf8(&output.stderr)?.to_owned(),
-    ))
+    .run(rest_client)
+    .await?;
+    Ok(())
 }
 
-pub(crate) fn dataset_delete_entries_cmd(
-    cli_conf_path: &str,
-    delete_entries: &DeleteEntries,
-) -> CliResult<String> {
-    let mut cmd = Command::cargo_bin(PROG_NAME)?;
-    let mut args = vec![
-        "delete".to_owned(),
-        "--index-id".to_owned(),
-        delete_entries.index_id.to_string(),
-    ];
-    for uuid in delete_entries.uuids.clone() {
-        args.push("--uuids".to_owned());
-        args.push(uuid.to_string());
+async fn dataset_delete_entries(
+    rest_client: &FindexRestClient,
+    index_id: &Uuid,
+    uuids: Vec<Uuid>,
+) -> CliResult<()> {
+    DeleteEntries {
+        index_id: *index_id,
+        uuids,
     }
-    cmd.env(FINDEX_CLI_CONF_ENV, cli_conf_path);
-
-    cmd.arg("datasets").args(args);
-    let output = recover_cmd_logs(&mut cmd);
-    if output.status.success() {
-        let findex_output = std::str::from_utf8(&output.stdout)?;
-        return Ok(findex_output.to_owned());
-    }
-    Err(CliError::Default(
-        std::str::from_utf8(&output.stderr)?.to_owned(),
-    ))
+    .run(rest_client)
+    .await?;
+    Ok(())
 }
 
-pub(crate) fn datasets_get_entries_cmd(
-    cli_conf_path: &str,
-    get_entries: &GetEntries,
+async fn dataset_get_entries(
+    rest_client: &FindexRestClient,
+    index_id: &Uuid,
+    uuids: Vec<Uuid>,
 ) -> CliResult<EncryptedEntries> {
-    let mut cmd = Command::cargo_bin(PROG_NAME)?;
-    let mut args = vec![
-        "get".to_owned(),
-        "--index-id".to_owned(),
-        get_entries.index_id.to_string(),
-    ];
-    for uuid in get_entries.uuids.clone() {
-        args.push("--uuids".to_owned());
-        args.push(uuid.to_string());
+    GetEntries {
+        index_id: *index_id,
+        uuids,
     }
-    cmd.env(FINDEX_CLI_CONF_ENV, cli_conf_path);
-
-    cmd.arg("datasets").args(args);
-    let output = recover_cmd_logs(&mut cmd);
-    if output.status.success() {
-        let findex_output = std::str::from_utf8(&output.stdout)?;
-        return parse_entries(findex_output);
-    }
-    Err(CliError::Default(
-        std::str::from_utf8(&output.stderr)?.to_owned(),
-    ))
-}
-
-#[allow(clippy::indexing_slicing)]
-fn parse_entries(s: &str) -> CliResult<EncryptedEntries> {
-    let mut entries_map = HashMap::new();
-    for line in s.lines() {
-        let parts: Vec<&str> = line.split(", Entry Value: ").collect();
-        if parts.len() == 2 {
-            let index_id = parts[0].replace("Entry ID: ", "");
-            let entry = parts[1].to_owned();
-            entries_map.insert(
-                Uuid::parse_str(&index_id)?,
-                general_purpose::STANDARD.decode(entry)?,
-            );
-        }
-    }
-    Ok(EncryptedEntries::from(entries_map))
+    .run(rest_client)
+    .await
 }
 
 #[tokio::test]
-#[allow(clippy::panic_in_result_fn, clippy::print_stdout)]
 pub(crate) async fn test_datasets() -> CliResult<()> {
     log_init(None);
     let ctx = start_default_test_findex_server().await;
+    let owner_conf = FindexClientConfig::load(Some(PathBuf::from(&ctx.owner_client_conf_path)))?;
+    let owner_rest_client = FindexRestClient::new(owner_conf)?;
 
     let index_id = Uuid::new_v4();
 
@@ -133,37 +74,21 @@ pub(crate) async fn test_datasets() -> CliResult<()> {
     let uuids: Vec<Uuid> = encrypted_entries.iter().map(|(uuid, _)| *uuid).collect();
 
     // Add entries to the dataset
-    dataset_add_entries_cmd(
-        &ctx.owner_client_conf_path,
-        &AddEntries {
-            index_id,
-            entries: encrypted_entries,
-        },
-    )?;
+    dataset_add_entries(&owner_rest_client, &index_id, encrypted_entries.clone()).await?;
 
     // Get the added entries from the dataset
-    let added_entries = datasets_get_entries_cmd(
-        &ctx.owner_client_conf_path,
-        &GetEntries {
-            index_id,
-            uuids: uuids.clone(),
-        },
-    )?;
-    // println!("added_entries: {added_entries}");
+    let added_entries = dataset_get_entries(&owner_rest_client, &index_id, uuids.clone()).await?;
     assert_eq!(added_entries.len(), entries_number);
 
-    dataset_delete_entries_cmd(
-        &ctx.owner_client_conf_path,
-        &DeleteEntries {
-            index_id,
-            uuids: added_entries.get_uuids().deref().to_owned(),
-        },
-    )?;
+    dataset_delete_entries(
+        &owner_rest_client,
+        &index_id,
+        added_entries.get_uuids().deref().to_owned(),
+    )
+    .await?;
 
     // Get the added entries from the dataset
-    let deleted_entries =
-        datasets_get_entries_cmd(&ctx.owner_client_conf_path, &GetEntries { index_id, uuids })?;
-    // println!("added_entries: {added_entries}");
+    let deleted_entries = dataset_get_entries(&owner_rest_client, &index_id, uuids).await?;
     assert_eq!(deleted_entries.len(), 0);
 
     Ok(())

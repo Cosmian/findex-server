@@ -31,7 +31,7 @@ actix-service = "2.0"
 actix-tls = "3.4"
 actix-web = { workspace = true, features = ["macros", "openssl"] }
 alcoholic_jwt = "4091"
-async-trait = "0.1.83"
+async-trait = "0.1.86"
 chrono = "0.4"
 clap = { workspace = true, features = [
   "help",
@@ -42,13 +42,14 @@ clap = { workspace = true, features = [
   "derive",
   "cargo",
 ] }
-cloudproof_findex = { workspace = true, features = ["redis-interface"] }
+cosmian_crypto_core = { workspace = true }
+cosmian_findex = { workspace = true, features = ["redis-mem"] }
 cosmian_findex_structs = { path = "../structs" }
 cosmian_logger = { workspace = true }
 dotenvy = "0.15"
 futures = "0.3"
 openssl = { workspace = true, default-features = false }
-redis = { version = "0.27", features = [
+redis = { version = "0.28.2", features = [
   "aio",
   "script",
   "connection-manager",
@@ -63,7 +64,7 @@ redis = { version = "0.27", features = [
 reqwest = { workspace = true, features = ["default", "json"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
-sqlx = { version = "0.8.2", default-features = false, features = [
+sqlx = { version = "0.8.3", default-features = false, features = [
   "json",
   "runtime-tokio-native-tls",
 ] }
@@ -76,3 +77,51 @@ uuid = { workspace = true, features = ["v4"] }
 
 [dev-dependencies]
 tempfile = { workspace = true }
+rand = "0.9.0"
+
+# ------------------------------------------------------------------------------
+# START DEBIAN PACKAGING
+[package.metadata.deb]
+maintainer = "Emmanuel Coste <emmanuel.coste@cosmian.com>"
+maintainer-scripts = "../../pkg/deb/"
+copyright = "2024, Cosmian Tech SAS <tech@cosmian.com>"
+license-file = ["../../LICENSE", "0"]
+changelog = "../../CHANGELOG.md"
+section = "security"
+priority = "optional"
+assets = [
+  [
+    "target/release/cosmian_findex_server",
+    "usr/sbin/cosmian_findex_server",
+    "500",
+  ],
+  [
+    "../../README.md",
+    "usr/share/doc/cosmian_findex_server/README",
+    "644",
+  ],
+  [
+    "../../pkg/findex_server.toml",
+    "etc/cosmian/",
+    "400",
+  ],
+]
+systemd-units = [
+  { unit-name = "cosmian_findex_server", unit-scripts = "../../pkg", enable = true, start = false, restart-after-upgrade = false },
+]
+
+# END DEBIAN PACKAGING
+# ------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
+# START RPM PACKAGING
+[package.metadata.generate-rpm]
+license = "BUSL-1.1"
+assets = [
+  { source = "target/release/cosmian_findex_server", dest = "/usr/sbin/cosmian_findex_server", mode = "500" },
+  { source = "../../README.md", dest = "/usr/share/doc/cosmian_findex_server/README", mode = "644", doc = true },
+  { source = "../../pkg/findex_server.toml", dest = "/etc/cosmian/findex_server.toml", mode = "400" },
+  { source = "../../pkg/cosmian_findex_server.service", dest = "/lib/systemd/system/cosmian_findex_server.service", mode = "644" },
+]
+auto-req = "no" # do not try to discover .so dependencies
+require-sh = true

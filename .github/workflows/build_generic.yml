@@ -22,6 +22,10 @@ on:
       skip_services_tests:
         required: false
         type: string
+      docker_compose:
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   cargo-build:
@@ -34,8 +38,17 @@ jobs:
           toolchain: ${{ inputs.toolchain }}
           components: rustfmt, clippy
 
+      - name: Run Redis container
+        if: ${{ inputs.docker_compose }}
+        run: |
+          docker compose -h
+          docker compose up -d
+
       - name: Build and tests
         env:
+          REDIS_URL: redis://localhost:6379
+          REDIS_URL2: redis://localhost:6380
+
           # Google variables
           TEST_GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.TEST_GOOGLE_OAUTH_CLIENT_ID }}
           TEST_GOOGLE_OAUTH_CLIENT_SECRET: ${{ secrets.TEST_GOOGLE_OAUTH_CLIENT_SECRET }}
@@ -54,6 +67,7 @@ jobs:
           path: |
             target/${{ inputs.target }}/${{ inputs.debug_or_release }}/cosmian_findex_cli
             target/${{ inputs.target }}/${{ inputs.debug_or_release }}/cosmian_findex_server
+            target/${{ inputs.target }}/debian/*.deb
           retention-days: 1
           if-no-files-found: error
 
@@ -75,18 +89,18 @@ jobs:
           set -ex
           pwd
           find . -type f
-          chmod u+x ./cosmian_findex_cli
-          chmod u+x ./cosmian_findex_server
+          chmod u+x ./${{ inputs.debug_or_release }}/cosmian_findex_cli
+          chmod u+x ./${{ inputs.debug_or_release }}/cosmian_findex_server
 
-          ./cosmian_findex_cli -V
-          ./cosmian_findex_server -V
+          ./${{ inputs.debug_or_release }}/cosmian_findex_cli -V
+          ./${{ inputs.debug_or_release }}/cosmian_findex_server -V
 
       - name: MacOS launch cli and server
         if: contains(runner.os, 'macos')
         run: |
           set -ex
-          chmod u+x ./cosmian_findex_cli
-          chmod u+x ./cosmian_findex_server
+          chmod u+x ./${{ inputs.debug_or_release }}/cosmian_findex_cli
+          chmod u+x ./${{ inputs.debug_or_release }}/cosmian_findex_server
 
-          ./cosmian_findex_cli -V
-          ./cosmian_findex_server -V
+          ./${{ inputs.debug_or_release }}/cosmian_findex_cli -V
+          ./${{ inputs.debug_or_release }}/cosmian_findex_server -V

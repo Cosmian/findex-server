@@ -1,3 +1,4 @@
+use cosmian_config_utils::ConfigUtils;
 use std::{
     env,
     path::PathBuf,
@@ -8,8 +9,7 @@ use std::{
 
 use actix_server::ServerHandle;
 use cosmian_findex_client::{
-    findex_client_bail, findex_client_error,
-    reexport::{cosmian_config_utils::ConfigUtils, cosmian_http_client::HttpClientConfig},
+    findex_client_bail, findex_client_error, reexport::cosmian_http_client::HttpClientConfig,
     FindexClientConfig, FindexClientError, FindexRestClient,
 };
 use cosmian_findex_server::{
@@ -23,6 +23,8 @@ use tracing::{info, trace};
 
 use crate::test_jwt::{get_auth0_jwt_config, AUTH0_TOKEN};
 
+const REDIS_DEFAULT_URL: &str = "redis://localhost:6379";
+
 /// In order to run most tests in parallel,
 /// we use that to avoid to try to start N Findex servers (one per test)
 /// with a default configuration.
@@ -31,12 +33,12 @@ use crate::test_jwt::{get_auth0_jwt_config, AUTH0_TOKEN};
 pub(crate) static ONCE: OnceCell<TestsContext> = OnceCell::const_new();
 pub(crate) static ONCE_SERVER_WITH_AUTH: OnceCell<TestsContext> = OnceCell::const_new();
 
-fn redis_db_config() -> DBConfig {
-    let url = if let Ok(var_env) = env::var("REDIS_HOST") {
-        format!("redis://{var_env}:6379")
-    } else {
-        "redis://localhost:6379".to_owned()
-    };
+pub fn get_redis_url(redis_url_var_env: &str) -> String {
+    env::var(redis_url_var_env).unwrap_or_else(|_| REDIS_DEFAULT_URL.to_string())
+}
+
+fn redis_db_config(redis_url_var_env: &str) -> DBConfig {
+    let url = get_redis_url(redis_url_var_env);
     trace!("TESTS: using redis on {url}");
     DBConfig {
         database_type: DatabaseType::Redis,
@@ -45,20 +47,13 @@ fn redis_db_config() -> DBConfig {
     }
 }
 
-fn get_db_config() -> DBConfig {
-    env::var_os("FINDEX_TEST_DB").map_or_else(redis_db_config, |v| match v.to_str().unwrap_or("") {
-        "redis" => redis_db_config(),
-        _ => redis_db_config(),
-    })
-}
-
 /// Start a test Findex server in a thread with the default options:
 /// No TLS, no certificate authentication
 pub async fn start_default_test_findex_server() -> &'static TestsContext {
     trace!("Starting default test server");
     ONCE.get_or_try_init(|| {
         start_test_server_with_options(
-            get_db_config(),
+            redis_db_config("REDIS_URL"),
             6668,
             AuthenticationOptions {
                 use_jwt_token: false,
@@ -76,7 +71,7 @@ pub async fn start_default_test_findex_server_with_cert_auth() -> &'static Tests
     ONCE_SERVER_WITH_AUTH
         .get_or_try_init(|| {
             start_test_server_with_options(
-                get_db_config(),
+                redis_db_config("REDIS_URL2"),
                 6660,
                 AuthenticationOptions {
                     use_jwt_token: false,
@@ -119,7 +114,7 @@ pub async fn start_test_server_with_options(
     authentication_options: AuthenticationOptions,
 ) -> Result<TestsContext, FindexClientError> {
     cosmian_logger::log_init(None);
-    let server_params = generate_server_params(db_config.clone(), port, &authentication_options)?;
+    let server_params = generate_server_params(db_config, port, &authentication_options)?;
 
     // Create a (object owner) conf
     let (owner_client_conf_path, owner_client_conf) = generate_owner_conf(&server_params)?;
@@ -162,7 +157,7 @@ fn start_test_findex_server(
             .enable_all()
             .build()?
             .block_on(start_findex_server(server_params, Some(tx)))
-            .map_err(|e| FindexClientError::UnexpectedError(e.to_string()))
+            .map_err(|e| FindexClientError::Default(e.to_string()))
     });
     trace!("Waiting for test Findex server to start...");
     let server_handle = rx
@@ -176,32 +171,23 @@ fn start_test_findex_server(
 async fn wait_for_server_to_start(
     findex_client: &FindexRestClient,
 ) -> Result<(), FindexClientError> {
-    // Depending on the running environment, the server could take a bit of time to
-    // start We try to query it with a dummy request until be sure it is
-    // started.
-    let mut retry = true;
-    let mut timeout = 5;
-    let mut waiting = 1;
-    while retry {
+    // Depending on the running environment, the server could take a bit of time
+    // to start. We try to querying it with a dummy request until it is started.
+    for i in 1..=5 {
         info!("...checking if the server is up...");
-        let result = findex_client.version().await;
-        if result.is_err() {
-            timeout -= 1;
-            retry = timeout >= 0;
-            if retry {
-                info!("The server is not up yet, retrying in {waiting}s... ({result:?}) ",);
-                thread::sleep(Duration::from_secs(waiting));
-                waiting *= 2;
-            } else {
-                info!("The server is still not up, stop trying");
-                findex_client_bail!("Can't start the Findex server to run tests");
-            }
+        if let Err(err) = findex_client.version().await {
+            info!(
+                "The server is not up yet, retrying in {}s... ({err:?}) ",
+                2 * i
+            );
+            thread::sleep(Duration::from_secs(2 * i));
         } else {
             info!("UP!");
-            retry = false;
+            return Ok(());
         }
     }
-    Ok(())
+    info!("The server is still not up, stop trying");
+    findex_client_bail!("Can't start the Findex server to run tests");
 }
 
 fn generate_http_config(port: u16, use_https: bool, use_client_cert: bool) -> HttpConfig {
@@ -378,7 +364,7 @@ mod test {
         for (use_https, use_jwt_token, use_client_cert, description) in test_cases {
             trace!("Running test case: {}", description);
             let context = start_test_server_with_options(
-                redis_db_config(),
+                redis_db_config("REDIS_URL"),
                 6667,
                 AuthenticationOptions {
                     use_https,

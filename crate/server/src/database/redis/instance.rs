@@ -1,54 +1,39 @@
-use redis::{
-    aio::{ConnectionManager, ConnectionManagerConfig},
-    Client, Script,
-};
+use crate::error::{result::FResult, server::FindexServerError};
+use cosmian_findex::{Address, RedisMemory};
+use cosmian_findex_structs::SERVER_ADDRESS_LENGTH;
+use redis::aio::ConnectionManager;
+use tokio::sync::Mutex;
 use tracing::info;
 
-use crate::error::result::FResult;
-
-/// The conditional upsert script used to only update a table if the
-/// indexed value matches ARGV[2] or no value is stored at ARGV[1]. When the value does not match, the
-/// indexed value is returned.
-const CONDITIONAL_UPSERT_SCRIPT: &str = r"
-        local value=redis.call('GET',ARGV[1])
-        if ((value==false) or (ARGV[2] == value)) then
-            redis.call('SET', ARGV[1], ARGV[3])
-            return
-        else
-            return value
-        end;
-    ";
-
-pub(crate) struct Redis {
-    pub(crate) client: Client,
-    pub(crate) mgr: ConnectionManager,
-    pub(crate) upsert_script: Script,
+pub(crate) struct Redis<const WORD_LENGTH: usize> {
+    pub(crate) memory: RedisMemory<Address<SERVER_ADDRESS_LENGTH>, [u8; WORD_LENGTH]>,
+    pub(crate) manager: ConnectionManager,
+    pub(crate) lock: Mutex<()>,
 }
 
-impl Redis {
+impl<const WORD_LENGTH: usize> Redis<WORD_LENGTH> {
     pub(crate) async fn instantiate(redis_url: &str, clear_database: bool) -> FResult<Self> {
         let client = redis::Client::open(redis_url)?;
+        let mut manager = client.get_connection_manager().await?;
 
-        let mgr = ConnectionManager::new_with_config(
-            client.clone(),
-            ConnectionManagerConfig::new().set_number_of_retries(18),
-        )
-        .await?;
         if clear_database {
-            info!("Warning: Irreversible operation: clearing the database");
-            Self::clear_database(mgr.clone()).await?;
+            info!("Warning: proceeding to clear the database, this operation is irreversible.");
+            let deletion_result: String = redis::cmd("FLUSHDB").query_async(&mut manager).await?;
+            if deletion_result.as_str() == "OK" {
+                info!("Database cleared");
+            } else {
+                return Err(FindexServerError::DatabaseError(
+                    "Database not cleared, Redis DB returned {deletion_result}".to_owned(),
+                ));
+            }
         }
-        Ok(Self {
-            client,
-            mgr,
-            upsert_script: Script::new(CONDITIONAL_UPSERT_SCRIPT),
-        })
-    }
 
-    pub(crate) async fn clear_database(mgr: ConnectionManager) -> FResult<()> {
-        redis::cmd("FLUSHDB")
-            .query_async::<()>(&mut mgr.clone())
-            .await?;
-        Ok(())
+        let memory = RedisMemory::connect_with_manager(manager.clone()).await?;
+
+        Ok(Self {
+            memory,
+            manager,
+            lock: Mutex::new(()),
+        })
     }
 }

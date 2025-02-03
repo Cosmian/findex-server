@@ -5,78 +5,135 @@ Multiple options are available to run the Findex server, including using Docker,
 !!! warning
     No authentication is configured for quick start. This is not recommended for production use.
 
-## Docker
+=== "Docker"
 
-The quickest way to get started with Findex server is to use the Docker image. To run the server binary on `http://localhost:6668` that stores its data
-in a Redis server, run the following command:
+    The quickest way to get started with Findex server is to use the Docker image.
+    To run the server binary on `http://localhost:6668` that stores its data
+    in a Redis server, run the following command:
 
-```sh
-docker compose -f docker-compose-quick-start.yml up
-```
+    ```sh
+    docker compose -f docker-compose-quick-start.yml up
+    ```
 
-where `docker-compose-quick-start.yml` is the following:
+    where `docker-compose-quick-start.yml` is the following:
 
-```yaml
-services:
-  redis:
-    container_name: redis
-    image: redis:latest
-    ports:
-      - 6379:6379
-  findex-server:
-    container_name: findex-server
-    image: ghcr.io/cosmian/findex-server:latest
-    ports:
-      - 6668:6668
-    environment:
-      FINDEX_SERVER_DATABASE_TYPE: redis
-      FINDEX_SERVER_DATABASE_URL: redis://redis:6379
-      FINDEX_SERVER_CLEAR_DATABASE: true
+    ```yaml
+    services:
+      redis:
+        container_name: redis
+        image: redis:latest
+        ports:
+          - 6379:6379
+      findex-server:
+        container_name: findex-server
+        image: ghcr.io/cosmian/findex-server:latest
+        ports:
+          - 6668:6668
+        environment:
+          FINDEX_SERVER_DATABASE_TYPE: redis
+          FINDEX_SERVER_DATABASE_URL: redis://redis:6379
+          FINDEX_SERVER_CLEAR_DATABASE: true
+    ```
 
-```
+=== "Ubuntu 24.04"
 
-## Pre-built binaries
+    An other option include running the server binary directly installing the
+    Debian package [available here](https://package.cosmian.com/findex-server/0.2.0/ubuntu-24.04/).
 
-An other option include running the server binary directly or building it from source: pre-built binaries [are available](https://package.cosmian.com/findex-server/0.1.1/) for Linux, MacOS, and Windows.
+    First, run the Redis server independently:
 
-First, run the Redis server independently:
+    ```sh
+    docker run -d -p 6379:6379 redis
+    ```
 
-```sh
-docker run -d -p 6379:6379 redis
-```
+    Then, download package and install it:
 
-Then, download the binary for your platform and run it:
+    ```console title="On local machine"
+    sudo apt update && sudo apt install -y wget
+    wget https://package.cosmian.com/findex-server/0.2.0/ubuntu-24.04/cosmian-findex-server_0.2.0-1_amd64.deb
+    sudo apt install ./cosmian-findex-server_0.2.0-1_amd64.deb
+    cosmian_findex_server --version
+    ```
 
-```sh
-wget https://package.cosmian.com/findex-server/0.1.1/ubuntu_24_04-release.zip
-unzip ubuntu_24_04-release.zip
-./ubuntu_24_04-release/cosmian_findex_server -- --database-url redis://localhost:6379 --database-type redis
-```
+    The server should now be running on `http://localhost:6668`.
 
-The server should now be running on `http://localhost:6668`.
+=== "RHEL 9"
 
-## From source
+    An other option include running the server binary directly installing the
+    Debian package [available here](https://package.cosmian.com/findex-server/0.2.0/rhel9/).
 
-To build the server from source, clone the repository and run the following commands:
+    First, run the Redis server independently:
 
-```sh
-git clone https://github.com/Cosmian/findex-server.git
-cd findex-server
-cargo build
-```
+    ```sh
+    docker run -d -p 6379:6379 redis
+    ```
 
-First, run the Redis server independently:
+    Then, download package and install it:
 
-```sh
-docker run -d -p 6379:6379 redis
-```
+    ```console title="On local machine"
+    sudo dnf update && dnf install -y wget
+    wget https://package.cosmian.com/findex-server/0.2.0/rhel9/cosmian_findex_server-0.2.0-1.x86_64.rpm
+    sudo dnf install ./cosmian_findex_server-0.2.0-1.x86_64.rpm
+    cosmian_findex_server --version
+    ```
 
-Then, run the server:
+    The server should now be running on `http://localhost:6668`.
 
-```sh
-cargo run --bin cosmian_findex_server -- --database-url redis://localhost:6379 --database-type redis
-```
+=== "MacOS"
+
+    On ARM MacOS, download the build archive and extract it:
+
+    ```console title="On local machine"
+    wget https://package.cosmian.com/findex-server/0.2.0/macos_arm-release.zip
+    unzip macos_arm-release.zip
+    cp ./macos_arm-release/cosmian_findex_server /usr/local/bin/
+    chmod u+x /usr/local/bin/cosmian_findex_server
+    cosmian_findex_server --version
+    ```
+
+=== "Windows"
+
+    On Windows, download the build archive:
+
+    ```console title="Build archive"
+     https://package.cosmian.com/findex-server/0.2.0/windows-release.zip
+    ```
+
+    Extract the cosmian_findex_server from:
+
+    ```console title="cosmian_findex_server for Windows"
+    /windows-release/cosmian_findex_server.exe
+    ```
+
+    Copy it to a folder in your PATH and run it:
+
+    ```console title="On local machine"
+    cosmian_findex_server --version
+    ```
+
+=== "From source"
+
+    To build the server from source, clone the repository and run the following commands:
+
+    ```sh
+    git clone https://github.com/Cosmian/findex-server.git
+    cd findex-server
+    cargo build
+    ```
+
+    First, run the Redis server independently:
+
+    ```sh
+    docker run -d -p 6379:6379 redis
+    ```
+
+    Then, run the server:
+
+    ```sh
+    cargo run --bin cosmian_findex_server -- --database-url redis://localhost:6379 --database-type redis
+    ```
 
 ## Configuration
 
-Please refer to the [configuration documentation](./configuration.md) for more information on how to configure the Findex server.
+Please refer to the [configuration documentation](./configuration.md) for more
+information on how to configure the Findex server.

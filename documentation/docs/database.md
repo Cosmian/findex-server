@@ -73,26 +73,24 @@ sequenceDiagram
 
 ### Store and retrieve encrypted indexes as Findex requirements
 
-According the Findex REST client implementation found in [cloudproof_rust](https://github.com/Cosmian/cloudproof_rust), the server presents the following endpoints:
+The server presents the following endpoints:
 
-| Endpoint                             | Description                 |
-| ------------------------------------ | --------------------------- |
-| `/indexes/{index_id}/fetch_entries`  | retrieve encrypted indexes  |
-| `/indexes/{index_id}/fetch_chains`   | retrieve encrypted indexes  |
-| `/indexes/{index_id}/upsert_entries` | insert encrypted indexes    |
-| `/indexes/{index_id}/insert_chains`  | insert encrypted indexes    |
-| `/indexes/{index_id}/delete_entries` | delete encrypted indexes    |
-| `/indexes/{index_id}/delete_chains`  | delete encrypted indexes    |
-| `/indexes/{index_id}/dump_tokens`    | print the encrypted indexes |
+| Endpoint                            | Description                |
+| ----------------------------------- | -------------------------- |
+| `/indexes/{index_id}/batch_read`    | retrieve encrypted indexes |
+| `/indexes/{index_id}/guarded_write` | insert encrypted indexes   |
 
-The encryption is done by the client before sending the data to the server.
+And consequently, the Findex [REST client implementation] (crate/client/src/rest_client.rs)
+implements the client side of the communication with the server.
+
+Furthermore, the encryption is done by the client before sending the data to the server.
 
 #### Database structure
 
 In a key-value database (like Redis), indexes are stored as follows:
 
-| Key            | Value                  |
-| -------------- | ---------------------- |
+| Key              | Value                  |
+| ---------------- | ---------------------- |
 | index_id \|\| id | Findex encrypted index |
 
 Concerning the format of encrypted indexes, please read the [Findex github](https://github.com/Cosmian/findex).

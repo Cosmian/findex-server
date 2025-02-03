@@ -17,7 +17,7 @@ use futures::{
     Future,
 };
 use openssl::{nid::Nid, x509::X509};
-use tracing::{debug, error, trace};
+use tracing::{error, trace};
 
 use crate::{error::result::FResult, findex_server_bail};
 
@@ -79,7 +79,7 @@ where
 
     /// Create a new instance of the `SslAuth` middleware.
     fn new_transform(&self, service: S) -> Self::Future {
-        debug!("Ssl Authentication enabled");
+        trace!("Ssl Authentication enabled");
         // Create a new instance of the `SslAuthMiddleware`.
         ok(SslAuthMiddleware { service })
     }
@@ -95,7 +95,6 @@ where
     S::Future: 'static,
 {
     type Error = Error;
-    #[allow(clippy::type_complexity)]
     type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>>>>;
     type Response = ServiceResponse<EitherBody<B, BoxBody>>;
 

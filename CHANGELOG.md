@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.0] - 2025-02-03
+
+### 🚀 Features
+
+- Support findex v7 ([#37](https://github.com/Cosmian/kms/pull/37))
+
+### ⚙️ Miscellaneous Tasks
+
+- Remove concurrency GH blocker
+- Add Linux packages for Debian and RHEL
+
 ## [0.1.1] - 2025-01-09
 
 ### 🚀 Features

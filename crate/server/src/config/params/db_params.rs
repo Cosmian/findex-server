@@ -16,7 +16,7 @@ impl DbParams {
     }
 }
 impl Default for DbParams {
-    #[allow(clippy::expect_used)]
+    #[allow(clippy::expect_used)] // Won't panic because the URL is valid
     fn default() -> Self {
         Self::Redis(Url::parse("redis://localhost:6379").expect("Invalid default URL"))
     }
@@ -26,7 +26,7 @@ impl Display for DbParams {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Redis(url) => {
-                write!(f, "redis: {}", redact_url(url),)
+                write!(f, "redis: {}", redact_url(url))
             }
         }
     }
@@ -44,7 +44,6 @@ fn redact_url(original: &Url) -> Url {
         url.set_password(Some("****"))
             .expect("masking password failed");
     }
-
     url
 }
 

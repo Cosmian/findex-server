@@ -14,7 +14,6 @@
     clippy::pedantic,
     clippy::cargo,
     clippy::nursery,
-
     // restriction lints
     clippy::unwrap_used,
     clippy::get_unwrap,
@@ -36,7 +35,6 @@
     clippy::map_err_ignore,
     clippy::redundant_clone,
     clippy::todo
-
 )]
 #![allow(
     clippy::module_name_repetitions,
@@ -45,10 +43,7 @@
     clippy::multiple_crate_versions,
     clippy::redundant_pub_crate
 )]
-
-pub use config::{FindexClientConfig, FINDEX_CLI_CONF_ENV};
-pub use error::{result::FindexClientResult, FindexClientError};
-pub use rest_client::{handle_error, FindexRestClient};
+use cosmian_findex::{Findex, Value};
 
 mod config;
 mod datasets;
@@ -56,7 +51,14 @@ mod error;
 mod permissions;
 mod rest_client;
 
+pub use config::{FindexClientConfig, FINDEX_CLI_CONF_ENV};
+use cosmian_findex_structs::WORD_LENGTH;
+pub use error::{result::FindexClientResult, FindexClientError};
+pub use rest_client::{handle_error, FindexRestClient};
+
+pub type InstantiatedFindex = Findex<WORD_LENGTH, Value, String, FindexRestClient>;
+
 pub mod reexport {
-    pub use cosmian_config_utils;
+    pub use cosmian_findex;
     pub use cosmian_http_client;
 }
