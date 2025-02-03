@@ -17,8 +17,8 @@ mod findex_tests {
     fn test_ser_deser_addresses() {
         let mut rng = StdRng::from_seed(SEED);
 
-        let address1: Address<ADDRESS_LENGTH> = rng.gen::<u128>().to_be_bytes().into();
-        let address2: Address<ADDRESS_LENGTH> = rng.gen::<u128>().to_be_bytes().into();
+        let address1: Address<ADDRESS_LENGTH> = rng.random::<u128>().to_be_bytes().into();
+        let address2: Address<ADDRESS_LENGTH> = rng.random::<u128>().to_be_bytes().into();
         let addresses = Addresses(vec![address1, address2]);
 
         let serialized = addresses.serialize().expect("Serialization failed");
@@ -48,7 +48,7 @@ mod findex_tests {
     fn test_ser_deser_guard() {
         let mut rng = StdRng::from_seed(SEED);
 
-        let address1: Address<ADDRESS_LENGTH> = rng.gen::<u128>().to_be_bytes().into();
+        let address1: Address<ADDRESS_LENGTH> = rng.random::<u128>().to_be_bytes().into();
         let mut word = [0_u8; WORD_LENGTH];
         rng.fill(&mut word[..]);
 
@@ -62,7 +62,7 @@ mod findex_tests {
             "Guard with Some(word) does not match"
         );
 
-        let address2: Address<ADDRESS_LENGTH> = rng.gen::<u128>().to_be_bytes().into();
+        let address2: Address<ADDRESS_LENGTH> = rng.random::<u128>().to_be_bytes().into();
         let guard_none: Guard<WORD_LENGTH> = Guard(address2, None);
 
         let serialized_none = guard_none.serialize().expect("Serialization failed");
@@ -79,8 +79,8 @@ mod findex_tests {
     fn test_ser_deser_tasks() {
         let mut rng = StdRng::from_seed(SEED);
 
-        let address1: Address<ADDRESS_LENGTH> = rng.gen::<u128>().to_be_bytes().into();
-        let address2: Address<ADDRESS_LENGTH> = rng.gen::<u128>().to_be_bytes().into();
+        let address1: Address<ADDRESS_LENGTH> = rng.random::<u128>().to_be_bytes().into();
+        let address2: Address<ADDRESS_LENGTH> = rng.random::<u128>().to_be_bytes().into();
         let mut word1 = [0_u8; WORD_LENGTH];
         let mut word2 = [0_u8; WORD_LENGTH];
         rng.fill(&mut word1[..]);

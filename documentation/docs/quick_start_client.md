@@ -68,6 +68,6 @@ The [Cosmian CLI](../cosmian_cli/index.md) allows to interact both with the **KM
     Decrypted record: SouthboroughMAUnited States9686
     ```
 
-   ## Configuration
+## Configuration
 
-    Please refer to the [configuration documentation](../cosmian_cli/configuration.md) for more information on how to configure the Cosmian CLI.
+Please refer to the [configuration documentation](../cosmian_cli/configuration.md) for more information on how to configure the Cosmian CLI.

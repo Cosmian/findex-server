@@ -47,23 +47,13 @@ fn redis_db_config(redis_url_var_env: &str) -> DBConfig {
     }
 }
 
-fn get_db_config(redis_url_var_env: &str) -> DBConfig {
-    env::var_os("FINDEX_TEST_DB").map_or_else(
-        || redis_db_config(redis_url_var_env),
-        |v| match v.to_str().unwrap_or("") {
-            "redis" => redis_db_config(redis_url_var_env),
-            _ => redis_db_config(redis_url_var_env),
-        },
-    )
-}
-
 /// Start a test Findex server in a thread with the default options:
 /// No TLS, no certificate authentication
 pub async fn start_default_test_findex_server() -> &'static TestsContext {
     trace!("Starting default test server");
     ONCE.get_or_try_init(|| {
         start_test_server_with_options(
-            get_db_config("REDIS_URL"),
+            redis_db_config("REDIS_URL"),
             6668,
             AuthenticationOptions {
                 use_jwt_token: false,
@@ -81,7 +71,7 @@ pub async fn start_default_test_findex_server_with_cert_auth() -> &'static Tests
     ONCE_SERVER_WITH_AUTH
         .get_or_try_init(|| {
             start_test_server_with_options(
-                get_db_config("REDIS_URL2"),
+                redis_db_config("REDIS_URL2"),
                 6660,
                 AuthenticationOptions {
                     use_jwt_token: false,
