@@ -31,7 +31,7 @@ actix-service = "2.0"
 actix-tls = "3.4"
 actix-web = { workspace = true, features = ["macros", "openssl"] }
 alcoholic_jwt = "4091"
-async-trait = "0.1.83"
+async-trait = "0.1.86"
 chrono = "0.4"
 clap = { workspace = true, features = [
   "help",
@@ -49,7 +49,7 @@ cosmian_logger = { workspace = true }
 dotenvy = "0.15"
 futures = "0.3"
 openssl = { workspace = true, default-features = false }
-redis = { version = "0.28.1", features = [
+redis = { version = "0.28.2", features = [
   "aio",
   "script",
   "connection-manager",
@@ -64,7 +64,7 @@ redis = { version = "0.28.1", features = [
 reqwest = { workspace = true, features = ["default", "json"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
-sqlx = { version = "0.8.2", default-features = false, features = [
+sqlx = { version = "0.8.3", default-features = false, features = [
   "json",
   "runtime-tokio-native-tls",
 ] }
