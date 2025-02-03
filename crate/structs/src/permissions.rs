@@ -1,8 +1,6 @@
 use std::{collections::HashMap, fmt::Display, str::FromStr};
 
-use cloudproof_findex::reexport::cosmian_crypto_core::bytes_ser_de::{
-    self, to_leb128_len, Serializable,
-};
+use cosmian_crypto_core::bytes_ser_de::{self, to_leb128_len, Serializable};
 use uuid::Uuid;
 
 use crate::{
@@ -72,7 +70,7 @@ const INDEX_ID_LENGTH: usize = 16;
 /// | Index ID (UUID) | Permission |
 /// |-----------------|------------|
 /// | 16 bytes        | 1 byte     |
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Default, PartialEq, Eq)]
 pub struct Permissions {
     pub permissions: HashMap<Uuid, Permission>,
 }

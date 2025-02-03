@@ -31,8 +31,9 @@ clap = { workspace = true, features = [
   "derive",
   "cargo",
 ] }
-cloudproof_findex = { workspace = true, features = ["rest-interface"] }
 cosmian_config_utils = { workspace = true }
+cosmian_crypto_core = { workspace = true }
+cosmian_findex = { workspace = true }
 cosmian_findex_client = { path = "../client" }
 cosmian_findex_structs = { path = "../structs" }
 cosmian_logger = { workspace = true }
@@ -49,6 +50,7 @@ actix-rt = "2.10"
 actix-server = { workspace = true }
 assert_cmd = "2.0"
 const-oid = { version = "0.9", features = ["db"] }
+cosmian_findex = { workspace = true, features = ["test-utils"] }
 openssl = { workspace = true }
 predicates = "3.1"
 regex = { version = "1.11", default-features = false }

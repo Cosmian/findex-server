@@ -1,18 +1,22 @@
-use std::fmt::Display;
-
-use cosmian_http_client::HttpClient;
-use reqwest::{Response, StatusCode};
-use serde::{Deserialize, Serialize};
-use tracing::{instrument, trace};
-use uuid::Uuid;
-
 use crate::{
+    config::FindexClientConfig,
     error::{
         result::{FindexClientResult, FindexRestClientResultHelper},
         FindexClientError,
     },
-    FindexClientConfig,
+    InstantiatedFindex, WORD_LENGTH,
 };
+use base64::{engine::general_purpose, Engine};
+use cosmian_findex::{
+    generic_decode, generic_encode, Address, Findex, MemoryADT, Secret, ADDRESS_LENGTH, KEY_LENGTH,
+};
+use cosmian_findex_structs::{Addresses, Guard, OptionalWords, Tasks};
+use cosmian_http_client::HttpClient;
+use reqwest::{Response, StatusCode};
+use serde::{Deserialize, Serialize};
+use std::fmt::Display;
+use tracing::{trace, warn};
+use uuid::Uuid;
 
 // Response for success
 #[derive(Deserialize, Serialize, Debug)] // Debug is required by ok_json()
@@ -29,8 +33,10 @@ impl Display for SuccessResponse {
 
 #[derive(Clone)]
 pub struct FindexRestClient {
-    pub client: HttpClient,
+    pub http_client: HttpClient,
     pub config: FindexClientConfig,
+    // TODO: why is it an option?
+    index_id: Option<Uuid>,
 }
 
 impl FindexRestClient {
@@ -50,22 +56,170 @@ impl FindexRestClient {
             )
         })?;
 
-        Ok(Self { client, config })
+        Ok(Self {
+            http_client: client,
+            config,
+            index_id: None,
+        })
     }
 
-    #[instrument(ret(Display), err, skip(self))]
+    /// Instantiate a Findex REST client with a specific index.
+    fn new_with_index_id(self, index_id: Uuid) -> Self {
+        Self {
+            http_client: self.http_client,
+            config: self.config,
+            index_id: Some(index_id),
+        }
+    }
+
+    /// Instantiate a Findex REST client with a specific index. In the CLI
+    /// crate, first instantiate a base `FindexRestClient` and that will be used
+    /// to instantiate a findex instance with a specific index each time a call
+    /// for Findex is needed
+    ///
+    /// # Errors
+    /// Return an error if the Findex cannot be instantiated.
+    pub fn instantiate_findex(
+        self,
+        index_id: Uuid,
+        seed: &Secret<KEY_LENGTH>,
+    ) -> Result<InstantiatedFindex, FindexClientError> {
+        trace!("Instantiating a Findex rest client");
+        Ok(Findex::new(
+            seed,
+            self.new_with_index_id(index_id),
+            generic_encode,
+            generic_decode,
+        ))
+    }
+
+    // #[instrument(ret(Display), err, skip(self))]
+    /// # Errors
+    /// Return an error if the request fails.
     pub async fn version(&self) -> FindexClientResult<String> {
         let endpoint = "/version";
-        let server_url = format!("{}{endpoint}", self.client.server_url);
-        let response = self.client.client.get(server_url).send().await?;
-        let status_code = response.status();
-        if status_code.is_success() {
+        let server_url = format!("{}{endpoint}", self.http_client.server_url);
+        let response = self.http_client.client.get(server_url).send().await?;
+        if response.status().is_success() {
             return Ok(response.json::<String>().await?);
         }
 
         // process error
         let p = handle_error(endpoint, response).await?;
         Err(FindexClientError::RequestFailed(p))
+    }
+}
+
+impl MemoryADT for FindexRestClient {
+    type Address = Address<ADDRESS_LENGTH>;
+    type Word = [u8; WORD_LENGTH];
+    type Error = FindexClientError;
+
+    #[allow(clippy::renamed_function_params)] // original name (a) is less clear
+    async fn batch_read(
+        &self,
+        addresses: Vec<Self::Address>,
+    ) -> Result<Vec<Option<[u8; WORD_LENGTH]>>, FindexClientError> {
+        let index_id = self
+            .index_id
+            .ok_or_else(|| FindexClientError::Default("index ID is missing".to_owned()))?;
+
+        let endpoint = format!("/indexes/{index_id}/batch_read");
+        let server_url = format!("{}{}", self.http_client.server_url, endpoint);
+
+        trace!(
+            "Initiating batch_read of {} addresses for index {} at server_url: {}",
+            addresses.len(),
+            index_id,
+            server_url
+        );
+
+        let response = self
+            .http_client
+            .client
+            .post(&server_url)
+            .body(Addresses::new(addresses).serialize()?)
+            .send()
+            .await?;
+
+        if !response.status().is_success() {
+            warn!("batch_read failed on server url {:?}.", server_url);
+            let err = handle_error(&endpoint, response).await?;
+            return Err(FindexClientError::RequestFailed(err));
+        }
+
+        let words: OptionalWords<WORD_LENGTH> =
+            OptionalWords::deserialize(&response.bytes().await?)?;
+
+        trace!(
+            "batch_read successful on server url {}. result: {}",
+            &server_url,
+            words
+        );
+
+        Ok(words.into_inner())
+    }
+
+    async fn guarded_write(
+        &self,
+        guard: (Self::Address, Option<Self::Word>),
+        tasks: Vec<(Self::Address, Self::Word)>,
+    ) -> Result<Option<[u8; WORD_LENGTH]>, FindexClientError> {
+        let index_id = self
+            .index_id
+            .ok_or_else(|| FindexClientError::Default("index ID is missing".to_owned()))?;
+
+        let endpoint = format!("/indexes/{index_id}/guarded_write");
+        let server_url = format!("{}{}", self.http_client.server_url, &endpoint);
+
+        trace!(
+            "Initiating guarded_write of {} values for index {} at server_url: {}",
+            tasks.len(),
+            index_id,
+            &server_url
+        );
+
+        // BEGIN TODO: using `Serializable` avoids re-coding vector
+        // concatenation. Anyway, this should be abstracted away in a function.
+        let guard_bytes = Guard::new(guard.0, guard.1).serialize()?;
+        let task_bytes = Tasks::new(tasks).serialize()?;
+        let mut request_bytes = Vec::with_capacity(guard_bytes.len() + task_bytes.len());
+        request_bytes.extend_from_slice(&guard_bytes);
+        request_bytes.extend_from_slice(&task_bytes);
+        // END TODO
+
+        let response = self
+            .http_client
+            .client
+            .post(&server_url)
+            .body(request_bytes)
+            .send()
+            .await?;
+
+        if !response.status().is_success() {
+            warn!("guarded_write failed on server url {}.", server_url);
+            let err = handle_error(&endpoint, response).await?;
+            return Err(FindexClientError::RequestFailed(err));
+        }
+
+        let guard = {
+            let bytes = response.bytes().await?;
+            let words: Vec<_> = OptionalWords::deserialize(&bytes)?.into();
+            words.first().copied().ok_or_else(|| {
+                FindexClientError::RequestFailed(format!(
+                    "Unexpected response from server. Expected 1 word, got {}",
+                    words.len()
+                ))
+            })
+        }?;
+
+        trace!(
+            "guarded_write successful on server url {}. guard: {}",
+            server_url,
+            guard.map_or("None".to_owned(), |g| general_purpose::STANDARD.encode(g))
+        );
+
+        Ok(guard)
     }
 }
 

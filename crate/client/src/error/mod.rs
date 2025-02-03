@@ -8,12 +8,10 @@ pub(crate) mod result;
 
 #[derive(Error, Debug)]
 pub enum FindexClientError {
-    #[error("{0}")]
+    #[error("Unexpected Error: {0}")]
     Default(String),
     #[error("REST Request Failed: {0}")]
     RequestFailed(String),
-    #[error("Unexpected Error: {0}")]
-    UnexpectedError(String),
     #[error(transparent)]
     StructsError(#[from] StructsError),
     #[error(transparent)]

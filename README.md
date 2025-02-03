@@ -47,7 +47,7 @@ For [Cosmian CLI](./documentation/docs/quick_start_client.md).
 
 ## Findex server
 
-**Findex server** cannot be described without mentioning the principle of **client-side encryption**, since client is responsible of encrypting the data before sending it to the server.
+**Findex server** cannot be described without mentioning the principle of what is **client-side encryption**, since client is responsible of encrypting the data before sending it to the server.
 
 ### Client-Side Encryption
 

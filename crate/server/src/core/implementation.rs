@@ -1,25 +1,24 @@
 use actix_web::{HttpMessage, HttpRequest};
-use cosmian_findex_structs::Permission;
-use tracing::{debug, instrument, trace};
+use cosmian_findex_structs::{Permission, WORD_LENGTH};
+use tracing::{debug, trace};
 use uuid::Uuid;
 
 use crate::{
     config::{DbParams, ServerParams},
-    database::{DatabaseTraits, Redis},
+    database::{database_traits::PermissionsTrait, redis::Redis},
     error::result::FResult,
     middlewares::{JwtAuthClaim, PeerCommonName},
 };
-
 pub(crate) struct FindexServer {
     pub(crate) params: ServerParams,
-    pub(crate) db: Box<dyn DatabaseTraits + Sync + Send>,
+    pub(crate) db: Redis<WORD_LENGTH>,
 }
 
 impl FindexServer {
     pub(crate) async fn instantiate(mut shared_config: ServerParams) -> FResult<Self> {
-        let db: Box<dyn DatabaseTraits + Sync + Send> = match &mut shared_config.db_params {
+        let db = match &mut shared_config.db_params {
             DbParams::Redis(url) => {
-                Box::new(Redis::instantiate(url.as_str(), shared_config.clear_db_on_start).await?)
+                Redis::instantiate(url.as_str(), shared_config.clear_db_on_start).await?
             }
         };
 
@@ -55,11 +54,11 @@ impl FindexServer {
             },
             |claim| claim.email.clone(),
         );
-        debug!("Authenticated user: {}", user);
+        trace!("Authenticated user: {}", user);
         user
     }
 
-    #[instrument(ret(Display), err, skip(self))]
+    // #[instrument(ret(Display), err, skip(self))]
     pub(crate) async fn get_permission(
         &self,
         user_id: &str,

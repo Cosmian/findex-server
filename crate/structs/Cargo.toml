@@ -16,6 +16,10 @@ doctest = false
 
 [dependencies]
 base64 = { workspace = true }
-cloudproof_findex = { workspace = true }
+cosmian_crypto_core = { workspace = true, features = ["ser"] }
+cosmian_findex = { workspace = true, features = ["test-utils"] }
 thiserror = { workspace = true }
 uuid = { workspace = true }
+
+[dev-dependencies]
+rand = "0.9.0"

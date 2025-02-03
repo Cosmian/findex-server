@@ -15,8 +15,10 @@ doctest = false
 [features]
 
 [dependencies]
-cloudproof_findex = { git = "https://www.github.com/Cosmian/cloudproof_rust", branch = "feat/add_basic_findex_rest_client" }
+base64 = { workspace = true }
 cosmian_config_utils = { workspace = true }
+cosmian_crypto_core = { workspace = true }
+cosmian_findex = { workspace = true }
 cosmian_findex_structs = { path = "../structs" }
 cosmian_http_client = { workspace = true }
 cosmian_logger = { workspace = true }

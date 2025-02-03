@@ -75,13 +75,36 @@ sequenceDiagram
 !!! info
     JWT is a compact, URL-safe means of representing claims to be transferred between two parties. The claims in a JWT are encoded as a JSON object that is used as the payload of a JSON Web Signature (JWS) structure or as the plaintext of a JSON Web Encryption (JWE) structure. This enables the claims to be digitally signed or integrity protected with a Message Authentication Code (MAC) and/or encrypted.
 
-Cosmian CLI is helpful to authenticate with the Findex server using OpenID Connect.
+## Cosmian CLI Configuration
+
+[Cosmian CLI](../cosmian_cli/index.md) is helpful to authenticate with the Findex server using OpenID Connect.
+The CLI has to be installed locally and configured with the Findex server URL and OAuth2 configuration.
 
 !!! info
     The Cosmian CLI realizes this authentication flow using this simple command:
     ```sh
-    cosmian findex login
+    cosmian findex-server login
     ```
+
+By using this default configuration `~/.cosmian/cosmian.toml`:
+
+```toml
+[kms_config]
+print_json = false
+
+[kms_config.http_config]
+server_url = "http://127.0.0.1:9998"
+
+[findex_config.http_config]
+server_url = "https://<FINDEX-SERVER-URL>/"
+
+[findex_config.http_config.oauth2_conf]
+client_id = "99999999-abababababababababab.apps.googleusercontent.com"
+client_secret = "XXX"
+authorize_url = "https://accounts.google.com/o/oauth2/v2/auth"
+token_url = "https://oauth2.googleapis.com/token"
+scopes = ["openid", "email"]
+```
 
 ## X509 certificates authentication
 

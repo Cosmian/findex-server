@@ -134,7 +134,7 @@ repos:
       - id: clippy-autofix-all-targets
       - id: clippy-all-targets-all-features
       - id: clippy-all-targets
-      - id: cargo-format # in last du to clippy fixes
+      - id: cargo-format # in last due to clippy fixes
       - id: docker-compose-down
 
   - repo: https://github.com/EmbarkStudios/cargo-deny

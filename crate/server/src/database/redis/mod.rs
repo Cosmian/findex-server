@@ -1,10 +1,10 @@
-pub(crate) use instance::Redis;
-
-use super::DatabaseTraits;
-
 mod datasets;
 mod findex;
 mod instance;
 mod permissions;
 
-impl DatabaseTraits for Redis {}
+use cosmian_findex_structs::WORD_LENGTH;
+pub(crate) use instance::Redis;
+
+use crate::database::database_traits::DatabaseTraits;
+impl DatabaseTraits for Redis<WORD_LENGTH> {}

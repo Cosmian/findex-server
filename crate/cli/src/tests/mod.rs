@@ -1,7 +1,5 @@
 mod auth_tests;
 mod datasets;
-mod findex;
+mod findex_tests;
 mod permissions;
-mod utils;
-
-const PROG_NAME: &str = "cosmian_findex_cli";
+pub(crate) mod search_options;

@@ -1,92 +1,42 @@
-use std::process::Command;
-
-use assert_cmd::prelude::*;
-use cosmian_config_utils::ConfigUtils;
-use cosmian_findex_client::{FindexClientConfig, FindexRestClient, FINDEX_CLI_CONF_ENV};
-use tracing::debug;
+use cosmian_findex_client::FindexRestClient;
+use cosmian_findex_structs::Permission;
 use uuid::Uuid;
 
 use crate::{
     actions::permissions::{CreateIndex, GrantPermission, ListPermissions, RevokePermission},
-    error::{result::CliResult, CliError},
-    tests::{utils::recover_cmd_logs, PROG_NAME},
+    error::result::CliResult,
 };
 
-pub(crate) async fn create_index_id_cmd(cli_conf_path: &str) -> CliResult<Uuid> {
-    let findex_rest_client = FindexRestClient::new(FindexClientConfig::from_toml(cli_conf_path)?)?;
-    CreateIndex.run(&findex_rest_client).await
+pub(crate) async fn create_index_id(rest_client: &FindexRestClient) -> CliResult<Uuid> {
+    CreateIndex.run(rest_client).await
 }
 
-pub(crate) fn list_permission_cmd(
-    cli_conf_path: &str,
-    action: &ListPermissions,
+pub(crate) async fn list_permission(
+    rest_client: &FindexRestClient,
+    user: String,
 ) -> CliResult<String> {
-    let mut cmd = Command::cargo_bin(PROG_NAME)?;
-    let args = vec!["list".to_owned(), "--user".to_owned(), action.user.clone()];
-    cmd.env(FINDEX_CLI_CONF_ENV, cli_conf_path);
-
-    cmd.arg("permissions").args(args);
-    debug!("cmd: {:?}", cmd);
-    let output = recover_cmd_logs(&mut cmd);
-    if output.status.success() {
-        let findex_output = std::str::from_utf8(&output.stdout)?;
-        return Ok(findex_output.to_owned());
-    }
-    Err(CliError::Default(
-        std::str::from_utf8(&output.stderr)?.to_owned(),
-    ))
+    ListPermissions { user }.run(rest_client).await
 }
 
-pub(crate) fn grant_permission_cmd(
-    cli_conf_path: &str,
-    action: &GrantPermission,
+pub(crate) async fn grant_permission(
+    rest_client: &FindexRestClient,
+    user: String,
+    index_id: Uuid,
+    permission: Permission,
 ) -> CliResult<String> {
-    let mut cmd = Command::cargo_bin(PROG_NAME)?;
-    let args = vec![
-        "grant".to_owned(),
-        "--user".to_owned(),
-        action.user.clone(),
-        "--index-id".to_owned(),
-        action.index_id.to_string(),
-        "--permission".to_owned(),
-        action.permission.to_string(),
-    ];
-    cmd.env(FINDEX_CLI_CONF_ENV, cli_conf_path);
-
-    cmd.arg("permissions").args(args);
-    debug!("cmd: {:?}", cmd);
-    let output = recover_cmd_logs(&mut cmd);
-    if output.status.success() {
-        let findex_output = std::str::from_utf8(&output.stdout)?;
-        return Ok(findex_output.to_owned());
+    GrantPermission {
+        user,
+        index_id,
+        permission,
     }
-    Err(CliError::Default(
-        std::str::from_utf8(&output.stderr)?.to_owned(),
-    ))
+    .run(rest_client)
+    .await
 }
 
-pub(crate) fn revoke_permission_cmd(
-    cli_conf_path: &str,
-    action: &RevokePermission,
+pub(crate) async fn revoke_permission(
+    rest_client: &FindexRestClient,
+    user: String,
+    index_id: Uuid,
 ) -> CliResult<String> {
-    let mut cmd = Command::cargo_bin(PROG_NAME)?;
-    let args = vec![
-        "revoke".to_owned(),
-        "--user".to_owned(),
-        action.user.clone(),
-        "--index-id".to_owned(),
-        action.index_id.to_string(),
-    ];
-    cmd.env(FINDEX_CLI_CONF_ENV, cli_conf_path);
-
-    cmd.arg("permissions").args(args);
-    debug!("cmd: {:?}", cmd);
-    let output = recover_cmd_logs(&mut cmd);
-    if output.status.success() {
-        let findex_output = std::str::from_utf8(&output.stdout)?;
-        return Ok(findex_output.to_owned());
-    }
-    Err(CliError::Default(
-        std::str::from_utf8(&output.stderr)?.to_owned(),
-    ))
+    RevokePermission { user, index_id }.run(rest_client).await
 }

@@ -22,6 +22,10 @@ on:
       skip_services_tests:
         required: false
         type: string
+      docker_compose:
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   cargo-build:
@@ -34,8 +38,17 @@ jobs:
           toolchain: ${{ inputs.toolchain }}
           components: rustfmt, clippy
 
+      - name: Run Redis container
+        if: ${{ inputs.docker_compose }}
+        run: |
+          docker compose -h
+          docker compose up -d
+
       - name: Build and tests
         env:
+          REDIS_URL: redis://localhost:6379
+          REDIS_URL2: redis://localhost:6380
+
           # Google variables
           TEST_GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.TEST_GOOGLE_OAUTH_CLIENT_ID }}
           TEST_GOOGLE_OAUTH_CLIENT_SECRET: ${{ secrets.TEST_GOOGLE_OAUTH_CLIENT_SECRET }}

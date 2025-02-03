@@ -64,7 +64,7 @@ jobs:
         - /home/cosmian/.ssh/id_rsa:/root/.ssh/id_rsa
 
     env:
-      ARCHIVE_NAMES: rhel9-${{ inputs.debug_or_release }} ubuntu_24_04-${{ inputs.debug_or_release }} macos_arm-${{ inputs.debug_or_release }}
+      ARCHIVE_NAMES: rhel9-${{ inputs.debug_or_release }} ubuntu_2*_04-${{ inputs.debug_or_release }} macos_arm-${{ inputs.debug_or_release }}
 
     steps:
       - run: rm -rf windows* ubuntu* macos* rhel9*

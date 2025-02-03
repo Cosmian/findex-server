@@ -18,7 +18,6 @@ const FINDEX_SERVER_CONF: &str = "/etc/cosmian/findex_server.toml";
 /// This function sets up the necessary environment variables and logging
 /// options, then parses the command line arguments using [`ClapConfig::parse()`](https://docs.rs/clap/latest/clap/struct.ClapConfig.html#method.parse).
 #[tokio::main]
-#[allow(clippy::needless_return)]
 async fn main() -> FResult<()> {
     // Set up environment variables and logging options
     if std::env::var("RUST_BACKTRACE").is_err() {
