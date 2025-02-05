@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### 🚀 Features
 
-- Support findex v7 ([#37](https://github.com/Cosmian/kms/pull/37))
+- Support findex v7 ([#37](https://github.com/Cosmian/findex-server/pull/37))
 
 ### ⚙️ Miscellaneous Tasks
 
