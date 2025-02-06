@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use super::Redis;
 use crate::{
     database::database_traits::PermissionsTrait,
@@ -5,32 +7,11 @@ use crate::{
 };
 use async_trait::async_trait;
 use cosmian_findex_structs::{Permission, Permissions, WORD_LENGTH};
-use redis::{pipe, AsyncCommands};
+use redis::AsyncCommands;
 use tracing::{debug, instrument, trace};
 use uuid::Uuid;
 
-// async fn transaction_async<
-//     C: ConnectionLike + Clone,
-//     K: ToRedisArgs,
-//     T: Send,
-//     F: Fn(C, Pipeline) -> Fut,
-//     Fut: Future<Output = Result<Option<T>, RedisError>> + Send,
-// >(
-//     mut cnx: C,
-//     guards: &[K],
-//     transaction: F,
-// ) -> Result<T, RedisError> {
-//     loop {
-//         cmd("WATCH").arg(guards).exec_async(&mut cnx).await?;
-//         match transaction(cnx.clone(), pipe().atomic().to_owned()).await? {
-//             None => continue,
-//             Some(response) => {
-//                 return Ok(response);
-//             }
-//         }
-//     }
-// }
-
+#[allow(dependency_on_unit_never_type_fallback)] // TODO: fixme
 #[async_trait]
 impl PermissionsTrait for Redis<WORD_LENGTH> {
     /// Creates a new index ID and grants admin privileges.
@@ -39,19 +20,15 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
     async fn create_index_id(&self, user_id: &str) -> FResult<Uuid> {
         let index_id = Uuid::new_v4();
         let user_redis_key = format!("user:permissions:{}", user_id);
-        let index_key = format!("index:permissions:{}", index_id);
 
-        // Use a single atomic transaction to set both mappings
-        // TODO(hatem): use the new transaction async function on this
-        let _ = pipe()
-            .atomic() // encloses the Pipe in Multi/Exec
+        let _: () = self
+            .manager
+            .clone()
             .hset(
                 &user_redis_key,
                 index_id.to_string(),
                 u8::from(Permission::Admin).to_string(),
             )
-            .hset(&index_key, user_id, u8::from(Permission::Admin))
-            .exec_async(&mut self.manager.clone()) // TODO(hatem) change to query_async if working
             .await?;
 
         debug!("new index with id {index_id} created for user {user_id}");
@@ -63,18 +40,33 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
     async fn get_permissions(&self, user_id: &str) -> FResult<Permissions> {
         let user_redis_key = format!("user:permissions:{}", user_id);
 
-        let mut pipe = pipe();
-        let values: Vec<Vec<String>> = {
-            pipe.atomic()
+        let values: HashMap<String, String> = {
+            self.manager
+                .clone()
                 .hgetall(user_redis_key)
-                .query_async(&mut self.manager.clone())
                 .await
                 .map_err(FindexServerError::from)?
         };
 
-        // // TODO: format
-        println!("permissions for user {user_id}: {values:?}");
-        Ok(Permissions::default())
+        let permissions: Permissions = values
+            .clone()
+            .into_iter()
+            .map(|(index_str, perm_str)| {
+                // Parse UUID from string
+                let index_id = Uuid::parse_str(&index_str).unwrap();
+                // Parse permission from string
+                let permission = match perm_str.as_str() {
+                    "2" => Permission::Admin,
+                    "1" => Permission::Write,
+                    "0" => Permission::Read,
+                    _ => panic!("wrong permission value was stored ?"),
+                };
+                (index_id, permission)
+            })
+            .collect();
+
+        println!("permissions for user {user_id}: {values:?} --> converted to {permissions:?}");
+        Ok(permissions)
     }
 
     /// More efficient as it doesn't need to read ALL existing permissions first.
@@ -89,7 +81,6 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
             .map_err(FindexServerError::from)?;
 
         println!("\npermissions for user {user_id}: {permission:?}\n");
-        // Convert the string permission to your numeric type
         let _permission = match permission.as_deref() {
             Some("2") => Permission::Admin,
             Some("1") => Permission::Write,
@@ -113,18 +104,15 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
         index_id: &Uuid,
     ) -> FResult<()> {
         let user_key = format!("user:permissions:{}", user_id);
-        let index_key = format!("index:permissions:{}", index_id);
-        let perm_number = u8::from(permission);
+        let perm_number = u8::from(permission.clone());
 
-        let mut pipe = pipe();
-        pipe.atomic()
+        self.manager
+            .clone()
             .hset(&user_key, index_id.to_string(), &perm_number)
-            .hset(&index_key, user_id, &perm_number)
-            .query_async::<()>(&mut self.manager.clone())
             .await
             .map_err(FindexServerError::from)?;
 
-        trace!("Granted {perm_number} permission to {user_id} for index {index_id}");
+        trace!("Granted {permission:?} permission to {user_id} for index {index_id}");
         Ok(())
     }
 
@@ -132,13 +120,11 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
     #[instrument(ret, err, skip(self), level = "trace")]
     async fn revoke_permission(&self, user_id: &str, index_id: &Uuid) -> FResult<()> {
         let user_key = format!("user:permissions:{}", user_id);
-        let index_key = format!("index:permissions:{}", index_id);
 
-        let mut pipe = pipe();
-        pipe.atomic()
+        let _: () = self
+            .manager
+            .clone()
             .hdel(&user_key, index_id.to_string())
-            .hdel(&index_key, user_id)
-            .query_async::<()>(&mut self.manager.clone())
             .await
             .map_err(FindexServerError::from)?;
 
@@ -169,7 +155,7 @@ mod tests {
 
     use rand::{rng, Rng};
     // use futures::future::join_all;
-    use rand::{thread_rng, Rng};
+    // use rand::{thread_rng, Rng};
     // use redis::aio::ConnectionManager;
     use tokio;
     use uuid::Uuid;
@@ -299,6 +285,29 @@ mod tests {
     // }
 
     #[tokio::test]
+    async fn test_permissions_create_debug() {
+        let db = setup_test_db().await;
+        let user_id = Uuid::new_v4().to_string();
+
+        // Create new index
+        let _index_id = db
+            .create_index_id(&user_id)
+            .await
+            .expect("Failed to create index");
+        let _index_id = db
+            .create_index_id(&user_id)
+            .await
+            .expect("Failed to create index");
+        // Verify permissions were created
+        let _permissions = db
+            .get_permissions(&user_id)
+            .await
+            .expect("Failed to get permissions");
+
+        // assert!(permissions.get_permission(&index_id).is_some());
+    }
+
+    #[tokio::test]
     async fn test_permissions_create_index_id() {
         let db = setup_test_db().await;
         let user_id = Uuid::new_v4().to_string();
@@ -311,7 +320,7 @@ mod tests {
 
         // Verify permissions were created
         let permission = db
-            .get_permission(user_id, &index_id)
+            .get_permission(&user_id, &index_id)
             .await
             .expect("Failed to get permissions");
 
@@ -567,8 +576,8 @@ mod tests {
     ///   - Any mismatch fails the test
     #[tokio::test]
     async fn test_permissions_concurrent_grand_revoke_permissions() {
-        const MAX_USERS: usize = 100;
-        const MAX_OPS: usize = 100;
+        const MAX_USERS: usize = 1000;
+        const MAX_OPS: usize = 1000;
         let mut rng = rng();
 
         let users: Vec<String> = (0..rng.random_range(1..=MAX_USERS))
@@ -644,10 +653,10 @@ mod tests {
             let db = Arc::clone(&db_arc);
             let ops = operations.get(user.as_str()).unwrap().clone();
 
-            for (op_idx, op) in ops.into_iter().enumerate() {
+            for (_op_idx, op) in ops.into_iter().enumerate() {
                 let db = Arc::clone(&db); // This is the only clone we need
                 let user = user.clone();
-                let expected_states = expected_state[user.as_str()].clone();
+                // let expected_states = expected_state[user.as_str()].clone();
 
                 handles.push(tokio::spawn(async move {
                     // Execute operation
@@ -675,20 +684,20 @@ mod tests {
                     }
 
                     // Validate permissions after operation
-                    let current_permissions = db
-                        .get_permissions(&user)
-                        .await
-                        .expect("Failed to get permissions");
+                    // let current_permissions = db
+                    //     .get_permissions(&user)
+                    //     .await
+                    //     .expect("Failed to get permissions");
 
-                    // Convert expected state to Permissions struct
-                    let expected_permissions = Permissions {
-                        permissions: expected_states[op_idx].clone(),
-                    };
+                    // // Convert expected state to Permissions struct
+                    // let expected_permissions = Permissions {
+                    //     permissions: expected_states[op_idx].clone(),
+                    // };
 
-                    assert_eq!(
-                        current_permissions, expected_permissions,
-                        "Permissions mismatch for user {user} after operation {op_idx}",
-                    );
+                    // assert_eq!(
+                    //     current_permissions, expected_permissions,
+                    //     "Permissions mismatch for user {user} after operation {op_idx}",
+                    // );
                 }));
             }
         }
@@ -696,6 +705,27 @@ mod tests {
         // Wait for all tasks to complete
         for handle in handles {
             handle.await.unwrap();
+        }
+
+        for user in &users {
+            let current_permissions = db_arc
+                .get_permissions(user)
+                .await
+                .expect("Failed to get permissions");
+
+            // Get final expected state (last state in the vector)
+            let expected_final_state = expected_state[user.as_str()]
+                .last()
+                .expect("Expected state should not be empty");
+
+            let expected_permissions = Permissions {
+                permissions: expected_final_state.clone(),
+            };
+
+            assert_eq!(
+                current_permissions, expected_permissions,
+                "Final permissions mismatch for user {user}"
+            );
         }
     }
 }
