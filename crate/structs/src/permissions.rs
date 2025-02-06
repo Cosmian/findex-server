@@ -84,6 +84,16 @@ impl Display for Permissions {
     }
 }
 
+impl FromIterator<(Uuid, Permission)> for Permissions {
+    fn from_iter<I: IntoIterator<Item = (Uuid, Permission)>>(iter: I) -> Self {
+        let mut permissions = HashMap::new();
+        for (uuid, permission) in iter {
+            permissions.insert(uuid, permission);
+        }
+        Permissions { permissions }
+    }
+}
+
 impl Serializable for Permissions {
     type Error = StructsError;
 
