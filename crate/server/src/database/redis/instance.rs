@@ -2,13 +2,12 @@ use crate::error::{result::FResult, server::FindexServerError};
 use cosmian_findex::{Address, RedisMemory};
 use cosmian_findex_structs::SERVER_ADDRESS_LENGTH;
 use redis::aio::ConnectionManager;
-use tokio::sync::Mutex;
 use tracing::info;
 
 pub(crate) struct Redis<const WORD_LENGTH: usize> {
     pub(crate) memory: RedisMemory<Address<SERVER_ADDRESS_LENGTH>, [u8; WORD_LENGTH]>,
     pub(crate) manager: ConnectionManager,
-    pub(crate) lock: Mutex<()>,
+    // pub(crate) lock: Mutex<()>,
 }
 
 impl<const WORD_LENGTH: usize> Redis<WORD_LENGTH> {
@@ -33,7 +32,7 @@ impl<const WORD_LENGTH: usize> Redis<WORD_LENGTH> {
         Ok(Self {
             memory,
             manager,
-            lock: Mutex::new(()),
+            // lock: Mutex::new(()),
         })
     }
 }
