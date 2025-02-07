@@ -31,22 +31,22 @@ pub(crate) async fn create_index_id(
     }))
 }
 
-#[post("/permission/grant/{user_id}/{permission}/{index_id}")]
-pub(crate) async fn grant_permission(
+#[post("/permission/set/{user_id}/{permission}/{index_id}")]
+pub(crate) async fn set_permission(
     req: HttpRequest,
     params: web::Path<(String, String, String)>,
     findex_server: Data<Arc<FindexServer>>,
 ) -> FResult<Json<SuccessResponse>> {
     let user = findex_server.get_user(&req);
     let (user_id, permission, index_id) = params.into_inner();
-    trace!("user {user}: POST /permission/grant/{user_id}/{permission}/{index_id}");
+    trace!("user {user}: POST /permission/set/{user_id}/{permission}/{index_id}");
 
-    // Check if the user has the right to grant permission: only admins can do that
+    // Check if the user has the right to set permission: only admins can do that
     let user_permission = findex_server.get_permission(&user, &index_id).await?;
     if Permission::Admin != user_permission {
         return Err(FindexServerError::Unauthorized(format!(
             "Delegating permission to an index requires an admin permission. User {user} with \
-             permission {user_permission} does not allow granting permission to index {index_id} \
+             permission {user_permission} does not allow setting permission to index {index_id} \
              with permission {permission}",
         )));
     }
@@ -56,7 +56,7 @@ pub(crate) async fn grant_permission(
 
     findex_server
         .db
-        .grant_permission(
+        .set_permission(
             &user_id,
             Permission::from_str(permission.as_str())?,
             &index_id,

@@ -28,7 +28,7 @@ const PERMISSIONS_PREFIX: &str = "permissions";
 
 #[async_trait]
 impl PermissionsTrait for Redis<WORD_LENGTH> {
-    /// Creates a new index ID and grants admin privileges.
+    /// Creates a new index ID and sets admin privileges.
     /// Instead of serializing/deserializing permissions, we use Redis hashes directly.
     #[instrument(ret(Display), err, skip(self), level = "trace")]
     async fn create_index_id(&self, user_id: &str) -> FResult<Uuid> {
@@ -50,8 +50,8 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
         Ok(index_id)
     }
 
-    /// Grants a permission to a user for a specific index.
-    async fn grant_permission(
+    /// Sets a permission to a user for a specific index.
+    async fn set_permission(
         &self,
         user_id: &str,
         permission: Permission,
@@ -67,7 +67,7 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
             .await
             .map_err(FindexServerError::from)?;
 
-        trace!("Granted {permission:?} permission to {user_id} for index {index_id}");
+        trace!("Set {permission:?} permission to {user_id} for index {index_id}");
         Ok(())
     }
 
@@ -200,26 +200,26 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_permissions_grant_and_revoke_permissions() {
+    async fn test_permissions_set_and_revoke_permissions() {
         let db = setup_test_db().await;
 
         let user_id = "test_user_2";
         let index_id = Uuid::new_v4();
 
-        // Grant Read permission
-        db.grant_permission(user_id, Permission::Read, &index_id)
+        // Set Read permission
+        db.set_permission(user_id, Permission::Read, &index_id)
             .await
-            .expect("Failed to grant permission");
+            .expect("Failed to set permission");
 
-        // Verify permission was granted
+        // Verify permission was set
         let permission = db
             .get_permission(user_id, &index_id)
             .await
             .expect("Failed to get permission");
         assert_eq!(permission, Permission::Read);
 
-        // Grant Read, then update to Admin
-        db.grant_permission(user_id, Permission::Admin, &index_id)
+        // Set Read, then update to Admin
+        db.set_permission(user_id, Permission::Admin, &index_id)
             .await
             .unwrap();
 
@@ -260,12 +260,12 @@ mod tests {
             (write_index_id, Permission::Write),
             (read_index_id, Permission::Read),
         ] {
-            // Grant permission
-            db.grant_permission(&test_user_id, permission_kind.clone(), &index_id)
+            // Set permission
+            db.set_permission(&test_user_id, permission_kind.clone(), &index_id)
                 .await
-                .expect("Failed to grant permission {permission_kind}");
+                .expect("Failed to set permission {permission_kind}");
 
-            // Verify permission was granted
+            // Verify permission was set
             let permission = db
                 .get_permission(&test_user_id, &index_id)
                 .await
@@ -335,11 +335,11 @@ mod tests {
                 // create new index
                 updated_state.insert(*index_id, Permission::Admin);
             }
-            Operation::GrantPermission {
+            Operation::SetPermission {
                 permission,
                 index_id,
             } => {
-                // grant new permission
+                // set new permission
                 // won't panic because permission is either 0, 1 or 2
                 updated_state.insert(*index_id, permission.clone());
             }
@@ -358,7 +358,7 @@ mod tests {
         CreateIndex {
             index_id: Uuid,
         },
-        GrantPermission {
+        SetPermission {
             permission: Permission,
             index_id: Uuid,
         },
@@ -372,7 +372,7 @@ mod tests {
             0 => Operation::CreateIndex {
                 index_id: Uuid::new_v4(),
             },
-            1 => Operation::GrantPermission {
+            1 => Operation::SetPermission {
                 permission: Permission::try_from(rng.random_range(0..=2)).unwrap(),
                 index_id: Uuid::new_v4(),
             },
@@ -430,12 +430,12 @@ mod tests {
     ///
     /// Assumption:
     /// - Each user starts with no permissions
-    /// - The function "grant_permission" is correct, for practical purposes, we will simulate its usage to ensure predictable test outcomes
+    /// - The function "set_permission" is correct, for practical purposes, we will simulate its usage to ensure predictable test outcomes
     ///
     /// For each user:
     /// - MAX_OPS random operations are generated, where each operation is one of:
-    ///   0: Create new index (grants Admin permission)
-    ///   1: Grant new permission (Read, Write, or Admin)
+    ///   0: Create new index (sets Admin permission)
+    ///   1: Set new permission (Read, Write, or Admin)
     ///   2: Revoke permission
     /// - The expected permission state is tracked after each operation
     ///
@@ -446,7 +446,7 @@ mod tests {
     ///   - The actual state is compared with the expected state
     ///   - Any mismatch fails the test
     #[tokio::test]
-    async fn test_permissions_concurrent_grant_revoke_permissions() {
+    async fn test_permissions_concurrent_set_revoke_permissions() {
         const MAX_USERS: usize = 100;
         const MAX_OPS: usize = 100;
         let mut rng = rng();
@@ -486,14 +486,14 @@ mod tests {
                     // if operation is not "create", rather use one of the created indexes to stay realistic
                     let available_indexes = previous_state.keys().collect::<Vec<&Uuid>>();
                     if available_indexes.is_empty() {
-                        // If there are no available indexes, we can't grant or revoke permissions, change the operation to create a new index
+                        // If there are no available indexes, we can't set or revoke permissions, change the operation to create a new index
                         op = Operation::CreateIndex {
                             index_id: Uuid::new_v4(),
                         };
                     } else {
                         let chosen_index = rng.random_range(0..available_indexes.len());
                         match &mut op {
-                            Operation::GrantPermission { index_id, .. }
+                            Operation::SetPermission { index_id, .. }
                             | Operation::RevokePermission { index_id } => {
                                 *index_id = *available_indexes[chosen_index];
                             }
@@ -526,17 +526,17 @@ mod tests {
                     match op {
                         Operation::CreateIndex { index_id } => {
                             // Simulate new index creation
-                            db.grant_permission(&user, Permission::Admin, &index_id)
+                            db.set_permission(&user, Permission::Admin, &index_id)
                                 .await
-                                .expect("Failed to grant permission");
+                                .expect("Failed to set permission");
                         }
-                        Operation::GrantPermission {
+                        Operation::SetPermission {
                             permission,
                             index_id,
                         } => {
-                            db.grant_permission(&user, permission.clone(), &index_id)
+                            db.set_permission(&user, permission.clone(), &index_id)
                                 .await
-                                .expect("Failed to grant permission");
+                                .expect("Failed to set permission");
                         }
                         Operation::RevokePermission { index_id } => {
                             // Revoke permission

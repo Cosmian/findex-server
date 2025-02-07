@@ -10,7 +10,7 @@ use crate::error::result::{CliResult, CliResultHelper};
 pub enum PermissionsAction {
     Create(CreateIndex),
     List(ListPermissions),
-    Grant(GrantPermission),
+    Set(SetPermission),
     Revoke(RevokePermission),
 }
 
@@ -30,7 +30,7 @@ impl PermissionsAction {
                 .run(rest_client)
                 .await
                 .map(|permissions| format!("Permissions: {permissions}")),
-            Self::Grant(action) => action.run(rest_client).await,
+            Self::Set(action) => action.run(rest_client).await,
             Self::Revoke(action) => action.run(rest_client).await,
         }
     }
@@ -88,16 +88,16 @@ impl ListPermissions {
     }
 }
 
-/// Grant permission on a index.
+/// Set permission on a index.
 ///
 /// This command can only be called by the owner of the index. It allows to
-/// grant:
+/// set:
 /// * `read` permission: the user can only read the index
 /// * `write` permission: the user can read and write the index
-/// * `admin` permission: the user can read, write and grant permission to the
+/// * `admin` permission: the user can read, write and set permission to the
 ///   index
 #[derive(Parser, Debug)]
-pub struct GrantPermission {
+pub struct SetPermission {
     /// The user identifier to allow
     #[clap(long, required = true)]
     pub user: String,
@@ -110,17 +110,17 @@ pub struct GrantPermission {
     pub permission: Permission,
 }
 
-impl GrantPermission {
-    /// Runs the `GrantPermission` action.
+impl SetPermission {
+    /// Runs the `SetPermission` action.
     ///
     /// # Errors
     ///
     /// Returns an error if the query execution on the Findex server fails.
     pub async fn run(&self, rest_client: &FindexRestClient) -> CliResult<String> {
         let response = rest_client
-            .grant_permission(&self.user, &self.permission, &self.index_id)
+            .set_permission(&self.user, &self.permission, &self.index_id)
             .await
-            .with_context(|| "Can't execute the grant permission query on the findex server")?;
+            .with_context(|| "Can't execute the set permission query on the findex server")?;
 
         Ok(response.success)
     }

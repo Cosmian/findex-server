@@ -15,7 +15,7 @@ use crate::{
         insert_or_delete::InsertOrDeleteAction, parameters::FindexParameters, search::SearchAction,
     },
     error::result::CliResult,
-    tests::permissions::{create_index_id, grant_permission, list_permission, revoke_permission},
+    tests::permissions::{create_index_id, list_permission, revoke_permission, set_permission},
 };
 
 use super::search_options::SearchOptions;
@@ -176,7 +176,7 @@ pub(crate) async fn test_findex_cert_auth() -> CliResult<()> {
 }
 
 #[tokio::test]
-pub(crate) async fn test_findex_grant_and_revoke_permission() -> CliResult<()> {
+pub(crate) async fn test_findex_set_and_revoke_permission() -> CliResult<()> {
     log_init(None);
     let ctx = start_default_test_findex_server_with_cert_auth().await;
     let owner_conf = FindexClientConfig::load(Some(PathBuf::from(&ctx.owner_client_conf_path)))?;
@@ -212,8 +212,7 @@ pub(crate) async fn test_findex_grant_and_revoke_permission() -> CliResult<()> {
     .insert(&mut owner_rest_client)
     .await?;
 
-    // Grant read permission to the client
-    grant_permission(
+    set_permission(
         &owner_rest_client,
         "user.client@acme.com".to_owned(),
         index_id,
@@ -248,8 +247,7 @@ pub(crate) async fn test_findex_grant_and_revoke_permission() -> CliResult<()> {
     .await
     .unwrap_err();
 
-    // Grant write permission
-    grant_permission(
+    set_permission(
         &owner_rest_client,
         "user.client@acme.com".to_owned(),
         index_id,
@@ -287,7 +285,7 @@ pub(crate) async fn test_findex_grant_and_revoke_permission() -> CliResult<()> {
     .await?;
 
     // Try to escalade privileges from `read` to `admin`
-    grant_permission(
+    set_permission(
         &user_rest_client,
         "user.client@acme.com".to_owned(),
         index_id,

@@ -8,7 +8,6 @@ use crate::{
     structs_bail,
 };
 
-#[repr(u8)]
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Debug)]
 pub enum Permission {
     Read = 0,
@@ -141,7 +140,7 @@ impl Permissions {
         Self { permissions }
     }
 
-    pub fn grant_permission(&mut self, index_id: Uuid, permission: Permission) {
+    pub fn set_permission(&mut self, index_id: Uuid, permission: Permission) {
         self.permissions.insert(index_id, permission);
     }
 
