@@ -15,11 +15,11 @@ fn parse_permission_string(perm_str: &str) -> FResult<Permission> {
     perm_str
         .parse::<u8>()
         .map_err(|_| {
-            FindexServerError::Unauthorized(format!("Invalid permission string: {}", perm_str))
+            FindexServerError::Unauthorized(format!("Invalid permission string: {perm_str}"))
         })
         .and_then(|p| {
             Permission::try_from(p).map_err(|_| {
-                FindexServerError::Unauthorized(format!("Invalid permission value: {}", p))
+                FindexServerError::Unauthorized(format!("Invalid permission value: {p}"))
             })
         })
 }
@@ -33,7 +33,7 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
     #[instrument(ret(Display), err, skip(self), level = "trace")]
     async fn create_index_id(&self, user_id: &str) -> FResult<Uuid> {
         let index_id = Uuid::new_v4();
-        let user_redis_key = format!("{PERMISSIONS_PREFIX}:{}", user_id);
+        let user_redis_key = format!("{PERMISSIONS_PREFIX}:{user_id}");
 
         // never type fallbacks will be deprecated in future Rust releases, hence this explicit typing
         let _: () = self
@@ -57,13 +57,13 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
         permission: Permission,
         index_id: &Uuid,
     ) -> FResult<()> {
-        let user_key = format!("{PERMISSIONS_PREFIX}:{}", user_id);
+        let user_key = format!("{PERMISSIONS_PREFIX}:{user_id}");
         let perm_number = u8::from(permission.clone());
 
         let _: () = self
             .manager
             .clone()
-            .hset(&user_key, index_id.to_string(), &perm_number)
+            .hset(&user_key, index_id.to_string(), perm_number)
             .await
             .map_err(FindexServerError::from)?;
 
@@ -73,7 +73,7 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
 
     #[instrument(ret(Display), err, skip(self), level = "trace")]
     async fn get_permissions(&self, user_id: &str) -> FResult<Permissions> {
-        let user_redis_key = format!("{PERMISSIONS_PREFIX}:{}", user_id);
+        let user_redis_key = format!("{PERMISSIONS_PREFIX}:{user_id}");
 
         let permissions: Permissions = self
             .manager
@@ -85,7 +85,7 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
             .map(|(index_str, perm_str)| {
                 Ok((
                     Uuid::parse_str(&index_str)
-                        .map_err(|_| FindexServerError::Unauthorized("Invalid UUID".to_string()))?,
+                        .map_err(|_| FindexServerError::Unauthorized("Invalid UUID".to_owned()))?,
                     parse_permission_string(&perm_str)?,
                 ))
             })
@@ -96,7 +96,7 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
     }
 
     async fn get_permission(&self, user_id: &str, index_id: &Uuid) -> FResult<Permission> {
-        let user_key = format!("{PERMISSIONS_PREFIX}:{}", user_id);
+        let user_key = format!("{PERMISSIONS_PREFIX}:{user_id}");
 
         let permission: Option<String> = self
             .manager
@@ -117,7 +117,7 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
 
     #[instrument(ret, err, skip(self), level = "trace")]
     async fn revoke_permission(&self, user_id: &str, index_id: &Uuid) -> FResult<()> {
-        let user_key = format!("{PERMISSIONS_PREFIX}:{}", user_id);
+        let user_key = format!("{PERMISSIONS_PREFIX}:{user_id}");
 
         let _: () = self
             .manager
@@ -519,7 +519,7 @@ mod tests {
             let db = Arc::clone(&db_arc);
             let ops = operations.get(user.as_str()).unwrap().clone();
 
-            for (_op_idx, op) in ops.into_iter().enumerate() {
+            for op in ops.enumerate() {
                 let db = Arc::clone(&db);
                 let user = user.clone();
 

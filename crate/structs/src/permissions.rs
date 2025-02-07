@@ -90,7 +90,7 @@ impl FromIterator<(Uuid, Permission)> for Permissions {
         for (uuid, permission) in iter {
             permissions.insert(uuid, permission);
         }
-        Permissions { permissions }
+        Self { permissions }
     }
 }
 
