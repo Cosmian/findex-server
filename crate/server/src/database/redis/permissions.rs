@@ -14,12 +14,12 @@ use uuid::Uuid;
 fn parse_permission_string(perm_str: &str) -> FResult<Permission> {
     perm_str
         .parse::<u8>()
-        .map_err(|_| {
-            FindexServerError::Unauthorized(format!("Invalid permission string: {perm_str}"))
+        .map_err(|e| {
+            FindexServerError::Unauthorized(format!("Invalid permission string: {perm_str}. {e}"))
         })
         .and_then(|p| {
-            Permission::try_from(p).map_err(|_| {
-                FindexServerError::Unauthorized(format!("Invalid permission value: {p}"))
+            Permission::try_from(p).map_err(|e| {
+                FindexServerError::Unauthorized(format!("Invalid permission value: {p}. {e}"))
             })
         })
 }
@@ -84,8 +84,9 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
             .into_iter()
             .map(|(index_str, perm_str)| {
                 Ok((
-                    Uuid::parse_str(&index_str)
-                        .map_err(|_| FindexServerError::Unauthorized("Invalid UUID".to_owned()))?,
+                    Uuid::parse_str(&index_str).map_err(|e| {
+                        FindexServerError::Unauthorized(format!("Invalid UUID. {e}"))
+                    })?,
                     parse_permission_string(&perm_str)?,
                 ))
             })
@@ -447,9 +448,9 @@ mod tests {
     ///   - The actual state is compared with the expected state
     ///   - Any mismatch fails the test
     #[tokio::test]
-    async fn test_permissions_concurrent_grand_revoke_permissions() {
-        const MAX_USERS: usize = 100;
-        const MAX_OPS: usize = 100;
+    async fn test_permissions_concurrent_grant_revoke_permissions() {
+        const MAX_USERS: usize = 1000;
+        const MAX_OPS: usize = 1000;
         let mut rng = rng();
 
         let users: Vec<String> = (0..rng.random_range(1..=MAX_USERS))
@@ -519,7 +520,7 @@ mod tests {
             let db = Arc::clone(&db_arc);
             let ops = operations.get(user.as_str()).unwrap().clone();
 
-            for op in ops.enumerate() {
+            for op in ops {
                 let db = Arc::clone(&db);
                 let user = user.clone();
 
