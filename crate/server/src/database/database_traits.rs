@@ -19,12 +19,6 @@ pub(crate) trait PermissionsTrait: Sync + Send {
         index_id: &Uuid,
     ) -> FResult<()>;
     async fn revoke_permission(&self, user_id: &str, index_id: &Uuid) -> FResult<()>;
-    async fn _check_permission(
-        &self,
-        user_id: &str,
-        index_id: &Uuid,
-        expected_permission: Permission,
-    ) -> FResult<bool>;
 }
 
 #[async_trait]

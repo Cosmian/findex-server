@@ -15,22 +15,6 @@ use std::{str::FromStr, sync::Arc};
 use tracing::trace;
 use uuid::Uuid;
 
-pub(crate) async fn check_permission(
-    user: &str,
-    index_id: &str,
-    expected_permission: Permission,
-    findex_server: &FindexServer,
-) -> FResult<()> {
-    let permission = findex_server.get_permission(user, index_id).await?;
-    trace!("check_permission: user {user} has permission {permission} on index {index_id}");
-    if permission < expected_permission {
-        return Err(FindexServerError::Unauthorized(format!(
-            "User {user} with permission {permission} is not allowed to write on index {index_id}",
-        )));
-    }
-    Ok(())
-}
-
 #[post("/create/index")]
 pub(crate) async fn create_index_id(
     req: HttpRequest,

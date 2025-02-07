@@ -7,7 +7,7 @@ use crate::{
 };
 use async_trait::async_trait;
 use cosmian_findex_structs::{Permission, Permissions, WORD_LENGTH};
-use redis::{AsyncCommands, Script};
+use redis::AsyncCommands;
 use tracing::{instrument, trace};
 use uuid::Uuid;
 
@@ -99,20 +99,18 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
     async fn get_permission(&self, user_id: &str, index_id: &Uuid) -> FResult<Permission> {
         let user_key = format!("{PERMISSIONS_PREFIX}:{user_id}");
 
-        let permission: Option<String> = self
+        let permission = self
             .manager
             .clone()
-            .hget(&user_key, index_id.to_string())
+            .hget::<_, _, Option<String>>(&user_key, index_id.to_string())
             .await
-            .map_err(FindexServerError::from)?;
-
-        let permission = permission
+            .map_err(FindexServerError::from)?
             .ok_or_else(|| {
                 FindexServerError::Unauthorized(format!("No permission found for index {index_id}"))
             })
             .and_then(|p| parse_permission_string(&p))?;
 
-        trace!("Permissions for user {user_id}: AFTER PARSE {permission:?}\n");
+        trace!("Permissions for user {user_id}: {permission:?}");
         Ok(permission)
     }
 
@@ -129,32 +127,6 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
 
         trace!("Revoked permission for {user_id} on index {index_id}");
         Ok(())
-    }
-
-    async fn _check_permission(
-        &self,
-        user_id: &str,
-        index_id: &Uuid,
-        expected_permission: Permission,
-    ) -> FResult<bool> {
-        let user_key = format!("{PERMISSIONS_PREFIX}:{user_id}");
-        let script = r#"
-        local perm = redis.call('HGET', KEYS[1], ARGV[1])
-        if not perm then return 0 end
-        return tonumber(perm) >= tonumber(ARGV[2])
-        "#;
-        let s = Script::new(script);
-
-        let res: bool = s
-            .arg(&user_key)
-            .arg(index_id.to_string())
-            .arg(u8::from(expected_permission).to_string())
-            .invoke_async(&mut self.manager.clone())
-            .await
-            .map_err(FindexServerError::from)?;
-
-        trace!("Permission check for {user_id} on index {index_id}: {res}");
-        Ok(res)
     }
 }
 
