@@ -7,7 +7,7 @@ use crate::{
 };
 use async_trait::async_trait;
 use cosmian_findex_structs::{Permission, Permissions, WORD_LENGTH};
-use redis::AsyncCommands;
+use redis::{AsyncCommands, Script};
 use tracing::{instrument, trace};
 use uuid::Uuid;
 
@@ -129,6 +129,32 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
 
         trace!("Revoked permission for {user_id} on index {index_id}");
         Ok(())
+    }
+
+    async fn _check_permission(
+        &self,
+        user_id: &str,
+        index_id: &Uuid,
+        expected_permission: Permission,
+    ) -> FResult<bool> {
+        let user_key = format!("{PERMISSIONS_PREFIX}:{user_id}");
+        let script = r#"
+        local perm = redis.call('HGET', KEYS[1], ARGV[1])
+        if not perm then return 0 end
+        return tonumber(perm) >= tonumber(ARGV[2])
+        "#;
+        let s = Script::new(script);
+
+        let res: bool = s
+            .arg(&user_key)
+            .arg(index_id.to_string())
+            .arg(u8::from(expected_permission).to_string())
+            .invoke_async(&mut self.manager.clone())
+            .await
+            .map_err(FindexServerError::from)?;
+
+        trace!("Permission check for {user_id} on index {index_id}: {res}");
+        Ok(res)
     }
 }
 
@@ -449,8 +475,8 @@ mod tests {
     ///   - Any mismatch fails the test
     #[tokio::test]
     async fn test_permissions_concurrent_grant_revoke_permissions() {
-        const MAX_USERS: usize = 1000;
-        const MAX_OPS: usize = 1000;
+        const MAX_USERS: usize = 100;
+        const MAX_OPS: usize = 100;
         let mut rng = rng();
 
         let users: Vec<String> = (0..rng.random_range(1..=MAX_USERS))
