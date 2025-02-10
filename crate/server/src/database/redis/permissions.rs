@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use super::Redis;
 use crate::{
     database::database_traits::PermissionsTrait,
@@ -10,19 +8,6 @@ use cosmian_findex_structs::{Permission, Permissions, WORD_LENGTH};
 use redis::AsyncCommands;
 use tracing::{instrument, trace};
 use uuid::Uuid;
-
-fn parse_permission_string(perm_str: &str) -> FResult<Permission> {
-    perm_str
-        .parse::<u8>()
-        .map_err(|e| {
-            FindexServerError::Unauthorized(format!("Invalid permission string: {perm_str}. {e}"))
-        })
-        .and_then(|p| {
-            Permission::try_from(p).map_err(|e| {
-                FindexServerError::Unauthorized(format!("Invalid permission value: {p}. {e}"))
-            })
-        })
-}
 
 const PERMISSIONS_PREFIX: &str = "permissions";
 
@@ -39,10 +24,10 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
         let _: () = self
             .manager
             .clone()
-            .hset(
+            .hset::<_, _, u8, _>(
                 &user_redis_key,
-                index_id.to_string(),
-                u8::from(Permission::Admin).to_string(),
+                &index_id.to_string(),
+                u8::from(Permission::Admin),
             )
             .await?;
 
@@ -58,12 +43,11 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
         index_id: &Uuid,
     ) -> FResult<()> {
         let user_key = format!("{PERMISSIONS_PREFIX}:{user_id}");
-        let perm_number = u8::from(permission.clone());
 
         let _: () = self
             .manager
             .clone()
-            .hset(&user_key, index_id.to_string(), perm_number)
+            .hset::<_, _, u8, _>(&user_key, index_id.to_string(), u8::from(permission))
             .await
             .map_err(FindexServerError::from)?;
 
@@ -78,16 +62,18 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
         let permissions: Permissions = self
             .manager
             .clone()
-            .hgetall::<_, HashMap<String, String>>(user_redis_key)
+            .hgetall::<_, Vec<(String, u8)>>(user_redis_key)
             .await
             .map_err(FindexServerError::from)?
             .into_iter()
-            .map(|(index_str, perm_str)| {
+            .map(|(index_str, perm)| {
                 Ok((
                     Uuid::parse_str(&index_str).map_err(|e| {
-                        FindexServerError::Unauthorized(format!("Invalid UUID. {e}"))
+                        FindexServerError::DatabaseError(format!("Invalid UUID. {e}"))
                     })?,
-                    parse_permission_string(&perm_str)?,
+                    Permission::try_from(perm).map_err(|e| {
+                        FindexServerError::DatabaseError(format!("Invalid permission. {e}"))
+                    })?,
                 ))
             })
             .collect::<FResult<_>>()?;
@@ -96,19 +82,24 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
         Ok(permissions)
     }
 
+    #[instrument(ret(Display), err, skip(self), level = "trace")]
     async fn get_permission(&self, user_id: &str, index_id: &Uuid) -> FResult<Permission> {
         let user_key = format!("{PERMISSIONS_PREFIX}:{user_id}");
 
         let permission = self
             .manager
             .clone()
-            .hget::<_, _, Option<String>>(&user_key, index_id.to_string())
+            .hget::<_, _, Option<u8>>(&user_key, index_id.to_string())
             .await
             .map_err(FindexServerError::from)?
             .ok_or_else(|| {
                 FindexServerError::Unauthorized(format!("No permission found for index {index_id}"))
             })
-            .and_then(|p| parse_permission_string(&p))?;
+            .and_then(|p| {
+                Permission::try_from(p).map_err(|e| {
+                    FindexServerError::DatabaseError(format!("Invalid permission. {e}"))
+                })
+            })?;
 
         trace!("Permissions for user {user_id}: {permission:?}");
         Ok(permission)
@@ -261,7 +252,7 @@ mod tests {
             (read_index_id, Permission::Read),
         ] {
             // Set permission
-            db.set_permission(&test_user_id, permission_kind.clone(), &index_id)
+            db.set_permission(&test_user_id, permission_kind, &index_id)
                 .await
                 .expect("Failed to set permission {permission_kind}");
 
@@ -341,7 +332,7 @@ mod tests {
             } => {
                 // set new permission
                 // won't panic because permission is either 0, 1 or 2
-                updated_state.insert(*index_id, permission.clone());
+                updated_state.insert(*index_id, *permission);
             }
             Operation::RevokePermission { index_id } => {
                 // revoke permission
@@ -534,7 +525,7 @@ mod tests {
                             permission,
                             index_id,
                         } => {
-                            db.set_permission(&user, permission.clone(), &index_id)
+                            db.set_permission(&user, permission, &index_id)
                                 .await
                                 .expect("Failed to set permission");
                         }

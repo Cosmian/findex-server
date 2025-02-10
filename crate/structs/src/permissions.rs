@@ -8,7 +8,7 @@ use crate::{
     structs_bail,
 };
 
-#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Debug)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Permission {
     Read = 0,
     Write = 1,
@@ -111,7 +111,7 @@ impl Serializable for Permissions {
     fn write(&self, ser: &mut bytes_ser_de::Serializer) -> Result<usize, Self::Error> {
         let mut n = ser.write_leb128_u64(u64::try_from(self.permissions.len())?)?;
         for (index_id, permission) in &self.permissions {
-            n += ser.write_leb128_u64(u64::from(u8::from(permission.clone())))?;
+            n += ser.write_leb128_u64(u64::from(u8::from(*permission)))?;
             n += ser.write_array(index_id.as_bytes())?;
         }
         Ok(n)
@@ -158,10 +158,7 @@ impl Permissions {
         let mut permissions = HashMap::with_capacity(self.permissions.len());
         for (index_id, permission) in &self.permissions {
             if let Some(other_permission) = other_permissions.permissions.get(index_id) {
-                permissions.insert(
-                    *index_id,
-                    std::cmp::min(permission.clone(), other_permission.clone()),
-                );
+                permissions.insert(*index_id, std::cmp::min(*permission, *other_permission));
             }
         }
         Self { permissions }
