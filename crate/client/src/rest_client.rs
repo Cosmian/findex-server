@@ -34,8 +34,11 @@ impl Display for SuccessResponse {
 #[derive(Clone)]
 pub struct FindexRestClient {
     pub http_client: HttpClient,
-    pub config: FindexClientConfig,
-    // TODO: why is it an option?
+    /// Each instance of FindexRestClient is associated with a specific index
+    /// however, since all RestClients are instantiated with the same http_client,
+    /// we keep the client in the base struct and create each new index_id bounded
+    /// InstantiatedFindex after providing its index_id via the instantiate_findex
+    /// function.
     index_id: Option<Uuid>,
 }
 
@@ -47,7 +50,7 @@ impl FindexRestClient {
     /// # Errors
     /// Return an error if the configuration file is not found or if the
     /// configuration is invalid or if the client cannot be instantiated.
-    pub fn new(config: FindexClientConfig) -> Result<Self, FindexClientError> {
+    pub fn new(config: &FindexClientConfig) -> Result<Self, FindexClientError> {
         // Instantiate a Findex server REST client with the given configuration
         let client = HttpClient::instantiate(&config.http_config).with_context(|| {
             format!(
@@ -58,7 +61,6 @@ impl FindexRestClient {
 
         Ok(Self {
             http_client: client,
-            config,
             index_id: None,
         })
     }
@@ -67,7 +69,6 @@ impl FindexRestClient {
     fn new_with_index_id(self, index_id: Uuid) -> Self {
         Self {
             http_client: self.http_client,
-            config: self.config,
             index_id: Some(index_id),
         }
     }

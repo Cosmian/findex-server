@@ -30,7 +30,7 @@ async fn insert_search_delete(
     index_id: &Uuid,
     search_options: SearchOptions,
 ) -> CliResult<()> {
-    let mut rest_client = FindexRestClient::new(FindexClientConfig::load(Some(PathBuf::from(
+    let rest_client = FindexRestClient::new(&FindexClientConfig::load(Some(PathBuf::from(
         cli_conf_path,
     )))?)?;
 
@@ -42,7 +42,7 @@ async fn insert_search_delete(
         },
         csv: PathBuf::from(&search_options.dataset_path),
     }
-    .insert(&mut rest_client)
+    .insert(rest_client.clone())
     .await?;
 
     // Ensure searching returns the expected results
@@ -53,7 +53,7 @@ async fn insert_search_delete(
         },
         keyword: search_options.keywords.clone(),
     }
-    .run(&mut rest_client)
+    .run(rest_client.clone())
     .await?;
     assert_eq!(
         search_options.expected_results,
@@ -68,7 +68,7 @@ async fn insert_search_delete(
         },
         csv: PathBuf::from(search_options.dataset_path),
     }
-    .delete(&mut rest_client)
+    .delete(rest_client.clone())
     .await?;
 
     // Ensure no results are returned after deletion
@@ -79,7 +79,7 @@ async fn insert_search_delete(
         },
         keyword: search_options.keywords,
     }
-    .run(&mut rest_client)
+    .run(rest_client)
     .await?;
     assert!(search_results.is_empty());
 
@@ -148,7 +148,7 @@ pub(crate) async fn test_findex_cert_auth() -> CliResult<()> {
     log_init(None);
     let ctx = start_default_test_findex_server_with_cert_auth().await;
     let owner_conf = FindexClientConfig::load(Some(PathBuf::from(&ctx.owner_client_conf_path)))?;
-    let owner_rest_client = FindexRestClient::new(owner_conf)?;
+    let owner_rest_client = FindexRestClient::new(&owner_conf)?;
 
     let search_options = SearchOptions {
         dataset_path: SMALL_DATASET.into(),
@@ -160,7 +160,7 @@ pub(crate) async fn test_findex_cert_auth() -> CliResult<()> {
         },
     };
 
-    let index_id = create_index_id(&owner_rest_client).await?;
+    let index_id = create_index_id(owner_rest_client).await?;
 
     trace!("index_id: {index_id}");
 
@@ -180,7 +180,7 @@ pub(crate) async fn test_findex_set_and_revoke_permission() -> CliResult<()> {
     log_init(None);
     let ctx = start_default_test_findex_server_with_cert_auth().await;
     let owner_conf = FindexClientConfig::load(Some(PathBuf::from(&ctx.owner_client_conf_path)))?;
-    let owner_rest_client = FindexRestClient::new(owner_conf)?;
+    let owner_rest_client = FindexRestClient::new(&owner_conf)?;
 
     let search_options = SearchOptions {
         dataset_path: SMALL_DATASET.into(),
@@ -192,14 +192,14 @@ pub(crate) async fn test_findex_set_and_revoke_permission() -> CliResult<()> {
         },
     };
 
-    let index_id = create_index_id(&owner_rest_client).await?;
+    let index_id = create_index_id(owner_rest_client).await?;
     trace!("index_id: {index_id}");
 
     let owner_conf = FindexClientConfig::load(Some(PathBuf::from(&ctx.owner_client_conf_path)))?;
-    let mut owner_rest_client = FindexRestClient::new(owner_conf)?;
+    let owner_rest_client = FindexRestClient::new(&owner_conf)?;
 
     let user_conf = FindexClientConfig::load(Some(PathBuf::from(&ctx.user_client_conf_path)))?;
-    let mut user_rest_client = FindexRestClient::new(user_conf)?;
+    let user_rest_client = FindexRestClient::new(&user_conf)?;
 
     // Index the dataset as admin
     InsertOrDeleteAction {
@@ -209,11 +209,11 @@ pub(crate) async fn test_findex_set_and_revoke_permission() -> CliResult<()> {
         },
         csv: PathBuf::from(SMALL_DATASET),
     }
-    .insert(&mut owner_rest_client)
+    .insert(owner_rest_client.clone())
     .await?;
 
     set_permission(
-        &owner_rest_client,
+        owner_rest_client.clone(),
         "user.client@acme.com".to_owned(),
         index_id,
         Permission::Read,
@@ -228,7 +228,7 @@ pub(crate) async fn test_findex_set_and_revoke_permission() -> CliResult<()> {
         },
         keyword: search_options.keywords.clone(),
     }
-    .run(&mut user_rest_client)
+    .run(user_rest_client.clone())
     .await?;
     assert_eq!(
         search_options.expected_results,
@@ -243,19 +243,20 @@ pub(crate) async fn test_findex_set_and_revoke_permission() -> CliResult<()> {
         },
         csv: PathBuf::from(SMALL_DATASET),
     }
-    .insert(&mut user_rest_client)
+    .insert(user_rest_client.clone())
     .await
     .unwrap_err();
 
     set_permission(
-        &owner_rest_client,
+        owner_rest_client.clone(),
         "user.client@acme.com".to_owned(),
         index_id,
         Permission::Write,
     )
     .await?;
 
-    let perm = list_permission(&owner_rest_client, "user.client@acme.com".to_owned()).await?;
+    let perm =
+        list_permission(owner_rest_client.clone(), "user.client@acme.com".to_owned()).await?;
     debug!("User permission: {:?}", perm);
 
     // User can read...
@@ -266,7 +267,7 @@ pub(crate) async fn test_findex_set_and_revoke_permission() -> CliResult<()> {
         },
         keyword: search_options.keywords.clone(),
     }
-    .run(&mut user_rest_client)
+    .run(user_rest_client.clone())
     .await?;
     assert_eq!(
         search_options.expected_results,
@@ -281,12 +282,12 @@ pub(crate) async fn test_findex_set_and_revoke_permission() -> CliResult<()> {
         },
         csv: PathBuf::from(SMALL_DATASET),
     }
-    .insert(&mut user_rest_client)
+    .insert(user_rest_client.clone())
     .await?;
 
     // Try to escalade privileges from `read` to `admin`
     set_permission(
-        &user_rest_client,
+        user_rest_client.clone(),
         "user.client@acme.com".to_owned(),
         index_id,
         Permission::Admin,
@@ -295,7 +296,7 @@ pub(crate) async fn test_findex_set_and_revoke_permission() -> CliResult<()> {
     .unwrap_err();
 
     revoke_permission(
-        &owner_rest_client,
+        owner_rest_client,
         "user.client@acme.com".to_owned(),
         index_id,
     )
@@ -308,7 +309,7 @@ pub(crate) async fn test_findex_set_and_revoke_permission() -> CliResult<()> {
         },
         keyword: search_options.keywords.clone(),
     }
-    .run(&mut user_rest_client)
+    .run(user_rest_client)
     .await
     .unwrap_err();
 

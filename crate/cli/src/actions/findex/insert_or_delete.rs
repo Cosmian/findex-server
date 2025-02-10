@@ -6,7 +6,7 @@ use crate::{
 use clap::Parser;
 use cosmian_findex::{Findex, IndexADT, Value};
 use cosmian_findex_client::FindexRestClient;
-use cosmian_findex_structs::{Keyword, Keywords, WORD_LENGTH};
+use cosmian_findex_structs::{Keyword, KeywordToDataSetsMap, Keywords, WORD_LENGTH};
 use std::{
     collections::{HashMap, HashSet},
     fs::File,
@@ -14,7 +14,7 @@ use std::{
     sync::Arc,
 };
 use tokio::sync::Semaphore;
-use tracing::trace;
+use tracing::{instrument, trace};
 
 #[derive(Parser, Debug)]
 #[clap(verbatim_doc_comment)]
@@ -38,15 +38,9 @@ impl InsertOrDeleteAction {
     /// - There is an error reading the CSV records.
     /// - There is an error converting the CSV records to the expected data
     ///   types.
-    /// - The Findex instance cannot be instantiated.
-    /// - The Findex instance cannot insert or delete the data.
-    /// - The semaphore cannot acquire a permit.
-    async fn insert_or_delete(
-        &self,
-        rest_client: &FindexRestClient,
-        is_insert: bool,
-    ) -> CliResult<Keywords> {
-        let file = File::open(self.csv.clone())?;
+    #[instrument(err)]
+    pub(crate) fn from_csv(p: PathBuf) -> CliResult<KeywordToDataSetsMap> {
+        let file = File::open(p)?;
 
         let bindings = csv::Reader::from_reader(file).byte_records().fold(
             HashMap::new(),
@@ -65,33 +59,38 @@ impl InsertOrDeleteAction {
         );
         trace!("CSV lines are OK");
 
-        // cloning will be eliminated in the future, cf https://github.com/Cosmian/findex-server/issues/28
-        let findex = Arc::<Findex<WORD_LENGTH, Value, String, FindexRestClient>>::new(
-            rest_client.clone().instantiate_findex(
-                self.findex_parameters.index_id,
-                &self.findex_parameters.seed()?,
-            )?,
-        );
+    async fn insert_or_delete(
+        &self,
+        rest_client: FindexRestClient,
+        is_insert: bool,
+    ) -> CliResult<Keywords> {
+        let bindings = Self::from_csv(self.csv.clone())?;
+
+        let findex: Arc<Findex<200, Value, String, FindexRestClient>> =
+            Arc::<Findex<WORD_LENGTH, Value, String, FindexRestClient>>::new(
+                // cheap reference clone
+                rest_client.instantiate_findex(
+                    self.findex_parameters.index_id,
+                    &self.findex_parameters.seed()?,
+                )?,
+            );
         let semaphore = Arc::new(Semaphore::new(MAX_PERMITS));
-        let written_keywords = bindings.keys().cloned().collect::<Vec<_>>();
+        let written_keywords = bindings.keys().collect::<Vec<_>>();
 
         let handles = bindings
+            .clone()
+            .0
             .into_iter()
             .map(|(kw, vs)| {
                 let findex = findex.clone();
                 let semaphore = semaphore.clone();
                 tokio::spawn(async move {
-                    let _permit = semaphore.acquire().await.map_err(|e| {
-                        CliError::Default(format!(
-                            "Acquire error while trying to ask for permit: {e:?}"
-                        ))
-                    })?;
+                    let _permit = semaphore.acquire().await;
                     if is_insert {
-                        findex.insert(kw, vs).await?;
+                        findex.insert(kw, vs).await
                     } else {
-                        findex.delete(kw, vs).await?;
+                        findex.delete(kw, vs).await
                     }
-                    Ok::<_, CliError>(())
                 })
             })
             .collect::<Vec<_>>();
@@ -111,7 +110,7 @@ impl InsertOrDeleteAction {
     ///
     /// # Errors
     /// - If insert new indexes fails
-    pub async fn insert(&self, rest_client: &mut FindexRestClient) -> CliResult<Keywords> {
+    pub async fn insert(&self, rest_client: FindexRestClient) -> CliResult<Keywords> {
         Self::insert_or_delete(self, rest_client, true).await
     }
 
@@ -119,7 +118,7 @@ impl InsertOrDeleteAction {
     ///
     /// # Errors
     /// - If deleting indexes fails
-    pub async fn delete(&self, rest_client: &mut FindexRestClient) -> CliResult<Keywords> {
+    pub async fn delete(&self, rest_client: FindexRestClient) -> CliResult<Keywords> {
         Self::insert_or_delete(self, rest_client, false).await
     }
 }

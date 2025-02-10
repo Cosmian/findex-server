@@ -1,5 +1,8 @@
+use std::path::PathBuf;
+
 use clap::Parser;
 use cosmian_findex_client::FindexClientConfig;
+use tracing::trace;
 
 use crate::error::result::CliResult;
 
@@ -17,8 +20,19 @@ impl LogoutAction {
     ///
     /// Returns an error if there is an issue loading or saving the
     /// configuration file.
-    pub fn run(&self, conf: &mut FindexClientConfig) -> CliResult<String> {
-        conf.http_config.access_token = None;
+    pub fn run(
+        &self,
+        mut config: FindexClientConfig,
+        conf_path: Option<PathBuf>,
+    ) -> CliResult<String> {
+        config.http_config.access_token = None;
+        config.save(conf_path.clone())?;
+
+        trace!(
+            "Access token has been removed from the configuration file {:?}",
+            conf_path
+        );
+
         Ok("\nThe access token was removed from the Findex CLI configuration".to_owned())
     }
 }

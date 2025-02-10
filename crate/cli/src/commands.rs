@@ -83,15 +83,26 @@ pub enum CoreFindexActions {
 
 impl CoreFindexActions {
     /// Process the command line arguments
+    /// TODO(hatem) : update this once fix is working
     ///
     /// # Errors
     /// - If the configuration file is not found or invalid
     #[allow(clippy::unit_arg)] // println! does return () but it prints the output of action.run() beforehand, nothing is "lost" and hence this lint will only cause useless boilerplate code
-    pub async fn run(&self, findex_client: &mut FindexRestClient) -> CliResult<()> {
-        let action = self;
+    pub async fn run(
+        &self,
+        findex_client: FindexRestClient,
+        config: FindexClientConfig,
+        conf_path: Option<PathBuf>,
+    ) -> CliResult<()> {
+        let action: &CoreFindexActions = self;
         {
             let result = match action {
+                // actions that don't need to return a value and don't edit the configuration
+                Self::Permissions(action) => action.run(findex_client).await,
                 Self::Datasets(action) => action.run(findex_client).await,
+                Self::ServerVersion(action) => action.run(findex_client).await,
+
+                // actions that return a value that needs to be formatted, and don't edit the configuration
                 Self::Delete(action) => {
                     let deleted_keywords = action.delete(findex_client).await?;
                     Ok(format!("Deleted keywords: {deleted_keywords}"))
@@ -100,14 +111,14 @@ impl CoreFindexActions {
                     let inserted_keywords = action.insert(findex_client).await?;
                     Ok(format!("Inserted keywords: {inserted_keywords}"))
                 }
-                Self::Permissions(action) => action.run(findex_client).await,
-                Self::Login(action) => action.run(&mut findex_client.config).await,
-                Self::Logout(action) => action.run(&mut findex_client.config),
                 Self::Search(action) => {
                     let search_results = action.run(findex_client).await?;
                     Ok(format!("Search results: {search_results}"))
                 }
-                Self::ServerVersion(action) => action.run(findex_client).await,
+
+                // actions that edit the configuration, and don't return a value
+                Self::Login(action) => action.run(config, conf_path).await,
+                Self::Logout(action) => action.run(config, conf_path),
             };
             match result {
                 Ok(output) => Ok(println!("{output}")),
@@ -126,20 +137,15 @@ pub async fn findex_cli_main() -> CliResult<()> {
     let cli_opts = FindexCli::parse();
     let config = cli_opts.prepare_config()?;
 
-    // Instantiate the Findex REST client
-    let mut rest_client = FindexRestClient::new(config.clone())?;
-
     // Process the command
-    cli_opts.command.run(&mut rest_client).await?;
-
-    // Post-process the login/logout actions: save Findex CLI configuration
-    // The reason why it is done here is that the login/logout actions are also call by meta Cosmian CLI using its own Findex client configuration
-    match cli_opts.command {
-        CoreFindexActions::Login(_) | CoreFindexActions::Logout(_) => {
-            config.save(cli_opts.conf_path.clone())?;
-        }
-        _ => {}
-    }
+    cli_opts
+        .command
+        .run(
+            FindexRestClient::new(&config)?,
+            config,
+            cli_opts.conf_path.clone(),
+        )
+        .await?;
 
     Ok(())
 }

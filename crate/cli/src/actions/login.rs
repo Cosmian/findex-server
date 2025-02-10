@@ -1,5 +1,8 @@
+use std::path::PathBuf;
+
 use clap::Parser;
 use cosmian_findex_client::{reexport::cosmian_http_client::LoginState, FindexClientConfig};
+use tracing::trace;
 
 use crate::error::{result::CliResult, CliError};
 
@@ -31,7 +34,11 @@ impl LoginAction {
     /// # Errors
     /// Fails if the configuration file is missing or if the `oauth2_conf` object
     /// Fails if credentials are invalid. No access token could be retrieved.
-    pub async fn run(&self, config: &mut FindexClientConfig) -> CliResult<String> {
+    pub async fn run(
+        &self,
+        mut config: FindexClientConfig,
+        conf_path: Option<PathBuf>,
+    ) -> CliResult<String> {
         let login_config = config.http_config.oauth2_conf.as_ref().ok_or_else(|| {
             CliError::Default(format!(
                 "The `login` command (only used for JWT authentication) requires an Identity \
@@ -44,6 +51,13 @@ impl LoginAction {
         let access_token = state.finalize().await?;
 
         config.http_config.access_token = Some(access_token.clone());
+        config.save(conf_path.clone())?;
+
+        trace!(
+            "Access token has been saved in the configuration file {:?}",
+            conf_path
+        );
+
         Ok(access_token)
     }
 }

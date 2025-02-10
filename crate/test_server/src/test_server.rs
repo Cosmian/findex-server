@@ -118,7 +118,7 @@ pub async fn start_test_server_with_options(
 
     // Create a (object owner) conf
     let (owner_client_conf_path, owner_client_conf) = generate_owner_conf(&server_params)?;
-    let findex_client = FindexRestClient::new(owner_client_conf.clone())?;
+    let findex_client = FindexRestClient::new(&owner_client_conf)?;
 
     info!(
         "Starting Findex test server at URL: {} with server params {:?}",
