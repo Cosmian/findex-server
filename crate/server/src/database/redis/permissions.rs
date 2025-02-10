@@ -5,32 +5,33 @@ use crate::{
 };
 use async_trait::async_trait;
 use cosmian_findex_structs::{Permission, Permissions, WORD_LENGTH};
-use redis::AsyncCommands;
+use redis::{aio::ConnectionManager, AsyncCommands, RedisError};
 use tracing::{instrument, trace};
 use uuid::Uuid;
 
 const PERMISSIONS_PREFIX: &str = "permissions";
 
+async fn hset_redis_permission(
+    manager: &ConnectionManager,
+    user_id: &str,
+    index_id: &Uuid,
+    permission: Permission,
+) -> Result<(), RedisError> {
+    let user_redis_key = format!("{PERMISSIONS_PREFIX}:{user_id}");
+
+    manager
+        .clone()
+        .hset::<_, _, u8, _>(&user_redis_key, index_id.to_string(), u8::from(permission))
+        .await
+}
+
 #[async_trait]
 impl PermissionsTrait for Redis<WORD_LENGTH> {
     /// Creates a new index ID and sets admin privileges.
-    /// Instead of serializing/deserializing permissions, we use Redis hashes directly.
     #[instrument(ret(Display), err, skip(self), level = "trace")]
     async fn create_index_id(&self, user_id: &str) -> FResult<Uuid> {
         let index_id = Uuid::new_v4();
-        let user_redis_key = format!("{PERMISSIONS_PREFIX}:{user_id}");
-
-        // never type fallbacks will be deprecated in future Rust releases, hence this explicit typing
-        let _: () = self
-            .manager
-            .clone()
-            .hset::<_, _, u8, _>(
-                &user_redis_key,
-                &index_id.to_string(),
-                u8::from(Permission::Admin),
-            )
-            .await?;
-
+        hset_redis_permission(&self.manager, user_id, &index_id, Permission::Admin).await?;
         trace!("New index with id {index_id} created for user {user_id}");
         Ok(index_id)
     }
@@ -42,15 +43,7 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
         permission: Permission,
         index_id: &Uuid,
     ) -> FResult<()> {
-        let user_key = format!("{PERMISSIONS_PREFIX}:{user_id}");
-
-        let _: () = self
-            .manager
-            .clone()
-            .hset::<_, _, u8, _>(&user_key, index_id.to_string(), u8::from(permission))
-            .await
-            .map_err(FindexServerError::from)?;
-
+        hset_redis_permission(&self.manager, user_id, index_id, permission).await?;
         trace!("Set {permission:?} permission to {user_id} for index {index_id}");
         Ok(())
     }
@@ -109,6 +102,7 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
     async fn revoke_permission(&self, user_id: &str, index_id: &Uuid) -> FResult<()> {
         let user_key = format!("{PERMISSIONS_PREFIX}:{user_id}");
 
+        // never type fallbacks will be deprecated in future Rust releases, hence this explicit typing
         let _: () = self
             .manager
             .clone()
@@ -194,7 +188,7 @@ mod tests {
     async fn test_permissions_set_and_revoke_permissions() {
         let db = setup_test_db().await;
 
-        let user_id = "test_user_2";
+        let user_id = "test_user_1";
         let index_id = Uuid::new_v4();
 
         // Set Read permission
@@ -214,6 +208,16 @@ mod tests {
             .await
             .unwrap();
 
+        let permission = db.get_permission(user_id, &index_id).await.unwrap();
+        assert_eq!(permission, Permission::Admin);
+
+        // Now, we create a new use and give him Read permission on the same index
+        let different_user_id = "test_user_2";
+        db.set_permission(different_user_id, Permission::Read, &index_id)
+            .await
+            .unwrap();
+
+        // Verify that the first user still has Admin permission
         let permission = db.get_permission(user_id, &index_id).await.unwrap();
         assert_eq!(permission, Permission::Admin);
 
@@ -316,6 +320,45 @@ mod tests {
             .unwrap();
     }
 
+    #[tokio::test]
+    async fn test_permissions_concurrent_create_index_id() {
+        let db = Arc::new(setup_test_db().await);
+        let user_id = Uuid::new_v4().to_string();
+        let tasks_count = 20;
+
+        // Create multiple concurrent tasks to create index IDs
+        let tasks: Vec<_> = (0..tasks_count)
+            .map(|_| {
+                let dba = Arc::clone(&db);
+                let user_id = user_id.clone();
+                tokio::spawn(async move { dba.create_index_id(&user_id).await })
+            })
+            .collect();
+
+        // Wait for all tasks to complete
+        let results: Vec<_> = futures::future::join_all(tasks)
+            .await
+            .into_iter()
+            .collect::<Result<Vec<_>, _>>()
+            .expect("Failed to join tasks");
+
+        // Verify that all tasks succeeded
+        assert_eq!(results.len(), tasks_count, "Not all tasks completed");
+
+        // Verify that the IDs were actually stored in the db
+        let current_permissions = db.get_permissions(&user_id).await.unwrap().permissions;
+
+        // Collect the unique IDs and permissions in Hashes
+        // Verify that the number of unique IDs is equal to the number of tasks
+        let unique_ids: HashSet<_> = current_permissions.keys().collect();
+        assert_eq!(unique_ids.len(), tasks_count, "Not all IDs were stored");
+
+        // Verify that all permissions are Admin
+        for perm in current_permissions.values() {
+            assert_eq!(perm, &Permission::Admin, "Unexpected permission found");
+        }
+    }
+
     fn update_expected_results(
         previous_state: HashMap<Uuid, Permission>,
         operation: &Operation,
@@ -371,45 +414,6 @@ mod tests {
                 index_id: Uuid::new_v4(),
             },
             _ => panic!("Invalid operation"),
-        }
-    }
-
-    #[tokio::test]
-    async fn test_permissions_concurrent_create_index_id() {
-        let db = Arc::new(setup_test_db().await);
-        let user_id = Uuid::new_v4().to_string();
-        let tasks_count = 20;
-
-        // Create multiple concurrent tasks to create index IDs
-        let tasks: Vec<_> = (0..tasks_count)
-            .map(|_| {
-                let dba = Arc::clone(&db);
-                let user_id = user_id.clone();
-                tokio::spawn(async move { dba.create_index_id(&user_id).await })
-            })
-            .collect();
-
-        // Wait for all tasks to complete
-        let results: Vec<_> = futures::future::join_all(tasks)
-            .await
-            .into_iter()
-            .collect::<Result<Vec<_>, _>>()
-            .expect("Failed to join tasks");
-
-        // Verify that all tasks succeeded
-        assert_eq!(results.len(), tasks_count, "Not all tasks completed");
-
-        // Verify that the IDs were actually stored in the db
-        let current_permissions = db.get_permissions(&user_id).await.unwrap().permissions;
-
-        // Collect the unique IDs and permissions in Hashes
-        // Verify that the number of unique IDs is equal to the number of tasks
-        let unique_ids: HashSet<_> = current_permissions.keys().collect();
-        assert_eq!(unique_ids.len(), tasks_count, "Not all IDs were stored");
-
-        // Verify that all permissions are Admin
-        for perm in current_permissions.values() {
-            assert_eq!(perm, &Permission::Admin, "Unexpected permission found");
         }
     }
 
