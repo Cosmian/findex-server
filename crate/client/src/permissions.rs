@@ -22,13 +22,13 @@ impl FindexRestClient {
     }
 
     #[instrument(ret(Display), err, skip(self), level = "trace")]
-    pub async fn grant_permission(
+    pub async fn set_permission(
         &self,
         user_id: &str,
         permission: &Permission,
         index_id: &Uuid,
     ) -> FindexClientResult<SuccessResponse> {
-        let endpoint = format!("/permission/grant/{user_id}/{permission}/{index_id}");
+        let endpoint = format!("/permission/set/{user_id}/{permission}/{index_id}");
         let server_url = format!("{}{endpoint}", self.http_client.server_url);
         trace!("POST: {server_url}");
         let response = self.http_client.client.post(server_url).send().await?;

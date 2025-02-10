@@ -24,7 +24,7 @@ sequenceDiagram
   User->>F: User authentication
   User->>F: User create an Index ID
   F->>User: Index ID with admin permission
-  User->>F: User grant/revoke permission to another user
+  User->>F: User set/revoke permission to another user
 ```
 
 There are 3 permissions:
@@ -35,7 +35,7 @@ There are 3 permissions:
 
 The mechanism is pretty simple:
 
-When a user creates a new **Index ID**, he becomes the **admin** of this index. He can then grant other index users the role of **reader**, **writer** or **admin**.
+When a user creates a new **Index ID**, he becomes the **admin** of this index. He can then set other index users the role of **reader**, **writer** or **admin**.
 
 Every server endpoint is protected by this authorization mechanism: the server checks the user's role before allowing access to the endpoint.
 
@@ -45,15 +45,15 @@ Currently, there is an entry for each user in database. In the case of a key-val
 
 #### Example
 
-| Key              | Value                                                                                          |
-| ---------------- | ---------------------------------------------------------------------------------------------- |
+| Key              | Value                                                                                |
+| ---------------- | ------------------------------------------------------------------------------------ |
 | `user@gmail.com` | (0,d9eee59c-f9df-4edd-97bc-ba5952ce63af) \| (1,5b044b87-bced-424c-9dac-f25550c88c20) |
 
 ## Endpoints
 
-| Endpoint                                              | Description                                       |
-| ----------------------------------------------------- | ------------------------------------------------- |
-| `/create/index`                                       | Create an **Index ID**                            |
-| `/permission/grant/{user_id}/{permission}/{index_id}` | Grant a permission to a user for a specific index |
-| `/permission/list/{user_id}`                          | List permissions of a user                        |
-| `/permission/revoke/{user_id}/{index_id}`             | Revoke a user's permission for a specific index   |
+| Endpoint                                            | Description                                     |
+| --------------------------------------------------- | ----------------------------------------------- |
+| `/create/index`                                     | Create an **Index ID**                          |
+| `/permission/set/{user_id}/{permission}/{index_id}` | Set a permission to a user for a specific index |
+| `/permission/list/{user_id}`                        | List permissions of a user                      |
+| `/permission/revoke/{user_id}/{index_id}`           | Revoke a user's permission for a specific index |

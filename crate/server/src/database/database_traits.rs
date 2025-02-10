@@ -12,7 +12,7 @@ pub(crate) trait PermissionsTrait: Sync + Send {
     async fn create_index_id(&self, user_id: &str) -> FResult<Uuid>;
     async fn get_permissions(&self, user_id: &str) -> FResult<Permissions>;
     async fn get_permission(&self, user_id: &str, index_id: &Uuid) -> FResult<Permission>;
-    async fn grant_permission(
+    async fn set_permission(
         &self,
         user_id: &str,
         permission: Permission,

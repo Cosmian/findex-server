@@ -14,13 +14,7 @@ use cosmian_findex_structs::{
 use tracing::trace;
 use uuid::Uuid;
 
-use crate::{
-    core::FindexServer,
-    error::server::FindexServerError,
-    routes::{check_permission, error::ResponseBytes},
-};
-
-// TODO(hatem): reduce cloning
+use crate::{core::FindexServer, error::server::FindexServerError, routes::error::ResponseBytes};
 
 #[allow(clippy::indexing_slicing)]
 fn prepend_index_id(
@@ -44,7 +38,9 @@ pub(crate) async fn findex_batch_read(
 
     trace!("user {user}: POST /indexes/{index_id}/batch_read");
 
-    check_permission(&user, &index_id, Permission::Read, &findex_server).await?;
+    findex_server
+        .ensure_minimum_permission(&user, &index_id, Permission::Read)
+        .await?;
 
     let index_id = Uuid::parse_str(&index_id)?;
     let addresses = Addresses::deserialize(&bytes)?
@@ -82,7 +78,9 @@ pub(crate) async fn findex_guarded_write(
 
     trace!("user {user}: POST /indexes/{index_id}/guarded_write");
 
-    check_permission(&user, &index_id, Permission::Write, &findex_server).await?;
+    findex_server
+        .ensure_minimum_permission(&user, &index_id, Permission::Write)
+        .await?;
 
     let index_id = Uuid::parse_str(&index_id)?;
 

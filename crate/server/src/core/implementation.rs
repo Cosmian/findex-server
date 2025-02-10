@@ -6,7 +6,7 @@ use uuid::Uuid;
 use crate::{
     config::{DbParams, ServerParams},
     database::{database_traits::PermissionsTrait, redis::Redis},
-    error::result::FResult,
+    error::{result::FResult, server::FindexServerError},
     middlewares::{JwtAuthClaim, PeerCommonName},
 };
 pub(crate) struct FindexServer {
@@ -58,7 +58,6 @@ impl FindexServer {
         user
     }
 
-    // #[instrument(ret(Display), err, skip(self))]
     pub(crate) async fn get_permission(
         &self,
         user_id: &str,
@@ -75,5 +74,21 @@ impl FindexServer {
         let permission = self.db.get_permission(user_id, &index_id).await?;
         trace!("User {user_id} has: {permission}");
         Ok(permission)
+    }
+
+    pub(crate) async fn ensure_minimum_permission(
+        &self,
+        user: &str,
+        index_id: &str,
+        expected_permission: Permission,
+    ) -> FResult<()> {
+        let permission = self.get_permission(user, index_id).await?;
+        trace!("ensure_minimum_permission: user {user} has permission {permission} on index {index_id}");
+        if permission < expected_permission {
+            return Err(FindexServerError::Unauthorized(format!(
+                "User {user} with permission {permission} is not allowed to write on index {index_id}",
+            )));
+        }
+        Ok(())
     }
 }

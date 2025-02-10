@@ -22,8 +22,8 @@ use crate::{
     middlewares::{extract_peer_certificate, AuthTransformer, JwksManager, JwtConfig, SslAuth},
     routes::{
         create_index_id, datasets_add_entries, datasets_del_entries, datasets_get_entries,
-        findex_batch_read, findex_guarded_write, get_version, grant_permission, list_permission,
-        revoke_permission,
+        findex_batch_read, findex_guarded_write, get_version, list_permission, revoke_permission,
+        set_permission,
     },
 };
 
@@ -254,7 +254,7 @@ pub(crate) async fn prepare_findex_server(
             // Permissions management endpoints
             .service(create_index_id)
             .service(list_permission)
-            .service(grant_permission)
+            .service(set_permission)
             .service(revoke_permission)
             // Dataset management
             .service(datasets_add_entries)
