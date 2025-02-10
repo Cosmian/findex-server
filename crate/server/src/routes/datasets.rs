@@ -29,7 +29,7 @@ pub(crate) async fn datasets_add_entries(
     info!("user {user}: POST /datasets/{index_id}/add_entries");
 
     findex_server
-        .check_permission(&user, &index_id, Permission::Write)
+        .ensure_minimum_permission(&user, &index_id, Permission::Write)
         .await?;
 
     let index_id = Uuid::parse_str(&index_id)?;
@@ -66,7 +66,7 @@ pub(crate) async fn datasets_del_entries(
     info!("user {user}: POST /datasets/{index_id}/delete_entries");
 
     findex_server
-        .check_permission(&user, &index_id, Permission::Write)
+        .ensure_minimum_permission(&user, &index_id, Permission::Write)
         .await?;
 
     let index_id = Uuid::parse_str(&index_id)?;
@@ -103,7 +103,7 @@ pub(crate) async fn datasets_get_entries(
     info!("user {user}: POST /datasets/{index_id}/get_entries",);
 
     findex_server
-        .check_permission(&user, &index_id, Permission::Read)
+        .ensure_minimum_permission(&user, &index_id, Permission::Read)
         .await?;
 
     let index_id = Uuid::parse_str(&index_id)?;

@@ -62,7 +62,7 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
             .map(|(index_str, perm)| {
                 Ok((
                     Uuid::parse_str(&index_str).map_err(|e| {
-                        FindexServerError::DatabaseError(format!("Invalid UUID. {e}"))
+                        FindexServerError::DatabaseError(format!("Invalid index ID. {e}"))
                     })?,
                     Permission::try_from(perm).map_err(|e| {
                         FindexServerError::DatabaseError(format!("Invalid permission. {e}"))
@@ -86,7 +86,9 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
             .await
             .map_err(FindexServerError::from)?
             .ok_or_else(|| {
-                FindexServerError::Unauthorized(format!("No permission found for index {index_id}"))
+                FindexServerError::DatabaseError(format!(
+                    "No permission found for index {index_id}"
+                ))
             })
             .and_then(|p| {
                 Permission::try_from(p).map_err(|e| {

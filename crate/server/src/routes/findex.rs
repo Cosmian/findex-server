@@ -39,7 +39,7 @@ pub(crate) async fn findex_batch_read(
     trace!("user {user}: POST /indexes/{index_id}/batch_read");
 
     findex_server
-        .check_permission(&user, &index_id, Permission::Read)
+        .ensure_minimum_permission(&user, &index_id, Permission::Read)
         .await?;
 
     let index_id = Uuid::parse_str(&index_id)?;
@@ -79,7 +79,7 @@ pub(crate) async fn findex_guarded_write(
     trace!("user {user}: POST /indexes/{index_id}/guarded_write");
 
     findex_server
-        .check_permission(&user, &index_id, Permission::Write)
+        .ensure_minimum_permission(&user, &index_id, Permission::Write)
         .await?;
 
     let index_id = Uuid::parse_str(&index_id)?;

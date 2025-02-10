@@ -76,14 +76,14 @@ impl FindexServer {
         Ok(permission)
     }
 
-    pub(crate) async fn check_permission(
+    pub(crate) async fn ensure_minimum_permission(
         &self,
         user: &str,
         index_id: &str,
         expected_permission: Permission,
     ) -> FResult<()> {
         let permission = self.get_permission(user, index_id).await?;
-        trace!("check_permission: user {user} has permission {permission} on index {index_id}");
+        trace!("ensure_minimum_permission: user {user} has permission {permission} on index {index_id}");
         if permission < expected_permission {
             return Err(FindexServerError::Unauthorized(format!(
                 "User {user} with permission {permission} is not allowed to write on index {index_id}",
