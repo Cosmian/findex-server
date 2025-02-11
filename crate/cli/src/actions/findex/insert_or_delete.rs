@@ -6,7 +6,7 @@ use crate::{
 use clap::Parser;
 use cosmian_findex::{Findex, IndexADT, Value};
 use cosmian_findex_client::FindexRestClient;
-use cosmian_findex_structs::{Keyword, KeywordToDataSetsMap, Keywords, WORD_LENGTH};
+use cosmian_findex_structs::{Keyword, Keywords, WORD_LENGTH};
 use std::{
     collections::{HashMap, HashSet},
     fs::File,
@@ -30,6 +30,9 @@ impl InsertOrDeleteAction {
     /// First, converts a CSV file to a hashmap where the keys are keywords and
     /// the values are sets of indexed values (Data). Then, inserts or deletes
     /// using the Findex instance.
+    /// First, converts a CSV file to a hashmap where the keys are keywords and
+    /// the values are sets of indexed values (Data). Then, inserts or deletes
+    /// using the Findex instance.
     ///
     /// # Errors
     ///
@@ -46,9 +49,17 @@ impl InsertOrDeleteAction {
         rest_client: &FindexRestClient,
         is_insert: bool,
     ) -> CliResult<Keywords> {
+    /// - The Findex instance cannot be instantiated.
+    /// - The Findex instance cannot insert or delete the data.
+    /// - The semaphore cannot acquire a permit.
+    async fn insert_or_delete(
+        &self,
+        rest_client: &FindexRestClient,
+        is_insert: bool,
+    ) -> CliResult<Keywords> {
         let file = File::open(self.csv.clone())?;
 
-        let bindings = KeywordToDataSetsMap(csv::Reader::from_reader(file).byte_records().fold(
+        let bindings = csv::Reader::from_reader(file).byte_records().fold(
             HashMap::new(),
             |mut acc: HashMap<Keyword, HashSet<Value>>, result| {
                 if let Ok(record) = result {
@@ -65,7 +76,9 @@ impl InsertOrDeleteAction {
         ));
         trace!("CSV lines are OK");
 
+
         // cloning will be eliminated in the future, cf https://github.com/Cosmian/findex-server/issues/28
+        let findex = Arc::<Findex<WORD_LENGTH, Value, String, FindexRestClient>>::new(
         let findex = Arc::<Findex<WORD_LENGTH, Value, String, FindexRestClient>>::new(
             rest_client.clone().instantiate_findex(
                 self.findex_parameters.index_id,
@@ -73,25 +86,25 @@ impl InsertOrDeleteAction {
             )?,
         );
         let semaphore = Arc::new(Semaphore::new(MAX_PERMITS));
-        let written_keywords = bindings.keys().collect::<Vec<_>>();
+        let written_keywords = bindings.keys().cloned().collect::<Vec<_>>();
 
         let handles = bindings
-            .clone()
-            .0
             .into_iter()
             .map(|(kw, vs)| {
                 let findex = findex.clone();
                 let semaphore = semaphore.clone();
                 tokio::spawn(async move {
-                    let _permit = semaphore
-                        .acquire()
-                        .await
-                        .map_err(|e| cosmian_findex::Error::Conversion(e.to_string()))?;
+                    let _permit = semaphore.acquire().await.map_err(|e| {
+                        CliError::Default(format!(
+                            "Acquire error while trying to ask for permit: {e:?}"
+                        ))
+                    })?;
                     if is_insert {
-                        findex.insert(kw, vs).await
+                        findex.insert(kw, vs).await?;
                     } else {
-                        findex.delete(kw, vs).await
+                        findex.delete(kw, vs).await?;
                     }
+                    Ok::<_, CliError>(())
                 })
             })
             .collect::<Vec<_>>();
