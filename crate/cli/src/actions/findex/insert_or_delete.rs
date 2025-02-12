@@ -80,7 +80,7 @@ impl InsertOrDeleteAction {
         let operation_name = if is_insert { "Indexing" } else { "Deleting" };
         let output = format!("Indexing done: keywords: {written_keywords:?}");
 
-        let semaphore = Arc::new(Semaphore::new(10));
+        let semaphore = Arc::new(Semaphore::new(30));
 
         let handles = bindings
             .0
