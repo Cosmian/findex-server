@@ -10,6 +10,7 @@ use std::{
     path::PathBuf,
     sync::Arc,
 };
+use tokio::sync::Semaphore;
 use tracing::{instrument, trace};
 
 #[derive(Parser, Debug)]
@@ -79,15 +80,26 @@ impl InsertOrDeleteAction {
         let operation_name = if is_insert { "Indexing" } else { "Deleting" };
         let output = format!("Indexing done: keywords: {written_keywords:?}");
 
+        let semaphore = Arc::new(Semaphore::new(10));
+
         let handles = bindings
             .0
             .into_iter()
             .map(|(kw, vs)| {
                 let findex = findex.clone();
+                let semaphore = semaphore.clone(); // Clone semaphore for each task
                 if is_insert {
-                    tokio::spawn(async move { findex.insert(kw, vs).await })
+                    tokio::spawn({
+                        async move {
+                            let _permit = semaphore.acquire().await;
+                            findex.insert(kw, vs).await
+                        }
+                    })
                 } else {
-                    tokio::spawn(async move { findex.delete(kw, vs).await })
+                    tokio::spawn(async move {
+                        let _permit = semaphore.acquire().await;
+                        findex.delete(kw, vs).await
+                    })
                 }
             })
             .collect::<Vec<_>>();
