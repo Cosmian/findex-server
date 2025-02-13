@@ -28,40 +28,46 @@ impl SearchAction {
     /// Returns an error if the version query fails or if there is an issue
     /// writing to the console.
     pub async fn run(&self, rest_client: &mut FindexRestClient) -> CliResult<SearchResults> {
+        let keywords = Keywords::from(self.keyword.clone()).0;
+        if keywords.is_empty() {
+            return Err(CliError::Default("No search results found".to_owned()));
+        }
+
         // cloning will be eliminated in the future, cf https://github.com/Cosmian/findex-server/issues/28
         let findex_instance = rest_client.clone().instantiate_findex(
             self.findex_parameters.index_id,
             &self.findex_parameters.seed()?,
         )?;
 
-        let semaphore = Arc::new(Semaphore::new(MAX_SEMAPHORES));
+        let semaphores = Arc::new(Semaphore::new(MAX_SEMAPHORES));
 
-        // First accumulate all search results in a vector
-        let mut all_results = Vec::new();
-
-        let handles = Keywords::from(self.keyword.clone())
-            .0
+        let mut handles = keywords
             .into_iter()
             .map(|k| {
-                let semaphore = semaphore.clone();
+                let semaphores = semaphores.clone();
                 let findex_instance = findex_instance.clone();
                 tokio::spawn(async move {
-                    let _permit = semaphore.acquire().await;
+                    let _permit = semaphores.acquire().await;
                     findex_instance.search(&k).await
                 })
             })
             .collect::<Vec<_>>();
 
+        // for overall effeciency, we perform the first search outside the loop, then we intersect any further results with it
+        let mut acc_results = handles
+            .remove(0)
+            .await
+            .map_err(|e| CliError::Default(e.to_string()))??;
+
         for h in handles {
-            all_results.push(h.await.map_err(|e| CliError::Default(e.to_string()))??);
+            // if we have no more results, we can break early because and intersection with an empty set will certainly be empty
+            if acc_results.is_empty() {
+                break;
+            }
+            let _a = h.await.map_err(|e| CliError::Default(e.to_string()))??;
+            acc_results.retain(|item| _a.contains(item));
         }
 
-        // Then take the intersection of all search results
-        let search_results = all_results
-            .into_iter()
-            .reduce(|acc, results| acc.intersection(&results).cloned().collect())
-            .ok_or_else(|| CliError::Default("No search results found".to_owned()))?;
-
-        Ok(SearchResults(search_results))
+        Ok(SearchResults(acc_results))
     }
 }

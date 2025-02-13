@@ -7,6 +7,7 @@ use clap::Parser;
 use cosmian_findex::{Findex, IndexADT, Value};
 use cosmian_findex_client::FindexRestClient;
 use cosmian_findex_structs::{Keyword, KeywordToDataSetsMap, WORD_LENGTH};
+use futures::future::select_all;
 use std::{
     collections::{HashMap, HashSet},
     fs::File,
@@ -14,7 +15,7 @@ use std::{
     sync::Arc,
 };
 use tokio::sync::Semaphore;
-use tracing::{instrument, trace};
+use tracing::{instrument, trace, warn};
 
 #[derive(Parser, Debug)]
 #[clap(verbatim_doc_comment)]
@@ -77,14 +78,14 @@ impl InsertOrDeleteAction {
         let semaphores = Arc::new(Semaphore::new(MAX_SEMAPHORES));
         let keywords_str = format!("{:?}", bindings.keys().collect::<Vec<_>>()); // for logging
 
-        let handles = bindings
+        let mut futs = bindings
             .0
             .into_iter()
             .map(|(kw, vs)| {
                 let findex = findex.clone();
-                let semaphore = semaphores.clone();
+                let semaphores = semaphores.clone();
                 tokio::spawn(async move {
-                    let _permit = semaphore.acquire().await;
+                    let _permit = semaphores.acquire().await;
                     if is_insert {
                         findex.insert(kw, vs).await
                     } else {
@@ -94,11 +95,28 @@ impl InsertOrDeleteAction {
             })
             .collect::<Vec<_>>();
 
-        for h in handles {
-            h.await.map_err(|e| CliError::Default(e.to_string()))??;
-        }
-
         let operation_name = if is_insert { "Indexing" } else { "Deleting" };
+
+        while !futs.is_empty() {
+            let (res, _, remaining_futures) = select_all(futs).await;
+            warn!("{}: {:?}", &operation_name, &res);
+            match res {
+                Ok(Ok(_)) => (), // Operation succeeded
+                Ok(Err(e)) => {
+                    return Err(CliError::Default(format!(
+                        "Operation failed during {} - {}",
+                        &operation_name, e
+                    )));
+                }
+                Err(e) => {
+                    return Err(CliError::Default(format!(
+                        "Task failed sucessfully {} - {}",
+                        &operation_name, e
+                    )));
+                }
+            }
+            futs = remaining_futures;
+        }
 
         trace!("{} done: keywords: {:?}", operation_name, &keywords_str);
 

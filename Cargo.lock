@@ -860,6 +860,7 @@ dependencies = [
  "cosmian_findex_structs",
  "cosmian_logger",
  "csv",
+ "futures",
  "hex",
  "openssl",
  "predicates",
