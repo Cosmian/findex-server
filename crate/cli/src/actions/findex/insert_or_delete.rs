@@ -1,5 +1,8 @@
 use super::parameters::FindexParameters;
-use crate::error::{result::CliResult, CliError};
+use crate::{
+    actions::findex::MAX_SEMAPHORES,
+    error::{result::CliResult, CliError},
+};
 use clap::Parser;
 use cosmian_findex::{Findex, IndexADT, Value};
 use cosmian_findex_client::FindexRestClient;
@@ -62,6 +65,8 @@ impl InsertOrDeleteAction {
         rest_client: &FindexRestClient,
         is_insert: bool,
     ) -> CliResult<String> {
+        let bindings = self.to_indexed_value_keywords_map()?;
+
         // cloning will be eliminated in the future, cf https://github.com/Cosmian/findex-server/issues/28
         let findex = Arc::<Findex<WORD_LENGTH, Value, String, FindexRestClient>>::new(
             rest_client.clone().instantiate_findex(
@@ -69,38 +74,23 @@ impl InsertOrDeleteAction {
                 &self.findex_parameters.seed()?,
             )?,
         );
-
-        let bindings = self.to_indexed_value_keywords_map()?;
-
-        // Write messages before consuming values to avoid cloning.
-        let written_keywords = format!(
-            "Indexing done: keywords: {:?}",
-            bindings.keys().collect::<Vec<_>>()
-        );
-        let operation_name = if is_insert { "Indexing" } else { "Deleting" };
-        let output = format!("Indexing done: keywords: {written_keywords:?}");
-
-        let semaphore = Arc::new(Semaphore::new(30));
+        let semaphores = Arc::new(Semaphore::new(MAX_SEMAPHORES));
+        let keywords_str = format!("{:?}", bindings.keys().collect::<Vec<_>>()); // for logging
 
         let handles = bindings
             .0
             .into_iter()
             .map(|(kw, vs)| {
                 let findex = findex.clone();
-                let semaphore = semaphore.clone(); // Clone semaphore for each task
-                if is_insert {
-                    tokio::spawn({
-                        async move {
-                            let _permit = semaphore.acquire().await;
-                            findex.insert(kw, vs).await
-                        }
-                    })
-                } else {
-                    tokio::spawn(async move {
-                        let _permit = semaphore.acquire().await;
+                let semaphore = semaphores.clone();
+                tokio::spawn(async move {
+                    let _permit = semaphore.acquire().await;
+                    if is_insert {
+                        findex.insert(kw, vs).await
+                    } else {
                         findex.delete(kw, vs).await
-                    })
-                }
+                    }
+                })
             })
             .collect::<Vec<_>>();
 
@@ -108,9 +98,14 @@ impl InsertOrDeleteAction {
             h.await.map_err(|e| CliError::Default(e.to_string()))??;
         }
 
-        trace!("{} done: keywords: {:?}", operation_name, written_keywords);
+        let operation_name = if is_insert { "Indexing" } else { "Deleting" };
 
-        Ok(output)
+        trace!("{} done: keywords: {:?}", operation_name, &keywords_str);
+
+        Ok(format!(
+            "{} done: keywords: {:?}",
+            &operation_name, &keywords_str
+        ))
     }
 
     /// Insert new indexes

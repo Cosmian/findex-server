@@ -1,10 +1,13 @@
+use std::sync::Arc;
+
 use crate::error::{result::CliResult, CliError};
 use clap::Parser;
 use cosmian_findex::IndexADT;
 use cosmian_findex_client::FindexRestClient;
 use cosmian_findex_structs::{Keywords, SearchResults};
+use tokio::sync::Semaphore;
 
-use super::parameters::FindexParameters;
+use super::{parameters::FindexParameters, MAX_SEMAPHORES};
 
 /// Search words.
 #[derive(Parser, Debug)]
@@ -31,11 +34,26 @@ impl SearchAction {
             &self.findex_parameters.seed()?,
         )?;
 
+        let semaphore = Arc::new(Semaphore::new(MAX_SEMAPHORES));
+
         // First accumulate all search results in a vector
         let mut all_results = Vec::new();
-        for k in Keywords::from(self.keyword.clone()).0 {
-            let search_result = findex_instance.search(&k).await?;
-            all_results.push(search_result);
+
+        let handles = Keywords::from(self.keyword.clone())
+            .0
+            .into_iter()
+            .map(|k| {
+                let semaphore = semaphore.clone();
+                let findex_instance = findex_instance.clone();
+                tokio::spawn(async move {
+                    let _permit = semaphore.acquire().await;
+                    findex_instance.search(&k).await
+                })
+            })
+            .collect::<Vec<_>>();
+
+        for h in handles {
+            all_results.push(h.await.map_err(|e| CliError::Default(e.to_string()))??);
         }
 
         // Then take the intersection of all search results
