@@ -1,12 +1,12 @@
 use super::parameters::FindexParameters;
 use crate::{
-    actions::findex::MAX_SEMAPHORES,
+    actions::findex::MAX_PERMITS,
     error::{result::CliResult, CliError},
 };
 use clap::Parser;
 use cosmian_findex::{Findex, IndexADT, Value};
 use cosmian_findex_client::FindexRestClient;
-use cosmian_findex_structs::{Keyword, KeywordToDataSetsMap, WORD_LENGTH};
+use cosmian_findex_structs::{Keyword, KeywordToDataSetsMap, Keywords, WORD_LENGTH};
 use std::{
     collections::{HashMap, HashSet},
     fs::File,
@@ -37,9 +37,9 @@ impl InsertOrDeleteAction {
     /// - There is an error reading the CSV records.
     /// - There is an error converting the CSV records to the expected data
     ///   types.
-    #[instrument(err, skip(self))]
-    pub(crate) fn to_indexed_value_keywords_map(&self) -> CliResult<KeywordToDataSetsMap> {
-        let file = File::open(self.csv.clone())?;
+    #[instrument(err)]
+    pub(crate) fn from_csv(p: PathBuf) -> CliResult<KeywordToDataSetsMap> {
+        let file = File::open(p)?;
 
         let csv_in_memory = csv::Reader::from_reader(file).byte_records().fold(
             HashMap::new(),
@@ -64,8 +64,8 @@ impl InsertOrDeleteAction {
         &self,
         rest_client: &FindexRestClient,
         is_insert: bool,
-    ) -> CliResult<String> {
-        let bindings = self.to_indexed_value_keywords_map()?;
+    ) -> CliResult<Keywords> {
+        let bindings = Self::from_csv(self.csv.clone())?;
 
         // cloning will be eliminated in the future, cf https://github.com/Cosmian/findex-server/issues/28
         let findex = Arc::<Findex<WORD_LENGTH, Value, String, FindexRestClient>>::new(
@@ -74,15 +74,16 @@ impl InsertOrDeleteAction {
                 &self.findex_parameters.seed()?,
             )?,
         );
-        let semaphores = Arc::new(Semaphore::new(MAX_SEMAPHORES));
-        let keywords_str = format!("{:?}", bindings.keys().collect::<Vec<_>>()); // for logging
+        let semaphore = Arc::new(Semaphore::new(MAX_PERMITS));
+        let written_keywords = bindings.keys().collect::<Vec<_>>();
 
         let handles = bindings
+            .clone()
             .0
             .into_iter()
             .map(|(kw, vs)| {
                 let findex = findex.clone();
-                let semaphore = semaphores.clone();
+                let semaphore = semaphore.clone();
                 tokio::spawn(async move {
                     let _permit = semaphore.acquire().await;
                     if is_insert {
@@ -100,19 +101,16 @@ impl InsertOrDeleteAction {
 
         let operation_name = if is_insert { "Indexing" } else { "Deleting" };
 
-        trace!("{} done: keywords: {:?}", operation_name, &keywords_str);
+        trace!("{} done: keywords: {:?}", operation_name, &written_keywords);
 
-        Ok(format!(
-            "{} done: keywords: {:?}",
-            &operation_name, &keywords_str
-        ))
+        Ok(written_keywords.into())
     }
 
     /// Insert new indexes
     ///
     /// # Errors
     /// - If insert new indexes fails
-    pub async fn insert(&self, rest_client: &mut FindexRestClient) -> CliResult<String> {
+    pub async fn insert(&self, rest_client: &mut FindexRestClient) -> CliResult<Keywords> {
         Self::insert_or_delete(self, rest_client, true).await
     }
 
@@ -120,7 +118,7 @@ impl InsertOrDeleteAction {
     ///
     /// # Errors
     /// - If deleting indexes fails
-    pub async fn delete(&self, rest_client: &mut FindexRestClient) -> CliResult<String> {
+    pub async fn delete(&self, rest_client: &mut FindexRestClient) -> CliResult<Keywords> {
         Self::insert_or_delete(self, rest_client, false).await
     }
 }

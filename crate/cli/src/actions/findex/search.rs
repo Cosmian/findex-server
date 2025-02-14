@@ -1,13 +1,11 @@
-use std::sync::Arc;
-
+use super::{parameters::FindexParameters, MAX_PERMITS};
 use crate::error::{result::CliResult, CliError};
 use clap::Parser;
 use cosmian_findex::IndexADT;
 use cosmian_findex_client::FindexRestClient;
 use cosmian_findex_structs::{Keywords, SearchResults};
+use std::sync::Arc;
 use tokio::sync::Semaphore;
-
-use super::{parameters::FindexParameters, MAX_SEMAPHORES};
 
 /// Search words.
 #[derive(Parser, Debug)]
@@ -39,23 +37,23 @@ impl SearchAction {
             &self.findex_parameters.seed()?,
         )?;
 
-        let semaphores = Arc::new(Semaphore::new(MAX_SEMAPHORES));
+        let semaphore = Arc::new(Semaphore::new(MAX_PERMITS));
 
         let mut handles = keywords
             .into_iter()
             .map(|k| {
-                let semaphores = semaphores.clone();
+                let semaphore = semaphore.clone();
                 let findex_instance = findex_instance.clone();
                 tokio::spawn(async move {
-                    let _permit = semaphores.acquire().await;
+                    let _permit = semaphore.acquire().await;
                     findex_instance.search(&k).await
                 })
             })
             .collect::<Vec<_>>();
 
-        // for overall effeciency, we perform the first search outside the loop, then we intersect any further results with it
         let mut acc_results = handles
-            .remove(0)
+            .pop()
+            .ok_or_else(|| CliError::Default("No search handles available".to_owned()))?
             .await
             .map_err(|e| CliError::Default(e.to_string()))??;
 
@@ -64,8 +62,8 @@ impl SearchAction {
             if acc_results.is_empty() {
                 break;
             }
-            let _a = h.await.map_err(|e| CliError::Default(e.to_string()))??;
-            acc_results.retain(|item| _a.contains(item));
+            let next_search_result = h.await.map_err(|e| CliError::Default(e.to_string()))??;
+            acc_results.retain(|item| next_search_result.contains(item));
         }
 
         Ok(SearchResults(acc_results))
