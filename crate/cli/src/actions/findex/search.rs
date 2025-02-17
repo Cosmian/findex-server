@@ -42,7 +42,10 @@ impl SearchAction {
                 let semaphore = semaphore.clone();
                 let findex_instance = findex_instance.clone();
                 tokio::spawn(async move {
-                    let _permit = semaphore.acquire().await;
+                    let _permit = semaphore
+                        .acquire()
+                        .await
+                        .map_err(|e| cosmian_findex::Error::Conversion(e.to_string()))?;
                     findex_instance.search(&k).await
                 })
             })

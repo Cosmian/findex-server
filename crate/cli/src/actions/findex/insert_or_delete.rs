@@ -83,7 +83,10 @@ impl InsertOrDeleteAction {
                 let findex = findex.clone();
                 let semaphore = semaphore.clone();
                 tokio::spawn(async move {
-                    let _permit = semaphore.acquire().await;
+                    let _permit = semaphore
+                        .acquire()
+                        .await
+                        .map_err(|e| cosmian_findex::Error::Conversion(e.to_string()))?;
                     if is_insert {
                         findex.insert(kw, vs).await
                     } else {
