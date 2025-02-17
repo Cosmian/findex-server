@@ -30,9 +30,6 @@ impl InsertOrDeleteAction {
     /// First, converts a CSV file to a hashmap where the keys are keywords and
     /// the values are sets of indexed values (Data). Then, inserts or deletes
     /// using the Findex instance.
-    /// First, converts a CSV file to a hashmap where the keys are keywords and
-    /// the values are sets of indexed values (Data). Then, inserts or deletes
-    /// using the Findex instance.
     ///
     /// # Errors
     ///
@@ -41,14 +38,6 @@ impl InsertOrDeleteAction {
     /// - There is an error reading the CSV records.
     /// - There is an error converting the CSV records to the expected data
     ///   types.
-    /// - The Findex instance cannot be instantiated.
-    /// - The Findex instance cannot insert or delete the data.
-    /// - The semaphore cannot acquire a permit.
-    async fn insert_or_delete(
-        &self,
-        rest_client: &FindexRestClient,
-        is_insert: bool,
-    ) -> CliResult<Keywords> {
     /// - The Findex instance cannot be instantiated.
     /// - The Findex instance cannot insert or delete the data.
     /// - The semaphore cannot acquire a permit.
@@ -73,12 +62,10 @@ impl InsertOrDeleteAction {
                 }
                 acc
             },
-        ));
+        );
         trace!("CSV lines are OK");
 
-
         // cloning will be eliminated in the future, cf https://github.com/Cosmian/findex-server/issues/28
-        let findex = Arc::<Findex<WORD_LENGTH, Value, String, FindexRestClient>>::new(
         let findex = Arc::<Findex<WORD_LENGTH, Value, String, FindexRestClient>>::new(
             rest_client.clone().instantiate_findex(
                 self.findex_parameters.index_id,

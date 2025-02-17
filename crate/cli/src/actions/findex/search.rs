@@ -1,5 +1,4 @@
 use super::{parameters::FindexParameters, MAX_PERMITS};
-use super::{parameters::FindexParameters, MAX_PERMITS};
 use crate::error::{result::CliResult, CliError};
 use clap::Parser;
 use cosmian_findex::IndexADT;
@@ -27,8 +26,6 @@ impl SearchAction {
     /// Returns an error if the version query fails or if there is an issue
     /// writing to the console.
     pub async fn run(&self, rest_client: &mut FindexRestClient) -> CliResult<SearchResults> {
-        let keywords = Keywords::from(self.keyword.clone()).0;
-
         // cloning will be eliminated in the future, cf https://github.com/Cosmian/findex-server/issues/28
         let findex_instance = rest_client.clone().instantiate_findex(
             self.findex_parameters.index_id,
