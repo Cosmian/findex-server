@@ -1,18 +1,20 @@
-use std::{
-    collections::{HashMap, HashSet},
-    fs::File,
-    path::PathBuf,
+use super::parameters::FindexParameters;
+use crate::{
+    actions::findex::MAX_PERMITS,
+    error::{result::CliResult, CliError},
 };
-
 use clap::Parser;
 use cosmian_findex::{Findex, IndexADT, Value};
 use cosmian_findex_client::FindexRestClient;
 use cosmian_findex_structs::{Keyword, KeywordToDataSetsMap, Keywords, WORD_LENGTH};
-use tracing::{instrument, trace};
-
-use crate::error::result::CliResult;
-
-use super::parameters::FindexParameters;
+use std::{
+    collections::{HashMap, HashSet},
+    fs::File,
+    path::PathBuf,
+    sync::Arc,
+};
+use tokio::sync::Semaphore;
+use tracing::trace;
 
 #[derive(Parser, Debug)]
 #[clap(verbatim_doc_comment)]
@@ -25,8 +27,9 @@ pub struct InsertOrDeleteAction {
 }
 
 impl InsertOrDeleteAction {
-    /// Converts a CSV file to a hashmap where the keys are keywords and
-    /// the values are sets of indexed values (Data).
+    /// First, converts a CSV file to a hashmap where the keys are keywords and
+    /// the values are sets of indexed values (Data). Then, inserts or deletes
+    /// using the Findex instance.
     ///
     /// # Errors
     ///
@@ -35,11 +38,17 @@ impl InsertOrDeleteAction {
     /// - There is an error reading the CSV records.
     /// - There is an error converting the CSV records to the expected data
     ///   types.
-    #[instrument(err, skip(self))]
-    pub(crate) fn to_keywords_indexed_value_map(&self) -> CliResult<KeywordToDataSetsMap> {
+    /// - The Findex instance cannot be instantiated.
+    /// - The Findex instance cannot insert or delete the data.
+    /// - The semaphore cannot acquire a permit.
+    async fn insert_or_delete(
+        &self,
+        rest_client: &FindexRestClient,
+        is_insert: bool,
+    ) -> CliResult<Keywords> {
         let file = File::open(self.csv.clone())?;
 
-        let csv_in_memory = csv::Reader::from_reader(file).byte_records().fold(
+        let bindings = KeywordToDataSetsMap(csv::Reader::from_reader(file).byte_records().fold(
             HashMap::new(),
             |mut acc: HashMap<Keyword, HashSet<Value>>, result| {
                 if let Ok(record) = result {
@@ -53,38 +62,49 @@ impl InsertOrDeleteAction {
                 }
                 acc
             },
-        );
+        ));
         trace!("CSV lines are OK");
-        Ok(KeywordToDataSetsMap(csv_in_memory))
-    }
 
-    /// Insert or delete indexes
-    async fn insert_or_delete(
-        &self,
-        rest_client: &FindexRestClient,
-        is_insert: bool,
-    ) -> CliResult<Keywords> {
-        let keywords_indexed_value = self.to_keywords_indexed_value_map()?;
-        let findex: Findex<WORD_LENGTH, Value, String, FindexRestClient> =
         // cloning will be eliminated in the future, cf https://github.com/Cosmian/findex-server/issues/28
+        let findex = Arc::<Findex<WORD_LENGTH, Value, String, FindexRestClient>>::new(
             rest_client.clone().instantiate_findex(
                 self.findex_parameters.index_id,
                 &self.findex_parameters.seed()?,
-            )?;
-        for (key, value) in keywords_indexed_value.iter() {
-            if is_insert {
-                trace!("Attempt to insert ...");
-                findex.insert(key, value.clone()).await
-            } else {
-                findex.delete(key, value.clone()).await
-            }?;
-        }
-        let written_keywords = keywords_indexed_value.keys().collect::<Vec<_>>();
-        let operation_name = if is_insert { "Indexing" } else { "Deleting" };
-        let written_keywords = Keywords::from(written_keywords);
+            )?,
+        );
+        let semaphore = Arc::new(Semaphore::new(MAX_PERMITS));
+        let written_keywords = bindings.keys().collect::<Vec<_>>();
 
-        trace!("{} done: keywords: {}", operation_name, written_keywords);
-        Ok(written_keywords)
+        let handles = bindings
+            .clone()
+            .0
+            .into_iter()
+            .map(|(kw, vs)| {
+                let findex = findex.clone();
+                let semaphore = semaphore.clone();
+                tokio::spawn(async move {
+                    let _permit = semaphore
+                        .acquire()
+                        .await
+                        .map_err(|e| cosmian_findex::Error::Conversion(e.to_string()))?;
+                    if is_insert {
+                        findex.insert(kw, vs).await
+                    } else {
+                        findex.delete(kw, vs).await
+                    }
+                })
+            })
+            .collect::<Vec<_>>();
+
+        for h in handles {
+            h.await.map_err(|e| CliError::Default(e.to_string()))??;
+        }
+
+        let operation_name = if is_insert { "Indexing" } else { "Deleting" };
+
+        trace!("{} done: keywords: {:?}", operation_name, &written_keywords);
+
+        Ok(written_keywords.into())
     }
 
     /// Insert new indexes

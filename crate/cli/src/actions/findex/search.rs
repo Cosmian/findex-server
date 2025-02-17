@@ -1,10 +1,11 @@
+use super::{parameters::FindexParameters, MAX_PERMITS};
 use crate::error::{result::CliResult, CliError};
 use clap::Parser;
 use cosmian_findex::IndexADT;
 use cosmian_findex_client::FindexRestClient;
 use cosmian_findex_structs::{Keywords, SearchResults};
-
-use super::parameters::FindexParameters;
+use std::sync::Arc;
+use tokio::sync::Semaphore;
 
 /// Search words.
 #[derive(Parser, Debug)]
@@ -25,25 +26,46 @@ impl SearchAction {
     /// Returns an error if the version query fails or if there is an issue
     /// writing to the console.
     pub async fn run(&self, rest_client: &mut FindexRestClient) -> CliResult<SearchResults> {
+        let keywords = Keywords::from(self.keyword.clone()).0;
+
         // cloning will be eliminated in the future, cf https://github.com/Cosmian/findex-server/issues/28
         let findex_instance = rest_client.clone().instantiate_findex(
             self.findex_parameters.index_id,
             &self.findex_parameters.seed()?,
         )?;
 
-        // First accumulate all search results in a vector
-        let mut all_results = Vec::new();
-        for k in Keywords::from(self.keyword.clone()).0 {
-            let search_result = findex_instance.search(&k).await?;
-            all_results.push(search_result);
+        let semaphore = Arc::new(Semaphore::new(MAX_PERMITS));
+
+        let mut handles = keywords
+            .into_iter()
+            .map(|k| {
+                let semaphore = semaphore.clone();
+                let findex_instance = findex_instance.clone();
+                tokio::spawn(async move {
+                    let _permit = semaphore
+                        .acquire()
+                        .await
+                        .map_err(|e| cosmian_findex::Error::Conversion(e.to_string()))?;
+                    findex_instance.search(&k).await
+                })
+            })
+            .collect::<Vec<_>>();
+
+        let mut acc_results = handles
+            .pop()
+            .ok_or_else(|| CliError::Default("No search handles available".to_owned()))?
+            .await
+            .map_err(|e| CliError::Default(e.to_string()))??;
+
+        for h in handles {
+            // The empty set is the fixed point of the intersection.
+            if acc_results.is_empty() {
+                break;
+            }
+            let next_search_result = h.await.map_err(|e| CliError::Default(e.to_string()))??;
+            acc_results.retain(|item| next_search_result.contains(item));
         }
 
-        // Then take the intersection of all search results
-        let search_results = all_results
-            .into_iter()
-            .reduce(|acc, results| acc.intersection(&results).cloned().collect())
-            .ok_or_else(|| CliError::Default("No search results found".to_owned()))?;
-
-        Ok(SearchResults(search_results))
+        Ok(SearchResults(acc_results))
     }
 }
