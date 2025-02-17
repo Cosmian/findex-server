@@ -14,7 +14,7 @@ use std::{
     sync::Arc,
 };
 use tokio::sync::Semaphore;
-use tracing::{instrument, trace};
+use tracing::trace;
 
 #[derive(Parser, Debug)]
 #[clap(verbatim_doc_comment)]
@@ -27,8 +27,9 @@ pub struct InsertOrDeleteAction {
 }
 
 impl InsertOrDeleteAction {
-    /// Converts a CSV file to a hashmap where the keys are keywords and
-    /// the values are sets of indexed values (Data).
+    /// First, converts a CSV file to a hashmap where the keys are keywords and
+    /// the values are sets of indexed values (Data). Then, inserts or deletes
+    /// using the Findex instance.
     ///
     /// # Errors
     ///
@@ -37,11 +38,17 @@ impl InsertOrDeleteAction {
     /// - There is an error reading the CSV records.
     /// - There is an error converting the CSV records to the expected data
     ///   types.
-    #[instrument(err)]
-    pub(crate) fn from_csv(p: PathBuf) -> CliResult<KeywordToDataSetsMap> {
-        let file = File::open(p)?;
+    /// - The Findex instance cannot be instantiated.
+    /// - The Findex instance cannot insert or delete the data.
+    /// - The semaphore cannot acquire a permit.
+    async fn insert_or_delete(
+        &self,
+        rest_client: &FindexRestClient,
+        is_insert: bool,
+    ) -> CliResult<Keywords> {
+        let file = File::open(self.csv.clone())?;
 
-        let csv_in_memory = csv::Reader::from_reader(file).byte_records().fold(
+        let bindings = KeywordToDataSetsMap(csv::Reader::from_reader(file).byte_records().fold(
             HashMap::new(),
             |mut acc: HashMap<Keyword, HashSet<Value>>, result| {
                 if let Ok(record) = result {
@@ -55,17 +62,8 @@ impl InsertOrDeleteAction {
                 }
                 acc
             },
-        );
+        ));
         trace!("CSV lines are OK");
-        Ok(KeywordToDataSetsMap(csv_in_memory))
-    }
-
-    async fn insert_or_delete(
-        &self,
-        rest_client: &FindexRestClient,
-        is_insert: bool,
-    ) -> CliResult<Keywords> {
-        let bindings = Self::from_csv(self.csv.clone())?;
 
         // cloning will be eliminated in the future, cf https://github.com/Cosmian/findex-server/issues/28
         let findex = Arc::<Findex<WORD_LENGTH, Value, String, FindexRestClient>>::new(

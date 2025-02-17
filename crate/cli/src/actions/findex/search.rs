@@ -27,9 +27,6 @@ impl SearchAction {
     /// writing to the console.
     pub async fn run(&self, rest_client: &mut FindexRestClient) -> CliResult<SearchResults> {
         let keywords = Keywords::from(self.keyword.clone()).0;
-        if keywords.is_empty() {
-            return Err(CliError::Default("No search results found".to_owned()));
-        }
 
         // cloning will be eliminated in the future, cf https://github.com/Cosmian/findex-server/issues/28
         let findex_instance = rest_client.clone().instantiate_findex(
@@ -49,6 +46,7 @@ impl SearchAction {
                     findex_instance.search(&k).await
                 })
             })
+            .ok_or_else(|| CliError::Default("No search handles available".to_owned()))?
             .collect::<Vec<_>>();
 
         let mut acc_results = handles
@@ -58,7 +56,7 @@ impl SearchAction {
             .map_err(|e| CliError::Default(e.to_string()))??;
 
         for h in handles {
-            // if we have no more results, we can break early because and intersection with an empty set will certainly be empty
+            // The empty set is the fixed point of the intersection.
             if acc_results.is_empty() {
                 break;
             }
