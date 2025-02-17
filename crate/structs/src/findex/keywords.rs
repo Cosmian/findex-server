@@ -49,9 +49,9 @@ impl From<Vec<String>> for Keywords {
     }
 }
 
-impl From<Vec<&Keyword>> for Keywords {
-    fn from(keywords: Vec<&Keyword>) -> Self {
-        Self(keywords.into_iter().cloned().collect())
+impl From<Vec<Keyword>> for Keywords {
+    fn from(keywords: Vec<Keyword>) -> Self {
+        Self(keywords.into_iter().collect())
     }
 }
 

@@ -5,5 +5,5 @@ pub mod search;
 ///
 /// Each network call opens a socket which consumes a file descriptor. While the system's file descriptor
 /// limit can be configured (via `ulimit -n` or `/etc/security/limits.conf`), we enforce this fixed limit
-/// to ensure consistent behavior, but it can be tuned according to the system.
+/// to avoid OS-level file descriptor exhaustion.
 pub(crate) const MAX_PERMITS: usize = 256;
