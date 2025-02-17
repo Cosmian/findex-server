@@ -46,7 +46,6 @@ impl SearchAction {
                     findex_instance.search(&k).await
                 })
             })
-            .ok_or_else(|| CliError::Default("No search handles available".to_owned()))?
             .collect::<Vec<_>>();
 
         let mut acc_results = handles
