@@ -47,7 +47,6 @@ jobs:
       - name: Build and tests
         env:
           REDIS_URL: redis://localhost:6379
-          REDIS_URL2: redis://localhost:6380
 
           # Google variables
           TEST_GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.TEST_GOOGLE_OAUTH_CLIENT_ID }}

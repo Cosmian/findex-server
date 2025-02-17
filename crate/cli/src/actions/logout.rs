@@ -1,5 +1,5 @@
 use clap::Parser;
-use cosmian_findex_client::FindexClientConfig;
+use cosmian_findex_client::RestClientConfig;
 
 use crate::error::result::CliResult;
 
@@ -17,7 +17,7 @@ impl LogoutAction {
     ///
     /// Returns an error if there is an issue loading or saving the
     /// configuration file.
-    pub fn run(&self, conf: &mut FindexClientConfig) -> CliResult<String> {
+    pub fn run(&self, conf: &mut RestClientConfig) -> CliResult<String> {
         conf.http_config.access_token = None;
         Ok("\nThe access token was removed from the Findex CLI configuration".to_owned())
     }

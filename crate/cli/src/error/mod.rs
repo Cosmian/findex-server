@@ -5,7 +5,8 @@ use assert_cmd::cargo::CargoError;
 use cosmian_config_utils::ConfigUtilsError;
 use cosmian_crypto_core::CryptoCoreError;
 use cosmian_findex::{Address, ADDRESS_LENGTH};
-use cosmian_findex_client::{reexport::cosmian_http_client::HttpClientError, FindexClientError};
+use cosmian_findex_client::{reexport::cosmian_http_client::HttpClientError, ClientError};
+use cosmian_kms_cli::reexport::cosmian_kms_client;
 use hex::FromHexError;
 use thiserror::Error;
 
@@ -27,9 +28,15 @@ pub enum CliError {
     #[error(transparent)]
     CryptoCoreError(#[from] CryptoCoreError),
     #[error(transparent)]
-    FindexClientError(#[from] FindexClientError),
+    FindexClientError(#[from] ClientError),
     #[error(transparent)]
     FromHexError(#[from] FromHexError),
+    #[error(transparent)]
+    KmipError(#[from] cosmian_kms_client::cosmian_kmip::KmipError),
+    #[error(transparent)]
+    KmsClientError(#[from] cosmian_kms_client::KmsClientError),
+    #[error(transparent)]
+    CliError(#[from] cosmian_kms_cli::error::CliError),
     #[error(transparent)]
     Utf8Error(#[from] Utf8Error),
     #[error(transparent)]
@@ -41,6 +48,8 @@ pub enum CliError {
     UuidError(#[from] uuid::Error),
     #[error(transparent)]
     Base64(#[from] base64::DecodeError),
+    #[error(transparent)]
+    TryFromSliceError(#[from] std::array::TryFromSliceError),
     // Other errors
     #[error("{0}")]
     Default(String),

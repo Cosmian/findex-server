@@ -3,9 +3,9 @@ use std::path::PathBuf;
 use clap::Parser;
 use cosmian_findex_server::{
     config::{ClapConfig, ServerParams},
-    error::{result::FResult, server::FindexServerError},
+    error::{result::FResult, server::ServerError},
     findex_server::start_findex_server,
-    findex_server_bail,
+    server_bail,
 };
 use cosmian_logger::log_init;
 use dotenvy::dotenv;
@@ -43,7 +43,7 @@ async fn main() -> FResult<()> {
     let conf = if let Ok(conf_path) = std::env::var("COSMIAN_FINDEX_SERVER_CONF") {
         let conf_path = PathBuf::from(conf_path);
         if !conf_path.exists() {
-            findex_server_bail!(FindexServerError::ServerError(format!(
+            server_bail!(ServerError::ServerError(format!(
                 "Cannot read findex server config at specified path: {conf_path:?} - file does \
                  not exist"
             )));
@@ -62,12 +62,12 @@ async fn main() -> FResult<()> {
         );
 
         let conf_content = std::fs::read_to_string(&conf).map_err(|e| {
-            FindexServerError::ServerError(format!(
+            ServerError::ServerError(format!(
                 "Cannot read findex server config at: {conf:?} - {e:?}"
             ))
         })?;
         toml::from_str(&conf_content).map_err(|e| {
-            FindexServerError::ServerError(format!(
+            ServerError::ServerError(format!(
                 "Cannot parse findex server config at: {conf:?} - {e:?}"
             ))
         })?

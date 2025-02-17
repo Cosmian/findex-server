@@ -1,11 +1,12 @@
-use super::{parameters::FindexParameters, MAX_PERMITS};
-use crate::error::{result::CliResult, CliError};
+use super::{
+    instantiated_findex::InstantiatedFindex, parameters::FindexParameters, retrieve_key_from_kms,
+};
+use crate::{cli_error, error::result::CliResult};
 use clap::Parser;
-use cosmian_findex::IndexADT;
-use cosmian_findex_client::FindexRestClient;
-use cosmian_findex_structs::{Keyword, SearchResults};
-use std::{collections::HashSet, sync::Arc};
-use tokio::sync::Semaphore;
+use cosmian_findex::MemoryEncryptionLayer;
+use cosmian_findex_client::{FindexRestClient, KmsEncryptionLayer, RestClient};
+use cosmian_findex_structs::{SearchResults, CUSTOM_WORD_LENGTH};
+use cosmian_kms_cli::reexport::cosmian_kms_client::KmsClient;
 
 /// Search words.
 #[derive(Parser, Debug)]
@@ -25,49 +26,44 @@ impl SearchAction {
     ///
     /// Returns an error if the version query fails or if there is an issue
     /// writing to the console.
-    pub async fn run(&self, rest_client: &mut FindexRestClient) -> CliResult<SearchResults> {
-        // cloning will be eliminated in the future, cf https://github.com/Cosmian/findex-server/issues/28
-        let findex_instance = rest_client.clone().instantiate_findex(
-            self.findex_parameters.index_id,
-            &self.findex_parameters.seed()?,
-        )?;
+    pub async fn run(
+        &self,
+        rest_client: &mut RestClient,
+        kms_client: &KmsClient,
+    ) -> CliResult<SearchResults> {
+        let memory = FindexRestClient::new(rest_client.clone(), self.findex_parameters.index_id);
 
-        let semaphore = Arc::new(Semaphore::new(MAX_PERMITS));
+        let search_results = if let Some(seed_key_id) = self.findex_parameters.seed_key_id.clone() {
+            let seed = retrieve_key_from_kms(&seed_key_id, kms_client.clone()).await?;
 
-        let mut handles = self
-            .keyword
-            .iter()
-            .map(|k| {
-                let semaphore = semaphore.clone();
-                let k = Keyword::from(k.as_ref());
-                let findex_instance = findex_instance.clone();
-                tokio::spawn(async move {
-                    let _permit = semaphore.acquire().await.map_err(|e| {
-                        CliError::Default(format!(
-                            "Acquire error while trying to ask for permit: {e:?}"
-                        ))
-                    })?;
-                    Ok::<_, CliError>(findex_instance.search(&k).await?)
-                })
-            })
-            .collect::<Vec<_>>();
+            let encryption_layer =
+                MemoryEncryptionLayer::<CUSTOM_WORD_LENGTH, _>::new(&seed, memory);
 
-        if let Some(initial_handle) = handles.pop() {
-            let mut acc_results = initial_handle
-                .await
-                .map_err(|e| CliError::Default(e.to_string()))??;
-            for h in handles {
-                // The empty set is the fixed point of the intersection.
-                if acc_results.is_empty() {
-                    break;
-                }
-                let next_search_result =
-                    h.await.map_err(|e| CliError::Default(e.to_string()))??;
-                acc_results.retain(|item| next_search_result.contains(item));
-            }
-            Ok(SearchResults(acc_results))
+            let findex = InstantiatedFindex::new(encryption_layer);
+            findex.search(&self.keyword).await?
         } else {
-            Ok(SearchResults(HashSet::new()))
-        }
+            let hmac_key_id = self
+                .findex_parameters
+                .hmac_key_id
+                .clone()
+                .ok_or_else(|| cli_error!("The HMAC key ID is required for indexing"))?;
+            let aes_xts_key_id = self
+                .findex_parameters
+                .aes_xts_key_id
+                .clone()
+                .ok_or_else(|| cli_error!("The AES XTS key ID is required for indexing"))?;
+
+            let encryption_layer = KmsEncryptionLayer::<CUSTOM_WORD_LENGTH, _>::new(
+                kms_client.clone(),
+                hmac_key_id.clone(),
+                aes_xts_key_id.clone(),
+                memory,
+            );
+
+            let findex = InstantiatedFindex::new(encryption_layer);
+            findex.search(&self.keyword).await?
+        };
+
+        Ok(search_results)
     }
 }

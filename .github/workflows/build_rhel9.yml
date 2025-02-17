@@ -32,15 +32,10 @@ jobs:
           --health-retries 5
         # ports: # not required since docker in docker
         #   - 6379:6379
-      redis2:
-        image: redis
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        # ports: # not required since docker in docker
-        #   - 6380:6379
+      kms:
+        image: ghcr.io/cosmian/kms:feat-add_digest_and_mac_kmip_operations
+        ports:
+          - 9998:9998
 
     name: ${{ inputs.archive-name }}
     runs-on: ubuntu-22.04
@@ -67,12 +62,11 @@ jobs:
         run: |
           set -ex
           nc -zv redis 6379
-          nc -zv redis2 6379
 
       - name: Build and tests
         env:
           REDIS_URL: redis://redis:6379
-          REDIS_URL2: redis://redis2:6379
+          KMS_HOSTNAME: kms
 
           # Google variables
           TEST_GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.TEST_GOOGLE_OAUTH_CLIENT_ID }}
