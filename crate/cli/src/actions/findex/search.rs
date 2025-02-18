@@ -33,6 +33,12 @@ impl SearchAction {
     ) -> CliResult<SearchResults> {
         let memory = FindexRestClient::new(rest_client.clone(), self.findex_parameters.index_id);
 
+        let lowercase_keywords = self
+            .keyword
+            .iter()
+            .map(|kw| kw.to_lowercase())
+            .collect::<Vec<_>>();
+
         let search_results = if let Some(seed_key_id) = self.findex_parameters.seed_key_id.clone() {
             let seed = retrieve_key_from_kms(&seed_key_id, kms_client.clone()).await?;
 
@@ -40,7 +46,7 @@ impl SearchAction {
                 MemoryEncryptionLayer::<CUSTOM_WORD_LENGTH, _>::new(&seed, memory);
 
             let findex = InstantiatedFindex::new(encryption_layer);
-            findex.search(&self.keyword).await?
+            findex.search(&lowercase_keywords).await?
         } else {
             let hmac_key_id = self
                 .findex_parameters
@@ -61,7 +67,7 @@ impl SearchAction {
             );
 
             let findex = InstantiatedFindex::new(encryption_layer);
-            findex.search(&self.keyword).await?
+            findex.search(&lowercase_keywords).await?
         };
 
         Ok(search_results)

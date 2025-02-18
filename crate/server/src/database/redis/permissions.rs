@@ -257,19 +257,19 @@ mod tests {
             // Set permission
             db.set_permission(&test_user_id, permission_kind, &index_id)
                 .await
-                .expect("Failed to set permission {permission_kind}");
+                .unwrap_or_else(|_| panic!("Failed to get permission {permission_kind}"));
 
             // Verify permission was set
             let permission = db
                 .get_permission(&test_user_id, &index_id)
                 .await
-                .expect("Failed to get permission {permission_kind}");
+                .unwrap_or_else(|_| panic!("Failed to get permission {permission_kind}"));
             assert_eq!(permission, permission_kind);
 
             // Revoke permission
             db.revoke_permission(&test_user_id, &index_id)
                 .await
-                .expect("Failed to revoke permission {permission_kind}");
+                .unwrap_or_else(|_| panic!("Failed to get permission {permission_kind}"));
 
             // Verify permission was revoked
             let result = db.get_permission(&test_user_id, &index_id).await;

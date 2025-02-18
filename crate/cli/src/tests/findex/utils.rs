@@ -32,7 +32,7 @@ pub(crate) async fn insert_search_delete(
         findex_parameters: findex_parameters.clone(),
         csv: PathBuf::from(&search_options.dataset_path),
     }
-    .insert(&mut rest_client, &kms_client)
+    .insert(&mut rest_client, kms_client.clone())
     .await?;
 
     // Ensure searching returns the expected results
@@ -52,7 +52,7 @@ pub(crate) async fn insert_search_delete(
         findex_parameters: findex_parameters.clone(),
         csv: PathBuf::from(search_options.dataset_path),
     }
-    .delete(&mut rest_client, &kms_client)
+    .delete(&mut rest_client, kms_client.clone())
     .await?;
 
     // Ensure no results are returned after deletion
@@ -98,3 +98,6 @@ pub(crate) async fn create_encryption_layer<const WORD_LENGTH: usize>(
     );
     Ok(encryption_layer)
 }
+
+//TODO(manu): adapt doc
+//TODO(manu): findex params should be really optional

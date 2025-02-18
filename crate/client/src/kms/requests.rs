@@ -51,10 +51,10 @@ impl<
 
     pub(crate) fn build_mac_message_request(
         &self,
-        addresses: Vec<Memory::Address>,
+        addresses: &[Memory::Address],
     ) -> ClientResult<Message> {
         let items = addresses
-            .into_iter()
+            .iter()
             .map(|address| {
                 MessageBatchItem::new(Operation::Mac(self.build_mac_request(address.to_vec())))
             })
@@ -80,10 +80,10 @@ impl<
 
     pub(crate) fn build_encrypt_message_request(
         &self,
-        words_and_addresses: Vec<([u8; WORD_LENGTH], Memory::Address)>,
+        words_and_addresses: &[([u8; WORD_LENGTH], Memory::Address)],
     ) -> ClientResult<Message> {
         let items = words_and_addresses
-            .into_iter()
+            .iter()
             .map(|(word, address)| {
                 self.build_encrypt_request(word.to_vec(), address.to_vec())
                     .map(|encrypt_request| {
@@ -110,10 +110,10 @@ impl<
 
     pub(crate) fn build_decrypt_message_request(
         &self,
-        words_and_addresses: Vec<([u8; WORD_LENGTH], Memory::Address)>,
+        words_and_addresses: &[([u8; WORD_LENGTH], Memory::Address)],
     ) -> ClientResult<Message> {
         let items = words_and_addresses
-            .into_iter()
+            .iter()
             .map(|(word, address)| {
                 MessageBatchItem::new(Operation::Decrypt(
                     self.build_decrypt_request(word.to_vec(), address.to_vec()),

@@ -20,9 +20,9 @@ impl<const WORD_LENGTH: usize> Redis<WORD_LENGTH> {
             if deletion_result.as_str() == "OK" {
                 info!("Database cleared");
             } else {
-                return Err(ServerError::DatabaseError(
-                    "Database not cleared, Redis DB returned {deletion_result}".to_owned(),
-                ));
+                return Err(ServerError::DatabaseError(format!(
+                    "Database not cleared, Redis DB returned {deletion_result}"
+                )));
             }
         }
 

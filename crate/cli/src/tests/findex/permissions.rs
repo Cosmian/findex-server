@@ -15,7 +15,7 @@ use crate::{
     error::result::CliResult,
     tests::{
         findex::utils::{insert_search_delete, instantiate_kms_client, SMALL_DATASET},
-        permissions::{create_index_id, list_permission, revoke_permission, set_permission},
+        permissions::{create_index_id, list_permissions, revoke_permission, set_permission},
         search_options::SearchOptions,
     },
 };
@@ -54,7 +54,7 @@ pub(crate) async fn test_findex_set_and_revoke_permission() -> CliResult<()> {
         findex_parameters: findex_parameters.clone(),
         csv: PathBuf::from(SMALL_DATASET),
     }
-    .insert(&mut owner_rest_client, &kms_client)
+    .insert(&mut owner_rest_client, kms_client.clone())
     .await?;
 
     // Set read permission to the client
@@ -83,7 +83,7 @@ pub(crate) async fn test_findex_set_and_revoke_permission() -> CliResult<()> {
         findex_parameters: findex_parameters.clone(),
         csv: PathBuf::from(SMALL_DATASET),
     }
-    .insert(&mut user_rest_client, &kms_client)
+    .insert(&mut user_rest_client, kms_client.clone())
     .await
     .unwrap_err();
 
@@ -96,7 +96,7 @@ pub(crate) async fn test_findex_set_and_revoke_permission() -> CliResult<()> {
     )
     .await?;
 
-    let perm = list_permission(&owner_rest_client, "user.client@acme.com".to_owned()).await?;
+    let perm = list_permissions(&owner_rest_client, "user.client@acme.com".to_owned()).await?;
     debug!("User permission: {:?}", perm);
 
     // User can read...
@@ -116,7 +116,7 @@ pub(crate) async fn test_findex_set_and_revoke_permission() -> CliResult<()> {
         findex_parameters: findex_parameters.clone(),
         csv: PathBuf::from(SMALL_DATASET),
     }
-    .insert(&mut user_rest_client, &kms_client)
+    .insert(&mut user_rest_client, kms_client.clone())
     .await?;
 
     // Try to escalade privileges from `read` to `admin`

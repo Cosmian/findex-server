@@ -35,19 +35,19 @@ impl<
         }
     }
 
-    /// Search multiple keywords. Returned results are the intersection of all search results.
+    /// Search multiple keywords. Returned results are the intersection of all search results (logical AND).
     ///
     /// # Errors
-    /// - If search fails
-    pub async fn search(&self, keyword: &[String]) -> CliResult<SearchResults> {
+    /// - If any of the concurrent search operations fail:
+    /// - If the semaphore acquisition fails due to system resource exhaustion
+    pub async fn search(&self, keywords: &[String]) -> CliResult<SearchResults> {
         let semaphore = Arc::new(Semaphore::new(MAX_PERMITS));
 
-        let mut handles = keyword
+        let mut handles = keywords
             .iter()
-            .map(|kw| kw.to_lowercase())
-            .map(|k| {
+            .map(|kw| {
                 let semaphore = semaphore.clone();
-                let k = Keyword::from(k.as_ref());
+                let keyword = Keyword::from(kw.as_ref());
                 let findex_instance = self.findex.clone();
                 tokio::spawn(async move {
                     let _permit = semaphore.acquire().await.map_err(|e| {
@@ -55,7 +55,7 @@ impl<
                             "Acquire error while trying to ask for permit: {e:?}"
                         ))
                     })?;
-                    Ok::<_, CliError>(findex_instance.search(&k).await?)
+                    Ok::<_, CliError>(findex_instance.search(&keyword).await?)
                 })
             })
             .collect::<Vec<_>>();

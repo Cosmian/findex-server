@@ -60,30 +60,25 @@ impl<
         &self,
         addresses: Vec<Memory::Address>,
     ) -> ClientResult<Vec<Memory::Address>> {
-        let addresses_vec_of_arrays: Vec<[u8; ADDRESS_LENGTH]> = self
+        let tokens = self
             .kms_client
-            .message(self.build_mac_message_request(addresses)?)
+            .message(self.build_mac_message_request(&addresses)?)
             .await?
             .extract_items_data()?
             .into_iter()
-            .map(|c| {
+            .map(|mac| {
                 // Truncate to the first ADDRESS_LENGTH bytes
-                c.get(0..ADDRESS_LENGTH)
+                mac.get(0..ADDRESS_LENGTH)
                     .ok_or_else(|| {
                         ClientError::Default(format!(
                             "Could not extract first {ADDRESS_LENGTH} bytes of the computed HMAC"
                         ))
                     })?
                     .try_into()
+                    .map(|array: [u8; ADDRESS_LENGTH]| Address::from(array))
                     .map_err(|e| ClientError::Default(format!("Conversion error: {e}")))
             })
             .collect::<Result<Vec<_>, _>>()?;
-
-        let tokens = addresses_vec_of_arrays
-            .into_iter()
-            .map(Address::from)
-            .collect();
-
         trace!("hmac: tokens: {:?}", tokens);
         Ok(tokens)
     }
@@ -96,7 +91,7 @@ impl<
         let ciphertexts = Self::extract_words(
             &self
                 .kms_client
-                .message(self.build_encrypt_message_request(words_and_addresses.clone())?)
+                .message(self.build_encrypt_message_request(&words_and_addresses)?)
                 .await?,
         )?;
 
@@ -112,10 +107,11 @@ impl<
         &self,
         word_and_address: ([u8; WORD_LENGTH], Memory::Address),
     ) -> ClientResult<([u8; WORD_LENGTH], Memory::Address)> {
+        let address = word_and_address.1.clone();
         let plaintext = Self::extract_words(
             &self
                 .kms_client
-                .message(self.build_decrypt_message_request(vec![word_and_address.clone()])?)
+                .message(self.build_decrypt_message_request(&[word_and_address])?)
                 .await?,
         )?
         .into_iter()
@@ -124,7 +120,7 @@ impl<
             ClientError::Default("No plaintext found after single_decrypt".to_owned())
         })?;
 
-        Ok((plaintext, word_and_address.1))
+        Ok((plaintext, address))
     }
 
     /// Decrypts this ciphertext using its encrypted memory address as tweak.
@@ -135,7 +131,7 @@ impl<
         let plaintexts = Self::extract_words(
             &self
                 .kms_client
-                .message(self.build_decrypt_message_request(words_and_addresses.clone())?)
+                .message(self.build_decrypt_message_request(&words_and_addresses)?)
                 .await?,
         )?;
 

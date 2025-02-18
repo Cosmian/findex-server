@@ -11,7 +11,7 @@ pub(crate) async fn create_index_id(rest_client: &RestClient) -> CliResult<Uuid>
     CreateIndex.run(rest_client).await
 }
 
-pub(crate) async fn list_permission(rest_client: &RestClient, user: String) -> CliResult<String> {
+pub(crate) async fn list_permissions(rest_client: &RestClient, user: String) -> CliResult<String> {
     ListPermissions { user }.run(rest_client).await
 }
 

@@ -37,7 +37,7 @@ pub struct FindexParameters {
 }
 
 impl FindexParameters {
-    /// Returns a new `FindexParameters` instance with the seed and KMS keys generated.
+    /// Returns a new `FindexParameters` instance with the KMS keys generated.
     /// By default, keys are generated inside KMS server and all cryptographic Findex operations is done usings KMS.
     ///
     /// # Errors
@@ -61,46 +61,48 @@ impl FindexParameters {
     /// This function will return an error if the KMS key generation fails.
     pub async fn new_with_seed_id(index_id: Uuid, kms_client: &KmsClient) -> CliResult<Self> {
         Ok(Self {
-            seed_key_id: Some(Self::gen_seed_key_id(kms_client).await?),
+            seed_key_id: Some(Self::gen_seed_id(kms_client).await?),
             hmac_key_id: None,
             aes_xts_key_id: None,
             index_id,
         })
     }
 
-    async fn gen_seed_key_id(kms_client: &KmsClient) -> CliResult<String> {
-        let unique_identifier = CreateKeyAction {
+    async fn gen_seed_id(kms_client: &KmsClient) -> CliResult<String> {
+        let uid = CreateKeyAction {
             number_of_bits: Some(256),
             algorithm: SymmetricAlgorithm::Aes,
             ..CreateKeyAction::default()
         }
         .run(kms_client)
         .await?;
-        println!("Warning: This is the only time that this seed key ID will be printed. ID: {unique_identifier}");
-        Ok(unique_identifier.to_string())
+        println!("Warning: This is the only time that this seed key ID will be printed. ID: {uid}");
+        Ok(uid.to_string())
     }
 
     async fn gen_hmac_key_id(kms_client: &KmsClient) -> CliResult<String> {
-        let unique_identifier = CreateKeyAction {
+        let uid = CreateKeyAction {
             number_of_bits: Some(256),
             algorithm: SymmetricAlgorithm::Sha3,
             ..CreateKeyAction::default()
         }
         .run(kms_client)
         .await?;
-        println!("Warning: This is the only time that this HMAC key ID will be printed. ID: {unique_identifier}");
-        Ok(unique_identifier.to_string())
+        println!("Warning: This is the only time that this HMAC key ID will be printed. ID: {uid}");
+        Ok(uid.to_string())
     }
 
     async fn gen_aes_xts_key_id(kms_client: &KmsClient) -> CliResult<String> {
-        let unique_identifier = CreateKeyAction {
+        let uid = CreateKeyAction {
             number_of_bits: Some(512),
             algorithm: SymmetricAlgorithm::Aes,
             ..CreateKeyAction::default()
         }
         .run(kms_client)
         .await?;
-        println!("Warning: This is the only time that this AES-XTS key ID will be printed. ID: {unique_identifier}");
-        Ok(unique_identifier.to_string())
+        println!(
+            "Warning: This is the only time that this AES-XTS key ID will be printed. ID: {uid}"
+        );
+        Ok(uid.to_string())
     }
 }

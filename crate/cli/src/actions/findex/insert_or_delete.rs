@@ -7,7 +7,7 @@ use crate::{
 use clap::Parser;
 use cosmian_findex::{MemoryEncryptionLayer, Value};
 use cosmian_findex_client::{FindexRestClient, KmsEncryptionLayer, RestClient};
-use cosmian_findex_structs::{Keyword, KeywordToDataSetsMap, Keywords, CUSTOM_WORD_LENGTH};
+use cosmian_findex_structs::{Keyword, Keywords, CUSTOM_WORD_LENGTH};
 use cosmian_kms_cli::reexport::cosmian_kms_client::KmsClient;
 use std::{
     collections::{HashMap, HashSet},
@@ -44,7 +44,7 @@ impl InsertOrDeleteAction {
     async fn insert_or_delete(
         &self,
         rest_client: &RestClient,
-        kms_client: &KmsClient,
+        kms_client: KmsClient,
         is_insert: bool,
     ) -> CliResult<Keywords> {
         let file = File::open(self.csv.clone())?;
@@ -68,14 +68,13 @@ impl InsertOrDeleteAction {
                 acc
             },
         );
-        trace!("insert_or_delete: bindings: {}", KeywordToDataSetsMap(bindings.clone()));
 
         let memory = FindexRestClient::new(rest_client.clone(), self.findex_parameters.index_id);
 
         let (operation_name, written_keywords) =
-            if let Some(seed_key_id) = self.findex_parameters.seed_key_id.clone() {
+            if let Some(seed_key_id) = &self.findex_parameters.seed_key_id {
                 trace!("Using client side encryption");
-                let seed = retrieve_key_from_kms(&seed_key_id, kms_client.clone()).await?;
+                let seed = retrieve_key_from_kms(seed_key_id, kms_client.clone()).await?;
 
                 let encryption_layer =
                     MemoryEncryptionLayer::<CUSTOM_WORD_LENGTH, _>::new(&seed, memory);
@@ -98,9 +97,9 @@ impl InsertOrDeleteAction {
                     .ok_or_else(|| cli_error!("The AES XTS key ID is required for indexing"))?;
 
                 let encryption_layer = KmsEncryptionLayer::<CUSTOM_WORD_LENGTH, _>::new(
-                    kms_client.clone(),
-                    hmac_key_id.clone(),
-                    aes_xts_key_id.clone(),
+                    kms_client,
+                    hmac_key_id,
+                    aes_xts_key_id,
                     memory,
                 );
 
@@ -111,7 +110,7 @@ impl InsertOrDeleteAction {
             };
 
         trace!("{operation_name} is done. Keywords: {written_keywords}");
-        Ok(written_keywords.into())
+        Ok(written_keywords)
     }
 
     /// Insert new indexes
@@ -121,7 +120,7 @@ impl InsertOrDeleteAction {
     pub async fn insert(
         &self,
         rest_client: &mut RestClient,
-        kms_client: &KmsClient,
+        kms_client: KmsClient,
     ) -> CliResult<Keywords> {
         Self::insert_or_delete(self, rest_client, kms_client, true).await
     }
@@ -133,7 +132,7 @@ impl InsertOrDeleteAction {
     pub async fn delete(
         &self,
         rest_client: &mut RestClient,
-        kms_client: &KmsClient,
+        kms_client: KmsClient,
     ) -> CliResult<Keywords> {
         Self::insert_or_delete(self, rest_client, kms_client, false).await
     }

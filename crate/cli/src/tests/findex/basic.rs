@@ -181,7 +181,7 @@ pub(crate) async fn test_findex_no_auth_searching_with_bad_key() -> CliResult<()
         findex_parameters: findex_parameters.clone(),
         csv: PathBuf::from(&search_options.dataset_path),
     }
-    .insert(&mut rest_client, &kms_client)
+    .insert(&mut rest_client, kms_client.clone())
     .await?;
 
     // But change the findex keys

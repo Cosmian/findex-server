@@ -110,11 +110,10 @@ impl<const WORD_LENGTH: usize> MemoryADT for FindexRestClient<WORD_LENGTH> {
         let guard = {
             let bytes = response.bytes().await?;
             let words: Vec<_> = OptionalWords::deserialize(&bytes)?.into();
-            words.first().copied().ok_or_else(|| {
-                ClientError::RequestFailed(format!(
-                    "Unexpected response from server. Expected 1 word, got {}",
-                    words.len()
-                ))
+            words.into_iter().next().ok_or_else(|| {
+                ClientError::RequestFailed(
+                    "Unexpected response from server. Expected 1 word, got None".to_owned(),
+                )
             })
         }?;
 

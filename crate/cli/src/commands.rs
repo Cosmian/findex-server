@@ -94,11 +94,11 @@ impl CoreFindexActions {
             let result = match action {
                 Self::Datasets(action) => action.run(rest_client).await,
                 Self::Delete(action) => {
-                    let deleted_keywords = action.delete(rest_client, &kms_client).await?;
+                    let deleted_keywords = action.delete(rest_client, kms_client).await?;
                     Ok(format!("Deleted keywords: {deleted_keywords}"))
                 }
                 Self::Insert(action) => {
-                    let inserted_keywords = action.insert(rest_client, &kms_client).await?;
+                    let inserted_keywords = action.insert(rest_client, kms_client).await?;
                     Ok(format!("Inserted keywords: {inserted_keywords}"))
                 }
                 Self::Permissions(action) => action.run(rest_client).await,

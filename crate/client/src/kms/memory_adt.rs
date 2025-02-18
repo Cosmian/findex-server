@@ -57,7 +57,7 @@ impl<
         let old = word.map(|_| old);
 
         //
-        // Write in Redis: guarded write
+        // Send bindings to server : guarded write
         let cur = self
             .mem
             .guarded_write(

@@ -54,8 +54,8 @@ const-oid = { version = "0.9", features = ["db"] }
 cosmian_findex = { workspace = true, features = ["test-utils"] }
 openssl = { workspace = true }
 predicates = "3.1"
-rand = { workspace = true }
-rand_chacha = { workspace = true }
+rand = "0.9.0"
+rand_chacha = "0.9.0"
 regex = { version = "1.11", default-features = false }
 tempfile = { workspace = true }
 test_findex_server = { path = "../test_server" }

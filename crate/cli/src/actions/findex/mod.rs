@@ -1,3 +1,4 @@
+use cosmian_crypto_core::reexport::zeroize::Zeroizing;
 use cosmian_findex::{Secret, KEY_LENGTH};
 use cosmian_kms_cli::reexport::cosmian_kms_client::{kmip_2_1::kmip_operations::Get, KmsClient};
 
@@ -23,13 +24,14 @@ pub async fn retrieve_key_from_kms(
     kms_client: KmsClient,
 ) -> CliResult<Secret<KEY_LENGTH>> {
     // Handle the case where seed_kms_id is set
-    let get_request = Get::from(key_id);
-    let get_response = kms_client.get(get_request).await?;
-    let mut bytes: [u8; KEY_LENGTH] = get_response
-        .object
-        .key_block()?
-        .key_bytes()?
-        .as_slice()
-        .try_into()?;
-    Ok(Secret::<KEY_LENGTH>::from_unprotected_bytes(&mut bytes))
+    let mut secret = Zeroizing::new([0_u8; KEY_LENGTH]);
+    secret.copy_from_slice(
+        &kms_client
+            .get(Get::from(key_id))
+            .await?
+            .object
+            .key_block()?
+            .key_bytes()?,
+    );
+    Ok(Secret::from_unprotected_bytes(&mut secret))
 }
