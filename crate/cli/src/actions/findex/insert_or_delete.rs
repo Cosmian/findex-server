@@ -68,7 +68,6 @@ impl InsertOrDeleteAction {
 
         let findex: Arc<Findex<200, Value, String, FindexRestClient>> =
             Arc::<Findex<WORD_LENGTH, Value, String, FindexRestClient>>::new(
-                // cheap reference clone
                 rest_client.instantiate_findex(
                     self.findex_parameters.index_id,
                     &self.findex_parameters.seed()?,

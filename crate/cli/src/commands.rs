@@ -98,36 +98,31 @@ impl CoreFindexActions {
         config: FindexClientConfig,
         conf_path: Option<PathBuf>,
     ) -> CliResult<()> {
-        let action: &Self = self;
-        {
-            let result = match action {
-                // actions that don't need to return a value and don't edit the configuration
-                Self::Permissions(action) => action.run(findex_client).await,
-                Self::Datasets(action) => action.run(findex_client).await,
-                Self::ServerVersion(action) => action.run(findex_client).await,
-
-                // actions that return a value that needs to be formatted, and don't edit the configuration
-                Self::Delete(action) => {
-                    let deleted_keywords = action.delete(findex_client).await?;
-                    Ok(format!("Deleted keywords: {deleted_keywords}"))
-                }
-                Self::Insert(action) => {
-                    let inserted_keywords = action.insert(findex_client).await?;
-                    Ok(format!("Inserted keywords: {inserted_keywords}"))
-                }
-                Self::Search(action) => {
-                    let search_results = action.run(findex_client).await?;
-                    Ok(format!("Search results: {search_results}"))
-                }
-
-                // actions that edit the configuration, and don't return a value
-                Self::Login(action) => action.run(config, conf_path).await,
-                Self::Logout(action) => action.run(config, &conf_path),
-            };
-            match result {
-                Ok(output) => Ok(println!("{output}")),
-                Err(e) => Err(e),
+        let result = match self {
+            // actions that don't edit the configuration
+            Self::Datasets(action) => action.run(findex_client).await,
+            Self::Permissions(action) => action.run(findex_client).await,
+            Self::ServerVersion(action) => action.run(findex_client).await,
+            Self::Delete(action) => {
+                let deleted_keywords = action.delete(findex_client).await?;
+                Ok(format!("Deleted keywords: {deleted_keywords}"))
             }
+            Self::Insert(action) => {
+                let inserted_keywords = action.insert(findex_client).await?;
+                Ok(format!("Inserted keywords: {inserted_keywords}"))
+            }
+            Self::Search(action) => {
+                let search_results = action.run(findex_client).await?;
+                Ok(format!("Search results: {search_results}"))
+            }
+
+            // actions that edit the configuration
+            Self::Login(action) => action.run(config, conf_path).await,
+            Self::Logout(action) => action.run(config, &conf_path),
+        };
+        match result {
+            Ok(output) => Ok(println!("{output}")),
+            Err(e) => Err(e),
         }
     }
 }
@@ -144,11 +139,7 @@ pub async fn findex_cli_main() -> CliResult<()> {
     // Process the command
     cli_opts
         .command
-        .run(
-            FindexRestClient::new(&config)?,
-            config,
-            cli_opts.conf_path.clone(),
-        )
+        .run(FindexRestClient::new(&config)?, config, cli_opts.conf_path)
         .await?;
 
     Ok(())

@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use clap::Parser;
 use cosmian_findex_client::FindexClientConfig;
-use tracing::trace;
+use tracing::info;
 
 use crate::error::result::CliResult;
 
@@ -28,7 +28,7 @@ impl LogoutAction {
         config.http_config.access_token = None;
         config.save(conf_path.clone())?;
 
-        trace!(
+        info!(
             "Access token has been removed from the configuration file {:?}",
             conf_path
         );

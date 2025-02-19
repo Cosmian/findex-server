@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use clap::Parser;
 use cosmian_findex_client::{reexport::cosmian_http_client::LoginState, FindexClientConfig};
-use tracing::trace;
+use tracing::info;
 
 use crate::error::{result::CliResult, CliError};
 
@@ -61,7 +61,7 @@ impl LoginAction {
         config.http_config.access_token = Some(access_token.clone());
         config.save(conf_path.clone())?;
 
-        trace!(
+        info!(
             "Access token has been saved in the configuration file {:?}",
             conf_path
         );

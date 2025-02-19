@@ -31,14 +31,16 @@ impl Display for SuccessResponse {
     }
 }
 
+/// A reusable factory for instanciating index-bounded `FindexRestClients`
+/// that interact with a Findex server.s
+///
+/// The base client contains shared HTTP settings but no index association.  
+/// To perform operations on indexes, create an index-specific instance via [`instantiate_findex`]:
 #[derive(Clone)]
 pub struct FindexRestClient {
     pub http_client: HttpClient,
-    /// Each instance of `FindexRestClient` is associated with a specific index
-    /// however, since all `RestClient` are instantiated with the same `http_client`,
-    /// we keep the client in the base struct and create each new `index_id` bounded
-    /// `InstantiatedFindex` after providing its `index_id` via the `instantiate_findex`
-    /// function.
+    /// When instanciating a `FindexRestClient` factory, the `index_id` is not known yet and hence
+    /// set to None. It is set when creating an index-specific instance via [`instantiate_findex`].
     index_id: Option<Uuid>,
 }
 
