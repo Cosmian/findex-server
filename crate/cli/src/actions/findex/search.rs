@@ -25,7 +25,7 @@ impl SearchAction {
     ///
     /// Returns an error if the version query fails or if there is an issue
     /// writing to the console.
-    pub async fn run(&self, rest_client: FindexRestClient) -> CliResult<SearchResults> {
+    pub async fn run(self, rest_client: FindexRestClient) -> CliResult<SearchResults> {
         let findex_instance = rest_client.instantiate_findex(
             self.findex_parameters.index_id,
             &self.findex_parameters.seed()?,

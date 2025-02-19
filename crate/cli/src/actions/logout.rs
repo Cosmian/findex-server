@@ -21,7 +21,7 @@ impl LogoutAction {
     /// Returns an error if there is an issue loading or saving the
     /// configuration file.
     pub fn run(
-        &self,
+        self,
         mut config: FindexClientConfig,
         conf_path: &Option<PathBuf>,
     ) -> CliResult<String> {

@@ -93,7 +93,7 @@ impl CoreFindexActions {
     /// - If the configuration file is not found or invalid
     #[allow(clippy::unit_arg)] // println! does return () but it prints the output of action.run() beforehand, nothing is "lost" and hence this lint will only cause useless boilerplate code
     pub async fn run(
-        &self,
+        self,
         findex_client: FindexRestClient,
         config: FindexClientConfig,
         conf_path: Option<PathBuf>,

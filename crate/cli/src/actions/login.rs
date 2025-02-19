@@ -35,7 +35,7 @@ impl LoginAction {
     /// Fails if the configuration file is missing or if the `oauth2_conf` object
     /// Fails if credentials are invalid. No access token could be retrieved.
     pub async fn run(
-        &self,
+        self,
         mut config: FindexClientConfig,
         conf_path: Option<PathBuf>,
     ) -> CliResult<String> {

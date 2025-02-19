@@ -42,7 +42,7 @@ impl InsertOrDeleteAction {
     /// - The Findex instance cannot insert or delete the data.
     /// - The semaphore cannot acquire a permit.
     async fn insert_or_delete(
-        &self,
+        self,
         rest_client: FindexRestClient,
         is_insert: bool,
     ) -> CliResult<Keywords> {
@@ -84,7 +84,7 @@ impl InsertOrDeleteAction {
                 tokio::spawn(async move {
                     let _permit = semaphore.acquire().await.map_err(|e| {
                         CliError::Default(format!(
-                            "Acquire error while trying to ask for permit: {e:?}"
+                            "Acquire        config.save(conf_path.clone())?;        config.save(conf_path.clone())?; error while trying to ask for permit: {e:?}"
                         ))
                     })?;
                     if is_insert {
@@ -112,7 +112,7 @@ impl InsertOrDeleteAction {
     ///
     /// # Errors
     /// - If insert new indexes fails
-    pub async fn insert(&self, rest_client: FindexRestClient) -> CliResult<Keywords> {
+    pub async fn insert(self, rest_client: FindexRestClient) -> CliResult<Keywords> {
         Self::insert_or_delete(self, rest_client, true).await
     }
 
@@ -120,7 +120,7 @@ impl InsertOrDeleteAction {
     ///
     /// # Errors
     /// - If deleting indexes fails
-    pub async fn delete(&self, rest_client: FindexRestClient) -> CliResult<Keywords> {
+    pub async fn delete(self, rest_client: FindexRestClient) -> CliResult<Keywords> {
         Self::insert_or_delete(self, rest_client, false).await
     }
 }
