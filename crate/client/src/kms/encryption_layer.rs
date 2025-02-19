@@ -87,47 +87,21 @@ impl<
     pub(crate) async fn encrypt(
         &self,
         words_and_addresses: Vec<([u8; WORD_LENGTH], Memory::Address)>,
-    ) -> ClientResult<Vec<([u8; WORD_LENGTH], Memory::Address)>> {
+    ) -> ClientResult<Vec<[u8; WORD_LENGTH]>> {
         let ciphertexts = Self::extract_words(
             &self
                 .kms_client
                 .message(self.build_encrypt_message_request(&words_and_addresses)?)
                 .await?,
         )?;
-
-        let addresses = words_and_addresses
-            .into_iter()
-            .map(|(_, address)| address)
-            .collect::<Vec<_>>();
-
-        Ok(ciphertexts.into_iter().zip(addresses).collect())
+        Ok(ciphertexts)
     }
 
-    pub(crate) async fn single_decrypt(
-        &self,
-        word_and_address: ([u8; WORD_LENGTH], Memory::Address),
-    ) -> ClientResult<([u8; WORD_LENGTH], Memory::Address)> {
-        let address = word_and_address.1.clone();
-        let plaintext = Self::extract_words(
-            &self
-                .kms_client
-                .message(self.build_decrypt_message_request(&[word_and_address])?)
-                .await?,
-        )?
-        .into_iter()
-        .next()
-        .ok_or_else(|| {
-            ClientError::Default("No plaintext found after single_decrypt".to_owned())
-        })?;
-
-        Ok((plaintext, address))
-    }
-
-    /// Decrypts this ciphertext using its encrypted memory address as tweak.
+    /// Decrypts these ciphertexts using the given addresses as tweak.
     pub(crate) async fn decrypt(
         &self,
         words_and_addresses: Vec<([u8; WORD_LENGTH], Memory::Address)>,
-    ) -> ClientResult<Vec<([u8; WORD_LENGTH], Memory::Address)>> {
+    ) -> ClientResult<Vec<[u8; WORD_LENGTH]>> {
         let plaintexts = Self::extract_words(
             &self
                 .kms_client
@@ -135,11 +109,6 @@ impl<
                 .await?,
         )?;
 
-        let addresses = words_and_addresses
-            .into_iter()
-            .map(|(_, address)| address)
-            .collect::<Vec<_>>();
-
-        Ok(plaintexts.into_iter().zip(addresses).collect())
+        Ok(plaintexts)
     }
 }

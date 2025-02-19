@@ -61,7 +61,8 @@ pub(crate) async fn test_findex_local_encryption() -> CliResult<()> {
     log_init(None);
     let ctx = start_default_test_findex_server().await;
     let kms_client = instantiate_kms_client()?;
-    let findex_parameters = FindexParameters::new_with_seed_id(Uuid::new_v4(), &kms_client).await?;
+    let findex_parameters =
+        FindexParameters::new_for_client_side_encryption(Uuid::new_v4(), &kms_client).await?;
 
     // Search 2 entries in a small dataset. Expect 2 results.
     let search_options = SearchOptions {
@@ -174,7 +175,8 @@ pub(crate) async fn test_findex_no_auth_searching_with_bad_key() -> CliResult<()
                 .collect()
         },
     };
-    let findex_parameters = FindexParameters::new_with_seed_id(index_id, &kms_client).await?;
+    let findex_parameters =
+        FindexParameters::new_for_client_side_encryption(index_id, &kms_client).await?;
 
     // Index the dataset
     InsertOrDeleteAction {

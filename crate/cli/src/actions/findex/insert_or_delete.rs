@@ -1,12 +1,8 @@
 use super::parameters::FindexParameters;
-use crate::{
-    actions::findex::{instantiated_findex::InstantiatedFindex, retrieve_key_from_kms},
-    cli_error,
-    error::result::CliResult,
-};
+use crate::{actions::findex::findex_instance::FindexInstance, error::result::CliResult};
 use clap::Parser;
-use cosmian_findex::{MemoryEncryptionLayer, Value};
-use cosmian_findex_client::{FindexRestClient, KmsEncryptionLayer, RestClient};
+use cosmian_findex::Value;
+use cosmian_findex_client::RestClient;
 use cosmian_findex_structs::{Keyword, Keywords, CUSTOM_WORD_LENGTH};
 use cosmian_kms_cli::reexport::cosmian_kms_client::KmsClient;
 use std::{
@@ -69,45 +65,17 @@ impl InsertOrDeleteAction {
             },
         );
 
-        let memory = FindexRestClient::new(rest_client.clone(), self.findex_parameters.index_id);
+        let findex_instance = FindexInstance::<CUSTOM_WORD_LENGTH>::instantiate_findex(
+            rest_client,
+            kms_client,
+            &self.findex_parameters,
+        )
+        .await?;
 
-        let (operation_name, written_keywords) =
-            if let Some(seed_key_id) = &self.findex_parameters.seed_key_id {
-                trace!("Using client side encryption");
-                let seed = retrieve_key_from_kms(seed_key_id, kms_client.clone()).await?;
-
-                let encryption_layer =
-                    MemoryEncryptionLayer::<CUSTOM_WORD_LENGTH, _>::new(&seed, memory);
-
-                let findex = InstantiatedFindex::new(encryption_layer);
-                let written_keywords = findex.insert_or_delete(bindings, is_insert).await?;
-                let operation_name = if is_insert { "Indexing" } else { "Deleting" };
-                (operation_name, written_keywords)
-            } else {
-                trace!("Using KMS server side encryption");
-                let hmac_key_id = self
-                    .findex_parameters
-                    .hmac_key_id
-                    .clone()
-                    .ok_or_else(|| cli_error!("The HMAC key ID is required for indexing"))?;
-                let aes_xts_key_id = self
-                    .findex_parameters
-                    .aes_xts_key_id
-                    .clone()
-                    .ok_or_else(|| cli_error!("The AES XTS key ID is required for indexing"))?;
-
-                let encryption_layer = KmsEncryptionLayer::<CUSTOM_WORD_LENGTH, _>::new(
-                    kms_client,
-                    hmac_key_id,
-                    aes_xts_key_id,
-                    memory,
-                );
-
-                let findex = InstantiatedFindex::new(encryption_layer);
-                let written_keywords = findex.insert_or_delete(bindings, is_insert).await?;
-                let operation_name = if is_insert { "Indexing" } else { "Deleting" };
-                (operation_name, written_keywords)
-            };
+        let written_keywords = findex_instance
+            .insert_or_delete(bindings, is_insert)
+            .await?;
+        let operation_name = if is_insert { "Indexing" } else { "Deleting" };
 
         trace!("{operation_name} is done. Keywords: {written_keywords}");
         Ok(written_keywords)

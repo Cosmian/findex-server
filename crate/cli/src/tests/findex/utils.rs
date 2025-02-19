@@ -100,4 +100,3 @@ pub(crate) async fn create_encryption_layer<const WORD_LENGTH: usize>(
 }
 
 //TODO(manu): adapt doc
-//TODO(manu): findex params should be really optional

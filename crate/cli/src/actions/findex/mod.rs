@@ -4,8 +4,8 @@ use cosmian_kms_cli::reexport::cosmian_kms_client::{kmip_2_1::kmip_operations::G
 
 use crate::error::result::CliResult;
 
+pub mod findex_instance;
 pub mod insert_or_delete;
-pub mod instantiated_findex;
 pub mod parameters;
 pub mod search;
 /// Maximum number of concurrent network calls allowed per CLI findex-command invocation.

@@ -31,7 +31,7 @@ impl<
         trace!("guarded_write: task_words: {task_words:?}");
 
         //
-        // Bulk addresses permute: tasks-addresses + guard-address
+        // Bulk addresses permute: put all addresses in the same vector: tasks-addresses + guard-address
         task_addresses.push(address);
         task_words.push(word.unwrap_or([0; WORD_LENGTH]));
 
@@ -42,27 +42,37 @@ impl<
 
         //
         // Zip words and tokens
-        let words_and_tokens = task_words.into_iter().zip(tokens).collect();
+        let words_and_tokens = task_words.into_iter().zip(tokens.clone()).collect();
         trace!("guarded_write: words_and_addresses: {words_and_tokens:?}");
 
         //
         // Bulk Encrypt
-        let mut ciphertext_and_tokens = self.encrypt(words_and_tokens).await?;
-        trace!("guarded_write: ciphertext_and_addresses: {ciphertext_and_tokens:?}");
+        let mut ciphertexts = self.encrypt(words_and_tokens).await?;
+        trace!("guarded_write: ciphertexts: {ciphertexts:?}");
 
         // Pop the old value
-        let (old, token) = ciphertext_and_tokens
+        let old = ciphertexts
             .pop()
             .ok_or_else(|| ClientError::Default("No ciphertext found".to_owned()))?;
         let old = word.map(|_| old);
 
+        // .. and pop the correspond token
+        let old_token = tokens
+            .last()
+            .ok_or_else(|| ClientError::Default("No token found".to_owned()))?
+            .clone();
+
         //
-        // Send bindings to server : guarded write
+        // Zip ciphertexts and tokens
+        let ciphertexts_and_tokens = ciphertexts.into_iter().zip(tokens);
+
+        //
+        // Send bindings to server
         let cur = self
             .mem
             .guarded_write(
-                (token.clone(), old),
-                ciphertext_and_tokens
+                (old_token.clone(), old),
+                ciphertexts_and_tokens
                     .into_iter()
                     .map(|(w, a)| (a, w))
                     .collect(),
@@ -73,7 +83,13 @@ impl<
         //
         // Decrypt the current value (if any)
         let res = match cur {
-            Some(ctx) => Some(self.single_decrypt((ctx, token)).await?.0),
+            Some(ctx) => Some(
+                *self
+                    .decrypt(vec![(ctx, old_token)])
+                    .await?
+                    .first()
+                    .ok_or_else(|| ClientError::Default("No plaintext found".to_owned()))?,
+            ),
             None => None,
         };
         trace!("guarded_write: res: {res:?}");
@@ -93,7 +109,7 @@ impl<
         trace!("batch_read: tokens: {:?}", tokens);
 
         //
-        // Read encrypted values from Redis
+        // Read encrypted values server-side
         let ciphertexts = self
             .mem
             .batch_read(tokens.clone())
@@ -104,23 +120,20 @@ impl<
 
         //
         // Zip ciphertexts and addresses
-        let ciphertexts_and_addresses = ciphertexts
+        let ciphertexts_and_tokens = ciphertexts
             .into_iter()
             .zip(tokens)
             .filter_map(|(ctx, tok)| ctx.map(|c| (c, tok)))
             .collect();
-        trace!("batch_read: ciphertexts and addresses: {ciphertexts_and_addresses:?}",);
+        trace!("batch_read: ciphertexts_and_tokens: {ciphertexts_and_tokens:?}",);
 
         //
         // Recover plaintext-words
-        let words_and_addresses = self.decrypt(ciphertexts_and_addresses).await?;
-        trace!("batch_read: words_and_addresses: {:?}", words_and_addresses);
-        let none_count = ciphertexts_len - words_and_addresses.len();
+        let words = self.decrypt(ciphertexts_and_tokens).await?;
+        trace!("batch_read: words: {:?}", words);
+        let none_count = ciphertexts_len - words.len();
 
-        let mut res: Vec<_> = words_and_addresses
-            .into_iter()
-            .map(|(w, _)| Some(w))
-            .collect();
+        let mut res: Vec<_> = words.into_iter().map(Some).collect();
 
         // Add None elements for addresses that didn't have values
         res.extend(std::iter::repeat_n(None, none_count));
@@ -132,7 +145,7 @@ impl<
 
 #[cfg(test)]
 #[allow(clippy::panic_in_result_fn, clippy::indexing_slicing)]
-mod encryption_layer {
+mod tests {
     use cosmian_findex::{
         test_utils::{test_guarded_write_concurrent, test_single_write_and_read, test_wrong_guard},
         InMemory,
@@ -210,10 +223,10 @@ mod encryption_layer {
         let tok = Address::<ADDRESS_LENGTH>::random(&mut rng);
         let ptx = [1; CUSTOM_WORD_LENGTH];
         let layer = create_test_layer().await?;
-        let ctx_and_addresses = layer.encrypt(vec![(ptx, tok)]).await?;
-        let res = layer.decrypt(ctx_and_addresses).await?;
-        assert_eq!(ptx.len(), res[0].0.len());
-        assert_eq!(ptx, res[0].0);
+        let ctx = layer.encrypt(vec![(ptx, tok.clone())]).await?.remove(0);
+        let res = layer.decrypt(vec![(ctx, tok)]).await?.remove(0);
+        assert_eq!(ptx.len(), res.len());
+        assert_eq!(ptx, res);
         Ok(())
     }
 

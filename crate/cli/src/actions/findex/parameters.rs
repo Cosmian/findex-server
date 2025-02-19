@@ -59,7 +59,10 @@ impl FindexParameters {
     ///
     /// # Errors
     /// This function will return an error if the KMS key generation fails.
-    pub async fn new_with_seed_id(index_id: Uuid, kms_client: &KmsClient) -> CliResult<Self> {
+    pub async fn new_for_client_side_encryption(
+        index_id: Uuid,
+        kms_client: &KmsClient,
+    ) -> CliResult<Self> {
         Ok(Self {
             seed_key_id: Some(Self::gen_seed_id(kms_client).await?),
             hmac_key_id: None,
@@ -68,7 +71,7 @@ impl FindexParameters {
         })
     }
 
-    async fn gen_seed_id(kms_client: &KmsClient) -> CliResult<String> {
+    pub(crate) async fn gen_seed_id(kms_client: &KmsClient) -> CliResult<String> {
         let uid = CreateKeyAction {
             number_of_bits: Some(256),
             algorithm: SymmetricAlgorithm::Aes,
@@ -78,6 +81,20 @@ impl FindexParameters {
         .await?;
         println!("Warning: This is the only time that this seed key ID will be printed. ID: {uid}");
         Ok(uid.to_string())
+    }
+
+    pub(crate) async fn get_hmac_key_id(&self, kms_client: &KmsClient) -> CliResult<String> {
+        match &self.hmac_key_id {
+            Some(id) => Ok(id.clone()),
+            None => Self::gen_hmac_key_id(kms_client).await,
+        }
+    }
+
+    pub(crate) async fn get_aes_xts_key_id(&self, kms_client: &KmsClient) -> CliResult<String> {
+        match &self.aes_xts_key_id {
+            Some(id) => Ok(id.clone()),
+            None => Self::gen_aes_xts_key_id(kms_client).await,
+        }
     }
 
     async fn gen_hmac_key_id(kms_client: &KmsClient) -> CliResult<String> {
@@ -92,7 +109,7 @@ impl FindexParameters {
         Ok(uid.to_string())
     }
 
-    async fn gen_aes_xts_key_id(kms_client: &KmsClient) -> CliResult<String> {
+    pub(crate) async fn gen_aes_xts_key_id(kms_client: &KmsClient) -> CliResult<String> {
         let uid = CreateKeyAction {
             number_of_bits: Some(512),
             algorithm: SymmetricAlgorithm::Aes,
