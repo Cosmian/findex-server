@@ -34,10 +34,10 @@ impl Display for SuccessResponse {
 #[derive(Clone)]
 pub struct FindexRestClient {
     pub http_client: HttpClient,
-    /// Each instance of FindexRestClient is associated with a specific index
-    /// however, since all RestClient are instantiated with the same http_client,
-    /// we keep the client in the base struct and create each new index_id bounded
-    /// InstantiatedFindex after providing its index_id via the instantiate_findex
+    /// Each instance of `FindexRestClient` is associated with a specific index
+    /// however, since all `RestClient` are instantiated with the same `http_client`,
+    /// we keep the client in the base struct and create each new `index_id` bounded
+    /// `InstantiatedFindex` after providing its `index_id` via the `instantiate_findex`
     /// function.
     index_id: Option<Uuid>,
 }
