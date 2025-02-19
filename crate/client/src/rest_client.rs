@@ -35,7 +35,7 @@ impl Display for SuccessResponse {
 pub struct FindexRestClient {
     pub http_client: HttpClient,
     /// Each instance of FindexRestClient is associated with a specific index
-    /// however, since all RestClients are instantiated with the same http_client,
+    /// however, since all RestClient are instantiated with the same http_client,
     /// we keep the client in the base struct and create each new index_id bounded
     /// InstantiatedFindex after providing its index_id via the instantiate_findex
     /// function.

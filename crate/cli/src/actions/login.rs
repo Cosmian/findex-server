@@ -41,8 +41,17 @@ impl LoginAction {
     ) -> CliResult<String> {
         let login_config = config.http_config.oauth2_conf.as_ref().ok_or_else(|| {
             CliError::Default(format!(
-                "The `login` command (only used for JWT authentication) requires an Identity \
-                 Provider (IdP) that MUST be configured in the oauth2_conf object in {config:?}",
+                "ERROR: Login command requires OAuth2 configuration\n\n\
+                 The `login` command needs an Identity Provider (IdP) configuration in your config file.\n\
+                 Please add an [http_config.oauth2_conf] section to your configuration file at {:?}.\n\n\
+                 Example configuration:\n\n\
+                 [http_config.oauth2_conf]\n\
+                 client_id = \"your-client-id\"\n\
+                 client_secret = \"your-client-secret\"\n\
+                 authorize_url = \"https://your-idp.com/authorize\"\n\
+                 token_url = \"https://your-idp.com/token\"\n\
+                 scopes = [\"openid\", \"email\"]\n",
+                 conf_path.clone().unwrap_or("~/.cosmian/findex.toml".to_owned().into())
             ))
         })?;
 
