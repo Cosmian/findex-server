@@ -23,7 +23,7 @@ impl LogoutAction {
     pub fn run(
         &self,
         mut config: FindexClientConfig,
-        conf_path: Option<PathBuf>,
+        conf_path: &Option<PathBuf>,
     ) -> CliResult<String> {
         config.http_config.access_token = None;
         config.save(conf_path.clone())?;

@@ -43,15 +43,14 @@ impl LoginAction {
             CliError::Default(format!(
                 "ERROR: Login command requires OAuth2 configuration\n\n\
                  The `login` command needs an Identity Provider (IdP) configuration in your config file.\n\
-                 Please add an [http_config.oauth2_conf] section to your configuration file at {:?}.\n\n\
+                 Please add an [http_config.oauth2_conf] section to your configuration file at {conf_path:?}.\n\n\
                  Example configuration:\n\n\
                  [http_config.oauth2_conf]\n\
                  client_id = \"your-client-id\"\n\
                  client_secret = \"your-client-secret\"\n\
                  authorize_url = \"https://your-idp.com/authorize\"\n\
                  token_url = \"https://your-idp.com/token\"\n\
-                 scopes = [\"openid\", \"email\"]\n",
-                 conf_path.clone().unwrap_or("~/.cosmian/findex.toml".to_owned().into())
+                 scopes = [\"openid\", \"email\"]\n"
             ))
         })?;
 

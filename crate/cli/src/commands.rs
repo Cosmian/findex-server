@@ -98,7 +98,7 @@ impl CoreFindexActions {
         config: FindexClientConfig,
         conf_path: Option<PathBuf>,
     ) -> CliResult<()> {
-        let action: &CoreFindexActions = self;
+        let action: &Self = self;
         {
             let result = match action {
                 // actions that don't need to return a value and don't edit the configuration
@@ -122,7 +122,7 @@ impl CoreFindexActions {
 
                 // actions that edit the configuration, and don't return a value
                 Self::Login(action) => action.run(config, conf_path).await,
-                Self::Logout(action) => action.run(config, conf_path),
+                Self::Logout(action) => action.run(config, &conf_path),
             };
             match result {
                 Ok(output) => Ok(println!("{output}")),
