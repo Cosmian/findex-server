@@ -26,11 +26,6 @@ impl SearchAction {
     /// Returns an error if the version query fails or if there is an issue
     /// writing to the console.
     pub async fn run(&self, rest_client: FindexRestClient) -> CliResult<SearchResults> {
-        let keywords = Keywords::from(self.keyword.clone()).0;
-        if keywords.is_empty() {
-            return Err(CliError::Default("No search results found".to_owned()));
-        }
-
         let findex_instance = rest_client.instantiate_findex(
             self.findex_parameters.index_id,
             &self.findex_parameters.seed()?,
