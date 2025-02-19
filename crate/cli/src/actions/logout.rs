@@ -18,21 +18,14 @@ impl LogoutAction {
     ///
     /// # Errors
     ///
-    /// Returns an error if there is an issue loading or saving the
-    /// configuration file.
+    /// Returns an error if there is an issue saving the configuration file.
     pub fn run(
         self,
         mut config: FindexClientConfig,
-        conf_path: &Option<PathBuf>,
+        conf_path: Option<PathBuf>,
     ) -> CliResult<String> {
         config.http_config.access_token = None;
-        config.save(conf_path.clone())?;
-
-        info!(
-            "Access token has been removed from the configuration file {:?}",
-            conf_path
-        );
-
+        config.save(conf_path)?;
         Ok("\nThe access token was removed from the Findex CLI configuration".to_owned())
     }
 }

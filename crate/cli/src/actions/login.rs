@@ -59,12 +59,13 @@ impl LoginAction {
         let access_token = state.finalize().await?;
 
         config.http_config.access_token = Some(access_token.clone());
-        config.save(conf_path.clone())?;
 
         info!(
-            "Access token has been saved in the configuration file {:?}",
+            "Saving access token in the configuration file {:?}",
             conf_path
         );
+
+        config.save(conf_path)?;
 
         Ok(access_token)
     }

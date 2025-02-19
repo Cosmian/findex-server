@@ -78,7 +78,7 @@ impl FindexClientConfig {
                 "Unable to convert the configuration path to a string".to_owned(),
             )
         })?)?;
-        println!("Saving configuration to: {conf_path_buf:?}");
+        println!("Configuration has been saved to: {conf_path_buf:?}");
 
         Ok(())
     }

@@ -91,7 +91,6 @@ impl CoreFindexActions {
     ///
     /// # Errors
     /// - If the configuration file is not found or invalid
-    #[allow(clippy::unit_arg)] // println! does return () but it prints the output of action.run() beforehand, nothing is "lost" and hence this lint will only cause useless boilerplate code
     pub async fn run(
         self,
         findex_client: FindexRestClient,
@@ -103,14 +102,8 @@ impl CoreFindexActions {
             Self::Datasets(action) => action.run(findex_client).await,
             Self::Permissions(action) => action.run(findex_client).await,
             Self::ServerVersion(action) => action.run(findex_client).await,
-            Self::Delete(action) => {
-                let deleted_keywords = action.delete(findex_client).await?;
-                Ok(format!("Deleted keywords: {deleted_keywords}"))
-            }
-            Self::Insert(action) => {
-                let inserted_keywords = action.insert(findex_client).await?;
-                Ok(format!("Inserted keywords: {inserted_keywords}"))
-            }
+            Self::Delete(action) => action.delete(findex_client).await,
+            Self::Insert(action) => action.insert(findex_client).await,
             Self::Search(action) => {
                 let search_results = action.run(findex_client).await?;
                 Ok(format!("Search results: {search_results}"))
@@ -118,10 +111,13 @@ impl CoreFindexActions {
 
             // actions that edit the configuration
             Self::Login(action) => action.run(config, conf_path).await,
-            Self::Logout(action) => action.run(config, &conf_path),
+            Self::Logout(action) => action.run(config, conf_path),
         };
         match result {
-            Ok(output) => Ok(println!("{output}")),
+            Ok(output) => {
+                println!("{output}");
+                Ok(())
+            }
             Err(e) => Err(e),
         }
     }

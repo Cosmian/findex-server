@@ -15,7 +15,7 @@ pub struct SearchAction {
     pub(crate) findex_parameters: FindexParameters,
     /// The word to search. Can be repeated.
     #[clap(long)]
-    pub(crate) keyword: Vec<String>,
+    pub(crate) keywords: Vec<String>,
 }
 
 impl SearchAction {
@@ -34,19 +34,17 @@ impl SearchAction {
         let semaphore = Arc::new(Semaphore::new(MAX_PERMITS));
 
         let mut handles = self
-            .keyword
-            .iter()
-            .map(|k| {
+            .keywords
+            .into_iter()
+            .map(|kw| {
                 let semaphore = semaphore.clone();
-                let k = Keyword::from(k.as_ref());
+                let kw = Keyword::from(kw.into_bytes());
                 let findex_instance = findex_instance.clone();
                 tokio::spawn(async move {
                     let _permit = semaphore.acquire().await.map_err(|e| {
-                        CliError::Default(format!(
-                            "Acquire error while trying to ask for permit: {e:?}"
-                        ))
+                        CliError::Default(format!("failed to acquire permit with error: {e:?}"))
                     })?;
-                    Ok::<_, CliError>(findex_instance.search(&k).await?)
+                    Ok::<_, CliError>(findex_instance.search(&kw).await?)
                 })
             })
             .collect::<Vec<_>>();

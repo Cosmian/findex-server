@@ -51,7 +51,7 @@ async fn insert_search_delete(
             seed: seed.to_owned(),
             index_id: *index_id,
         },
-        keyword: search_options.keywords.clone(),
+        keywords: search_options.keywords.clone(),
     }
     .run(rest_client.clone())
     .await?;
@@ -77,7 +77,7 @@ async fn insert_search_delete(
             seed: seed.to_owned(),
             index_id: *index_id,
         },
-        keyword: search_options.keywords,
+        keywords: search_options.keywords,
     }
     .run(rest_client)
     .await?;
@@ -226,7 +226,7 @@ pub(crate) async fn test_findex_set_and_revoke_permission() -> CliResult<()> {
             seed: TESTS_SEED.to_owned(),
             index_id,
         },
-        keyword: search_options.keywords.clone(),
+        keywords: search_options.keywords.clone(),
     }
     .run(user_rest_client.clone())
     .await?;
@@ -265,7 +265,7 @@ pub(crate) async fn test_findex_set_and_revoke_permission() -> CliResult<()> {
             seed: TESTS_SEED.to_owned(),
             index_id,
         },
-        keyword: search_options.keywords.clone(),
+        keywords: search_options.keywords.clone(),
     }
     .run(user_rest_client.clone())
     .await?;
@@ -307,7 +307,7 @@ pub(crate) async fn test_findex_set_and_revoke_permission() -> CliResult<()> {
             seed: TESTS_SEED.to_owned(),
             index_id,
         },
-        keyword: search_options.keywords.clone(),
+        keywords: search_options.keywords.clone(),
     }
     .run(user_rest_client)
     .await
