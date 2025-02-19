@@ -13,6 +13,12 @@ impl<'a> From<&'a [u8]> for Keyword {
     }
 }
 
+impl From<Vec<u8>> for Keyword {
+    fn from(bytes: Vec<u8>) -> Self {
+        Self(bytes)
+    }
+}
+
 impl std::fmt::Display for Keyword {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", String::from_utf8_lossy(&self.0))
@@ -43,7 +49,7 @@ impl From<Vec<String>> for Keywords {
     fn from(strings: Vec<String>) -> Self {
         let keywords = strings
             .into_iter()
-            .map(|s| Keyword::from(s.as_ref()))
+            .map(|s| Keyword::from(s.into_bytes()))
             .collect();
         Self(keywords)
     }
