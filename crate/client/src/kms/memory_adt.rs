@@ -23,55 +23,54 @@ impl<
         tasks: Vec<(Self::Address, Self::Word)>,
     ) -> Result<Option<Self::Word>, Self::Error> {
         trace!("guarded_write: guard: {:?}", guard);
-        let (address, word) = guard;
+        let (address, optional_word) = guard;
 
         // Split tasks into two vectors
         let (mut task_addresses, mut task_words): (Vec<_>, Vec<_>) = tasks.into_iter().unzip();
         trace!("guarded_write: task_addresses: {task_addresses:?}");
         trace!("guarded_write: task_words: {task_words:?}");
 
-        //
-        // Bulk addresses permute: put all addresses in the same vector: tasks-addresses + guard-address
-        task_addresses.push(address);
-        task_words.push(word.unwrap_or([0; WORD_LENGTH]));
-
-        //
-        // Compute HMAC of all addresses
-        let tokens = self.hmac(task_addresses).await?;
+        // Compute HMAC of all addresses together (including the guard address)
+        task_addresses.push(address); // size: n+1
+        let mut tokens = self.hmac(task_addresses).await?;
         trace!("guarded_write: tokens: {tokens:?}");
 
-        //
-        // Zip words and tokens
-        let words_and_tokens = task_words.into_iter().zip(tokens.clone()).collect();
-        trace!("guarded_write: words_and_addresses: {words_and_tokens:?}");
-
-        //
-        // Bulk Encrypt
-        let mut ciphertexts = self.encrypt(words_and_tokens).await?;
-        trace!("guarded_write: ciphertexts: {ciphertexts:?}");
-
-        // Pop the old value
-        let old = ciphertexts
+        // Put apart the last token
+        let token = tokens
             .pop()
-            .ok_or_else(|| ClientError::Default("No ciphertext found".to_owned()))?;
-        let old = word.map(|_| old);
+            .ok_or_else(|| ClientError::Default("No token found".to_owned()))?;
 
-        // .. and pop the correspond token
-        let old_token = tokens
-            .last()
-            .ok_or_else(|| ClientError::Default("No token found".to_owned()))?
-            .clone();
+        let (ciphertexts_and_tokens, old) = if let Some(word) = optional_word {
+            // Zip words and tokens
+            task_words.push(word); // size: n+1
+            tokens.push(token.clone()); // size: n+1
 
-        //
-        // Zip ciphertexts and tokens
-        let ciphertexts_and_tokens = ciphertexts.into_iter().zip(tokens);
+            // Bulk Encrypt
+            let mut ciphertexts = self.encrypt(&task_words, &tokens).await?;
+            trace!("guarded_write: ciphertexts: {ciphertexts:?}");
+
+            // Pop the old value
+            let old = ciphertexts
+                .pop()
+                .ok_or_else(|| ClientError::Default("No ciphertext found".to_owned()))?;
+
+            // Zip ciphertexts and tokens
+            (ciphertexts.into_iter().zip(tokens), Some(old))
+        } else {
+            // Bulk Encrypt
+            let ciphertexts = self.encrypt(&task_words, &tokens).await?;
+            trace!("guarded_write: ciphertexts: {ciphertexts:?}");
+
+            // Zip ciphertexts and tokens
+            (ciphertexts.into_iter().zip(tokens), None)
+        };
 
         //
         // Send bindings to server
         let cur = self
             .mem
             .guarded_write(
-                (old_token.clone(), old),
+                (token.clone(), old),
                 ciphertexts_and_tokens
                     .into_iter()
                     .map(|(w, a)| (a, w))
@@ -85,7 +84,7 @@ impl<
         let res = match cur {
             Some(ctx) => Some(
                 *self
-                    .decrypt(vec![(ctx, old_token)])
+                    .decrypt(&[ctx], &[token])
                     .await?
                     .first()
                     .ok_or_else(|| ClientError::Default("No plaintext found".to_owned()))?,
@@ -103,40 +102,48 @@ impl<
     ) -> Result<Vec<Option<Self::Word>>, Self::Error> {
         trace!("batch_read: Addresses: {:?}", addresses);
 
-        //
         // Compute HMAC of all addresses
         let tokens = self.hmac(addresses).await?;
         trace!("batch_read: tokens: {:?}", tokens);
 
-        //
         // Read encrypted values server-side
         let ciphertexts = self
             .mem
             .batch_read(tokens.clone())
             .await
             .map_err(|e| ClientError::Default(format!("Memory error: {e}")))?;
-        let ciphertexts_len = ciphertexts.len();
         trace!("batch_read: ciphertexts: {ciphertexts:?}");
 
-        //
-        // Zip ciphertexts and addresses
-        let ciphertexts_and_tokens = ciphertexts
-            .into_iter()
-            .zip(tokens)
-            .filter_map(|(ctx, tok)| ctx.map(|c| (c, tok)))
-            .collect();
-        trace!("batch_read: ciphertexts_and_tokens: {ciphertexts_and_tokens:?}",);
+        // Track the positions of None values and bulk ciphertexts and tokens
+        let (stripped_ciphertexts, stripped_tokens, none_positions): (Vec<_>, Vec<_>, Vec<_>) =
+            ciphertexts
+                .into_iter()
+                .zip(tokens.into_iter())
+                .enumerate()
+                .fold(
+                    (vec![], vec![], vec![]),
+                    |(mut ctxs, mut ts, mut ns), (i, (c, t))| {
+                        match c {
+                            Some(cipher) => {
+                                ctxs.push(cipher);
+                                ts.push(t);
+                            }
+                            None => ns.push(i),
+                        }
+                        (ctxs, ts, ns)
+                    },
+                );
 
-        //
         // Recover plaintext-words
-        let words = self.decrypt(ciphertexts_and_tokens).await?;
+        let words = self
+            .decrypt(&stripped_ciphertexts, &stripped_tokens)
+            .await?;
         trace!("batch_read: words: {:?}", words);
-        let none_count = ciphertexts_len - words.len();
 
-        let mut res: Vec<_> = words.into_iter().map(Some).collect();
-
-        // Add None elements for addresses that didn't have values
-        res.extend(std::iter::repeat_n(None, none_count));
+        let mut res = words.into_iter().map(Some).collect::<Vec<_>>();
+        for i in none_positions {
+            res.insert(i, None);
+        }
         trace!("batch_read: res: {:?}", res);
 
         Ok(res)
@@ -223,8 +230,8 @@ mod tests {
         let tok = Address::<ADDRESS_LENGTH>::random(&mut rng);
         let ptx = [1; CUSTOM_WORD_LENGTH];
         let layer = create_test_layer().await?;
-        let ctx = layer.encrypt(vec![(ptx, tok.clone())]).await?.remove(0);
-        let res = layer.decrypt(vec![(ctx, tok)]).await?.remove(0);
+        let ctx = layer.encrypt(&[ptx], &[tok.clone()]).await?.remove(0);
+        let res = layer.decrypt(&[ctx], &[tok]).await?.remove(0);
         assert_eq!(ptx.len(), res.len());
         assert_eq!(ptx, res);
         Ok(())

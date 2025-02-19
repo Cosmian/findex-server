@@ -86,9 +86,14 @@ impl<const WORD_LENGTH: usize> FindexInstance<WORD_LENGTH> {
     /// - If any of the concurrent search operations fail:
     /// - If the semaphore acquisition fails due to system resource exhaustion
     pub async fn search(&self, keywords: &[String]) -> CliResult<SearchResults> {
+        let lowercase_keywords = keywords
+            .iter()
+            .map(|kw| kw.to_lowercase())
+            .collect::<Vec<_>>();
+
         let semaphore = Arc::new(Semaphore::new(MAX_PERMITS));
 
-        let mut handles = keywords
+        let mut handles = lowercase_keywords
             .iter()
             .map(|kw| {
                 let semaphore = semaphore.clone();

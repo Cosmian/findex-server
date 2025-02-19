@@ -28,12 +28,6 @@ impl SearchAction {
         rest_client: &mut RestClient,
         kms_client: &KmsClient,
     ) -> CliResult<SearchResults> {
-        let lowercase_keywords = self
-            .keyword
-            .iter()
-            .map(|kw| kw.to_lowercase())
-            .collect::<Vec<_>>();
-
         // Either seed key is required or both hmac_key_id and aes_xts_key_id are required
         match (&self.findex_parameters.seed_key_id, &self.findex_parameters.hmac_key_id, &self.findex_parameters.aes_xts_key_id) {
             (Some(_), None, None) | (None, Some(_), Some(_)) => (),
@@ -47,6 +41,6 @@ impl SearchAction {
         )
         .await?;
 
-        findex_instance.search(&lowercase_keywords).await
+        findex_instance.search(&self.keyword).await
     }
 }

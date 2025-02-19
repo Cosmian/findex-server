@@ -80,10 +80,12 @@ impl<
 
     pub(crate) fn build_encrypt_message_request(
         &self,
-        words_and_addresses: &[([u8; WORD_LENGTH], Memory::Address)],
+        words: &[[u8; WORD_LENGTH]],
+        tokens: &[Memory::Address],
     ) -> ClientResult<Message> {
-        let items = words_and_addresses
+        let items = words
             .iter()
+            .zip(tokens)
             .map(|(word, address)| {
                 self.build_encrypt_request(word.to_vec(), address.to_vec())
                     .map(|encrypt_request| {
@@ -110,10 +112,12 @@ impl<
 
     pub(crate) fn build_decrypt_message_request(
         &self,
-        words_and_addresses: &[([u8; WORD_LENGTH], Memory::Address)],
+        words: &[[u8; WORD_LENGTH]],
+        tokens: &[Memory::Address],
     ) -> ClientResult<Message> {
-        let items = words_and_addresses
+        let items = words
             .iter()
+            .zip(tokens)
             .map(|(word, address)| {
                 MessageBatchItem::new(Operation::Decrypt(
                     self.build_decrypt_request(word.to_vec(), address.to_vec()),

@@ -86,29 +86,28 @@ impl<
     /// Bulk encrypts the given words using AES-XTS-512 and the given memory addresses as tweak.
     pub(crate) async fn encrypt(
         &self,
-        words_and_addresses: Vec<([u8; WORD_LENGTH], Memory::Address)>,
+        words: &[[u8; WORD_LENGTH]],
+        tokens: &[Memory::Address],
     ) -> ClientResult<Vec<[u8; WORD_LENGTH]>> {
-        let ciphertexts = Self::extract_words(
+        Self::extract_words(
             &self
                 .kms_client
-                .message(self.build_encrypt_message_request(&words_and_addresses)?)
+                .message(self.build_encrypt_message_request(words, tokens)?)
                 .await?,
-        )?;
-        Ok(ciphertexts)
+        )
     }
 
     /// Decrypts these ciphertexts using the given addresses as tweak.
     pub(crate) async fn decrypt(
         &self,
-        words_and_addresses: Vec<([u8; WORD_LENGTH], Memory::Address)>,
+        words: &[[u8; WORD_LENGTH]],
+        tokens: &[Memory::Address],
     ) -> ClientResult<Vec<[u8; WORD_LENGTH]>> {
-        let plaintexts = Self::extract_words(
+        Self::extract_words(
             &self
                 .kms_client
-                .message(self.build_decrypt_message_request(&words_and_addresses)?)
+                .message(self.build_decrypt_message_request(words, tokens)?)
                 .await?,
-        )?;
-
-        Ok(plaintexts)
+        )
     }
 }
