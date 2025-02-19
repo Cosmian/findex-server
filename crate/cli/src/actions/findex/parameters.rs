@@ -13,22 +13,26 @@ use crate::error::result::CliResult;
 pub struct FindexParameters {
     /// The user findex seed used (to insert, search and delete).
     /// The seed is a 32 bytes hex string.
-    #[clap(
-        required = false,
-        short = 's',
-        long,
-        group = "no_kms",
-        conflicts_with = "kms"
-    )]
+    #[clap(required = false, short = 's', long, conflicts_with = "aes_xts_key_id")]
     pub seed_key_id: Option<String>,
 
     /// Either the seed or the KMS keys (HMAC and AES XTS keys) must be provided.
     /// The HMAC key ID used to encrypt the seed.
-    #[clap(short = 'p', long, group = "kms", conflicts_with = "no_kms")]
+    #[clap(
+        short = 'p',
+        long,
+        conflicts_with = "seed_key_id",
+        requires = "aes_xts_key_id"
+    )]
     pub hmac_key_id: Option<String>,
 
     /// The AES XTS key ID used to encrypt the index.
-    #[clap(short = 'x', long, group = "kms", conflicts_with = "no_kms")]
+    #[clap(
+        short = 'x',
+        long,
+        conflicts_with = "seed_key_id",
+        requires = "hmac_key_id"
+    )]
     pub aes_xts_key_id: Option<String>,
 
     /// The index ID

@@ -5,7 +5,7 @@ use cosmian_findex_client::RestClient;
 use cosmian_findex_structs::{SearchResults, CUSTOM_WORD_LENGTH};
 use cosmian_kms_cli::reexport::cosmian_kms_client::KmsClient;
 
-/// Search words.
+/// Search words among encrypted indexes.
 #[derive(Parser, Debug)]
 #[clap(verbatim_doc_comment)]
 pub struct SearchAction {

@@ -68,17 +68,21 @@ impl FindexCli {
 
 #[derive(Subcommand)]
 pub enum CoreFindexActions {
-    #[command(subcommand)]
-    Datasets(DatasetsAction),
+    /// Create new indexes
+    Index(InsertOrDeleteAction),
+    Search(SearchAction),
     /// Delete indexed keywords
     Delete(InsertOrDeleteAction),
-    /// Insert new keywords
-    Insert(InsertOrDeleteAction),
-    Login(LoginAction),
-    Logout(LogoutAction),
+
     #[command(subcommand)]
     Permissions(PermissionsAction),
-    Search(SearchAction),
+
+    #[command(subcommand)]
+    Datasets(DatasetsAction),
+
+    Login(LoginAction),
+    Logout(LogoutAction),
+
     ServerVersion(ServerVersionAction),
 }
 
@@ -97,7 +101,7 @@ impl CoreFindexActions {
                     let deleted_keywords = action.delete(rest_client, kms_client).await?;
                     Ok(format!("Deleted keywords: {deleted_keywords}"))
                 }
-                Self::Insert(action) => {
+                Self::Index(action) => {
                     let inserted_keywords = action.insert(rest_client, kms_client).await?;
                     Ok(format!("Inserted keywords: {inserted_keywords}"))
                 }

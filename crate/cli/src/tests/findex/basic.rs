@@ -91,7 +91,7 @@ pub(crate) async fn test_findex_no_auth_huge_dataset() -> CliResult<()> {
     let ctx = start_default_test_findex_server().await;
     let kms_client = instantiate_kms_client()?;
     let findex_parameters =
-    // FindexParameters::new_with_seed_id(Uuid::new_v4(), &kms_client).await?;
+    // FindexParameters::new_for_client_side_encryption(Uuid::new_v4(), &kms_client).await?;
     FindexParameters::new_with_encryption_keys(Uuid::new_v4(), &kms_client).await?;
 
     // Search 1 entry in a huge dataset
