@@ -25,7 +25,7 @@ impl DatasetsAction {
     /// # Errors
     ///
     /// Returns an error if one of Add, Delete of Get actions fails
-    pub async fn run(self, rest_client: FindexRestClient) -> CliResult<String> {
+    pub async fn run(&self, rest_client: FindexRestClient) -> CliResult<String> {
         match self {
             Self::Add(action) => action.run(rest_client).await,
             Self::Delete(action) => action.run(rest_client).await,
@@ -74,7 +74,7 @@ impl AddEntries {
     /// Returns an error if the query execution on the Findex server fails.
     /// Returns an error if the base64 decoding fails.
     /// Returns an error if the UUID parsing fails.
-    pub async fn run(self, rest_client: FindexRestClient) -> CliResult<String> {
+    pub async fn run(&self, rest_client: FindexRestClient) -> CliResult<String> {
         let encrypted_entries = self.entries.iter().try_fold(
             HashMap::with_capacity(self.entries.len()),
             |mut acc, (key, value)| {
@@ -111,7 +111,7 @@ impl DeleteEntries {
     /// # Errors
     ///
     /// Returns an error if the query execution on the Findex server fails.
-    pub async fn run(self, rest_client: FindexRestClient) -> CliResult<String> {
+    pub async fn run(&self, rest_client: FindexRestClient) -> CliResult<String> {
         let response = rest_client
             .delete_entries(&self.index_id, &self.uuids)
             .await
@@ -140,7 +140,7 @@ impl GetEntries {
     ///
     /// Returns an error if the query execution on the Findex server fails.
     /// Returns an error if the UUID parsing fails.
-    pub async fn run(self, rest_client: FindexRestClient) -> CliResult<EncryptedEntries> {
+    pub async fn run(&self, rest_client: FindexRestClient) -> CliResult<EncryptedEntries> {
         let encrypted_entries = rest_client
             .get_entries(&self.index_id, &self.uuids)
             .await

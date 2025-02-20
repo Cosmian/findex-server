@@ -35,9 +35,9 @@ impl LoginAction {
     /// Fails if the configuration file is missing or if the `oauth2_conf` object
     /// Fails if credentials are invalid. No access token could be retrieved.
     pub async fn run(
-        self,
-        mut config: FindexClientConfig,
-        conf_path: Option<PathBuf>,
+        &self,
+        config: &mut FindexClientConfig,
+        conf_path: &Option<PathBuf>,
     ) -> CliResult<String> {
         let login_config = config.http_config.oauth2_conf.as_ref().ok_or_else(|| {
             CliError::Default(format!(
@@ -64,8 +64,6 @@ impl LoginAction {
             "Saving access token in the configuration file {:?} ...",
             conf_path
         );
-
-        config.save(conf_path)?;
 
         Ok(access_token)
     }

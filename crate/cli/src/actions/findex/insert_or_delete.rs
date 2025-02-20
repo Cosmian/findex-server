@@ -6,7 +6,7 @@ use crate::{
 use clap::Parser;
 use cosmian_findex::{Findex, IndexADT, Value};
 use cosmian_findex_client::FindexRestClient;
-use cosmian_findex_structs::{Keyword, WORD_LENGTH};
+use cosmian_findex_structs::{Keyword, Keywords, WORD_LENGTH};
 use std::{
     collections::{HashMap, HashSet},
     fs::File,
@@ -42,11 +42,11 @@ impl InsertOrDeleteAction {
     /// - The Findex instance cannot insert or delete the data.
     /// - The semaphore cannot acquire a permit.
     async fn insert_or_delete(
-        self,
+        &self,
         rest_client: FindexRestClient,
         is_insert: bool,
-    ) -> CliResult<String> {
-        let file = File::open(self.csv)?;
+    ) -> CliResult<Keywords> {
+        let file = File::open(&self.csv)?;
 
         let bindings = csv::Reader::from_reader(file).byte_records().fold(
             HashMap::new(),
@@ -75,7 +75,10 @@ impl InsertOrDeleteAction {
             );
 
         let semaphore = Arc::new(Semaphore::new(MAX_PERMITS));
-        let written_keywords = format!("{:?}", bindings.keys().collect::<Vec<_>>());
+        // We need to return the keywords that were written later on, but we will also need to
+        // move ownership of the bindings to the spawned tasks. We can't do both at the same time,
+        // so we will clone the keys and then move the bindings.
+        let written_keywords = Keywords(bindings.keys().cloned().collect::<HashSet<_>>());
 
         let handles = bindings
             .into_iter()
@@ -107,25 +110,15 @@ impl InsertOrDeleteAction {
     ///
     /// # Errors
     /// - If insert new indexes fails
-    pub async fn insert(self, rest_client: FindexRestClient) -> CliResult<String> {
-        Self::insert_or_delete(self, rest_client, true)
-            .await
-            .map(|fmt| {
-                trace!("Insert done: keywords: {fmt}");
-                format!("Inserted keywords: {fmt}")
-            })
+    pub async fn insert(&self, rest_client: FindexRestClient) -> CliResult<Keywords> {
+        Self::insert_or_delete(self, rest_client, true).await
     }
 
     /// Deletes indexes
     ///
     /// # Errors
     /// - If deleting indexes fails
-    pub async fn delete(self, rest_client: FindexRestClient) -> CliResult<String> {
-        Self::insert_or_delete(self, rest_client, false)
-            .await
-            .map(|fmt| {
-                trace!("Delete done: keywords: {fmt}");
-                format!("Deleted keywords: {fmt}")
-            })
+    pub async fn delete(&self, rest_client: FindexRestClient) -> CliResult<Keywords> {
+        Self::insert_or_delete(self, rest_client, false).await
     }
 }

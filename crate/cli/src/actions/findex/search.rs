@@ -25,7 +25,7 @@ impl SearchAction {
     ///
     /// Returns an error if the version query fails or if there is an issue
     /// writing to the console.
-    pub async fn run(self, rest_client: FindexRestClient) -> CliResult<SearchResults> {
+    pub async fn run(&self, rest_client: FindexRestClient) -> CliResult<SearchResults> {
         let findex_instance = rest_client.instantiate_findex(
             self.findex_parameters.index_id,
             &self.findex_parameters.seed()?,
@@ -35,10 +35,10 @@ impl SearchAction {
 
         let mut handles = self
             .keywords
-            .into_iter()
+            .iter()
             .map(|kw| {
                 let semaphore = semaphore.clone();
-                let kw = Keyword::from(kw.into_bytes().as_slice());
+                let kw = Keyword::from(kw.as_ref());
                 let findex_instance = findex_instance.clone();
                 tokio::spawn(async move {
                     let _permit = semaphore.acquire().await.map_err(|e| {

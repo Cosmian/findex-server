@@ -92,18 +92,24 @@ impl CoreFindexActions {
     /// # Errors
     /// - If the configuration file is not found or invalid
     pub async fn run(
-        self,
+        &self, // we do not want to consume self because we need post processing for the login/logout commands
         findex_client: FindexRestClient,
-        config: FindexClientConfig,
-        conf_path: Option<PathBuf>,
+        config: &mut FindexClientConfig,
+        conf_path: &Option<PathBuf>,
     ) -> CliResult<()> {
         let result = match self {
             // actions that don't edit the configuration
             Self::Datasets(action) => action.run(findex_client).await,
             Self::Permissions(action) => action.run(findex_client).await,
             Self::ServerVersion(action) => action.run(findex_client).await,
-            Self::Delete(action) => action.delete(findex_client).await,
-            Self::Insert(action) => action.insert(findex_client).await,
+            Self::Delete(action) => {
+                let deleted_keywords = action.delete(findex_client).await?;
+                Ok(format!("Deleted keywords: {deleted_keywords}"))
+            }
+            Self::Insert(action) => {
+                let inserted_keywords = action.insert(findex_client).await?;
+                Ok(format!("Inserted keywords: {inserted_keywords}"))
+            }
             Self::Search(action) => {
                 let search_results = action.run(findex_client).await?;
                 Ok(format!("Search results: {search_results}"))
@@ -130,13 +136,26 @@ impl CoreFindexActions {
 pub async fn findex_cli_main() -> CliResult<()> {
     log_init(None);
     let cli_opts = FindexCli::parse();
-    let config = cli_opts.prepare_config()?;
+    let mut config = cli_opts.prepare_config()?;
 
     // Process the command
     cli_opts
         .command
-        .run(FindexRestClient::new(&config)?, config, cli_opts.conf_path)
+        .run(
+            FindexRestClient::new(&config)?,
+            &mut config,
+            &cli_opts.conf_path,
+        )
         .await?;
 
+    // Post-process the login/logout actions: save Findex CLI configuration
+    // The reason why it is done here is that the login/logout actions are also call by meta Cosmian CLI using its own Findex client configuration
+    // !!! Do not edit this without reciprocal changes in the Cosmian CLI : https://github.com/Cosmian/cli
+    match cli_opts.command {
+        CoreFindexActions::Login(_) | CoreFindexActions::Logout(_) => {
+            config.save(cli_opts.conf_path)?;
+        }
+        _ => {}
+    }
     Ok(())
 }
