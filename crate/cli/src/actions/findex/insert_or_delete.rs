@@ -111,8 +111,8 @@ impl InsertOrDeleteAction {
         Self::insert_or_delete(self, rest_client, true)
             .await
             .map(|fmt| {
-                trace!("Insert done: keywords: {}", fmt);
-                format!("Inserted keywords: {}", fmt)
+                trace!("Insert done: keywords: {fmt}");
+                format!("Inserted keywords: {fmt}")
             })
     }
 
@@ -124,8 +124,8 @@ impl InsertOrDeleteAction {
         Self::insert_or_delete(self, rest_client, false)
             .await
             .map(|fmt| {
-                trace!("Delete done: keywords: {}", fmt);
-                format!("Deleted keywords: {}", fmt)
+                trace!("Delete done: keywords: {fmt}");
+                format!("Deleted keywords: {fmt}")
             })
     }
 }
