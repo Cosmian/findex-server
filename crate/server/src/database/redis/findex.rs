@@ -18,8 +18,8 @@ impl<const WORD_LENGTH: usize> MemoryADT for Redis<WORD_LENGTH> {
     async fn guarded_write(
         &self,
         guard: (Self::Address, Option<Self::Word>),
-        tasks: Vec<(Self::Address, Self::Word)>,
+        bindings: Vec<(Self::Address, Self::Word)>,
     ) -> Result<Option<Self::Word>, MemoryError> {
-        self.memory.guarded_write(guard, tasks).await
+        self.memory.guarded_write(guard, bindings).await
     }
 }

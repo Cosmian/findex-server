@@ -71,14 +71,14 @@ impl<const WORD_LENGTH: usize> MemoryADT for FindexRestClient<WORD_LENGTH> {
     async fn guarded_write(
         &self,
         guard: (Self::Address, Option<Self::Word>),
-        tasks: Vec<(Self::Address, Self::Word)>,
+        bindings: Vec<(Self::Address, Self::Word)>,
     ) -> Result<Option<[u8; WORD_LENGTH]>, ClientError> {
         let endpoint = format!("/indexes/{}/guarded_write", self.index_id);
         let server_url = format!("{}{}", self.rest_client.http_client.server_url, &endpoint);
 
         trace!(
             "Initiating guarded_write of {} values for index {} at server_url: {}",
-            tasks.len(),
+            bindings.len(),
             self.index_id,
             &server_url
         );
@@ -86,7 +86,7 @@ impl<const WORD_LENGTH: usize> MemoryADT for FindexRestClient<WORD_LENGTH> {
         // BEGIN TODO: using `Serializable` avoids re-coding vector
         // concatenation. Anyway, this should be abstracted away in a function.
         let guard_bytes = Guard::new(guard.0, guard.1).serialize()?;
-        let task_bytes = Tasks::new(tasks).serialize()?;
+        let task_bytes = Tasks::new(bindings).serialize()?;
         let mut request_bytes = Vec::with_capacity(guard_bytes.len() + task_bytes.len());
         request_bytes.extend_from_slice(&guard_bytes);
         request_bytes.extend_from_slice(&task_bytes);

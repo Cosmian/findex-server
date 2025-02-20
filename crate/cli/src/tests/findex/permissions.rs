@@ -9,12 +9,12 @@ use tracing::{debug, trace};
 use uuid::Uuid;
 
 use crate::{
-    actions::findex::{
-        insert_or_delete::InsertOrDeleteAction, parameters::FindexParameters, search::SearchAction,
-    },
+    actions::findex::{insert_or_delete::InsertOrDeleteAction, search::SearchAction},
     error::result::CliResult,
     tests::{
-        findex::utils::{insert_search_delete, instantiate_kms_client, SMALL_DATASET},
+        findex::utils::{
+            insert_search_delete, instantiate_kms_client, new_parameters, SMALL_DATASET,
+        },
         permissions::{create_index_id, list_permissions, revoke_permission, set_permission},
         search_options::SearchOptions,
     },
@@ -46,8 +46,7 @@ pub(crate) async fn test_findex_set_and_revoke_permission() -> CliResult<()> {
     let mut user_rest_client = RestClient::new(user_conf)?;
 
     let kms_client = instantiate_kms_client()?;
-    let findex_parameters =
-        FindexParameters::new_with_encryption_keys(index_id, &kms_client).await?;
+    let findex_parameters = new_parameters(index_id, &kms_client, true).await?;
 
     // Index the dataset as admin
     InsertOrDeleteAction {
@@ -153,8 +152,7 @@ pub(crate) async fn test_findex_no_permission() -> CliResult<()> {
     let ctx = start_default_test_findex_server_with_cert_auth().await;
 
     let kms_client = instantiate_kms_client()?;
-    let findex_parameters =
-        FindexParameters::new_with_encryption_keys(Uuid::new_v4(), &kms_client).await?;
+    let findex_parameters = new_parameters(Uuid::new_v4(), &kms_client, true).await?;
 
     let search_options = SearchOptions {
         dataset_path: SMALL_DATASET.into(),

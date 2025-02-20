@@ -20,13 +20,13 @@ impl<
     async fn guarded_write(
         &self,
         guard: (Self::Address, Option<Self::Word>),
-        tasks: Vec<(Self::Address, Self::Word)>,
+        bindings: Vec<(Self::Address, Self::Word)>,
     ) -> Result<Option<Self::Word>, Self::Error> {
         trace!("guarded_write: guard: {:?}", guard);
         let (address, optional_word) = guard;
 
         // Split tasks into two vectors
-        let (mut task_addresses, mut task_words): (Vec<_>, Vec<_>) = tasks.into_iter().unzip();
+        let (mut task_addresses, mut task_words): (Vec<_>, Vec<_>) = bindings.into_iter().unzip();
         trace!("guarded_write: task_addresses: {task_addresses:?}");
         trace!("guarded_write: task_words: {task_words:?}");
 

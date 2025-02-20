@@ -15,8 +15,21 @@ use cosmian_findex_structs::{Keyword, Keywords, SearchResults};
 use cosmian_kms_cli::reexport::cosmian_kms_client::KmsClient;
 use tokio::sync::Semaphore;
 use tracing::trace;
+use uuid::Uuid;
 
-use super::{parameters::FindexParameters, MAX_PERMITS};
+use super::MAX_PERMITS;
+
+pub enum FindexKeys {
+    ClientSideEncryption {
+        seed_key_id: String,
+        index_id: Uuid,
+    },
+    ServerSideEncryption {
+        hmac_key_id: String,
+        aes_xts_key_id: String,
+        index_id: Uuid,
+    },
+}
 
 #[derive(Clone)]
 pub enum FindexInstance<const WORD_LENGTH: usize> {
@@ -28,7 +41,7 @@ pub enum FindexInstance<const WORD_LENGTH: usize> {
             MemoryEncryptionLayer<WORD_LENGTH, FindexRestClient<WORD_LENGTH>>,
         >,
     ),
-    KmsEncryption(
+    ServerSideEncryption(
         Findex<
             WORD_LENGTH,
             Value,
@@ -49,35 +62,44 @@ impl<const WORD_LENGTH: usize> FindexInstance<WORD_LENGTH> {
     pub async fn instantiate_findex(
         rest_client: &RestClient,
         kms_client: KmsClient,
-        findex_parameters: &FindexParameters,
+        findex_keys: FindexKeys,
     ) -> CliResult<Self> {
-        let memory = FindexRestClient::new(rest_client.clone(), findex_parameters.index_id);
-
-        Ok(if let Some(seed_key_id) = &findex_parameters.seed_key_id {
-            trace!("Using client side encryption");
-            let seed = retrieve_key_from_kms(seed_key_id, kms_client).await?;
-            let encryption_layer = MemoryEncryptionLayer::<WORD_LENGTH, _>::new(&seed, memory);
-            Self::ClientSideEncryption(Findex::new(
-                encryption_layer,
-                generic_encode,
-                generic_decode,
-            ))
-        } else {
-            trace!("Using KMS server side encryption");
-            let hmac_key_id = findex_parameters.get_hmac_key_id(&kms_client).await?;
-            let aes_xts_key_id = findex_parameters.get_aes_xts_key_id(&kms_client).await?;
-            let encryption_layer = KmsEncryptionLayer::<WORD_LENGTH, _>::new(
-                kms_client,
+        match findex_keys {
+            FindexKeys::ClientSideEncryption {
+                seed_key_id,
+                index_id,
+            } => {
+                let memory = FindexRestClient::new(rest_client.clone(), index_id);
+                trace!("Using client side encryption");
+                let seed = retrieve_key_from_kms(&seed_key_id, kms_client).await?;
+                let encryption_layer = MemoryEncryptionLayer::<WORD_LENGTH, _>::new(&seed, memory);
+                Ok(Self::ClientSideEncryption(Findex::new(
+                    encryption_layer,
+                    generic_encode,
+                    generic_decode,
+                )))
+            }
+            FindexKeys::ServerSideEncryption {
                 hmac_key_id,
                 aes_xts_key_id,
-                memory,
-            );
-            Self::KmsEncryption(Findex::new(
-                encryption_layer,
-                generic_encode,
-                generic_decode,
-            ))
-        })
+                index_id,
+            } => {
+                let memory = FindexRestClient::new(rest_client.clone(), index_id);
+
+                trace!("Using KMS server side encryption");
+                let encryption_layer = KmsEncryptionLayer::<WORD_LENGTH, _>::new(
+                    kms_client,
+                    hmac_key_id,
+                    aes_xts_key_id,
+                    memory,
+                );
+                Ok(Self::ServerSideEncryption(Findex::new(
+                    encryption_layer,
+                    generic_encode,
+                    generic_decode,
+                )))
+            }
+        }
     }
 
     /// Search multiple keywords. Returned results are the intersection of all search results (logical AND).
@@ -107,7 +129,7 @@ impl<const WORD_LENGTH: usize> FindexInstance<WORD_LENGTH> {
                     })?;
                     Ok::<_, CliError>(match findex_instance {
                         Self::ClientSideEncryption(findex) => findex.search(&keyword).await?,
-                        Self::KmsEncryption(findex) => findex.search(&keyword).await?,
+                        Self::ServerSideEncryption(findex) => findex.search(&keyword).await?,
                     })
                 })
             })
@@ -164,7 +186,7 @@ impl<const WORD_LENGTH: usize> FindexInstance<WORD_LENGTH> {
                                 findex.delete(kw, vs).await?;
                             }
                         }
-                        Self::KmsEncryption(findex) => {
+                        Self::ServerSideEncryption(findex) => {
                             if is_insert {
                                 findex.insert(kw, vs).await?;
                             } else {
