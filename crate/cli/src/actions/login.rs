@@ -61,7 +61,7 @@ impl LoginAction {
         config.http_config.access_token = Some(access_token.clone());
 
         info!(
-            "Saving access token in the configuration file {:?}",
+            "Saving access token in the configuration file {:?} ...",
             conf_path
         );
 

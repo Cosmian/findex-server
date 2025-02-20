@@ -38,7 +38,7 @@ impl SearchAction {
             .into_iter()
             .map(|kw| {
                 let semaphore = semaphore.clone();
-                let kw = Keyword::from(kw.into_bytes());
+                let kw = Keyword::from(kw.into_bytes().as_slice());
                 let findex_instance = findex_instance.clone();
                 tokio::spawn(async move {
                     let _permit = semaphore.acquire().await.map_err(|e| {
