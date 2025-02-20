@@ -1,4 +1,4 @@
-use cosmian_findex_client::FindexRestClient;
+use cosmian_findex_client::RestClient;
 use cosmian_findex_structs::Permission;
 use uuid::Uuid;
 
@@ -7,19 +7,16 @@ use crate::{
     error::result::CliResult,
 };
 
-pub(crate) async fn create_index_id(rest_client: &FindexRestClient) -> CliResult<Uuid> {
+pub(crate) async fn create_index_id(rest_client: &RestClient) -> CliResult<Uuid> {
     CreateIndex.run(rest_client).await
 }
 
-pub(crate) async fn list_permission(
-    rest_client: &FindexRestClient,
-    user: String,
-) -> CliResult<String> {
+pub(crate) async fn list_permissions(rest_client: &RestClient, user: String) -> CliResult<String> {
     ListPermissions { user }.run(rest_client).await
 }
 
 pub(crate) async fn set_permission(
-    rest_client: &FindexRestClient,
+    rest_client: &RestClient,
     user: String,
     index_id: Uuid,
     permission: Permission,
@@ -34,7 +31,7 @@ pub(crate) async fn set_permission(
 }
 
 pub(crate) async fn revoke_permission(
-    rest_client: &FindexRestClient,
+    rest_client: &RestClient,
     user: String,
     index_id: Uuid,
 ) -> CliResult<String> {

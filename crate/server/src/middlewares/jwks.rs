@@ -3,7 +3,7 @@ use std::{collections::HashMap, sync::RwLock};
 use alcoholic_jwt::{JWK, JWKS};
 use chrono::{DateTime, Duration, Utc};
 
-use crate::error::{result::FResult, server::FindexServerError};
+use crate::error::{result::FResult, server::ServerError};
 
 static REFRESH_INTERVAL: i64 = 60; // in secs
 
@@ -29,7 +29,7 @@ impl JwksManager {
     /// Lock `jwks` to replace it
     fn set_jwks(&self, new_jwks: HashMap<String, JWKS>) -> FResult<()> {
         let mut jwks = self.jwks.write().map_err(|e| {
-            FindexServerError::ServerError(format!("cannot lock JWKS for write. Error: {e:?}"))
+            ServerError::ServerError(format!("cannot lock JWKS for write. Error: {e:?}"))
         })?;
         *jwks = new_jwks;
         Ok(())
@@ -41,7 +41,7 @@ impl JwksManager {
             .jwks
             .read()
             .map_err(|e| {
-                FindexServerError::ServerError(format!("cannot lock JWKS for read. Error: {e:?}"))
+                ServerError::ServerError(format!("cannot lock JWKS for read. Error: {e:?}"))
             })?
             .iter()
             .find_map(|(_, jwks)| jwks.find(kid))
@@ -54,14 +54,11 @@ impl JwksManager {
     pub(crate) async fn refresh(&self) -> FResult<()> {
         let refresh_is_allowed = {
             let mut last_update = self.last_update.write().map_err(|e| {
-                FindexServerError::ServerError(format!(
-                    "cannot lock last_update for write. Error: {e:?}"
-                ))
+                ServerError::ServerError(format!("cannot lock last_update for write. Error: {e:?}"))
             })?;
 
-            let can_be_refreshed = last_update.map_or(true, |lu| {
-                (lu + Duration::seconds(REFRESH_INTERVAL)) < Utc::now()
-            });
+            let can_be_refreshed = last_update
+                .is_none_or(|lu| (lu + Duration::seconds(REFRESH_INTERVAL)) < Utc::now());
 
             if can_be_refreshed {
                 *last_update = Some(Utc::now());

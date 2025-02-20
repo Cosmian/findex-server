@@ -6,7 +6,7 @@ use super::{DbParams, HttpParams};
 use crate::{
     config::{ClapConfig, IdpConfig},
     error::result::FResult,
-    findex_server_bail,
+    server_bail,
 };
 
 /// This structure is the context used by the server
@@ -70,7 +70,7 @@ impl ServerParams {
                 if http_params.is_running_https() {
                     Self::load_cert(&cert_file)
                 } else {
-                    findex_server_bail!(
+                    server_bail!(
                         "The authority certificate file can only be used when the server is \
                          running in HTTPS mode"
                     )

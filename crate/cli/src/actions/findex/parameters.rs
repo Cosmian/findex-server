@@ -1,36 +1,67 @@
 use clap::Parser;
 
-use cosmian_findex::{Secret, KEY_LENGTH as BYTE_KEY_LENGTH};
 use uuid::Uuid;
 
-use crate::{cli_error, error::result::CliResult};
+use crate::error::{result::CliResult, CliError};
 
-#[derive(Parser, Debug)]
+use super::findex_instance::FindexKeys;
+
+#[derive(Clone, Parser, Debug, Default)]
 #[clap(verbatim_doc_comment)]
 pub struct FindexParameters {
     /// The user findex seed used (to insert, search and delete).
     /// The seed is a 32 bytes hex string.
-    #[clap(long, short = 's')]
-    pub seed: String,
+    #[clap(required = false, short = 's', long, conflicts_with = "aes_xts_key_id")]
+    pub seed_key_id: Option<String>,
+
+    /// Either the seed or the KMS keys (HMAC and AES XTS keys) must be provided.
+    /// The HMAC key ID used to encrypt the seed.
+    #[clap(
+        short = 'p',
+        long,
+        conflicts_with = "seed_key_id",
+        requires = "aes_xts_key_id"
+    )]
+    pub hmac_key_id: Option<String>,
+
+    /// The AES XTS key ID used to encrypt the index.
+    #[clap(
+        short = 'x',
+        long,
+        conflicts_with = "seed_key_id",
+        requires = "hmac_key_id"
+    )]
+    pub aes_xts_key_id: Option<String>,
+
     /// The index ID
     #[clap(long, short = 'i')]
     pub index_id: Uuid,
 }
 
 impl FindexParameters {
-    /// Returns the user key decoded from hex.
+    /// Instantiates the Findex keys.
+    /// If a seed key is provided, the client side encryption is used.
+    /// Otherwise, the KMS server-side encryption is used.
+    ///
     /// # Errors
-    /// This function will return an error if the key is not a valid hex string.
-    pub fn seed(&self) -> CliResult<Secret<BYTE_KEY_LENGTH>> {
-        let mut seed: [u8; BYTE_KEY_LENGTH] =
-            hex::decode(self.seed.clone())?.try_into().map_err(|_err| {
-                cli_error!(format!(
-                    "Failed to convert hex key to {} bytes. Provided key : {}, length: {}",
-                    BYTE_KEY_LENGTH,
-                    self.seed,
-                    self.seed.len()
-                ))
-            })?;
-        Ok(Secret::<BYTE_KEY_LENGTH>::from_unprotected_bytes(&mut seed))
+    /// - if no key id is provided
+    pub fn instantiate_keys(self) -> CliResult<FindexKeys> {
+        match (self.seed_key_id, self.hmac_key_id, self.aes_xts_key_id) {
+            (Some(seed_key_id), None, None) => Ok(FindexKeys::ClientSideEncryption {
+                seed_key_id,
+                index_id: self.index_id,
+            }),
+            (None, Some(hmac_key_id), Some(aes_xts_key_id)) => {
+                Ok(FindexKeys::ServerSideEncryption {
+                    hmac_key_id,
+                    aes_xts_key_id,
+                    index_id: self.index_id,
+                })
+            }
+            _ => Err(CliError::Default(
+                "Either the seed or the KMS keys (HMAC and AES XTS keys) must be provided."
+                    .to_owned(),
+            )),
+        }
     }
 }

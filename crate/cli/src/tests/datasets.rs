@@ -3,15 +3,15 @@ use crate::{
     error::result::CliResult,
 };
 use base64::{engine::general_purpose, Engine};
-use cosmian_findex_client::{FindexClientConfig, FindexRestClient};
+use cosmian_findex_client::RestClient;
 use cosmian_findex_structs::EncryptedEntries;
 use cosmian_logger::log_init;
-use std::{ops::Deref, path::PathBuf};
+use std::ops::Deref;
 use test_findex_server::start_default_test_findex_server;
 use uuid::Uuid;
 
 async fn dataset_add_entries(
-    rest_client: &FindexRestClient,
+    rest_client: &RestClient,
     index_id: &Uuid,
     entries: Vec<(Uuid, String)>,
 ) -> CliResult<()> {
@@ -26,7 +26,7 @@ async fn dataset_add_entries(
 }
 
 async fn dataset_delete_entries(
-    rest_client: &FindexRestClient,
+    rest_client: &RestClient,
     index_id: &Uuid,
     uuids: Vec<Uuid>,
 ) -> CliResult<()> {
@@ -40,7 +40,7 @@ async fn dataset_delete_entries(
 }
 
 async fn dataset_get_entries(
-    rest_client: &FindexRestClient,
+    rest_client: &RestClient,
     index_id: &Uuid,
     uuids: Vec<Uuid>,
 ) -> CliResult<EncryptedEntries> {
@@ -56,8 +56,7 @@ async fn dataset_get_entries(
 pub(crate) async fn test_datasets() -> CliResult<()> {
     log_init(None);
     let ctx = start_default_test_findex_server().await;
-    let owner_conf = FindexClientConfig::load(Some(PathBuf::from(&ctx.owner_client_conf_path)))?;
-    let owner_rest_client = FindexRestClient::new(owner_conf)?;
+    let owner_rest_client = RestClient::new(ctx.owner_client_conf.clone())?;
 
     let index_id = Uuid::new_v4();
 

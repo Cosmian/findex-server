@@ -1,10 +1,10 @@
 use super::Redis;
 use crate::{
     database::database_traits::PermissionsTrait,
-    error::{result::FResult, server::FindexServerError},
+    error::{result::FResult, server::ServerError},
 };
 use async_trait::async_trait;
-use cosmian_findex_structs::{Permission, Permissions, WORD_LENGTH};
+use cosmian_findex_structs::{Permission, Permissions, CUSTOM_WORD_LENGTH};
 use redis::{aio::ConnectionManager, AsyncCommands, RedisError};
 use tracing::{instrument, trace};
 use uuid::Uuid;
@@ -26,7 +26,7 @@ async fn hset_redis_permission(
 }
 
 #[async_trait]
-impl PermissionsTrait for Redis<WORD_LENGTH> {
+impl PermissionsTrait for Redis<CUSTOM_WORD_LENGTH> {
     /// Creates a new index ID and sets admin privileges.
     #[instrument(ret(Display), err, skip(self), level = "trace")]
     async fn create_index_id(&self, user_id: &str) -> FResult<Uuid> {
@@ -57,15 +57,15 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
             .clone()
             .hgetall::<_, Vec<(String, u8)>>(user_redis_key)
             .await
-            .map_err(FindexServerError::from)?
+            .map_err(ServerError::from)?
             .into_iter()
             .map(|(index_str, perm)| {
                 Ok((
                     Uuid::parse_str(&index_str).map_err(|e| {
-                        FindexServerError::DatabaseError(format!("Invalid index ID. {e}"))
+                        ServerError::DatabaseError(format!("Invalid index ID. {e}"))
                     })?,
                     Permission::try_from(perm).map_err(|e| {
-                        FindexServerError::DatabaseError(format!("Invalid permission. {e}"))
+                        ServerError::DatabaseError(format!("Invalid permission. {e}"))
                     })?,
                 ))
             })
@@ -84,16 +84,13 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
             .clone()
             .hget::<_, _, Option<u8>>(&user_key, index_id.to_string())
             .await
-            .map_err(FindexServerError::from)?
+            .map_err(ServerError::from)?
             .ok_or_else(|| {
-                FindexServerError::DatabaseError(format!(
-                    "No permission found for index {index_id}"
-                ))
+                ServerError::DatabaseError(format!("No permission found for index {index_id}"))
             })
             .and_then(|p| {
-                Permission::try_from(p).map_err(|e| {
-                    FindexServerError::DatabaseError(format!("Invalid permission. {e}"))
-                })
+                Permission::try_from(p)
+                    .map_err(|e| ServerError::DatabaseError(format!("Invalid permission. {e}")))
             })?;
 
         trace!("Permissions for user {user_id}: {permission:?}");
@@ -110,7 +107,7 @@ impl PermissionsTrait for Redis<WORD_LENGTH> {
             .clone()
             .hdel(&user_key, index_id.to_string())
             .await
-            .map_err(FindexServerError::from)?;
+            .map_err(ServerError::from)?;
 
         trace!("Revoked permission for {user_id} on index {index_id}");
         Ok(())
@@ -155,7 +152,7 @@ mod tests {
         }
     }
 
-    async fn setup_test_db() -> Redis<WORD_LENGTH> {
+    async fn setup_test_db() -> Redis<CUSTOM_WORD_LENGTH> {
         let url = redis_db_config().database_url;
         Redis::instantiate(url.as_str(), false)
             .await
@@ -260,19 +257,19 @@ mod tests {
             // Set permission
             db.set_permission(&test_user_id, permission_kind, &index_id)
                 .await
-                .expect("Failed to set permission {permission_kind}");
+                .unwrap_or_else(|_| panic!("Failed to get permission {permission_kind}"));
 
             // Verify permission was set
             let permission = db
                 .get_permission(&test_user_id, &index_id)
                 .await
-                .expect("Failed to get permission {permission_kind}");
+                .unwrap_or_else(|_| panic!("Failed to get permission {permission_kind}"));
             assert_eq!(permission, permission_kind);
 
             // Revoke permission
             db.revoke_permission(&test_user_id, &index_id)
                 .await
-                .expect("Failed to revoke permission {permission_kind}");
+                .unwrap_or_else(|_| panic!("Failed to get permission {permission_kind}"));
 
             // Verify permission was revoked
             let result = db.get_permission(&test_user_id, &index_id).await;

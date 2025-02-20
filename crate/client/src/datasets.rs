@@ -4,19 +4,19 @@ use tracing::{instrument, trace};
 use uuid::Uuid;
 
 use crate::{
-    error::{result::FindexClientResult, FindexClientError},
+    error::{result::ClientResult, ClientError},
     handle_error,
     rest_client::{handle_status_code, SuccessResponse},
-    FindexRestClient,
+    RestClient,
 };
 
-impl FindexRestClient {
+impl RestClient {
     #[instrument(ret(Display), err, skip_all, level = "trace")]
     pub async fn add_entries(
         &self,
         index_id: &Uuid,
         encrypted_entries: &EncryptedEntries,
-    ) -> FindexClientResult<SuccessResponse> {
+    ) -> ClientResult<SuccessResponse> {
         let endpoint = format!("/datasets/{index_id}/add_entries");
         let server_url = format!("{}{endpoint}", self.http_client.server_url);
         trace!("POST: {server_url}");
@@ -37,7 +37,7 @@ impl FindexRestClient {
         &self,
         index_id: &Uuid,
         uuids: &[Uuid],
-    ) -> FindexClientResult<SuccessResponse> {
+    ) -> ClientResult<SuccessResponse> {
         let endpoint = format!("/datasets/{index_id}/delete_entries");
         let server_url = format!("{}{endpoint}", self.http_client.server_url);
         trace!("POST: {server_url}");
@@ -59,7 +59,7 @@ impl FindexRestClient {
         &self,
         index_id: &Uuid,
         uuids: &[Uuid],
-    ) -> FindexClientResult<EncryptedEntries> {
+    ) -> ClientResult<EncryptedEntries> {
         let endpoint = format!("/datasets/{index_id}/get_entries");
         let server_url = format!("{}{endpoint}", self.http_client.server_url);
         trace!("POST: {server_url}");
@@ -79,6 +79,6 @@ impl FindexRestClient {
         }
         // process error
         let p = handle_error(&endpoint, response).await?;
-        Err(FindexClientError::RequestFailed(p))
+        Err(ClientError::RequestFailed(p))
     }
 }

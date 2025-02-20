@@ -1,7 +1,7 @@
 use crate::{
     core::FindexServer,
     database::database_traits::PermissionsTrait,
-    error::{result::FResult, server::FindexServerError},
+    error::{result::FResult, server::ServerError},
     routes::error::{ResponseBytes, SuccessResponse},
 };
 use actix_web::{
@@ -44,7 +44,7 @@ pub(crate) async fn set_permission(
     // Check if the user has the right to set permission: only admins can do that
     let user_permission = findex_server.get_permission(&user, &index_id).await?;
     if Permission::Admin != user_permission {
-        return Err(FindexServerError::Unauthorized(format!(
+        return Err(ServerError::Unauthorized(format!(
             "Delegating permission to an index requires an admin permission. User {user} with \
              permission {user_permission} does not allow setting permission to index {index_id} \
              with permission {permission}",
@@ -110,7 +110,7 @@ pub(crate) async fn revoke_permission(
     let user_permission = findex_server.get_permission(&user, &index_id).await?;
 
     if Permission::Admin != user_permission {
-        return Err(FindexServerError::Unauthorized(format!(
+        return Err(ServerError::Unauthorized(format!(
             "Revoking permission to an index requires an admin permission. User {user} with \
              permission {user_permission} does not allow revoking permission to index {index_id}",
         )));

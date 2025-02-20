@@ -1,17 +1,17 @@
 use actix_web::{HttpMessage, HttpRequest};
-use cosmian_findex_structs::{Permission, WORD_LENGTH};
+use cosmian_findex_structs::{Permission, CUSTOM_WORD_LENGTH};
 use tracing::{debug, trace};
 use uuid::Uuid;
 
 use crate::{
     config::{DbParams, ServerParams},
     database::{database_traits::PermissionsTrait, redis::Redis},
-    error::{result::FResult, server::FindexServerError},
+    error::{result::FResult, server::ServerError},
     middlewares::{JwtAuthClaim, PeerCommonName},
 };
 pub(crate) struct FindexServer {
     pub(crate) params: ServerParams,
-    pub(crate) db: Redis<WORD_LENGTH>,
+    pub(crate) db: Redis<CUSTOM_WORD_LENGTH>,
 }
 
 impl FindexServer {
@@ -85,7 +85,7 @@ impl FindexServer {
         let permission = self.get_permission(user, index_id).await?;
         trace!("ensure_minimum_permission: user {user} has permission {permission} on index {index_id}");
         if permission < expected_permission {
-            return Err(FindexServerError::Unauthorized(format!(
+            return Err(ServerError::Unauthorized(format!(
                 "User {user} with permission {permission} is not allowed to write on index {index_id}",
             )));
         }

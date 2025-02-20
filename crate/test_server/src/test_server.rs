@@ -9,8 +9,8 @@ use std::{
 
 use actix_server::ServerHandle;
 use cosmian_findex_client::{
-    findex_client_bail, findex_client_error, reexport::cosmian_http_client::HttpClientConfig,
-    FindexClientConfig, FindexClientError, FindexRestClient,
+    client_bail, client_error, reexport::cosmian_http_client::HttpClientConfig, ClientError,
+    RestClient, RestClientConfig,
 };
 use cosmian_findex_server::{
     config::{
@@ -71,7 +71,7 @@ pub async fn start_default_test_findex_server_with_cert_auth() -> &'static Tests
     ONCE_SERVER_WITH_AUTH
         .get_or_try_init(|| {
             start_test_server_with_options(
-                redis_db_config("REDIS_URL2"),
+                redis_db_config("REDIS_URL"),
                 6660,
                 AuthenticationOptions {
                     use_jwt_token: false,
@@ -87,17 +87,17 @@ pub async fn start_default_test_findex_server_with_cert_auth() -> &'static Tests
 pub struct TestsContext {
     pub owner_client_conf_path: String,
     pub user_client_conf_path: String,
-    pub owner_client_conf: FindexClientConfig,
+    pub owner_client_conf: RestClientConfig,
     pub server_handle: ServerHandle,
-    pub thread_handle: JoinHandle<Result<(), FindexClientError>>,
+    pub thread_handle: JoinHandle<Result<(), ClientError>>,
 }
 
 impl TestsContext {
-    pub async fn stop_server(self) -> Result<(), FindexClientError> {
+    pub async fn stop_server(self) -> Result<(), ClientError> {
         self.server_handle.stop(false).await;
         self.thread_handle
             .join()
-            .map_err(|_e| findex_client_error!("failed joining the stop thread"))?
+            .map_err(|_e| client_error!("failed joining the stop thread"))?
     }
 }
 
@@ -112,13 +112,13 @@ pub async fn start_test_server_with_options(
     db_config: DBConfig,
     port: u16,
     authentication_options: AuthenticationOptions,
-) -> Result<TestsContext, FindexClientError> {
+) -> Result<TestsContext, ClientError> {
     cosmian_logger::log_init(None);
     let server_params = generate_server_params(db_config, port, &authentication_options)?;
 
     // Create a (object owner) conf
     let (owner_client_conf_path, owner_client_conf) = generate_owner_conf(&server_params)?;
-    let findex_client = FindexRestClient::new(owner_client_conf.clone())?;
+    let rest_client = RestClient::new(owner_client_conf.clone())?;
 
     info!(
         "Starting Findex test server at URL: {} with server params {:?}",
@@ -128,7 +128,7 @@ pub async fn start_test_server_with_options(
     let (server_handle, thread_handle) = start_test_findex_server(server_params);
 
     // wait for the server to be up
-    wait_for_server_to_start(&findex_client)
+    wait_for_server_to_start(&rest_client)
         .await
         .expect("server timeout");
 
@@ -148,7 +148,7 @@ pub async fn start_test_server_with_options(
 /// Start a test Findex server with the given config in a separate thread
 fn start_test_findex_server(
     server_params: ServerParams,
-) -> (ServerHandle, JoinHandle<Result<(), FindexClientError>>) {
+) -> (ServerHandle, JoinHandle<Result<(), ClientError>>) {
     let (tx, rx) = mpsc::channel::<ServerHandle>();
 
     let thread_handle = thread::spawn(move || {
@@ -157,7 +157,7 @@ fn start_test_findex_server(
             .enable_all()
             .build()?
             .block_on(start_findex_server(server_params, Some(tx)))
-            .map_err(|e| FindexClientError::Default(e.to_string()))
+            .map_err(|e| ClientError::Default(e.to_string()))
     });
     trace!("Waiting for test Findex server to start...");
     let server_handle = rx
@@ -168,14 +168,12 @@ fn start_test_findex_server(
 }
 
 /// Wait for the server to start by reading the version
-async fn wait_for_server_to_start(
-    findex_client: &FindexRestClient,
-) -> Result<(), FindexClientError> {
+async fn wait_for_server_to_start(rest_client: &RestClient) -> Result<(), ClientError> {
     // Depending on the running environment, the server could take a bit of time
     // to start. We try to querying it with a dummy request until it is started.
     for i in 1..=5 {
         info!("...checking if the server is up...");
-        if let Err(err) = findex_client.version().await {
+        if let Err(err) = rest_client.version().await {
             info!(
                 "The server is not up yet, retrying in {}s... ({err:?}) ",
                 2 * i
@@ -187,7 +185,7 @@ async fn wait_for_server_to_start(
         }
     }
     info!("The server is still not up, stop trying");
-    findex_client_bail!("Can't start the Findex server to run tests");
+    client_bail!("Can't start the Findex server to run tests");
 }
 
 fn generate_http_config(port: u16, use_https: bool, use_client_cert: bool) -> HttpConfig {
@@ -229,7 +227,7 @@ fn generate_server_params(
     db_config: DBConfig,
     port: u16,
     authentication_options: &AuthenticationOptions,
-) -> Result<ServerParams, FindexClientError> {
+) -> Result<ServerParams, ClientError> {
     // Configure the server
     let clap_config = ClapConfig {
         auth: if authentication_options.use_jwt_token {
@@ -245,9 +243,8 @@ fn generate_server_params(
         ),
         ..ClapConfig::default()
     };
-    ServerParams::try_from(clap_config).map_err(|e| {
-        FindexClientError::Default(format!("failed initializing the server config: {e}"))
-    })
+    ServerParams::try_from(clap_config)
+        .map_err(|e| ClientError::Default(format!("failed initializing the server config: {e}")))
 }
 
 fn set_access_token(server_params: &ServerParams) -> Option<String> {
@@ -261,14 +258,14 @@ fn set_access_token(server_params: &ServerParams) -> Option<String> {
 
 fn generate_owner_conf(
     server_params: &ServerParams,
-) -> Result<(String, FindexClientConfig), FindexClientError> {
+) -> Result<(String, RestClientConfig), ClientError> {
     // This create root dir
     let root_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
 
     // Create a conf
     let owner_client_conf_path = format!("/tmp/owner_findex_{}.toml", server_params.port);
 
-    let owner_client_conf = FindexClientConfig {
+    let owner_client_conf = RestClientConfig {
         http_config: HttpClientConfig {
             server_url: if matches!(server_params.http_params, HttpParams::Https(_)) {
                 format!("https://0.0.0.0:{}", server_params.port)
@@ -288,7 +285,7 @@ fn generate_owner_conf(
                 Some(
                     p.to_str()
                         .ok_or_else(|| {
-                            FindexClientError::Default("Can't convert path to string".to_owned())
+                            ClientError::Default("Can't convert path to string".to_owned())
                         })?
                         .to_string(),
                 )
@@ -313,8 +310,8 @@ fn generate_owner_conf(
 /// path
 fn generate_user_conf(
     port: u16,
-    owner_client_conf: &FindexClientConfig,
-) -> Result<String, FindexClientError> {
+    owner_client_conf: &RestClientConfig,
+) -> Result<String, ClientError> {
     // This create root dir
     let root_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
 
@@ -327,9 +324,7 @@ fn generate_user_conf(
             root_dir.join("../../test_data/certificates/user/user.client.acme.com.old.format.p12");
         Some(
             p.to_str()
-                .ok_or_else(|| {
-                    FindexClientError::Default("Can't convert path to string".to_owned())
-                })?
+                .ok_or_else(|| ClientError::Default("Can't convert path to string".to_owned()))?
                 .to_string(),
         )
     };
@@ -345,7 +340,7 @@ fn generate_user_conf(
 
 #[cfg(test)]
 mod test {
-    use cosmian_findex_client::FindexClientError;
+    use cosmian_findex_client::ClientError;
     use tracing::trace;
 
     use crate::{
@@ -353,7 +348,7 @@ mod test {
     };
 
     #[tokio::test]
-    async fn test_server_auth_matrix() -> Result<(), FindexClientError> {
+    async fn test_server_auth_matrix() -> Result<(), ClientError> {
         let test_cases = vec![
             (false, false, false, "all_disabled"),
             (true, false, false, "https_no_auth"),

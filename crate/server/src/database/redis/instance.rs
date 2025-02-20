@@ -1,4 +1,4 @@
-use crate::error::{result::FResult, server::FindexServerError};
+use crate::error::{result::FResult, server::ServerError};
 use cosmian_findex::{Address, RedisMemory};
 use cosmian_findex_structs::SERVER_ADDRESS_LENGTH;
 use redis::aio::ConnectionManager;
@@ -20,9 +20,9 @@ impl<const WORD_LENGTH: usize> Redis<WORD_LENGTH> {
             if deletion_result.as_str() == "OK" {
                 info!("Database cleared");
             } else {
-                return Err(FindexServerError::DatabaseError(
-                    "Database not cleared, Redis DB returned {deletion_result}".to_owned(),
-                ));
+                return Err(ServerError::DatabaseError(format!(
+                    "Database not cleared, Redis DB returned {deletion_result}"
+                )));
             }
         }
 

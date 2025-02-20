@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use async_trait::async_trait;
-use cosmian_findex_structs::{EncryptedEntries, Uuids, WORD_LENGTH};
+use cosmian_findex_structs::{EncryptedEntries, Uuids, CUSTOM_WORD_LENGTH};
 use redis::pipe;
 use tracing::{instrument, trace};
 use uuid::Uuid;
@@ -9,7 +9,7 @@ use uuid::Uuid;
 use super::Redis;
 use crate::{
     database::database_traits::DatasetsTrait,
-    error::{result::FResult, server::FindexServerError},
+    error::{result::FResult, server::ServerError},
 };
 
 /// Generate a Redis-key for the dataset table
@@ -21,7 +21,7 @@ fn build_redis_key(index_id: &Uuid, uid: &Uuid) -> Vec<u8> {
 }
 
 #[async_trait]
-impl DatasetsTrait for Redis<WORD_LENGTH> {
+impl DatasetsTrait for Redis<CUSTOM_WORD_LENGTH> {
     //
     // Dataset management
     //
@@ -38,7 +38,7 @@ impl DatasetsTrait for Redis<WORD_LENGTH> {
             .atomic()
             .query_async(&mut self.manager.clone())
             .await
-            .map_err(FindexServerError::from)
+            .map_err(ServerError::from)
     }
 
     #[instrument(ret, err, skip(self), level = "trace")]
@@ -49,7 +49,7 @@ impl DatasetsTrait for Redis<WORD_LENGTH> {
             .atomic()
             .query_async(&mut self.manager.clone())
             .await
-            .map_err(FindexServerError::from)
+            .map_err(ServerError::from)
     }
 
     #[instrument(ret(Display), err, skip(self), level = "trace")]
@@ -61,7 +61,7 @@ impl DatasetsTrait for Redis<WORD_LENGTH> {
             .atomic()
             .query_async::<Vec<Vec<u8>>>(&mut self.manager.clone())
             .await
-            .map_err(FindexServerError::from)?;
+            .map_err(ServerError::from)?;
 
         trace!("dataset_get_entries: values len: {}", values.len());
 

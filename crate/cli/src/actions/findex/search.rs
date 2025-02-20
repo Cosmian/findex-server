@@ -1,13 +1,11 @@
-use super::{parameters::FindexParameters, MAX_PERMITS};
-use crate::error::{result::CliResult, CliError};
+use super::{findex_instance::FindexInstance, parameters::FindexParameters};
+use crate::{cli_error, error::result::CliResult};
 use clap::Parser;
-use cosmian_findex::IndexADT;
-use cosmian_findex_client::FindexRestClient;
-use cosmian_findex_structs::{Keyword, SearchResults};
-use std::{collections::HashSet, sync::Arc};
-use tokio::sync::Semaphore;
+use cosmian_findex_client::RestClient;
+use cosmian_findex_structs::{SearchResults, CUSTOM_WORD_LENGTH};
+use cosmian_kms_cli::reexport::cosmian_kms_client::KmsClient;
 
-/// Search words.
+/// Search words among encrypted indexes.
 #[derive(Parser, Debug)]
 #[clap(verbatim_doc_comment)]
 pub struct SearchAction {
@@ -25,49 +23,24 @@ impl SearchAction {
     ///
     /// Returns an error if the version query fails or if there is an issue
     /// writing to the console.
-    pub async fn run(&self, rest_client: &mut FindexRestClient) -> CliResult<SearchResults> {
-        // cloning will be eliminated in the future, cf https://github.com/Cosmian/findex-server/issues/28
-        let findex_instance = rest_client.clone().instantiate_findex(
-            self.findex_parameters.index_id,
-            &self.findex_parameters.seed()?,
-        )?;
-
-        let semaphore = Arc::new(Semaphore::new(MAX_PERMITS));
-
-        let mut handles = self
-            .keyword
-            .iter()
-            .map(|k| {
-                let semaphore = semaphore.clone();
-                let k = Keyword::from(k.as_ref());
-                let findex_instance = findex_instance.clone();
-                tokio::spawn(async move {
-                    let _permit = semaphore.acquire().await.map_err(|e| {
-                        CliError::Default(format!(
-                            "Acquire error while trying to ask for permit: {e:?}"
-                        ))
-                    })?;
-                    Ok::<_, CliError>(findex_instance.search(&k).await?)
-                })
-            })
-            .collect::<Vec<_>>();
-
-        if let Some(initial_handle) = handles.pop() {
-            let mut acc_results = initial_handle
-                .await
-                .map_err(|e| CliError::Default(e.to_string()))??;
-            for h in handles {
-                // The empty set is the fixed point of the intersection.
-                if acc_results.is_empty() {
-                    break;
-                }
-                let next_search_result =
-                    h.await.map_err(|e| CliError::Default(e.to_string()))??;
-                acc_results.retain(|item| next_search_result.contains(item));
-            }
-            Ok(SearchResults(acc_results))
-        } else {
-            Ok(SearchResults(HashSet::new()))
+    pub async fn run(
+        &self,
+        rest_client: &mut RestClient,
+        kms_client: &KmsClient,
+    ) -> CliResult<SearchResults> {
+        // Either seed key is required or both hmac_key_id and aes_xts_key_id are required
+        match (&self.findex_parameters.seed_key_id, &self.findex_parameters.hmac_key_id, &self.findex_parameters.aes_xts_key_id) {
+            (Some(_), None, None) | (None, Some(_), Some(_)) => (),
+            _ => return Err(cli_error!("Either seed key ID is required or both HMAC key ID and AES XTS key ID are required")),
         }
+
+        let findex_instance = FindexInstance::<CUSTOM_WORD_LENGTH>::instantiate_findex(
+            rest_client,
+            kms_client.clone(),
+            self.findex_parameters.clone().instantiate_keys()?,
+        )
+        .await?;
+
+        findex_instance.search(&self.keyword).await
     }
 }

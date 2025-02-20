@@ -6,11 +6,11 @@ use serde::{Deserialize, Serialize};
 use tracing::{error, warn};
 use uuid::Uuid;
 
-use crate::error::server::FindexServerError;
+use crate::error::server::ServerError;
 
-pub(crate) type ResponseBytes = Result<HttpResponse, FindexServerError>;
+pub(crate) type ResponseBytes = Result<HttpResponse, ServerError>;
 
-impl actix_web::error::ResponseError for FindexServerError {
+impl actix_web::error::ResponseError for ServerError {
     fn status_code(&self) -> StatusCode {
         match self {
             Self::Unauthorized(_) => StatusCode::UNAUTHORIZED,

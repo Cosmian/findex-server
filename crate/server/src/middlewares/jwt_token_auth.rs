@@ -12,7 +12,7 @@ use tracing::{debug, error, trace};
 
 use super::UserClaim;
 use crate::{
-    error::{result::FResult, server::FindexServerError},
+    error::{result::FResult, server::ServerError},
     middlewares::jwt::JwtConfig,
 };
 
@@ -42,7 +42,7 @@ where
 fn extract_user_claim(
     configs: &[JwtConfig],
     identity: &str,
-) -> Result<UserClaim, Vec<FindexServerError>> {
+) -> Result<UserClaim, Vec<ServerError>> {
     let mut jwt_log_errors = Vec::new();
     for idp_config in configs {
         match idp_config.decode_bearer_header(identity) {
@@ -81,7 +81,7 @@ pub(crate) async fn manage_jwt(
     if private_claim.is_err() {
         configs
             .first()
-            .ok_or_else(|| FindexServerError::ServerError("No config available".to_owned()))?
+            .ok_or_else(|| ServerError::ServerError("No config available".to_owned()))?
             .jwks
             .refresh()
             .await?;
@@ -99,9 +99,7 @@ pub(crate) async fn manage_jwt(
                 req.method(),
                 req.path()
             );
-            Err(FindexServerError::InvalidRequest(
-                "No email in JWT".to_owned(),
-            ))
+            Err(ServerError::InvalidRequest("No email in JWT".to_owned()))
         }
         Err(jwt_log_errors) => {
             for error in &jwt_log_errors {
@@ -112,7 +110,7 @@ pub(crate) async fn manage_jwt(
                 req.method(),
                 req.path(),
             );
-            Err(FindexServerError::InvalidRequest("bad JWT".to_owned()))
+            Err(ServerError::InvalidRequest("bad JWT".to_owned()))
         }
     }
 }

@@ -8,13 +8,13 @@ use actix_web::{
 use cosmian_findex::{Address, MemoryADT, ADDRESS_LENGTH};
 
 use cosmian_findex_structs::{
-    Addresses, Guard, OptionalWords, Permission, Tasks, SERVER_ADDRESS_LENGTH, UID_LENGTH,
-    WORD_LENGTH,
+    Addresses, Guard, OptionalWords, Permission, Tasks, CUSTOM_WORD_LENGTH, SERVER_ADDRESS_LENGTH,
+    UID_LENGTH,
 };
 use tracing::trace;
 use uuid::Uuid;
 
-use crate::{core::FindexServer, error::server::FindexServerError, routes::error::ResponseBytes};
+use crate::{core::FindexServer, error::server::ServerError, routes::error::ResponseBytes};
 
 #[allow(clippy::indexing_slicing)]
 fn prepend_index_id(
@@ -91,25 +91,25 @@ pub(crate) async fn findex_guarded_write(
     let guard_len = if let Some(f) = bytes.get(ADDRESS_LENGTH) {
         match *f {
             0 => ADDRESS_LENGTH + 1,
-            1 => ADDRESS_LENGTH + 1 + WORD_LENGTH,
+            1 => ADDRESS_LENGTH + 1 + CUSTOM_WORD_LENGTH,
             _ => {
-                return Err(FindexServerError::InvalidRequest(format!(
+                return Err(ServerError::InvalidRequest(format!(
                     "{error_prefix} Invalid discriminant flag. Expected 0 or 1, found {f}"
                 )))
             }
         }
     } else {
-        return Err(FindexServerError::InvalidRequest(format!(
+        return Err(ServerError::InvalidRequest(format!(
             "{error_prefix} Invalid discriminant flag. Expected 0 or 1, found None"
         )));
     };
 
     let guard = Guard::deserialize(bytes.get(..guard_len).ok_or_else(|| {
-        FindexServerError::InvalidRequest(format!("{error_prefix} Could not parse guard."))
+        ServerError::InvalidRequest(format!("{error_prefix} Could not parse guard."))
     })?)?;
 
     let tasks = Tasks::deserialize(bytes.get(guard_len..).ok_or_else(|| {
-        FindexServerError::InvalidRequest(format!(
+        ServerError::InvalidRequest(format!(
             "{error_prefix} Could not parse tasks to be written.",
         ))
     })?)?;
