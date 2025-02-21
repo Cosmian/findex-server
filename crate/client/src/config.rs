@@ -76,7 +76,7 @@ impl RestClientConfig {
         self.to_toml(conf_path_buf.to_str().ok_or_else(|| {
             ClientError::Default("Unable to convert the configuration path to a string".to_owned())
         })?)?;
-        println!("Saving configuration to: {conf_path_buf:?}");
+        println!("Configuration has been saved to: {conf_path_buf:?}");
 
         Ok(())
     }

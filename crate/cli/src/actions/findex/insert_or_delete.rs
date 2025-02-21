@@ -43,7 +43,7 @@ impl InsertOrDeleteAction {
         kms_client: KmsClient,
         is_insert: bool,
     ) -> CliResult<Keywords> {
-        let file = File::open(self.csv.clone())?;
+        let file = File::open(&self.csv)?;
 
         let bindings = csv::Reader::from_reader(file).byte_records().fold(
             HashMap::new(),

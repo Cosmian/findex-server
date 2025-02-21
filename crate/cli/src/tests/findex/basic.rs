@@ -129,7 +129,7 @@ pub(crate) async fn test_findex_no_auth_huge_dataset_local_crypto() -> CliResult
 pub(crate) async fn test_findex_cert_auth() -> CliResult<()> {
     log_init(None);
     let ctx = start_default_test_findex_server_with_cert_auth().await;
-    let owner_rest_client = RestClient::new(ctx.owner_client_conf.clone())?;
+    let owner_rest_client = RestClient::new(&ctx.owner_client_conf.clone())?;
     let kms_client = instantiate_kms_client()?;
 
     let search_options = SearchOptions {
@@ -142,7 +142,7 @@ pub(crate) async fn test_findex_cert_auth() -> CliResult<()> {
         },
     };
 
-    let index_id = create_index_id(&owner_rest_client).await?;
+    let index_id = create_index_id(owner_rest_client).await?;
     trace!("index_id: {index_id}");
 
     let findex_parameters = FindexParameters::new(index_id, &kms_client, true).await?;
@@ -163,10 +163,10 @@ pub(crate) async fn test_findex_no_auth_searching_with_bad_key() -> CliResult<()
     log_init(None);
     let ctx = start_default_test_findex_server().await;
 
-    let mut rest_client = RestClient::new(ctx.owner_client_conf.clone())?;
+    let mut rest_client = RestClient::new(&ctx.owner_client_conf.clone())?;
     let kms_client = instantiate_kms_client()?;
 
-    let index_id = create_index_id(&rest_client).await?;
+    let index_id = create_index_id(rest_client.clone()).await?;
     trace!("index_id: {index_id}");
 
     // Search 2 entries in a small dataset. Expect 2 results.

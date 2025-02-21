@@ -1,12 +1,3 @@
-use std::{ops::Deref, path::PathBuf};
-
-use cosmian_findex_client::{FindexRestClient, KmsEncryptionLayer, RestClient, RestClientConfig};
-use cosmian_kms_cli::reexport::cosmian_kms_client::{
-    reexport::cosmian_http_client::HttpClientConfig, KmsClient, KmsClientConfig,
-};
-use test_findex_server::start_default_test_findex_server;
-use uuid::Uuid;
-
 use crate::{
     actions::findex::{
         insert_or_delete::InsertOrDeleteAction, parameters::FindexParameters, search::SearchAction,
@@ -14,6 +5,13 @@ use crate::{
     error::result::CliResult,
     tests::search_options::SearchOptions,
 };
+use cosmian_findex_client::{FindexRestClient, KmsEncryptionLayer, RestClient, RestClientConfig};
+use cosmian_kms_cli::reexport::cosmian_kms_client::{
+    reexport::cosmian_http_client::HttpClientConfig, KmsClient, KmsClientConfig,
+};
+use std::{ops::Deref, path::PathBuf};
+use test_findex_server::start_default_test_findex_server;
+use uuid::Uuid;
 
 pub(crate) const SMALL_DATASET: &str = "../../test_data/datasets/smallpop.csv";
 pub(crate) const HUGE_DATASET: &str = "../../test_data/datasets/business-employment.csv";
@@ -25,7 +23,7 @@ pub(crate) async fn insert_search_delete(
     kms_client: KmsClient,
 ) -> CliResult<()> {
     let mut rest_client =
-        RestClient::new(RestClientConfig::load(Some(PathBuf::from(cli_conf_path)))?)?;
+        RestClient::new(&RestClientConfig::load(Some(PathBuf::from(cli_conf_path)))?)?;
 
     // Index the dataset
     InsertOrDeleteAction {
@@ -91,7 +89,7 @@ pub(crate) async fn create_encryption_layer<const WORD_LENGTH: usize>(
         findex_parameters.hmac_key_id.unwrap(),
         findex_parameters.aes_xts_key_id.unwrap(),
         FindexRestClient::<WORD_LENGTH>::new(
-            RestClient::new(ctx.owner_client_conf.clone())?,
+            RestClient::new(&ctx.owner_client_conf.clone())?,
             findex_parameters.index_id,
         ),
     );

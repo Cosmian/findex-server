@@ -7,16 +7,16 @@ use crate::{
     error::result::CliResult,
 };
 
-pub(crate) async fn create_index_id(rest_client: &RestClient) -> CliResult<Uuid> {
-    CreateIndex.run(rest_client).await
+pub(crate) async fn create_index_id(rest_client: RestClient) -> CliResult<Uuid> {
+    CreateIndex.run(&rest_client).await
 }
 
-pub(crate) async fn list_permissions(rest_client: &RestClient, user: String) -> CliResult<String> {
-    ListPermissions { user }.run(rest_client).await
+pub(crate) async fn list_permissions(rest_client: RestClient, user: String) -> CliResult<String> {
+    ListPermissions { user }.run(&rest_client).await
 }
 
 pub(crate) async fn set_permission(
-    rest_client: &RestClient,
+    rest_client: RestClient,
     user: String,
     index_id: Uuid,
     permission: Permission,
@@ -26,14 +26,14 @@ pub(crate) async fn set_permission(
         index_id,
         permission,
     }
-    .run(rest_client)
+    .run(&rest_client)
     .await
 }
 
 pub(crate) async fn revoke_permission(
-    rest_client: &RestClient,
+    rest_client: RestClient,
     user: String,
     index_id: Uuid,
 ) -> CliResult<String> {
-    RevokePermission { user, index_id }.run(rest_client).await
+    RevokePermission { user, index_id }.run(&rest_client).await
 }

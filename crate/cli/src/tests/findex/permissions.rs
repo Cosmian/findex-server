@@ -1,13 +1,3 @@
-use std::{ops::Deref, path::PathBuf};
-
-use cosmian_findex::Value;
-use cosmian_findex_client::{RestClient, RestClientConfig};
-use cosmian_findex_structs::Permission;
-use cosmian_logger::log_init;
-use test_findex_server::start_default_test_findex_server_with_cert_auth;
-use tracing::{debug, trace};
-use uuid::Uuid;
-
 use crate::{
     actions::findex::{
         insert_or_delete::InsertOrDeleteAction, parameters::FindexParameters, search::SearchAction,
@@ -19,12 +9,20 @@ use crate::{
         search_options::SearchOptions,
     },
 };
+use cosmian_findex::Value;
+use cosmian_findex_client::{RestClient, RestClientConfig};
+use cosmian_findex_structs::Permission;
+use cosmian_logger::log_init;
+use std::{ops::Deref, path::PathBuf};
+use test_findex_server::start_default_test_findex_server_with_cert_auth;
+use tracing::{debug, trace};
+use uuid::Uuid;
 
 #[tokio::test]
 pub(crate) async fn test_findex_set_and_revoke_permission() -> CliResult<()> {
     log_init(None);
     let ctx = start_default_test_findex_server_with_cert_auth().await;
-    let owner_rest_client = RestClient::new(ctx.owner_client_conf.clone())?;
+    let owner_rest_client = RestClient::new(&ctx.owner_client_conf.clone())?;
 
     let search_options = SearchOptions {
         dataset_path: SMALL_DATASET.into(),
@@ -36,14 +34,14 @@ pub(crate) async fn test_findex_set_and_revoke_permission() -> CliResult<()> {
         },
     };
 
-    let index_id = create_index_id(&owner_rest_client).await?;
+    let index_id = create_index_id(owner_rest_client).await?;
     trace!("index_id: {index_id}");
 
     let owner_conf = RestClientConfig::load(Some(PathBuf::from(&ctx.owner_client_conf_path)))?;
-    let mut owner_rest_client = RestClient::new(owner_conf)?;
+    let mut owner_rest_client = RestClient::new(&owner_conf)?;
 
     let user_conf = RestClientConfig::load(Some(PathBuf::from(&ctx.user_client_conf_path)))?;
-    let mut user_rest_client = RestClient::new(user_conf)?;
+    let mut user_rest_client = RestClient::new(&user_conf)?;
 
     let kms_client = instantiate_kms_client()?;
     let findex_parameters = FindexParameters::new(index_id, &kms_client, true).await?;
@@ -58,7 +56,7 @@ pub(crate) async fn test_findex_set_and_revoke_permission() -> CliResult<()> {
 
     // Set read permission to the client
     set_permission(
-        &owner_rest_client,
+        owner_rest_client.clone(),
         "user.client@acme.com".to_owned(),
         index_id,
         Permission::Read,
@@ -88,14 +86,15 @@ pub(crate) async fn test_findex_set_and_revoke_permission() -> CliResult<()> {
 
     // Set write permission
     set_permission(
-        &owner_rest_client,
+        owner_rest_client.clone(),
         "user.client@acme.com".to_owned(),
         index_id,
         Permission::Write,
     )
     .await?;
 
-    let perm = list_permissions(&owner_rest_client, "user.client@acme.com".to_owned()).await?;
+    let perm =
+        list_permissions(owner_rest_client.clone(), "user.client@acme.com".to_owned()).await?;
     debug!("User permission: {:?}", perm);
 
     // User can read...
@@ -120,7 +119,7 @@ pub(crate) async fn test_findex_set_and_revoke_permission() -> CliResult<()> {
 
     // Try to escalade privileges from `read` to `admin`
     set_permission(
-        &user_rest_client,
+        user_rest_client.clone(),
         "user.client@acme.com".to_owned(),
         index_id,
         Permission::Admin,
@@ -129,7 +128,7 @@ pub(crate) async fn test_findex_set_and_revoke_permission() -> CliResult<()> {
     .unwrap_err();
 
     revoke_permission(
-        &owner_rest_client,
+        owner_rest_client,
         "user.client@acme.com".to_owned(),
         index_id,
     )

@@ -67,3 +67,7 @@ url = "2.5"
 uuid = { version = "1.13", features = ["v4", "serde"] }
 x509-parser = "0.17"
 zeroize = { version = "1.8", default-features = false }
+
+[patch.crates-io]
+# TODO: delete this upon covercrypt next release ( > 14.0.O)
+pqc_kyber = { package = "safe_pqc_kyber", git = "https://github.com/bwesterb/argyle-kyber", branch = "master" }

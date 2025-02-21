@@ -89,35 +89,47 @@ pub enum CoreFindexActions {
 impl CoreFindexActions {
     /// Process the command line arguments
     ///
+    /// # Arguments
+    /// * `findex_client` - The Findex client
+    /// * `config` - The Findex client configuration
+    /// * `conf_path` - The path to the configuration file
+    ///
     /// # Errors
     /// - If the configuration file is not found or invalid
-    #[allow(clippy::unit_arg)] // println! does return () but it prints the output of action.run() beforehand, nothing is "lost" and hence this lint will only cause useless boilerplate code
-    pub async fn run(&self, rest_client: &mut RestClient, kms_client: KmsClient) -> CliResult<()> {
-        let action = self;
-        {
-            let result = match action {
-                Self::Datasets(action) => action.run(rest_client).await,
-                Self::Delete(action) => {
-                    let deleted_keywords = action.delete(rest_client, kms_client).await?;
-                    Ok(format!("Deleted keywords: {deleted_keywords}"))
-                }
-                Self::Index(action) => {
-                    let inserted_keywords = action.insert(rest_client, kms_client).await?;
-                    Ok(format!("Inserted keywords: {inserted_keywords}"))
-                }
-                Self::Permissions(action) => action.run(rest_client).await,
-                Self::Login(action) => action.run(&mut rest_client.config).await,
-                Self::Logout(action) => action.run(&mut rest_client.config),
-                Self::Search(action) => {
-                    let search_results = action.run(rest_client, &kms_client).await?;
-                    Ok(format!("Search results: {search_results}"))
-                }
-                Self::ServerVersion(action) => action.run(rest_client).await,
-            };
-            match result {
-                Ok(output) => Ok(println!("{output}")),
-                Err(e) => Err(e),
+    pub async fn run(
+        &self, // we do not want to consume self because we need post processing for the login/logout commands
+        findex_client: &mut RestClient,
+        kms_client: KmsClient,
+        config: &mut RestClientConfig,
+    ) -> CliResult<()> {
+        let result = match self {
+            // actions that don't edit the configuration
+            Self::Datasets(action) => action.run(findex_client).await,
+            Self::Permissions(action) => action.run(findex_client).await,
+            Self::ServerVersion(action) => action.run(findex_client).await,
+            Self::Delete(action) => {
+                let deleted_keywords = action.delete(findex_client, kms_client).await?;
+                Ok(format!("Deleted keywords: {deleted_keywords}"))
             }
+            Self::Index(action) => {
+                let inserted_keywords = action.insert(findex_client, kms_client).await?;
+                Ok(format!("Inserted keywords: {inserted_keywords}"))
+            }
+            Self::Search(action) => {
+                let search_results = action.run(findex_client, &kms_client).await?;
+                Ok(format!("Search results: {search_results}"))
+            }
+
+            // actions that edit the configuration
+            Self::Login(action) => action.run(config).await,
+            Self::Logout(action) => action.run(config),
+        };
+        match result {
+            Ok(output) => {
+                println!("{output}");
+                Ok(())
+            }
+            Err(e) => Err(e),
         }
     }
 }
@@ -129,23 +141,26 @@ impl CoreFindexActions {
 pub async fn findex_cli_main() -> CliResult<()> {
     log_init(None);
     let cli_opts = FindexCli::parse();
-    let config = cli_opts.prepare_config()?;
+    let mut config = cli_opts.prepare_config()?;
 
     // Instantiate the Findex REST client
-    let mut rest_client = RestClient::new(config.clone())?;
+    let mut rest_client = RestClient::new(&config)?;
     let kms_client = KmsClient::new(KmsClientConfig::default())?;
 
     // Process the command
-    cli_opts.command.run(&mut rest_client, kms_client).await?;
+    cli_opts
+        .command
+        .run(&mut rest_client, kms_client, &mut config)
+        .await?;
 
     // Post-process the login/logout actions: save Findex CLI configuration
     // The reason why it is done here is that the login/logout actions are also call by meta Cosmian CLI using its own Findex client configuration
+    // !!! Do not edit this without reciprocal changes in the Cosmian CLI : https://github.com/Cosmian/cli
     match cli_opts.command {
         CoreFindexActions::Login(_) | CoreFindexActions::Logout(_) => {
-            config.save(cli_opts.conf_path.clone())?;
+            config.save(cli_opts.conf_path)?;
         }
         _ => {}
     }
-
     Ok(())
 }
