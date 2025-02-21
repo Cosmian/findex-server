@@ -28,7 +28,6 @@ impl Display for SuccessResponse {
 #[derive(Clone)]
 pub struct RestClient {
     pub http_client: HttpClient,
-    pub config: RestClientConfig,
 }
 
 impl RestClient {
@@ -39,7 +38,7 @@ impl RestClient {
     /// # Errors
     /// Return an error if the configuration file is not found or if the
     /// configuration is invalid or if the client cannot be instantiated.
-    pub fn new(config: RestClientConfig) -> Result<Self, ClientError> {
+    pub fn new(config: &RestClientConfig) -> Result<Self, ClientError> {
         // Instantiate a Findex server REST client with the given configuration
         let client = HttpClient::instantiate(&config.http_config).with_context(|| {
             format!(
@@ -50,7 +49,6 @@ impl RestClient {
 
         Ok(Self {
             http_client: client,
-            config,
         })
     }
 

@@ -33,7 +33,7 @@ impl RestClientConfig {
     /// Load the configuration from the given path
     ///
     /// # Arguments
-    /// * `conf_path` - The path to the configuration file
+    /// * `conf` - The path to the configuration file
     ///
     /// # Errors
     /// Return an error if the configuration file is not found or if the
@@ -76,7 +76,7 @@ impl RestClientConfig {
         self.to_toml(conf_path_buf.to_str().ok_or_else(|| {
             ClientError::Default("Unable to convert the configuration path to a string".to_owned())
         })?)?;
-        println!("Saving configuration to: {conf_path_buf:?}");
+        println!("Configuration has been saved to: {conf_path_buf:?}");
 
         Ok(())
     }

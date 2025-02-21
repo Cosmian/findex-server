@@ -118,7 +118,7 @@ pub async fn start_test_server_with_options(
 
     // Create a (object owner) conf
     let (owner_client_conf_path, owner_client_conf) = generate_owner_conf(&server_params)?;
-    let rest_client = RestClient::new(owner_client_conf.clone())?;
+    let findex_client = RestClient::new(&owner_client_conf)?;
 
     info!(
         "Starting Findex test server at URL: {} with server params {:?}",
@@ -128,7 +128,7 @@ pub async fn start_test_server_with_options(
     let (server_handle, thread_handle) = start_test_findex_server(server_params);
 
     // wait for the server to be up
-    wait_for_server_to_start(&rest_client)
+    wait_for_server_to_start(&findex_client)
         .await
         .expect("server timeout");
 
