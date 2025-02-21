@@ -43,7 +43,7 @@ impl LoginAction {
                  client_secret = \"your-client-secret\"\n\
                  authorize_url = \"https://your-idp.com/authorize\"\n\
                  token_url = \"https://your-idp.com/token\"\n\
-                 scopes = [\"openid\", \"email\"]\n".to_string()
+                 scopes = [\"openid\", \"email\"]\n".to_owned()
         )
         })?;
 
