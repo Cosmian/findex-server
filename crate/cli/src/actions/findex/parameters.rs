@@ -1,5 +1,9 @@
 use clap::Parser;
 
+use cosmian_kms_cli::{
+    actions::symmetric::keys::create_key::{CreateKeyAction, SymmetricAlgorithm},
+    reexport::cosmian_kms_client::KmsClient,
+};
 use uuid::Uuid;
 
 use crate::error::{result::CliResult, CliError};
@@ -39,6 +43,57 @@ pub struct FindexParameters {
 }
 
 impl FindexParameters {
+    #[allow(clippy::as_conversions)]
+    /// Instantiates the Findex parameters.
+    ///
+    /// # Errors
+    /// - if the keys cannot be generate via the KMS client
+    pub async fn new(
+        index_id: Uuid,
+        kms_client: &KmsClient,
+        server_side_encryption: bool,
+    ) -> CliResult<Self> {
+        async fn generate_key(
+            kms_client: &KmsClient,
+            bits: u32,
+            algorithm: SymmetricAlgorithm,
+            key_type: &str,
+        ) -> CliResult<String> {
+            let uid = CreateKeyAction {
+                number_of_bits: Some(bits as usize),
+                algorithm,
+                ..CreateKeyAction::default()
+            }
+            .run(kms_client)
+            .await?;
+            println!(
+            "Warning: This is the only time that this {key_type} key ID will be printed. ID: {uid}"
+        );
+            Ok(uid.to_string())
+        }
+
+        if server_side_encryption {
+            Ok(Self {
+                seed_key_id: None,
+                hmac_key_id: Some(
+                    generate_key(kms_client, 256, SymmetricAlgorithm::Sha3, "HMAC").await?,
+                ),
+                aes_xts_key_id: Some(
+                    generate_key(kms_client, 512, SymmetricAlgorithm::Aes, "AES-XTS").await?,
+                ),
+                index_id,
+            })
+        } else {
+            Ok(Self {
+                seed_key_id: Some(
+                    generate_key(kms_client, 256, SymmetricAlgorithm::Aes, "seed").await?,
+                ),
+                hmac_key_id: None,
+                aes_xts_key_id: None,
+                index_id,
+            })
+        }
+    }
     /// Instantiates the Findex keys.
     /// If a seed key is provided, the client side encryption is used.
     /// Otherwise, the KMS server-side encryption is used.

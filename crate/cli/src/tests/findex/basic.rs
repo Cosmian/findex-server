@@ -14,12 +14,14 @@ use tracing::trace;
 use uuid::Uuid;
 
 use crate::{
-    actions::findex::{insert_or_delete::InsertOrDeleteAction, search::SearchAction},
+    actions::findex::{
+        insert_or_delete::InsertOrDeleteAction, parameters::FindexParameters, search::SearchAction,
+    },
     error::result::CliResult,
     tests::{
         findex::utils::{
-            create_encryption_layer, insert_search_delete, instantiate_kms_client, new_parameters,
-            HUGE_DATASET, SMALL_DATASET,
+            create_encryption_layer, insert_search_delete, instantiate_kms_client, HUGE_DATASET,
+            SMALL_DATASET,
         },
         permissions::create_index_id,
         search_options::SearchOptions,
@@ -31,7 +33,7 @@ pub(crate) async fn test_findex_no_auth() -> CliResult<()> {
     log_init(None);
     let ctx = start_default_test_findex_server().await;
     let kms_client = instantiate_kms_client()?;
-    let findex_parameters = new_parameters(Uuid::new_v4(), &kms_client, true).await?;
+    let findex_parameters = FindexParameters::new(Uuid::new_v4(), &kms_client, true).await?;
 
     // Search 2 entries in a small dataset. Expect 2 results.
     let search_options = SearchOptions {
@@ -58,7 +60,7 @@ pub(crate) async fn test_findex_local_encryption() -> CliResult<()> {
     log_init(None);
     let ctx = start_default_test_findex_server().await;
     let kms_client = instantiate_kms_client()?;
-    let findex_parameters = new_parameters(Uuid::new_v4(), &kms_client, false).await?;
+    let findex_parameters = FindexParameters::new(Uuid::new_v4(), &kms_client, false).await?;
 
     // Search 2 entries in a small dataset. Expect 2 results.
     let search_options = SearchOptions {
@@ -84,7 +86,8 @@ async fn run_huge_dataset_test(use_remote_crypto: bool) -> CliResult<()> {
     log_init(None);
     let ctx = start_default_test_findex_server().await;
     let kms_client = instantiate_kms_client()?;
-    let findex_parameters = new_parameters(Uuid::new_v4(), &kms_client, use_remote_crypto).await?;
+    let findex_parameters =
+        FindexParameters::new(Uuid::new_v4(), &kms_client, use_remote_crypto).await?;
 
     // Search 1 entry in a huge dataset
     let search_options = SearchOptions {
@@ -142,7 +145,7 @@ pub(crate) async fn test_findex_cert_auth() -> CliResult<()> {
     let index_id = create_index_id(&owner_rest_client).await?;
     trace!("index_id: {index_id}");
 
-    let findex_parameters = new_parameters(index_id, &kms_client, true).await?;
+    let findex_parameters = FindexParameters::new(index_id, &kms_client, true).await?;
 
     insert_search_delete(
         &findex_parameters,
@@ -176,7 +179,7 @@ pub(crate) async fn test_findex_no_auth_searching_with_bad_key() -> CliResult<()
                 .collect()
         },
     };
-    let findex_parameters = new_parameters(Uuid::new_v4(), &kms_client, true).await?;
+    let findex_parameters = FindexParameters::new(Uuid::new_v4(), &kms_client, true).await?;
 
     // Index the dataset
     InsertOrDeleteAction {
@@ -189,7 +192,7 @@ pub(crate) async fn test_findex_no_auth_searching_with_bad_key() -> CliResult<()
     // But change the findex keys
     // Ensures searching returns no result
     let search_results = SearchAction {
-        findex_parameters: new_parameters(Uuid::new_v4(), &kms_client, true).await?,
+        findex_parameters: FindexParameters::new(Uuid::new_v4(), &kms_client, true).await?,
         keyword: search_options.keywords.clone(),
     }
     .run(&mut rest_client, &kms_client)
