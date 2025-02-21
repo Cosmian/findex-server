@@ -100,7 +100,7 @@ jobs:
             cosmian@package.cosmian.com:$DESTINATION_DIR/
 
           if [ "${{ inputs.debug_or_release }}" = "release" ]; then
-            ssh -o 'StrictHostKeyChecking no' -i /root/.ssh/id_rsa cosmian@package.cosmian.com mkdir -p $DESTINATION_DIR/{rhel9,ubuntu-20.04,ubuntu-22.04,ubuntu-24.04}
+            ssh -o 'StrictHostKeyChecking no' -i /root/.ssh/id_rsa cosmian@package.cosmian.com mkdir -p $DESTINATION_DIR/{rhel9,ubuntu-22.04,ubuntu-24.04}
 
             # RedHat 9 package
             scp -o 'StrictHostKeyChecking no' \
@@ -108,9 +108,6 @@ jobs:
               cosmian@package.cosmian.com:$DESTINATION_DIR/rhel9
 
             # Ubuntu packages
-            scp -o 'StrictHostKeyChecking no' \
-              -i /root/.ssh/id_rsa ubuntu_20_04-${{ inputs.debug_or_release }}/debian/*.deb \
-              cosmian@package.cosmian.com:$DESTINATION_DIR/ubuntu-20.04
             scp -o 'StrictHostKeyChecking no' \
               -i /root/.ssh/id_rsa ubuntu_22_04-${{ inputs.debug_or_release }}/debian/*.deb \
               cosmian@package.cosmian.com:$DESTINATION_DIR/ubuntu-22.04
@@ -126,7 +123,6 @@ jobs:
           files: |
             *.zip
             rhel9-release/generate-rpm/*.rpm \
-            ubuntu_20_04-release/debian/*.deb \
             ubuntu_22_04-release/debian/*.deb \
             ubuntu_24_04-release/debian/*.deb
 

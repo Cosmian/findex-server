@@ -27,9 +27,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - distribution: ubuntu-20.04
-            archive-name: ubuntu_20_04
-            target: x86_64-unknown-linux-gnu
           - distribution: ubuntu-22.04
             archive-name: ubuntu_22_04
             target: x86_64-unknown-linux-gnu
