@@ -25,14 +25,14 @@ impl<
         trace!("guarded_write: guard: {:?}", guard);
         let (address, optional_word) = guard;
 
-        // Split tasks into two vectors
-        let (mut task_addresses, mut task_words): (Vec<_>, Vec<_>) = bindings.into_iter().unzip();
-        trace!("guarded_write: task_addresses: {task_addresses:?}");
-        trace!("guarded_write: task_words: {task_words:?}");
+        // Split bindings into two vectors
+        let (mut bindings, mut bindings_words): (Vec<_>, Vec<_>) = bindings.into_iter().unzip();
+        trace!("guarded_write: bindings_addresses: {bindings:?}");
+        trace!("guarded_write: bindings_words: {bindings_words:?}");
 
         // Compute HMAC of all addresses together (including the guard address)
-        task_addresses.push(address); // size: n+1
-        let mut tokens = self.hmac(task_addresses).await?;
+        bindings.push(address); // size: n+1
+        let mut tokens = self.hmac(bindings).await?;
         trace!("guarded_write: tokens: {tokens:?}");
 
         // Put apart the last token
@@ -42,11 +42,11 @@ impl<
 
         let (ciphertexts_and_tokens, old) = if let Some(word) = optional_word {
             // Zip words and tokens
-            task_words.push(word); // size: n+1
+            bindings_words.push(word); // size: n+1
             tokens.push(token.clone()); // size: n+1
 
             // Bulk Encrypt
-            let mut ciphertexts = self.encrypt(&task_words, &tokens).await?;
+            let mut ciphertexts = self.encrypt(&bindings_words, &tokens).await?;
             trace!("guarded_write: ciphertexts: {ciphertexts:?}");
 
             // Pop the old value
@@ -58,7 +58,7 @@ impl<
             (ciphertexts.into_iter().zip(tokens), Some(old))
         } else {
             // Bulk Encrypt
-            let ciphertexts = self.encrypt(&task_words, &tokens).await?;
+            let ciphertexts = self.encrypt(&bindings_words, &tokens).await?;
             trace!("guarded_write: ciphertexts: {ciphertexts:?}");
 
             // Zip ciphertexts and tokens

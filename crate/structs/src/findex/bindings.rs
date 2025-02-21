@@ -5,13 +5,15 @@ use cosmian_findex::{Address, ADDRESS_LENGTH};
 use super::SerializationResult;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Tasks<const WORD_LENGTH: usize>(pub Vec<(Address<ADDRESS_LENGTH>, [u8; WORD_LENGTH])>);
+pub struct Bindings<const WORD_LENGTH: usize>(
+    pub Vec<(Address<ADDRESS_LENGTH>, [u8; WORD_LENGTH])>,
+);
 
-impl<const WORD_LENGTH: usize> Tasks<WORD_LENGTH> {
-    /// Creates a new `Tasks` instance.
+impl<const WORD_LENGTH: usize> Bindings<WORD_LENGTH> {
+    /// Creates a new `bindings` instance.
     #[must_use]
-    pub const fn new(tasks: Vec<(Address<ADDRESS_LENGTH>, [u8; WORD_LENGTH])>) -> Self {
-        Self(tasks)
+    pub const fn new(bindings: Vec<(Address<ADDRESS_LENGTH>, [u8; WORD_LENGTH])>) -> Self {
+        Self(bindings)
     }
 
     #[must_use]
@@ -19,7 +21,7 @@ impl<const WORD_LENGTH: usize> Tasks<WORD_LENGTH> {
         self.0
     }
 
-    /// Serializes the `Tasks` instance into a vector of bytes.
+    /// Serializes the `bindings` instance into a vector of bytes.
     ///
     /// The serialization protocol is as follows:
     /// 1. The length of the vector is serialized as a LEB128-encoded u64.
@@ -47,7 +49,7 @@ impl<const WORD_LENGTH: usize> Tasks<WORD_LENGTH> {
         Ok(ser.finalize().to_vec())
     }
 
-    /// Deserializes a vector of bytes into a `Tasks` instance.
+    /// Deserializes a vector of bytes into a `bindings` instance.
     ///
     /// The deserialization protocol is as follows:
     /// 1. The length of the vector is deserialized from a LEB128-encoded u64.

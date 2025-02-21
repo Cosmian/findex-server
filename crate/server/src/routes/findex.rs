@@ -8,8 +8,8 @@ use actix_web::{
 use cosmian_findex::{Address, MemoryADT, ADDRESS_LENGTH};
 
 use cosmian_findex_structs::{
-    Addresses, Guard, OptionalWords, Permission, Tasks, CUSTOM_WORD_LENGTH, SERVER_ADDRESS_LENGTH,
-    UID_LENGTH,
+    Addresses, Bindings, Guard, OptionalWords, Permission, CUSTOM_WORD_LENGTH,
+    SERVER_ADDRESS_LENGTH, UID_LENGTH,
 };
 use tracing::trace;
 use uuid::Uuid;
@@ -108,14 +108,14 @@ pub(crate) async fn findex_guarded_write(
         ServerError::InvalidRequest(format!("{error_prefix} Could not parse guard."))
     })?)?;
 
-    let tasks = Tasks::deserialize(bytes.get(guard_len..).ok_or_else(|| {
+    let bindings = Bindings::deserialize(bytes.get(guard_len..).ok_or_else(|| {
         ServerError::InvalidRequest(format!(
-            "{error_prefix} Could not parse tasks to be written.",
+            "{error_prefix} Could not parse bindings to be written.",
         ))
     })?)?;
 
     let (a_g, w_g) = guard.into_inner();
-    let bindings = tasks
+    let bindings = bindings
         .into_inner()
         .into_iter()
         .map(|(a, w)| (prepend_index_id(&a, &index_id), w))

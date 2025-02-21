@@ -56,8 +56,8 @@ use cosmian_findex::ADDRESS_LENGTH;
 pub use encrypted_entries::EncryptedEntries;
 pub use error::StructsError;
 pub use findex::{
-    Addresses, Guard, Keyword, KeywordToDataSetsMap, Keywords, OptionalWords, SearchResults,
-    SerializationResult, Tasks,
+    Addresses, Bindings, Guard, Keyword, KeywordToDataSetsMap, Keywords, OptionalWords,
+    SearchResults, SerializationResult,
 };
 pub use permissions::{Permission, Permissions};
 pub use uuids::Uuids;
