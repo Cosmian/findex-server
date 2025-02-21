@@ -92,7 +92,6 @@ impl CoreFindexActions {
     /// # Arguments
     /// * `findex_client` - The Findex client
     /// * `config` - The Findex client configuration
-    /// * `conf_path` - The path to the configuration file
     ///
     /// # Errors
     /// - If the configuration file is not found or invalid

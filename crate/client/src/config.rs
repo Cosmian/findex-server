@@ -33,7 +33,7 @@ impl RestClientConfig {
     /// Load the configuration from the given path
     ///
     /// # Arguments
-    /// * `conf_path` - The path to the configuration file
+    /// * `conf` - The path to the configuration file
     ///
     /// # Errors
     /// Return an error if the configuration file is not found or if the
