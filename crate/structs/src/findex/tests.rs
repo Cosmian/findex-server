@@ -7,8 +7,8 @@ mod findex_tests {
     use rand::{Rng, SeedableRng};
 
     use crate::findex::addresses::Addresses;
+    use crate::findex::bindings::Bindings;
     use crate::findex::guard::Guard;
-    use crate::findex::tasks::Tasks;
     use crate::findex::words::OptionalWords;
 
     const SEED: [u8; 32] = [1_u8; 32]; // arbitrary seed for the RNG
@@ -76,7 +76,7 @@ mod findex_tests {
     }
 
     #[test]
-    fn test_ser_deser_tasks() {
+    fn test_ser_deser_bindings() {
         let mut rng = StdRng::from_seed(SEED);
 
         let address1: Address<ADDRESS_LENGTH> = rng.random::<u128>().to_be_bytes().into();
@@ -86,11 +86,11 @@ mod findex_tests {
         rng.fill(&mut word1[..]);
         rng.fill(&mut word2[..]);
 
-        let tasks = Tasks(vec![(address1, word1), (address2, word2)]);
+        let bindings = Bindings(vec![(address1, word1), (address2, word2)]);
 
-        let serialized = tasks.serialize().expect("Serialization failed");
-        let deserialized = Tasks::deserialize(&serialized).expect("Deserialization failed");
+        let serialized = bindings.serialize().expect("Serialization failed");
+        let deserialized = Bindings::deserialize(&serialized).expect("Deserialization failed");
 
-        assert_eq!(tasks, deserialized, "Tasks do not match");
+        assert_eq!(bindings, deserialized, "Bindings do not match");
     }
 }

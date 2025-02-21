@@ -1,7 +1,7 @@
 use crate::{error::ClientError, handle_error, RestClient};
 use base64::{engine::general_purpose, Engine};
 use cosmian_findex::{Address, MemoryADT, ADDRESS_LENGTH};
-use cosmian_findex_structs::{Addresses, Guard, OptionalWords, Tasks};
+use cosmian_findex_structs::{Addresses, Bindings, Guard, OptionalWords};
 use tracing::{trace, warn};
 
 use uuid::Uuid;
@@ -86,10 +86,10 @@ impl<const WORD_LENGTH: usize> MemoryADT for FindexRestClient<WORD_LENGTH> {
         // BEGIN TODO: using `Serializable` avoids re-coding vector
         // concatenation. Anyway, this should be abstracted away in a function.
         let guard_bytes = Guard::new(guard.0, guard.1).serialize()?;
-        let task_bytes = Tasks::new(bindings).serialize()?;
-        let mut request_bytes = Vec::with_capacity(guard_bytes.len() + task_bytes.len());
+        let bindings_bytes = Bindings::new(bindings).serialize()?;
+        let mut request_bytes = Vec::with_capacity(guard_bytes.len() + bindings_bytes.len());
         request_bytes.extend_from_slice(&guard_bytes);
-        request_bytes.extend_from_slice(&task_bytes);
+        request_bytes.extend_from_slice(&bindings_bytes);
         // END TODO
 
         let response = self
