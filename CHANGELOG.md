@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.0] - 2025-02-21
+
+### 🚀 Features
+
+- [**breaking**] Update permission management flow, no more mutex (#45)
+- Semaphore for CLI parallelism (#46)
+- Kms encryption layer (#47)
+
+### 📚 Documentation
+
+- Review menu
+
+### ⚙️ Miscellaneous Tasks
+
+- Add 22.04 to releases
+
 ## [0.2.0] - 2025-02-03
 
 ### 🚀 Features
