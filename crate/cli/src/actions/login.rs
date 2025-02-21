@@ -33,7 +33,7 @@ impl LoginAction {
     /// Fails if credentials are invalid. No access token could be retrieved.
     pub async fn run(&self, config: &mut RestClientConfig) -> CliResult<String> {
         let login_config = config.http_config.oauth2_conf.as_ref().ok_or_else(|| {
-            CliError::Default(format!(
+            CliError::Default(
                 "ERROR: Login command requires OAuth2 configuration\n\n\
                  The `login` command needs an Identity Provider (IdP) configuration in your config file.\n\
                  Please add an [http_config.oauth2_conf] section to your configuration file.\n\n\
@@ -43,8 +43,8 @@ impl LoginAction {
                  client_secret = \"your-client-secret\"\n\
                  authorize_url = \"https://your-idp.com/authorize\"\n\
                  token_url = \"https://your-idp.com/token\"\n\
-                 scopes = [\"openid\", \"email\"]\n"
-            ))
+                 scopes = [\"openid\", \"email\"]\n".to_string()
+        )
         })?;
 
         let state = LoginState::try_from(login_config.clone())?;

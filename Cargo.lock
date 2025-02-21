@@ -725,9 +725,9 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.2.14"
+version = "1.2.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0c3d1b2e905a3a7b00a6141adb0e4c0bb941d11caf55349d863942a1cc44e3c9"
+checksum = "c736e259eea577f443d5c86c304f9f4ae0295c43f3ba05c21f1d66b5f06001af"
 dependencies = [
  "jobserver",
  "libc",
@@ -1300,7 +1300,7 @@ dependencies = [
 [[package]]
 name = "cosmian_kmip"
 version = "4.22.1"
-source = "git+https://www.github.com/Cosmian/kms?branch=feat%2Fadd_digest_and_mac_kmip_operations#ebd22790d98c70c8336e2b547c0c578ee5be0112"
+source = "git+https://www.github.com/Cosmian/kms?branch=feat%2Fadd_digest_and_mac_kmip_operations#d71edaa6ac3c8c308c050db9882eeef6beda05ec"
 dependencies = [
  "bitflags 2.8.0",
  "chrono",
@@ -1321,7 +1321,7 @@ dependencies = [
 [[package]]
 name = "cosmian_kms_access"
 version = "4.22.1"
-source = "git+https://www.github.com/Cosmian/kms?branch=feat%2Fadd_digest_and_mac_kmip_operations#ebd22790d98c70c8336e2b547c0c578ee5be0112"
+source = "git+https://www.github.com/Cosmian/kms?branch=feat%2Fadd_digest_and_mac_kmip_operations#d71edaa6ac3c8c308c050db9882eeef6beda05ec"
 dependencies = [
  "cosmian_kmip",
  "serde",
@@ -1330,7 +1330,7 @@ dependencies = [
 [[package]]
 name = "cosmian_kms_cli"
 version = "4.22.1"
-source = "git+https://www.github.com/Cosmian/kms?branch=feat%2Fadd_digest_and_mac_kmip_operations#ebd22790d98c70c8336e2b547c0c578ee5be0112"
+source = "git+https://www.github.com/Cosmian/kms?branch=feat%2Fadd_digest_and_mac_kmip_operations#d71edaa6ac3c8c308c050db9882eeef6beda05ec"
 dependencies = [
  "base64 0.22.1",
  "clap",
@@ -1361,7 +1361,7 @@ dependencies = [
 [[package]]
 name = "cosmian_kms_client"
 version = "4.22.1"
-source = "git+https://www.github.com/Cosmian/kms?branch=feat%2Fadd_digest_and_mac_kmip_operations#ebd22790d98c70c8336e2b547c0c578ee5be0112"
+source = "git+https://www.github.com/Cosmian/kms?branch=feat%2Fadd_digest_and_mac_kmip_operations#d71edaa6ac3c8c308c050db9882eeef6beda05ec"
 dependencies = [
  "cloudproof",
  "cosmian_config_utils",
@@ -1383,7 +1383,7 @@ dependencies = [
 [[package]]
 name = "cosmian_kms_crypto"
 version = "4.22.1"
-source = "git+https://www.github.com/Cosmian/kms?branch=feat%2Fadd_digest_and_mac_kmip_operations#ebd22790d98c70c8336e2b547c0c578ee5be0112"
+source = "git+https://www.github.com/Cosmian/kms?branch=feat%2Fadd_digest_and_mac_kmip_operations#d71edaa6ac3c8c308c050db9882eeef6beda05ec"
 dependencies = [
  "aes-gcm-siv",
  "argon2",
@@ -2524,9 +2524,9 @@ dependencies = [
 
 [[package]]
 name = "inout"
-version = "0.1.3"
+version = "0.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a0c10553d664a4d0bcff9f4215d0aac67a639cc68ef660840afe309b807bc9f5"
+checksum = "879f10e63c20629ecabbb64a8010319738c66a5cd0c29b02d63d272b03751d01"
 dependencies = [
  "block-padding",
  "generic-array",
@@ -3123,9 +3123,9 @@ dependencies = [
 
 [[package]]
 name = "pem"
-version = "3.0.4"
+version = "3.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8e459365e590736a54c3fa561947c84837534b8e9af6fc5bf781307e82658fae"
+checksum = "38af38e8470ac9dee3ce1bae1af9c1671fffc44ddfd8bd1d0a3445bf349a8ef3"
 dependencies = [
  "base64 0.22.1",
  "serde",
