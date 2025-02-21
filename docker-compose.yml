@@ -15,3 +15,5 @@ services:
     image: ghcr.io/cosmian/kms:feat-add_digest_and_mac_kmip_operations
     ports:
       - 9998:9998
+  #   environment:
+  #     RUST_LOG: cosmian_kms_cli=trace,cosmian_kms_server=trace

@@ -14,10 +14,29 @@ use cosmian_findex_client::{FindexRestClient, KmsEncryptionLayer, RestClient};
 use cosmian_findex_structs::{Keyword, Keywords, SearchResults};
 use cosmian_kms_cli::reexport::cosmian_kms_client::KmsClient;
 use tokio::sync::Semaphore;
-use tracing::trace;
+use tracing::{debug, trace};
 use uuid::Uuid;
 
-use super::MAX_PERMITS;
+/// Calculates maximum concurrent operations based on CPU cores and implicitly on maximum available file descriptors on Unix systems.
+///
+/// # Returns
+///
+/// Returns usize value representing concurrent operation limit (CPU cores * 4)
+///
+/// # Implementation constraints
+///
+/// - Must works cross-platform
+/// - Must adapt to maximum available CPU cores
+/// - Must optimize maximum the number concurrent network calls while avoiding resource exhaustion
+/// - Keeps concurrent operations within safe bounds (e.g. file descriptors on Unix systems)
+/// - Must be bound between 1 and 128
+/// - For the record, 256 has proven to be an instable value: Github runners are not able to handle it
+fn get_semaphore_limit() -> usize {
+    let res = (std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get) * 4)
+        .clamp(1, 128);
+    debug!("Semaphore limit: {res}");
+    res
+}
 
 pub enum FindexKeys {
     ClientSideEncryption {
@@ -113,7 +132,7 @@ impl<const WORD_LENGTH: usize> FindexInstance<WORD_LENGTH> {
             .map(|kw| kw.to_lowercase())
             .collect::<Vec<_>>();
 
-        let semaphore = Arc::new(Semaphore::new(MAX_PERMITS));
+        let semaphore = Arc::new(Semaphore::new(get_semaphore_limit()));
 
         let mut handles = lowercase_keywords
             .iter()
@@ -164,7 +183,7 @@ impl<const WORD_LENGTH: usize> FindexInstance<WORD_LENGTH> {
         bindings: HashMap<Keyword, HashSet<Value>>,
         is_insert: bool,
     ) -> CliResult<Keywords> {
-        let semaphore = Arc::new(Semaphore::new(MAX_PERMITS));
+        let semaphore = Arc::new(Semaphore::new(get_semaphore_limit()));
         let written_keywords = bindings.keys().cloned().collect::<Vec<_>>();
 
         let handles = bindings
