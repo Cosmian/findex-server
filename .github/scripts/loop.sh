@@ -9,6 +9,7 @@ cargo build --workspace --all-targets
 echo "Running tests in an infinite loop"
 while true; do
   reset
-  cargo test --workspace -- --nocapture
+  echo "Iteration: $((++count))"
+  cargo test --workspace -- --nocapture remote --include-ignored
   sleep 1
 done
