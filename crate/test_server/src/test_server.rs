@@ -197,7 +197,7 @@ fn generate_http_config(port: u16, use_https: bool, use_client_cert: bool) -> Ht
             HttpConfig {
                 port,
                 https_p12_file: Some(
-                    root_dir.join("../../test_data/certificates/server/findex.server.acme.com.p12"),
+                    root_dir.join("../../test_data/certificates/server/kmserver.acme.com.p12"),
                 ),
                 https_p12_password: Some("password".to_owned()),
                 authority_cert_file: Some(
@@ -209,7 +209,7 @@ fn generate_http_config(port: u16, use_https: bool, use_client_cert: bool) -> Ht
             HttpConfig {
                 port,
                 https_p12_file: Some(
-                    root_dir.join("../../test_data/certificates/server/findex.server.acme.com.p12"),
+                    root_dir.join("../../test_data/certificates/server/kmserver.acme.com.p12"),
                 ),
                 https_p12_password: Some("password".to_owned()),
                 ..HttpConfig::default()

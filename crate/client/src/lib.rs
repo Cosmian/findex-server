@@ -60,5 +60,6 @@ pub use rest_client::{handle_error, RestClient};
 
 pub mod reexport {
     pub use cosmian_findex;
+    pub use cosmian_findex_structs;
     pub use cosmian_http_client;
 }
