@@ -20,7 +20,7 @@ env:
 jobs:
   build-and-push-image:
     name: Image
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     container: docker:19.03.15
 
     steps:
@@ -31,8 +31,9 @@ jobs:
         run: apk add --no-cache tar
 
       - uses: actions/checkout@v4
-        with:
-          submodules: true
+      - name: Checkout submodules
+        run: |
+          git submodule update --init --recursive
 
       - name: Login to GitHub Packages
         uses: docker/login-action@v2

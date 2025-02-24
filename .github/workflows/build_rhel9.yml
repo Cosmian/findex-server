@@ -38,14 +38,16 @@ jobs:
           - 9998:9998
 
     name: ${{ inputs.archive-name }}
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     container:
       image: redhat/ubi9
 
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: true
+      - name: Checkout submodules
+        run: |
+          git submodule update --init --recursive
+
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ inputs.toolchain }}

@@ -1,4 +1,4 @@
-FROM ubuntu:22.04 AS builder
+FROM ubuntu:24.04 AS builder
 
 LABEL version="0.2.0"
 LABEL name="Cosmian Findex server docker container"
@@ -33,7 +33,7 @@ RUN /root/.cargo/bin/cargo build --release --no-default-features
 #
 # Findex server
 #
-FROM ubuntu:22.04 AS findex-server
+FROM ubuntu:24.04 AS findex-server
 
 ENV DEBIAN_FRONTEND=noninteractive
 
