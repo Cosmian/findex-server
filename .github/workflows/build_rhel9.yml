@@ -72,6 +72,7 @@ jobs:
         env:
           REDIS_URL: redis://redis:6379
           KMS_HOSTNAME: kms
+          KMS_DEFAULT_URL: http://kms:9998
 
           # Google variables
           TEST_GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.TEST_GOOGLE_OAUTH_CLIENT_ID }}
