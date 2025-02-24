@@ -47,7 +47,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /root/findex-server/target/release/cosmian_findex_server  /usr/bin/cosmian_findex_server
-COPY --from=builder /root/findex-server/target/release/cosmian_findex_cli     /usr/bin/cosmian_findex_cli
+COPY --from=builder /root/findex-server/target/release/cosmian                /usr/bin/cosmian
 
 #
 # Create working directory

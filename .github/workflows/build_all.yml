@@ -62,7 +62,7 @@ jobs:
       target: ${{ matrix.target }}
       debug_or_release: ${{ inputs.debug_or_release }}
       skip_services_tests: --skip test_findex --skip test_all_authentications --skip test_server_auth_matrix --skip test_datasets --skip test_permissions
-        --skip memory_adt
+        --skip memory_adt --skip test_encrypt
 
   windows-2022:
     if: inputs.debug_or_release == 'release'
