@@ -51,6 +51,7 @@ jobs:
           yum -y install python-devel
           yum -y install wget nc
           yum -y install perl-IPC-Cmd perl-Digest-SHA1 perl-CPAN perl-devel
+          yum -y install git
 
       - uses: actions/checkout@v4
         with:
