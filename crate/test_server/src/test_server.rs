@@ -195,7 +195,6 @@ fn generate_http_config(port: u16, use_https: bool, use_client_cert: bool) -> Ht
     if use_https {
         if use_client_cert {
             HttpConfig {
-                hostname: std::env::var("KMS_HOSTNAME").unwrap_or_else(|_| "0.0.0.0".to_owned()),
                 port,
                 https_p12_file: Some(
                     root_dir.join("../../test_data/certificates/server/kmserver.acme.com.p12"),
@@ -204,10 +203,10 @@ fn generate_http_config(port: u16, use_https: bool, use_client_cert: bool) -> Ht
                 authority_cert_file: Some(
                     root_dir.join("../../test_data/certificates/server/ca.crt"),
                 ),
+                ..HttpConfig::default()
             }
         } else {
             HttpConfig {
-                hostname: std::env::var("KMS_HOSTNAME").unwrap_or_else(|_| "0.0.0.0".to_owned()),
                 port,
                 https_p12_file: Some(
                     root_dir.join("../../test_data/certificates/server/kmserver.acme.com.p12"),
@@ -219,7 +218,6 @@ fn generate_http_config(port: u16, use_https: bool, use_client_cert: bool) -> Ht
     } else {
         HttpConfig {
             port,
-            hostname: std::env::var("KMS_HOSTNAME").unwrap_or_else(|_| "0.0.0.0".to_owned()),
             ..HttpConfig::default()
         }
     }
