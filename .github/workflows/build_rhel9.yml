@@ -33,7 +33,7 @@ jobs:
         # ports: # not required since docker in docker
         #   - 6379:6379
       kms:
-        image: ghcr.io/cosmian/kms:feat-add_digest_and_mac_kmip_operations
+        image: ghcr.io/cosmian/kms:develop
         ports:
           - 9998:9998
 

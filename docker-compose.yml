@@ -12,7 +12,7 @@ services:
   kms:
     container_name: kms
     # image: ghcr.io/cosmian/kms:4.22.1
-    image: ghcr.io/cosmian/kms:feat-add_digest_and_mac_kmip_operations
+    image: ghcr.io/cosmian/kms:develop
     ports:
       - 9998:9998
   #   environment:
