@@ -889,7 +889,7 @@ dependencies = [
  "base64 0.21.7",
  "chrono",
  "cosmian_crypto_core 9.6.0",
- "hex 0.4.3",
+ "hex",
  "rand 0.8.5",
  "rand_distr",
  "regex",
@@ -1071,7 +1071,7 @@ dependencies = [
  "cosmian_kms_cli",
  "cosmian_logger",
  "csv",
- "hex 0.3.2",
+ "hex",
  "lazy_static",
  "openssl",
  "predicates",
@@ -1307,7 +1307,7 @@ dependencies = [
  "bitflags 2.8.0",
  "chrono",
  "cosmian_logger",
- "hex 0.4.3",
+ "hex",
  "leb128",
  "num-bigint-dig",
  "serde",
@@ -1342,7 +1342,7 @@ dependencies = [
  "cosmian_kms_crypto",
  "cosmian_logger",
  "der",
- "hex 0.4.3",
+ "hex",
  "jwt-simple",
  "leb128",
  "num-format",
@@ -1393,7 +1393,7 @@ dependencies = [
  "cloudproof",
  "cosmian_kmip",
  "cosmian_logger",
- "hex 0.4.3",
+ "hex",
  "num-bigint-dig",
  "openssl",
  "rust-ini",
@@ -2203,12 +2203,6 @@ name = "hermit-abi"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fbf6a919d6cf397374f7dfeeea91d974c7c0a7221d0d0f4f20d859d329e53fcc"
-
-[[package]]
-name = "hex"
-version = "0.3.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "805026a5d0141ffc30abb3be3173848ad46a1b1664fe632428479619a3644d77"
 
 [[package]]
 name = "hex"
@@ -3998,7 +3992,7 @@ dependencies = [
  "dotenvy",
  "either",
  "heck 0.5.0",
- "hex 0.4.3",
+ "hex",
  "once_cell",
  "proc-macro2",
  "quote",
@@ -4035,7 +4029,7 @@ dependencies = [
  "futures-io",
  "futures-util",
  "generic-array",
- "hex 0.4.3",
+ "hex",
  "hkdf",
  "hmac",
  "itoa",
@@ -4073,7 +4067,7 @@ dependencies = [
  "futures-channel",
  "futures-core",
  "futures-util",
- "hex 0.4.3",
+ "hex",
  "hkdf",
  "hmac",
  "home",
