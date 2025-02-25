@@ -1,4 +1,4 @@
 [submodule "cli"]
     path = cli
-    url = git@github.com:Cosmian/cli.git
+    url = https://github.com/Cosmian/cli.git
     branch = merge_cli
