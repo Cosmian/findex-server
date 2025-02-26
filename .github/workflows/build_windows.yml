@@ -22,7 +22,9 @@ jobs:
       - name: Print ENV
         run: printenv
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - uses: dtolnay/rust-toolchain@master
         with:
@@ -68,7 +70,7 @@ jobs:
         with:
           name: ${{ inputs.archive-name }}-${{ inputs.debug_or_release }}
           path: |
-            target/x86_64-pc-windows-msvc/${{ inputs.debug_or_release }}/cosmian_findex_cli.exe
+            target/x86_64-pc-windows-msvc/${{ inputs.debug_or_release }}/cosmian.exe
             target/x86_64-pc-windows-msvc/${{ inputs.debug_or_release }}/cosmian_findex_server.exe
           retention-days: 1
           if-no-files-found: error
@@ -86,8 +88,8 @@ jobs:
         shell: pwsh
         run: Get-ChildItem -Recurse
 
-      - name: Launch cosmian_findex_cli and cosmian_findex_server
+      - name: Launch cosmian and cosmian_findex_server
         run: |
           pwd
-          ./cosmian_findex_cli.exe -V
+          ./cosmian.exe -V
           ./cosmian_findex_server.exe -V

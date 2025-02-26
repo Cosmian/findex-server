@@ -122,9 +122,12 @@ repos:
     rev: v1.0.32
     hooks:
       - id: cargo-format
-      # - id: dprint-toml-fix
-      # - id: cargo-upgrade
-      # - id: cargo-update
+      - id: dprint-toml-fix
+        stages: [manual]
+      - id: cargo-upgrade
+        stages: [manual]
+      - id: cargo-update
+        stages: [manual]
       - id: cargo-machete
       - id: docker-compose-up
       - id: cargo-build-all

@@ -1,10 +1,10 @@
 [workspace]
-default-members = ["crate/server", "crate/cli"]
+default-members = ["crate/server", "cli/crate/cli"]
 members = [
   "crate/structs",
   "crate/server",
   "crate/client",
-  "crate/cli",
+  "cli/crate/cli",
   "crate/test_server",
 ]
 resolver = "2"
@@ -44,16 +44,19 @@ opt-level = 0
 actix-server = { version = "2.5", default-features = false }
 actix-web = { version = "4.9.0", default-features = false }
 base64 = "0.22"
-clap = { version = "4.5.30", default-features = false }
+clap = { version = "4.5.31", default-features = false }
 cosmian_config_utils = { git = "https://www.github.com/Cosmian/http_client_server", tag = "0.1.0" }
 cosmian_crypto_core = { version = "10.0", default-features = false }
 cosmian_findex = { git = "https://github.com/Cosmian/findex", features = [
   "redis-mem",
 ], rev = "98fcb6e97054e1bb9dddd7a0d620e27438cb91b7" }
+cosmian_findex_client = { path = "crate/client" }
+cosmian_findex_structs = { path = "crate/structs" }
 cosmian_http_client = { git = "https://www.github.com/Cosmian/http_client_server", tag = "0.1.0" }
-cosmian_kms_cli = { git = "https://www.github.com/Cosmian/kms", branch = "feat/add_digest_and_mac_kmip_operations" }
+cosmian_kms_cli = { git = "https://www.github.com/Cosmian/kms", branch = "develop" }
 cosmian_logger = { git = "https://www.github.com/Cosmian/http_client_server", tag = "0.1.0" }
 der = { version = "0.7", default-features = false }
+hex = "0.4"
 openssl = { version = "0.10", default-features = false }
 pem = "3.0"
 reqwest = { version = "0.11", default-features = false }
@@ -64,6 +67,7 @@ thiserror = "2.0"
 tokio = { version = "1.43", default-features = false }
 tracing = "0.1"
 url = "2.5"
-uuid = { version = "1.13", features = ["v4", "serde"] }
+uuid = { version = "1.14", features = ["v4", "serde"] }
 x509-parser = "0.17"
 zeroize = { version = "1.8", default-features = false }
+test_findex_server = { path = "crate/test_server" }
