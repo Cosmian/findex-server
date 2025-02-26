@@ -3,7 +3,6 @@ default-members = ["crate/server", "cli/crate/cli"]
 members = [
   "crate/structs",
   "crate/server",
-  "crate/client",
   "cli/crate/cli",
 ]
 resolver = "2"
@@ -49,7 +48,6 @@ cosmian_crypto_core = { version = "10.0", default-features = false }
 cosmian_findex = { git = "https://github.com/Cosmian/findex", features = [
   "redis-mem",
 ], rev = "98fcb6e97054e1bb9dddd7a0d620e27438cb91b7" }
-cosmian_findex_client = { path = "crate/client" }
 cosmian_findex_server = { path = "crate/server" }
 cosmian_findex_structs = { path = "crate/structs" }
 cosmian_http_client = { git = "https://www.github.com/Cosmian/http_client_server", tag = "0.1.0" }
