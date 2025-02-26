@@ -43,7 +43,7 @@ rustup target add "$TARGET"
 # shellcheck disable=SC2086
 cargo build --target $TARGET $RELEASE
 
-export RUST_LOG="cosmian_cli=debug,cosmian_findex_client=debug,cosmian_findex_server=debug,test_findex_server=trace"
+export RUST_LOG="cosmian_cli=debug,cosmian_client=debug,cosmian_findex_server=debug"
 
 # shellcheck disable=SC2086
 cargo test --lib --target $TARGET $RELEASE --workspace -- --nocapture $SKIP_SERVICES_TESTS --include-ignored
