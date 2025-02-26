@@ -1,4 +1,3 @@
-use cosmian_config_utils::ConfigUtils;
 use std::{
     env,
     path::PathBuf,
@@ -85,9 +84,8 @@ pub async fn start_default_test_findex_server_with_cert_auth() -> &'static Tests
 }
 
 pub struct TestsContext {
-    pub owner_client_conf_path: String,
-    pub user_client_conf_path: String,
     pub owner_client_conf: RestClientConfig,
+    pub user_client_conf: RestClientConfig,
     pub server_handle: ServerHandle,
     pub thread_handle: JoinHandle<Result<(), ClientError>>,
 }
@@ -117,7 +115,8 @@ pub async fn start_test_server_with_options(
     let server_params = generate_server_params(db_config, port, &authentication_options)?;
 
     // Create a (object owner) conf
-    let (owner_client_conf_path, owner_client_conf) = generate_owner_conf(&server_params)?;
+    let owner_client_conf = generate_owner_conf(&server_params)?;
+    let user_client_conf = generate_user_conf(&owner_client_conf)?;
     let findex_client = RestClient::new(&owner_client_conf)?;
 
     info!(
@@ -132,14 +131,9 @@ pub async fn start_test_server_with_options(
         .await
         .expect("server timeout");
 
-    // generate a user conf
-    let user_client_conf_path =
-        generate_user_conf(port, &owner_client_conf).expect("Can't generate user conf");
-
     Ok(TestsContext {
-        owner_client_conf_path,
-        user_client_conf_path,
         owner_client_conf,
+        user_client_conf,
         server_handle,
         thread_handle,
     })
@@ -256,14 +250,9 @@ fn set_access_token(server_params: &ServerParams) -> Option<String> {
     }
 }
 
-fn generate_owner_conf(
-    server_params: &ServerParams,
-) -> Result<(String, RestClientConfig), ClientError> {
+fn generate_owner_conf(server_params: &ServerParams) -> Result<RestClientConfig, ClientError> {
     // This create root dir
     let root_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-
-    // Create a conf
-    let owner_client_conf_path = format!("/tmp/owner_findex_{}.toml", server_params.port);
 
     let owner_client_conf = RestClientConfig {
         http_config: HttpClientConfig {
@@ -300,18 +289,15 @@ fn generate_owner_conf(
             ..Default::default()
         },
     };
-    // write the conf to a file
-    owner_client_conf.to_toml(&owner_client_conf_path)?;
 
-    Ok((owner_client_conf_path, owner_client_conf))
+    Ok(owner_client_conf)
 }
 
 /// Generate a user configuration for user.client@acme.com and return the file
 /// path
 fn generate_user_conf(
-    port: u16,
     owner_client_conf: &RestClientConfig,
-) -> Result<String, ClientError> {
+) -> Result<RestClientConfig, ClientError> {
     // This create root dir
     let root_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
 
@@ -330,12 +316,8 @@ fn generate_user_conf(
     };
     user_conf.http_config.ssl_client_pkcs12_password = Some("password".to_owned());
 
-    // write the user conf
-    let user_conf_path = format!("/tmp/user_findex_{port}.toml");
-    user_conf.to_toml(&user_conf_path)?;
-
     // return the path
-    Ok(user_conf_path)
+    Ok(user_conf)
 }
 
 #[cfg(test)]

@@ -4249,7 +4249,6 @@ name = "test_findex_server"
 version = "0.2.0"
 dependencies = [
  "actix-server",
- "cosmian_config_utils",
  "cosmian_findex_client",
  "cosmian_findex_server",
  "cosmian_logger",
