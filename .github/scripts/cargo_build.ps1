@@ -17,10 +17,10 @@ function BuildProject {
 
     # Build `cosmian`
     if ($BuildType -eq "release") {
-        cargo build -p cosmian --release --target x86_64-pc-windows-msvc
+        cargo build -p cosmian_cli --release --target x86_64-pc-windows-msvc
     }
     else {
-        cargo build -p cosmian --target x86_64-pc-windows-msvc
+        cargo build -p cosmian_cli --target x86_64-pc-windows-msvc
     }
 
     # Check dynamic links

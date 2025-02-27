@@ -158,7 +158,7 @@ cd findex-server
 git submodule update --init --recursive
 
 # or with newer git versions
-git submodule update --recursive --remote
+git submodule update --init --recursive --remote
 
 # Build in release mode
 cargo build --release

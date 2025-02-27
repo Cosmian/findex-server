@@ -68,3 +68,7 @@ pub const UID_LENGTH: usize = 16;
 // Findex specializations
 pub const CUSTOM_WORD_LENGTH: usize = 200;
 pub const SERVER_ADDRESS_LENGTH: usize = ADDRESS_LENGTH + UID_LENGTH;
+
+pub mod reexport {
+    pub use cosmian_findex;
+}
