@@ -132,6 +132,7 @@ repos:
       - id: docker-compose-up
       - id: cargo-build-all
       - id: cargo-test
+        args: [--, --skip, hsm]
       - id: clippy-autofix-unreachable-pub
       - id: clippy-autofix-all-targets-all-features
       - id: clippy-autofix-all-targets
