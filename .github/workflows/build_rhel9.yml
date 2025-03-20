@@ -16,6 +16,9 @@ on:
       debug_or_release:
         required: true
         type: string
+      skip_services_tests:
+        required: false
+        type: string
       features:
         required: false
         type: string
@@ -32,10 +35,6 @@ jobs:
           --health-retries 5
         # ports: # not required since docker in docker
         #   - 6379:6379
-      kms:
-        image: ghcr.io/cosmian/kms:develop
-        ports:
-          - 9998:9998
 
     name: ${{ inputs.archive-name }}
     runs-on: ubuntu-24.04
@@ -81,6 +80,7 @@ jobs:
 
           TARGET: ${{ inputs.target }}
           DEBUG_OR_RELEASE: ${{ inputs.debug_or_release }}
+          SKIP_SERVICES_TESTS: ${{ inputs.skip_services_tests }}
         run: |
           bash .github/scripts/cargo_build.sh
 

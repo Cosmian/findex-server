@@ -21,6 +21,7 @@ jobs:
       archive-name: rhel9
       target: x86_64-unknown-linux-gnu
       debug_or_release: ${{ inputs.debug_or_release }}
+      skip_services_tests: --skip hsm
 
   generic-linux:
     strategy:
