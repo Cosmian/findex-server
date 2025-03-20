@@ -41,9 +41,9 @@ opt-level = 0
 
 [workspace.dependencies]
 actix-server = { version = "2.5", default-features = false }
-actix-web = { version = "4.9.0", default-features = false }
+actix-web = { version = "4.9", default-features = false }
 base64 = "0.22"
-clap = { version = "4.5.31", default-features = false }
+clap = { version = "4.5", default-features = false }
 cloudproof = { version = "3.0", default-features = false }
 cosmian_config_utils = { git = "https://www.github.com/Cosmian/http_client_server", tag = "0.1.0" }
 cosmian_cli = { path = "cli/crate/cli" }
@@ -68,6 +68,7 @@ leb128 = "0.2"
 num-format = "0.4"
 openssl = { version = "0.10", default-features = false }
 pem = "3.0"
+rand = "0.9"
 reqwest = { version = "0.11", default-features = false }
 serde = "1.0"
 serde_json = "1.0"
