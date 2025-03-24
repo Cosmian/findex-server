@@ -1,6 +1,6 @@
 use crate::StructsError;
-use base64::engine::general_purpose;
 use base64::Engine;
+use base64::engine::general_purpose;
 use cosmian_crypto_core::bytes_ser_de::{Deserializer, Serializer};
 use std::ops::Deref;
 

@@ -2,7 +2,7 @@
 #[cfg(test)]
 mod findex_tests {
 
-    use cosmian_findex::{Address, ADDRESS_LENGTH, WORD_LENGTH};
+    use cosmian_findex::{ADDRESS_LENGTH, Address, WORD_LENGTH};
     use rand::rngs::StdRng;
     use rand::{Rng, SeedableRng};
 

@@ -1,14 +1,13 @@
 use std::sync::Arc;
 
 use actix_web::{
-    post,
+    HttpRequest, HttpResponse, post,
     web::{self, Bytes, Data},
-    HttpRequest, HttpResponse,
 };
-use cosmian_findex::{Address, MemoryADT, ADDRESS_LENGTH};
+use cosmian_findex::{ADDRESS_LENGTH, Address, MemoryADT};
 
 use cosmian_findex_structs::{
-    Addresses, Bindings, Guard, OptionalWords, Permission, CUSTOM_WORD_LENGTH,
+    Addresses, Bindings, CUSTOM_WORD_LENGTH, Guard, OptionalWords, Permission,
     SERVER_ADDRESS_LENGTH, UID_LENGTH,
 };
 use tracing::trace;
@@ -95,7 +94,7 @@ pub(crate) async fn findex_guarded_write(
             _ => {
                 return Err(ServerError::InvalidRequest(format!(
                     "{error_prefix} Invalid discriminant flag. Expected 0 or 1, found {f}"
-                )))
+                )));
             }
         }
     } else {

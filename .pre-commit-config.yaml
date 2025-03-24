@@ -119,7 +119,7 @@ repos:
         args: [--skip-string-normalization]
 
   - repo: https://github.com/Cosmian/git-hooks.git
-    rev: v1.0.32
+    rev: v1.0.36
     hooks:
       - id: cargo-format
       - id: dprint-toml-fix
@@ -130,9 +130,13 @@ repos:
         stages: [manual]
       - id: cargo-machete
       - id: docker-compose-up
+      - id: cargo-build
+      - id: cargo-test
+        args: [--, --skip, test_wrap_auth, --skip, google_cse, --skip, hsm]
       - id: cargo-build-all
       - id: cargo-test
-        args: [--, --skip, hsm]
+        alias: cargo-test-all
+        args: [--all-features, --, --skip, test_wrap_auth, --skip, google_cse, --skip, hsm]
       - id: clippy-autofix-unreachable-pub
       - id: clippy-autofix-all-targets-all-features
       - id: clippy-autofix-all-targets

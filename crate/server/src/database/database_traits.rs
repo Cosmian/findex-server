@@ -27,7 +27,7 @@ pub(crate) trait DatasetsTrait: Sync + Send {
     // Dataset management
     //
     async fn dataset_add_entries(&self, index_id: &Uuid, entries: &EncryptedEntries)
-        -> FResult<()>;
+    -> FResult<()>;
     async fn dataset_delete_entries(&self, index_id: &Uuid, uuids: &Uuids) -> FResult<()>;
     async fn dataset_get_entries(
         &self,
