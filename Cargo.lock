@@ -1080,7 +1080,7 @@ dependencies = [
  "clap",
  "const-oid",
  "cosmian_config_utils",
- "cosmian_cover_crypt",
+ "cosmian_cover_crypt 15.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "cosmian_crypto_core 10.0.1",
  "cosmian_findex 7.0.0",
  "cosmian_findex_client",
@@ -1130,6 +1130,20 @@ dependencies = [
  "toml",
  "tracing",
  "url",
+]
+
+[[package]]
+name = "cosmian_cover_crypt"
+version = "15.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f12eb7e96555b6b8841966fa264e7a6dfe5e39ad0733317c088c52259e99993c"
+dependencies = [
+ "cosmian_crypto_core 10.0.1",
+ "ml-kem",
+ "serde",
+ "serde_json",
+ "tiny-keccak",
+ "zeroize",
 ]
 
 [[package]]
@@ -1398,7 +1412,7 @@ dependencies = [
  "aes-gcm-siv",
  "argon2",
  "base64 0.22.1",
- "cosmian_cover_crypt",
+ "cosmian_cover_crypt 15.0.0 (git+https://github.com/Cosmian/cover_crypt.git?branch=release%2Fv15.0.0)",
  "cosmian_crypto_core 10.0.1",
  "cosmian_kmip",
  "cosmian_logger",
@@ -1446,7 +1460,7 @@ dependencies = [
  "chrono",
  "clap",
  "cloudproof_findex",
- "cosmian_cover_crypt",
+ "cosmian_cover_crypt 15.0.0 (git+https://github.com/Cosmian/cover_crypt.git?branch=release%2Fv15.0.0)",
  "cosmian_crypto_core 10.0.1",
  "cosmian_kmip",
  "cosmian_kms_access",
