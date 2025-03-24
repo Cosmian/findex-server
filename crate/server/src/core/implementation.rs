@@ -1,5 +1,5 @@
 use actix_web::{HttpMessage, HttpRequest};
-use cosmian_findex_structs::{Permission, CUSTOM_WORD_LENGTH};
+use cosmian_findex_structs::{CUSTOM_WORD_LENGTH, Permission};
 use tracing::{debug, trace};
 use uuid::Uuid;
 
@@ -83,7 +83,9 @@ impl FindexServer {
         expected_permission: Permission,
     ) -> FResult<()> {
         let permission = self.get_permission(user, index_id).await?;
-        trace!("ensure_minimum_permission: user {user} has permission {permission} on index {index_id}");
+        trace!(
+            "ensure_minimum_permission: user {user} has permission {permission} on index {index_id}"
+        );
         if permission < expected_permission {
             return Err(ServerError::Unauthorized(format!(
                 "User {user} with permission {permission} is not allowed to write on index {index_id}",

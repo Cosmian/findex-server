@@ -9,11 +9,3 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-  kms:
-    container_name: kms
-    # image: ghcr.io/cosmian/kms:4.22.1
-    image: ghcr.io/cosmian/kms:develop
-    ports:
-      - 9998:9998
-  #   environment:
-  #     RUST_LOG: cosmian_kms_cli=trace,cosmian_kms_server=trace

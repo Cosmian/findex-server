@@ -5,9 +5,8 @@ use crate::{
     routes::error::{ResponseBytes, SuccessResponse},
 };
 use actix_web::{
-    post,
+    HttpRequest, HttpResponse, post,
     web::{self, Data, Json},
-    HttpRequest, HttpResponse,
 };
 use cosmian_crypto_core::bytes_ser_de::Serializable;
 use cosmian_findex_structs::Permission;

@@ -4,8 +4,8 @@ use crate::{
     error::{result::FResult, server::ServerError},
 };
 use async_trait::async_trait;
-use cosmian_findex_structs::{Permission, Permissions, CUSTOM_WORD_LENGTH};
-use redis::{aio::ConnectionManager, AsyncCommands, RedisError};
+use cosmian_findex_structs::{CUSTOM_WORD_LENGTH, Permission, Permissions};
+use redis::{AsyncCommands, RedisError, aio::ConnectionManager};
 use tracing::{instrument, trace};
 use uuid::Uuid;
 
@@ -134,7 +134,7 @@ mod tests {
     use super::*;
     use crate::config::{DBConfig, DatabaseType};
 
-    use rand::{rng, Rng};
+    use rand::{Rng, rng};
     use tokio;
     use uuid::Uuid;
 

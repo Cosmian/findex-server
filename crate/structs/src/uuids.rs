@@ -1,9 +1,9 @@
 use std::{fmt::Display, ops::Deref};
 
-use cosmian_crypto_core::bytes_ser_de::{self, to_leb128_len, Serializable};
+use cosmian_crypto_core::bytes_ser_de::{self, Serializable, to_leb128_len};
 use uuid::Uuid;
 
-use crate::{encrypted_entries::UUID_LENGTH, SearchResults, StructsError};
+use crate::{SearchResults, StructsError, encrypted_entries::UUID_LENGTH};
 
 #[derive(Debug)]
 pub struct Uuids {
