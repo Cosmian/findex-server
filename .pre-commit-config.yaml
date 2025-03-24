@@ -24,20 +24,20 @@
 exclude: test_data|documentation/docs/images
 repos:
   - repo: https://github.com/compilerla/conventional-pre-commit
-    rev: v3.4.0
+    rev: v4.0.0
     hooks:
       - id: conventional-pre-commit
         stages: [commit-msg]
         args: [] # optional: list of Conventional Commits types to allow e.g. [feat, fix, ci, chore, test]
 
   - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.42.0
+    rev: v0.44.0
     hooks:
       - id: markdownlint-fix
         args: [--disable=MD013, --disable=MD041, --disable=MD046, --fix]
 
   - repo: https://github.com/tcort/markdown-link-check
-    rev: v3.12.2
+    rev: v3.13.7
     hooks:
       - id: markdown-link-check
         args: [-q, --config, .markdown-link-check.json]
@@ -50,7 +50,7 @@ repos:
         exclude: ansible
 
   - repo: https://github.com/crate-ci/typos
-    rev: v1.25.0
+    rev: v1
     hooks:
       - id: typos
         exclude: crate/test_server/certificates
@@ -66,7 +66,7 @@ repos:
         exclude: ^.git/
 
   - repo: https://github.com/sirosen/texthooks
-    rev: 0.6.7
+    rev: 0.6.8
     hooks:
       - id: fix-smartquotes
       - id: fix-ligatures
@@ -112,7 +112,7 @@ repos:
       - id: trailing-whitespace
 
   - repo: https://github.com/psf/black
-    rev: 24.8.0
+    rev: 25.1.0
     hooks:
       - id: black
         # avoid clash with `double-quote-string-fixer`
