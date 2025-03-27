@@ -43,8 +43,9 @@ rustup target add "$TARGET"
 # shellcheck disable=SC2086
 cargo build --target $TARGET $RELEASE
 
-export RUST_LOG="cosmian_cli=error,cosmian_client=error,cosmian_findex_server=error"
-
+if [ "$DEBUG_OR_RELEASE" = "release" ]; then
+  INCLUDE_IGNORED="--include-ignored"
+fi
+export RUST_LOG="fatal,cosmian_cli=error,cosmian_findex_client=debug,cosmian_findex_server=debug"
 # shellcheck disable=SC2086
-# cargo test -v --workspace --lib --target $TARGET $RELEASE -- $SKIP_SERVICES_TESTS --include-ignored # re-include ignored tests later
-cargo test -v --workspace --lib --target $TARGET $RELEASE -- $SKIP_SERVICES_TESTS --skip test_concurrent_read_write
+cargo test --workspace --lib --target $TARGET $RELEASE $FEATURES -- --nocapture $SKIP_SERVICES_TESTS $INCLUDE_IGNORED

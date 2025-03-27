@@ -16,9 +16,6 @@ on:
       debug_or_release:
         required: true
         type: string
-      skip_services_tests:
-        required: false
-        type: string
       features:
         required: false
         type: string
@@ -88,7 +85,7 @@ jobs:
 
           TARGET: ${{ inputs.target }}
           DEBUG_OR_RELEASE: ${{ inputs.debug_or_release }}
-          SKIP_SERVICES_TESTS: ${{ inputs.skip_services_tests }}
+          SKIP_SERVICES_TESTS: --skip hsm
         run: |
           bash .github/scripts/cargo_build.sh
 

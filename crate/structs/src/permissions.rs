@@ -1,6 +1,7 @@
 use std::{collections::HashMap, fmt::Display, str::FromStr};
 
 use cosmian_crypto_core::bytes_ser_de::{self, Serializable, to_leb128_len};
+use tracing::debug;
 use uuid::Uuid;
 
 use crate::{
@@ -119,8 +120,12 @@ impl Serializable for Permissions {
 
     fn read(de: &mut bytes_ser_de::Deserializer) -> Result<Self, Self::Error> {
         let nb = de.read_leb128_u64()?;
-        let mut permissions =
-            HashMap::with_capacity(usize::try_from(nb)? * PERMISSION_LENGTH + INDEX_ID_LENGTH);
+        let length = usize::try_from(nb)? * PERMISSION_LENGTH + INDEX_ID_LENGTH;
+        if length > 1_000_000 {
+            debug!("Permissions: read: allocating {length}");
+        }
+
+        let mut permissions = HashMap::with_capacity(length);
         for _ in 0..nb {
             let permission_u8 = u8::try_from(de.read_leb128_u64()?)?;
             let permission = Permission::try_from(permission_u8)?;
