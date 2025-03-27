@@ -46,5 +46,4 @@ cargo build --target $TARGET $RELEASE
 export RUST_LOG="cosmian_cli=error,cosmian_client=error,cosmian_findex_server=error"
 
 # shellcheck disable=SC2086
-# cargo test -v --workspace --lib --target $TARGET $RELEASE -- $SKIP_SERVICES_TESTS --include-ignored # re-include ignored tests later
-cargo test -v --workspace --lib --target $TARGET $RELEASE -- $SKIP_SERVICES_TESTS --skip test_concurrent_read_write
+cargo test -v --workspace --lib --target $TARGET $RELEASE -- $SKIP_SERVICES_TESTS --include-ignored
