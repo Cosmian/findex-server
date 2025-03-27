@@ -33,6 +33,10 @@ impl<const WORD_LENGTH: usize> Bindings<WORD_LENGTH> {
     ///
     /// Returns a `SerializationError` if any step of the serialization process fails.
     pub fn serialize(&self) -> SerializationResult<Vec<u8>> {
+        if self.0.len() > 1024 {
+            println!("Bindings: serialize: {}", self.0.len());
+        }
+
         let mut ser = Serializer::with_capacity(self.0.len());
         ser.write_leb128_u64(self.0.len().try_into().map_err(|e| {
             StructsError::SerializationError(format!(
@@ -63,6 +67,10 @@ impl<const WORD_LENGTH: usize> Bindings<WORD_LENGTH> {
     pub fn deserialize(data: &[u8]) -> SerializationResult<Self> {
         let mut de = Deserializer::new(data);
         let length = <usize>::try_from(de.read_leb128_u64()?)?;
+        if length > 1024 {
+            println!("Bindings: deserialize: {length}");
+        }
+
         let mut items = Vec::with_capacity(length);
         for _ in 0..length {
             let address: Address<ADDRESS_LENGTH> = de.read_array()?.into();

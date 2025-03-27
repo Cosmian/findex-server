@@ -113,6 +113,10 @@ impl Serializable for EncryptedEntries {
     /// Deserialize the `EncryptedEntries` struct
     fn read(de: &mut Deserializer) -> Result<Self, Self::Error> {
         let length = <usize>::try_from(de.read_leb128_u64()?)?;
+        if length > 1024 {
+            println!("EncryptedEntries: read: {length}");
+        }
+
         let mut items = HashMap::with_capacity(length);
         for _ in 0..length {
             let key = Uuid::from_bytes(de.read_array()?);

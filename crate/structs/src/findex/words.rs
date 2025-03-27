@@ -104,6 +104,10 @@ impl<const WORD_LENGTH: usize> OptionalWords<WORD_LENGTH> {
     ///
     /// This function will return an error if the serialization process fails.
     pub fn serialize(&self) -> SerializationResult<Vec<u8>> {
+        if self.0.len() > 1024 {
+            println!("OptionalWords: serialize: {}", self.0.len());
+        }
+
         let mut ser = Serializer::with_capacity(self.0.len());
         ser.write_leb128_u64(self.0.len().try_into().map_err(|e| {
             StructsError::SerializationError(format!(
@@ -125,6 +129,9 @@ impl<const WORD_LENGTH: usize> OptionalWords<WORD_LENGTH> {
     pub fn deserialize(data: &[u8]) -> SerializationResult<Self> {
         let mut de = Deserializer::new(data);
         let length = <usize>::try_from(de.read_leb128_u64()?)?;
+        if length > 1024 {
+            println!("OptionalWords: deserialize: {length}");
+        }
         let mut items = Vec::with_capacity(length);
 
         for _ in 0..length {
