@@ -6,6 +6,7 @@ set -ex
 # export TARGET=aarch64-apple-darwin
 # export DEBUG_OR_RELEASE=debug
 # export SKIP_SERVICES_TESTS="--skip test_findex --skip test_all_authentications --skip test_server_auth_matrix --skip test_datasets"
+#
 
 ROOT_FOLDER=$(pwd)
 
@@ -39,6 +40,10 @@ if [ -z "$SKIP_SERVICES_TESTS" ]; then
 fi
 
 rustup target add "$TARGET"
+
+if [ -f /etc/lsb-release ]; then
+  bash .github/scripts/test_utimaco.sh
+fi
 
 # shellcheck disable=SC2086
 cargo build --target $TARGET $RELEASE
