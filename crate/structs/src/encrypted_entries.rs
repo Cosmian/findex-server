@@ -6,6 +6,7 @@ use std::{
 
 use base64::{Engine, engine::general_purpose};
 use cosmian_crypto_core::bytes_ser_de::{Deserializer, Serializable, Serializer, to_leb128_len};
+use tracing::debug;
 use uuid::Uuid;
 
 use crate::{StructsError, Uuids};
@@ -113,8 +114,8 @@ impl Serializable for EncryptedEntries {
     /// Deserialize the `EncryptedEntries` struct
     fn read(de: &mut Deserializer) -> Result<Self, Self::Error> {
         let length = <usize>::try_from(de.read_leb128_u64()?)?;
-        if length > 1024 {
-            println!("EncryptedEntries: read: {length}");
+        if length > 1_000_000 {
+            debug!("EncryptedEntries: read: allocating {length}");
         }
 
         let mut items = HashMap::with_capacity(length);
