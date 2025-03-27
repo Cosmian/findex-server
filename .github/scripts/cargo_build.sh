@@ -50,5 +50,5 @@ if [ "$DEBUG_OR_RELEASE" = "release" ]; then
   cargo test --workspace --lib --target $TARGET $RELEASE -- --nocapture $SKIP_SERVICES_TESTS --include-ignored
 else
   # shellcheck disable=SC2086
-  cargo test --workspace --lib --target $TARGET $RELEASE -- --nocapture $SKIP_SERVICES_TESTS
+  cargo test --workspace --lib --target $TARGET $RELEASE -- --nocapture $SKIP_SERVICES_TESTS --include-ignored
 fi
