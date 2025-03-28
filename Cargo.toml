@@ -56,11 +56,11 @@ cosmian_findex_server = { path = "crate/server" }
 cosmian_findex_structs = { path = "crate/structs" }
 cosmian_http_client = { git = "https://www.github.com/Cosmian/http_client_server", tag = "0.1.1" }
 cosmian_kms_client = { path = "cli/crate/kms_client" }
-cosmian_kms_access = { git = "https://www.github.com/Cosmian/kms", rev = "222fe232e0870f4868836377cb438a2e4a456a29" }
-cosmian_kms_crypto = { git = "https://www.github.com/Cosmian/kms", rev = "222fe232e0870f4868836377cb438a2e4a456a29" }
-cosmian_kms_server = { git = "https://www.github.com/Cosmian/kms", rev = "222fe232e0870f4868836377cb438a2e4a456a29" }
-cosmian_kms_server_database = { git = "https://www.github.com/Cosmian/kms", rev = "222fe232e0870f4868836377cb438a2e4a456a29" }
-cosmian_kmip = { git = "https://www.github.com/Cosmian/kms", rev = "222fe232e0870f4868836377cb438a2e4a456a29" }
+cosmian_kms_access = { git = "https://www.github.com/Cosmian/kms", branch = "develop" }
+cosmian_kms_crypto = { git = "https://www.github.com/Cosmian/kms", branch = "develop" }
+cosmian_kms_server = { git = "https://www.github.com/Cosmian/kms", branch = "develop" }
+cosmian_kms_server_database = { git = "https://www.github.com/Cosmian/kms", branch = "develop" }
+cosmian_kmip = { git = "https://www.github.com/Cosmian/kms", branch = "develop" }
 cosmian_logger = { git = "https://www.github.com/Cosmian/http_client_server", tag = "0.1.0" }
 der = { version = "0.7", default-features = false }
 hex = "0.4"
