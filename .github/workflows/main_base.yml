@@ -24,28 +24,28 @@ jobs:
   docker-image-release:
     if: inputs.debug_or_release == 'release'
     name: Build docker image for AMD64 and ARM64
-    uses: ./.github/workflows/build_docker_image.yml
+    uses: Cosmian/reusable_workflows/.github/workflows/build_docker_image.yml@develop
     with:
-      dockerfile: Dockerfile
+      prefix: ''
       registry-image: ghcr.io/cosmian/findex-server
       platforms: linux/amd64,linux/arm64
 
   docker-image:
     if: inputs.debug_or_release == 'debug'
     name: Build docker image for AMD64
-    uses: ./.github/workflows/build_docker_image.yml
+    uses: Cosmian/reusable_workflows/.github/workflows/build_docker_image.yml@develop
     with:
-      dockerfile: Dockerfile
+      prefix: ''
       registry-image: ghcr.io/cosmian/findex-server
       platforms: linux/amd64
 
   cargo-lint:
-    uses: ./.github/workflows/clippy.yml
+    uses: Cosmian/reusable_workflows/.github/workflows/clippy.yml@develop
     with:
       toolchain: ${{ inputs.toolchain }}
 
   build-tests:
-    uses: ./.github/workflows/build_all.yml
+    uses: Cosmian/reusable_workflows/.github/workflows/build_all.yml@develop
     secrets: inherit
     with:
       toolchain: ${{ inputs.toolchain }}
@@ -97,25 +97,20 @@ jobs:
           fi
           DESTINATION_DIR=/mnt/package/findex-server/$BRANCH
           ssh -o 'StrictHostKeyChecking no' -i /root/.ssh/id_rsa cosmian@package.cosmian.com mkdir -p $DESTINATION_DIR
-          scp -o 'StrictHostKeyChecking no' -i /root/.ssh/id_rsa \
-            *.zip \
-            cosmian@package.cosmian.com:$DESTINATION_DIR/
+          scp -o 'StrictHostKeyChecking no' -i /root/.ssh/id_rsa *.zip cosmian@package.cosmian.com:$DESTINATION_DIR/
 
           if [ "${{ inputs.debug_or_release }}" = "release" ]; then
             ssh -o 'StrictHostKeyChecking no' -i /root/.ssh/id_rsa cosmian@package.cosmian.com mkdir -p $DESTINATION_DIR/{rhel9,ubuntu-22.04,ubuntu-24.04}
 
             # RedHat 9 package
-            scp -o 'StrictHostKeyChecking no' \
-              -i /root/.ssh/id_rsa rhel9-${{ inputs.debug_or_release }}/generate-rpm/*.rpm \
-              cosmian@package.cosmian.com:$DESTINATION_DIR/rhel9
+            find "rhel9-${{ inputs.debug_or_release }}" -type f -name "*.rpm" -exec \
+              scp -o 'StrictHostKeyChecking no' -i /root/.ssh/id_rsa {} cosmian@package.cosmian.com:$DESTINATION_DIR/rhel9/ \;
 
             # Ubuntu packages
-            scp -o 'StrictHostKeyChecking no' \
-              -i /root/.ssh/id_rsa ubuntu_22_04-${{ inputs.debug_or_release }}/debian/*.deb \
-              cosmian@package.cosmian.com:$DESTINATION_DIR/ubuntu-22.04
-            scp -o 'StrictHostKeyChecking no' \
-              -i /root/.ssh/id_rsa ubuntu_24_04-${{ inputs.debug_or_release }}/debian/*.deb \
-              cosmian@package.cosmian.com:$DESTINATION_DIR/ubuntu-24.04
+            find "ubuntu_22_04-${{ inputs.debug_or_release }}" -type f -name "*.deb" -exec \
+              scp -o 'StrictHostKeyChecking no' -i /root/.ssh/id_rsa {} cosmian@package.cosmian.com:$DESTINATION_DIR/ubuntu-22.04/ \;
+            find "ubuntu_24_04-${{ inputs.debug_or_release }}" -type f -name "*.deb" -exec \
+              scp -o 'StrictHostKeyChecking no' -i /root/.ssh/id_rsa {} cosmian@package.cosmian.com:$DESTINATION_DIR/ubuntu-24.04/ \;
           fi
 
       - name: Release on tags, attach asset on release
@@ -124,9 +119,9 @@ jobs:
         with:
           files: |
             *.zip
-            rhel9-release/generate-rpm/*.rpm \
-            ubuntu_22_04-release/debian/*.deb \
-            ubuntu_24_04-release/debian/*.deb
+            ./rhel9-release/__w/findex-server/findex-server/target/x86_64-unknown-linux-gnu/generate-rpm/*.rpm \
+            ./ubuntu_22_04-release/home/runner/work/findex-server/findex-server/target/x86_64-unknown-linux-gnu/debian/*.deb \
+            ./ubuntu_24_04-release/home/runner/work/findex-server/findex-server/target/x86_64-unknown-linux-gnu/debian/*.deb
 
   public_documentation:
     needs:

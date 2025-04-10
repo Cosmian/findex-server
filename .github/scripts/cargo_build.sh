@@ -40,6 +40,10 @@ fi
 
 rustup target add "$TARGET"
 
+if [ -f /etc/lsb-release ]; then
+  bash .github/scripts/test_utimaco.sh
+fi
+
 # shellcheck disable=SC2086
 cargo build --target $TARGET $RELEASE
 
