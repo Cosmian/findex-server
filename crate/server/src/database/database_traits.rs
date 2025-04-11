@@ -1,8 +1,8 @@
+use crate::error::result::FResult;
 use async_trait::async_trait;
+use cosmian_findex::MemoryADT;
 use cosmian_findex_structs::{EncryptedEntries, Permission, Permissions, Uuids};
 use uuid::Uuid;
-
-use crate::error::result::FResult;
 
 #[async_trait]
 pub(crate) trait PermissionsTrait: Sync + Send {
@@ -38,4 +38,4 @@ pub(crate) trait DatasetsTrait: Sync + Send {
 
 #[allow(dead_code)] // false positive, used in crate/server/src/database/redis/mod.rs
 #[async_trait]
-pub(crate) trait DatabaseTraits: PermissionsTrait + DatasetsTrait {}
+pub(crate) trait DatabaseTraits: MemoryADT + PermissionsTrait + DatasetsTrait {}
