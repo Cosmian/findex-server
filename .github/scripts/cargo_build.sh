@@ -47,9 +47,6 @@ fi
 # shellcheck disable=SC2086
 cargo build --target $TARGET $RELEASE
 
-if [ "$DEBUG_OR_RELEASE" = "release" ]; then
-  INCLUDE_IGNORED="--include-ignored"
-fi
 export RUST_LOG="fatal,cosmian_cli=error,cosmian_findex_client=debug,cosmian_findex_server=debug"
 # shellcheck disable=SC2086
-cargo test --workspace --lib --target $TARGET $RELEASE $FEATURES -- --nocapture $SKIP_SERVICES_TESTS $INCLUDE_IGNORED
+cargo test --workspace --lib --target $TARGET $RELEASE $FEATURES -- --nocapture $SKIP_SERVICES_TESTS
