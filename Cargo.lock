@@ -1088,7 +1088,7 @@ checksum = "773648b94d0e5d620f64f280777445740e61fe701025087ec8b57f45c791888b"
 
 [[package]]
 name = "cosmian_cli"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "actix-rt",
  "actix-server",
@@ -1255,7 +1255,7 @@ dependencies = [
 
 [[package]]
 name = "cosmian_findex_client"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "base64 0.22.1",
  "cosmian_crypto_core 10.0.1",
@@ -1277,7 +1277,7 @@ dependencies = [
 
 [[package]]
 name = "cosmian_findex_server"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "actix-cors",
  "actix-identity",
@@ -1312,7 +1312,7 @@ dependencies = [
 
 [[package]]
 name = "cosmian_findex_structs"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "base64 0.22.1",
  "cosmian_crypto_core 10.0.1",
@@ -1391,7 +1391,7 @@ dependencies = [
 
 [[package]]
 name = "cosmian_kms_client"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "cosmian_crypto_core 10.0.1",
  "cosmian_http_client",
@@ -1408,7 +1408,7 @@ dependencies = [
 
 [[package]]
 name = "cosmian_kms_client_utils"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "base64 0.22.1",
  "clap",
@@ -5118,7 +5118,7 @@ checksum = "8f50febec83f5ee1df3015341d8bd429f2d1cc62bcba7ea2076759d315084683"
 
 [[package]]
 name = "test_findex_server"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "actix-server",
  "cosmian_findex_client",
@@ -5132,7 +5132,7 @@ dependencies = [
 
 [[package]]
 name = "test_kms_server"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "actix-server",
  "base64 0.22.1",
