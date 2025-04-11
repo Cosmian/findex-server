@@ -13,6 +13,12 @@ impl<'a> From<&'a [u8]> for Keyword {
     }
 }
 
+impl From<Vec<u8>> for Keyword {
+    fn from(bytes: Vec<u8>) -> Self {
+        Self(bytes)
+    }
+}
+
 impl std::fmt::Display for Keyword {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", String::from_utf8_lossy(&self.0))
@@ -36,6 +42,25 @@ impl DerefMut for KeywordToDataSetsMap {
     }
 }
 
+impl std::fmt::Display for KeywordToDataSetsMap {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let base64_map: HashMap<String, Vec<String>> = self
+            .0
+            .iter()
+            .map(|(keyword, values)| {
+                (
+                    String::from_utf8_lossy(&keyword.0).to_string(),
+                    values
+                        .iter()
+                        .map(|value| String::from_utf8_lossy(value.as_ref()).to_string())
+                        .collect(),
+                )
+            })
+            .collect();
+        write!(f, "{base64_map:?}")
+    }
+}
+
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Keywords(pub HashSet<Keyword>);
 
@@ -43,15 +68,15 @@ impl From<Vec<String>> for Keywords {
     fn from(strings: Vec<String>) -> Self {
         let keywords = strings
             .into_iter()
-            .map(|s| Keyword::from(s.as_ref()))
+            .map(|s| Keyword::from(s.into_bytes()))
             .collect();
         Self(keywords)
     }
 }
 
-impl From<Vec<&Keyword>> for Keywords {
-    fn from(keywords: Vec<&Keyword>) -> Self {
-        Self(keywords.into_iter().cloned().collect())
+impl From<Vec<Keyword>> for Keywords {
+    fn from(keywords: Vec<Keyword>) -> Self {
+        Self(keywords.into_iter().collect())
     }
 }
 

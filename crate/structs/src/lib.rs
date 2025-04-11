@@ -56,8 +56,8 @@ use cosmian_findex::ADDRESS_LENGTH;
 pub use encrypted_entries::EncryptedEntries;
 pub use error::StructsError;
 pub use findex::{
-    Addresses, Guard, Keyword, KeywordToDataSetsMap, Keywords, OptionalWords, SearchResults,
-    SerializationResult, Tasks,
+    Addresses, Bindings, Guard, Keyword, KeywordToDataSetsMap, Keywords, OptionalWords,
+    SearchResults, SerializationResult,
 };
 pub use permissions::{Permission, Permissions};
 pub use uuids::Uuids;
@@ -66,5 +66,9 @@ pub use uuids::Uuids;
 pub const UID_LENGTH: usize = 16;
 
 // Findex specializations
-pub const WORD_LENGTH: usize = 200;
+pub const CUSTOM_WORD_LENGTH: usize = 200;
 pub const SERVER_ADDRESS_LENGTH: usize = ADDRESS_LENGTH + UID_LENGTH;
+
+pub mod reexport {
+    pub use cosmian_findex;
+}

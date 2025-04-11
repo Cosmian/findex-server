@@ -1,15 +1,15 @@
 use std::{collections::HashMap, fmt::Display, str::FromStr};
 
-use cosmian_crypto_core::bytes_ser_de::{self, to_leb128_len, Serializable};
+use cosmian_crypto_core::bytes_ser_de::{self, Serializable, to_leb128_len};
+use tracing::debug;
 use uuid::Uuid;
 
 use crate::{
-    error::{result::StructsResult, StructsError},
+    error::{StructsError, result::StructsResult},
     structs_bail,
 };
 
-#[repr(u8)]
-#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Debug)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Permission {
     Read = 0,
     Write = 1,
@@ -84,6 +84,16 @@ impl Display for Permissions {
     }
 }
 
+impl FromIterator<(Uuid, Permission)> for Permissions {
+    fn from_iter<I: IntoIterator<Item = (Uuid, Permission)>>(iter: I) -> Self {
+        let mut permissions = HashMap::new();
+        for (uuid, permission) in iter {
+            permissions.insert(uuid, permission);
+        }
+        Self { permissions }
+    }
+}
+
 impl Serializable for Permissions {
     type Error = StructsError;
 
@@ -102,7 +112,7 @@ impl Serializable for Permissions {
     fn write(&self, ser: &mut bytes_ser_de::Serializer) -> Result<usize, Self::Error> {
         let mut n = ser.write_leb128_u64(u64::try_from(self.permissions.len())?)?;
         for (index_id, permission) in &self.permissions {
-            n += ser.write_leb128_u64(u64::from(u8::from(permission.clone())))?;
+            n += ser.write_leb128_u64(u64::from(u8::from(*permission)))?;
             n += ser.write_array(index_id.as_bytes())?;
         }
         Ok(n)
@@ -110,8 +120,12 @@ impl Serializable for Permissions {
 
     fn read(de: &mut bytes_ser_de::Deserializer) -> Result<Self, Self::Error> {
         let nb = de.read_leb128_u64()?;
-        let mut permissions =
-            HashMap::with_capacity(usize::try_from(nb)? * PERMISSION_LENGTH + INDEX_ID_LENGTH);
+        let length = usize::try_from(nb)? * PERMISSION_LENGTH + INDEX_ID_LENGTH;
+        if length > 1_000_000 {
+            debug!("Permissions: read: allocating {length}");
+        }
+
+        let mut permissions = HashMap::with_capacity(length);
         for _ in 0..nb {
             let permission_u8 = u8::try_from(de.read_leb128_u64()?)?;
             let permission = Permission::try_from(permission_u8)?;
@@ -131,7 +145,7 @@ impl Permissions {
         Self { permissions }
     }
 
-    pub fn grant_permission(&mut self, index_id: Uuid, permission: Permission) {
+    pub fn set_permission(&mut self, index_id: Uuid, permission: Permission) {
         self.permissions.insert(index_id, permission);
     }
 
@@ -149,10 +163,7 @@ impl Permissions {
         let mut permissions = HashMap::with_capacity(self.permissions.len());
         for (index_id, permission) in &self.permissions {
             if let Some(other_permission) = other_permissions.permissions.get(index_id) {
-                permissions.insert(
-                    *index_id,
-                    std::cmp::min(permission.clone(), other_permission.clone()),
-                );
+                permissions.insert(*index_id, std::cmp::min(*permission, *other_permission));
             }
         }
         Self { permissions }

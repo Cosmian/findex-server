@@ -2,11 +2,40 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.0] - 2025-04-11
+
+### 🚀 Features
+
+- [**breaking**] Update permission management flow, no more mutex ([#45](https://github.com/Cosmian/findex-server/pull/45))
+- Semaphore for CLI parallelism ([#46](https://github.com/Cosmian/findex-server/pull/46))
+- Parallelism for write only ([#50](https://github.com/Cosmian/findex-server/pull/50))
+- Delegate encryption to KMS writing a custom encryption layer ([#47](https://github.com/Cosmian/findex-server/pull/47))
+- Move all CLI relative crates on <https://github.com/Cosmian/client> ([#59](https://github.com/Cosmian/findex-server/pull/59))
+
+### 🐛 Bug Fixes
+
+- Reduce cloning ([#54](https://github.com/Cosmian/findex-server/pull/54))
+- Limit number of concurrent network calls ([#58](https://github.com/Cosmian/findex-server/pull/58))
+- Reuse CLI ([#64](https://github.com/Cosmian/findex-server/pull/64))
+- RUSTSEC-2025-0022: `openssl`: Use-After-Free in Md::fetch and Cipher::fetch
+
+### 📚 Documentation
+
+- Review menu and rename Findex server
+
+### ⚙️ Miscellaneous Tasks
+
+- Add ubuntu 20.04 and 22.04 to releases
+- Remove Ubuntu 20.04 support according to Github ([#56](https://github.com/Cosmian/findex-server/pull/56))
+- Move test_findex_server and cosmian_findex_client ([#61](https://github.com/Cosmian/findex-server/pull/61))
+- Fix cli tests ([#66](https://github.com/Cosmian/findex-server/pull/66))
+- Add reusable workflows ([#69](https://github.com/Cosmian/findex-server/pull/69))
+
 ## [0.2.0] - 2025-02-03
 
 ### 🚀 Features
 
-- Support findex v7 ([#37](https://github.com/Cosmian/kms/pull/37))
+- Support findex v7 ([#37](https://github.com/Cosmian/findex-server/pull/37))
 
 ### ⚙️ Miscellaneous Tasks
 
@@ -17,11 +46,11 @@ All notable changes to this project will be documented in this file.
 
 ### 🚀 Features
 
-- Server returns index_id in json response (#26)
+- Server returns index_id in json response ([#26](https://github.com/Cosmian/findex-server/pull/26))
 
 ### 🐛 Bug Fixes
 
-- Save configuration file outside of clap actions (#25)
+- Save configuration file outside of clap actions ([#25](https://github.com/Cosmian/findex-server/pull/25))
 
 ### ⚙️ Miscellaneous Tasks
 

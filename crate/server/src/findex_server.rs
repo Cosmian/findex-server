@@ -1,12 +1,12 @@
-use std::sync::{mpsc, Arc};
+use std::sync::{Arc, mpsc};
 
 use actix_cors::Cors;
 use actix_identity::IdentityMiddleware;
 use actix_web::{
+    App, HttpServer,
     dev::ServerHandle,
     middleware::Condition,
     web::{self, Data, JsonConfig, PayloadConfig},
-    App, HttpServer,
 };
 use openssl::{
     ssl::{SslAcceptor, SslAcceptorBuilder, SslMethod, SslVerifyMode},
@@ -18,13 +18,13 @@ use crate::{
     config::{self, JwtAuthConfig, ServerParams},
     core::FindexServer,
     error::result::FResult,
-    findex_server_bail,
-    middlewares::{extract_peer_certificate, AuthTransformer, JwksManager, JwtConfig, SslAuth},
+    middlewares::{AuthTransformer, JwksManager, JwtConfig, SslAuth, extract_peer_certificate},
     routes::{
         create_index_id, datasets_add_entries, datasets_del_entries, datasets_get_entries,
-        findex_batch_read, findex_guarded_write, get_version, grant_permission, list_permission,
-        revoke_permission,
+        findex_batch_read, findex_guarded_write, get_version, list_permission, revoke_permission,
+        set_permission,
     },
+    server_bail,
 };
 
 /// Starts the Findex server based on the provided configuration.
@@ -124,7 +124,7 @@ async fn start_https_findex_server(
     server_handle_transmitter: Option<mpsc::Sender<ServerHandle>>,
 ) -> FResult<()> {
     let config::HttpParams::Https(p12) = &server_params.http_params else {
-        findex_server_bail!("http/s: a PKCS#12 file must be provided")
+        server_bail!("http/s: a PKCS#12 file must be provided")
     };
 
     // Create and configure an SSL acceptor with the certificate and key
@@ -254,7 +254,7 @@ pub(crate) async fn prepare_findex_server(
             // Permissions management endpoints
             .service(create_index_id)
             .service(list_permission)
-            .service(grant_permission)
+            .service(set_permission)
             .service(revoke_permission)
             // Dataset management
             .service(datasets_add_entries)

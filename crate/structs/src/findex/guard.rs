@@ -1,6 +1,6 @@
 use crate::StructsError;
 use cosmian_crypto_core::bytes_ser_de::{Deserializer, Serializer};
-use cosmian_findex::{Address, ADDRESS_LENGTH};
+use cosmian_findex::{ADDRESS_LENGTH, Address};
 
 use super::SerializationResult;
 

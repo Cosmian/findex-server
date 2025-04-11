@@ -1,14 +1,12 @@
-use crate::error::{result::FResult, server::FindexServerError};
+use crate::error::{result::FResult, server::ServerError};
 use cosmian_findex::{Address, RedisMemory};
 use cosmian_findex_structs::SERVER_ADDRESS_LENGTH;
 use redis::aio::ConnectionManager;
-use tokio::sync::Mutex;
 use tracing::info;
 
 pub(crate) struct Redis<const WORD_LENGTH: usize> {
     pub(crate) memory: RedisMemory<Address<SERVER_ADDRESS_LENGTH>, [u8; WORD_LENGTH]>,
     pub(crate) manager: ConnectionManager,
-    pub(crate) lock: Mutex<()>,
 }
 
 impl<const WORD_LENGTH: usize> Redis<WORD_LENGTH> {
@@ -22,18 +20,14 @@ impl<const WORD_LENGTH: usize> Redis<WORD_LENGTH> {
             if deletion_result.as_str() == "OK" {
                 info!("Database cleared");
             } else {
-                return Err(FindexServerError::DatabaseError(
-                    "Database not cleared, Redis DB returned {deletion_result}".to_owned(),
-                ));
+                return Err(ServerError::DatabaseError(format!(
+                    "Database not cleared, Redis DB returned {deletion_result}"
+                )));
             }
         }
 
         let memory = RedisMemory::connect_with_manager(manager.clone()).await?;
 
-        Ok(Self {
-            memory,
-            manager,
-            lock: Mutex::new(()),
-        })
+        Ok(Self { memory, manager })
     }
 }

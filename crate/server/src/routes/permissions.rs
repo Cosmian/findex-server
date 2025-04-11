@@ -1,35 +1,18 @@
 use crate::{
     core::FindexServer,
     database::database_traits::PermissionsTrait,
-    error::{result::FResult, server::FindexServerError},
+    error::{result::FResult, server::ServerError},
     routes::error::{ResponseBytes, SuccessResponse},
 };
 use actix_web::{
-    post,
+    HttpRequest, HttpResponse, post,
     web::{self, Data, Json},
-    HttpRequest, HttpResponse,
 };
 use cosmian_crypto_core::bytes_ser_de::Serializable;
 use cosmian_findex_structs::Permission;
 use std::{str::FromStr, sync::Arc};
 use tracing::trace;
 use uuid::Uuid;
-
-pub(crate) async fn check_permission(
-    user: &str,
-    index_id: &str,
-    expected_permission: Permission,
-    findex_server: &FindexServer,
-) -> FResult<()> {
-    let permission = findex_server.get_permission(user, index_id).await?;
-    trace!("check_permission: user {user} has permission {permission} on index {index_id}");
-    if permission < expected_permission {
-        return Err(FindexServerError::Unauthorized(format!(
-            "User {user} with permission {permission} is not allowed to write on index {index_id}",
-        )));
-    }
-    Ok(())
-}
 
 #[post("/create/index")]
 pub(crate) async fn create_index_id(
@@ -47,22 +30,22 @@ pub(crate) async fn create_index_id(
     }))
 }
 
-#[post("/permission/grant/{user_id}/{permission}/{index_id}")]
-pub(crate) async fn grant_permission(
+#[post("/permission/set/{user_id}/{permission}/{index_id}")]
+pub(crate) async fn set_permission(
     req: HttpRequest,
     params: web::Path<(String, String, String)>,
     findex_server: Data<Arc<FindexServer>>,
 ) -> FResult<Json<SuccessResponse>> {
     let user = findex_server.get_user(&req);
     let (user_id, permission, index_id) = params.into_inner();
-    trace!("user {user}: POST /permission/grant/{user_id}/{permission}/{index_id}");
+    trace!("user {user}: POST /permission/set/{user_id}/{permission}/{index_id}");
 
-    // Check if the user has the right to grant permission: only admins can do that
+    // Check if the user has the right to set permission: only admins can do that
     let user_permission = findex_server.get_permission(&user, &index_id).await?;
     if Permission::Admin != user_permission {
-        return Err(FindexServerError::Unauthorized(format!(
+        return Err(ServerError::Unauthorized(format!(
             "Delegating permission to an index requires an admin permission. User {user} with \
-             permission {user_permission} does not allow granting permission to index {index_id} \
+             permission {user_permission} does not allow setting permission to index {index_id} \
              with permission {permission}",
         )));
     }
@@ -72,7 +55,7 @@ pub(crate) async fn grant_permission(
 
     findex_server
         .db
-        .grant_permission(
+        .set_permission(
             &user_id,
             Permission::from_str(permission.as_str())?,
             &index_id,
@@ -126,7 +109,7 @@ pub(crate) async fn revoke_permission(
     let user_permission = findex_server.get_permission(&user, &index_id).await?;
 
     if Permission::Admin != user_permission {
-        return Err(FindexServerError::Unauthorized(format!(
+        return Err(ServerError::Unauthorized(format!(
             "Revoking permission to an index requires an admin permission. User {user} with \
              permission {user_permission} does not allow revoking permission to index {index_id}",
         )));

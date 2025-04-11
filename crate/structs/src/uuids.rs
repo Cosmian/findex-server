@@ -1,9 +1,10 @@
 use std::{fmt::Display, ops::Deref};
 
-use cosmian_crypto_core::bytes_ser_de::{self, to_leb128_len, Serializable};
+use cosmian_crypto_core::bytes_ser_de::{self, Serializable, to_leb128_len};
+use tracing::debug;
 use uuid::Uuid;
 
-use crate::{encrypted_entries::UUID_LENGTH, SearchResults, StructsError};
+use crate::{SearchResults, StructsError, encrypted_entries::UUID_LENGTH};
 
 #[derive(Debug)]
 pub struct Uuids {
@@ -79,6 +80,10 @@ impl Serializable for Uuids {
 
     fn read(de: &mut bytes_ser_de::Deserializer) -> Result<Self, Self::Error> {
         let nb = de.read_leb128_u64()?;
+        let length = usize::try_from(nb)?;
+        if length > 1_000_000 {
+            debug!("Uuids: read: allocating {length}");
+        }
         let mut uuids = Vec::with_capacity(usize::try_from(nb)?);
         for _ in 0..nb {
             let uuid = de.read_array::<UUID_LENGTH>()?;

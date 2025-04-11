@@ -1,9 +1,8 @@
 use std::sync::Arc;
 
 use actix_web::{
-    post,
+    HttpRequest, HttpResponse, post,
     web::{self, Bytes, Data, Json},
-    HttpRequest, HttpResponse,
 };
 use cosmian_crypto_core::bytes_ser_de::Serializable;
 use cosmian_findex_structs::{EncryptedEntries, Permission, Uuids};
@@ -14,10 +13,7 @@ use crate::{
     core::FindexServer,
     database::database_traits::DatasetsTrait,
     error::result::FResult,
-    routes::{
-        check_permission,
-        error::{ResponseBytes, SuccessResponse},
-    },
+    routes::error::{ResponseBytes, SuccessResponse},
 };
 
 #[post("/datasets/{index_id}/add_entries")]
@@ -31,7 +27,9 @@ pub(crate) async fn datasets_add_entries(
 
     info!("user {user}: POST /datasets/{index_id}/add_entries");
 
-    check_permission(&user, &index_id, Permission::Write, &findex_server).await?;
+    findex_server
+        .ensure_minimum_permission(&user, &index_id, Permission::Write)
+        .await?;
 
     let index_id = Uuid::parse_str(&index_id)?;
     let encrypted_entries = EncryptedEntries::deserialize(&bytes)?;
@@ -66,7 +64,9 @@ pub(crate) async fn datasets_del_entries(
 
     info!("user {user}: POST /datasets/{index_id}/delete_entries");
 
-    check_permission(&user, &index_id, Permission::Write, &findex_server).await?;
+    findex_server
+        .ensure_minimum_permission(&user, &index_id, Permission::Write)
+        .await?;
 
     let index_id = Uuid::parse_str(&index_id)?;
     let uuids = Uuids::deserialize(&bytes)?;
@@ -101,7 +101,9 @@ pub(crate) async fn datasets_get_entries(
 
     info!("user {user}: POST /datasets/{index_id}/get_entries",);
 
-    check_permission(&user, &index_id, Permission::Read, &findex_server).await?;
+    findex_server
+        .ensure_minimum_permission(&user, &index_id, Permission::Read)
+        .await?;
 
     let index_id = Uuid::parse_str(&index_id)?;
     let uuids = Uuids::deserialize(&bytes)?;

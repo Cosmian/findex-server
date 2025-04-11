@@ -4,7 +4,13 @@
       "pattern": "../cosmian_cli"
     },
     {
+      "pattern": "../key_management_system"
+    },
+    {
       "pattern": "package.cosmian.com"
+    },
+    {
+      "pattern": "jwt.io"
     },
     {
       "pattern": "../cosmian_vm"

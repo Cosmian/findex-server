@@ -8,7 +8,7 @@ use thiserror::Error;
 
 // Each error type must have a corresponding HTTP status code
 #[derive(Error, Debug, Clone)]
-pub enum FindexServerError {
+pub enum ServerError {
     // When a conversion from/to bytes
     #[error("Conversion Error: {0}")]
     ConversionError(String),
@@ -49,19 +49,19 @@ pub enum FindexServerError {
     UuidError(#[from] uuid::Error),
 }
 
-impl From<std::io::Error> for FindexServerError {
+impl From<std::io::Error> for ServerError {
     fn from(e: std::io::Error) -> Self {
         Self::ServerError(e.to_string())
     }
 }
 
-impl From<redis::RedisError> for FindexServerError {
+impl From<redis::RedisError> for ServerError {
     fn from(err: redis::RedisError) -> Self {
         Self::Redis(err.to_string())
     }
 }
 
-impl From<MemoryError> for FindexServerError {
+impl From<MemoryError> for ServerError {
     fn from(e: MemoryError) -> Self {
         Self::DatabaseError(e.to_string())
     }
@@ -93,19 +93,19 @@ macro_rules! findex_server_ensure {
 #[macro_export]
 macro_rules! findex_server_error {
     ($msg:literal) => {
-        $crate::error::server::FindexServerError::ServerError(::core::format_args!($msg).to_string())
+        $crate::error::server::ServerError::ServerError(::core::format_args!($msg).to_string())
     };
     ($err:expr $(,)?) => ({
-        $crate::error::server::FindexServerError::ServerError($err.to_string())
+        $crate::error::server::ServerError::ServerError($err.to_string())
     });
     ($fmt:expr, $($arg:tt)*) => {
-        $crate::error::server::FindexServerError::ServerError(::core::format_args!($fmt, $($arg)*).to_string())
+        $crate::error::server::ServerError::ServerError(::core::format_args!($fmt, $($arg)*).to_string())
     };
 }
 
 /// Return early with an error if a condition is not satisfied.
 #[macro_export]
-macro_rules! findex_server_bail {
+macro_rules! server_bail {
     ($msg:literal) => {
         return ::core::result::Result::Err($crate::findex_server_error!($msg))
     };
@@ -120,7 +120,7 @@ macro_rules! findex_server_bail {
 #[allow(clippy::expect_used)] // ok in tests
 #[cfg(test)]
 mod tests {
-    use super::FindexServerError;
+    use super::ServerError;
 
     #[test]
     fn test_findex_server_error_interpolation() {
@@ -135,15 +135,15 @@ mod tests {
         err.expect_err("Unexpected server error: interpolate 44");
     }
 
-    fn bail() -> Result<(), FindexServerError> {
+    fn bail() -> Result<(), ServerError> {
         let var = 43;
         if true {
-            findex_server_bail!("interpolate {var}");
+            server_bail!("interpolate {var}");
         }
         Ok(())
     }
 
-    fn ensure() -> Result<(), FindexServerError> {
+    fn ensure() -> Result<(), ServerError> {
         let var = 44;
         findex_server_ensure!(false, "interpolate {var}");
         Ok(())

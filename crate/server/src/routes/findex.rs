@@ -1,26 +1,19 @@
 use std::sync::Arc;
 
 use actix_web::{
-    post,
+    HttpRequest, HttpResponse, post,
     web::{self, Bytes, Data},
-    HttpRequest, HttpResponse,
 };
-use cosmian_findex::{Address, MemoryADT, ADDRESS_LENGTH};
+use cosmian_findex::{ADDRESS_LENGTH, Address, MemoryADT};
 
 use cosmian_findex_structs::{
-    Addresses, Guard, OptionalWords, Permission, Tasks, SERVER_ADDRESS_LENGTH, UID_LENGTH,
-    WORD_LENGTH,
+    Addresses, Bindings, CUSTOM_WORD_LENGTH, Guard, OptionalWords, Permission,
+    SERVER_ADDRESS_LENGTH, UID_LENGTH,
 };
 use tracing::trace;
 use uuid::Uuid;
 
-use crate::{
-    core::FindexServer,
-    error::server::FindexServerError,
-    routes::{check_permission, error::ResponseBytes},
-};
-
-// TODO(hatem): reduce cloning
+use crate::{core::FindexServer, error::server::ServerError, routes::error::ResponseBytes};
 
 #[allow(clippy::indexing_slicing)]
 fn prepend_index_id(
@@ -44,7 +37,9 @@ pub(crate) async fn findex_batch_read(
 
     trace!("user {user}: POST /indexes/{index_id}/batch_read");
 
-    check_permission(&user, &index_id, Permission::Read, &findex_server).await?;
+    findex_server
+        .ensure_minimum_permission(&user, &index_id, Permission::Read)
+        .await?;
 
     let index_id = Uuid::parse_str(&index_id)?;
     let addresses = Addresses::deserialize(&bytes)?
@@ -82,7 +77,9 @@ pub(crate) async fn findex_guarded_write(
 
     trace!("user {user}: POST /indexes/{index_id}/guarded_write");
 
-    check_permission(&user, &index_id, Permission::Write, &findex_server).await?;
+    findex_server
+        .ensure_minimum_permission(&user, &index_id, Permission::Write)
+        .await?;
 
     let index_id = Uuid::parse_str(&index_id)?;
 
@@ -93,31 +90,31 @@ pub(crate) async fn findex_guarded_write(
     let guard_len = if let Some(f) = bytes.get(ADDRESS_LENGTH) {
         match *f {
             0 => ADDRESS_LENGTH + 1,
-            1 => ADDRESS_LENGTH + 1 + WORD_LENGTH,
+            1 => ADDRESS_LENGTH + 1 + CUSTOM_WORD_LENGTH,
             _ => {
-                return Err(FindexServerError::InvalidRequest(format!(
+                return Err(ServerError::InvalidRequest(format!(
                     "{error_prefix} Invalid discriminant flag. Expected 0 or 1, found {f}"
-                )))
+                )));
             }
         }
     } else {
-        return Err(FindexServerError::InvalidRequest(format!(
+        return Err(ServerError::InvalidRequest(format!(
             "{error_prefix} Invalid discriminant flag. Expected 0 or 1, found None"
         )));
     };
 
     let guard = Guard::deserialize(bytes.get(..guard_len).ok_or_else(|| {
-        FindexServerError::InvalidRequest(format!("{error_prefix} Could not parse guard."))
+        ServerError::InvalidRequest(format!("{error_prefix} Could not parse guard."))
     })?)?;
 
-    let tasks = Tasks::deserialize(bytes.get(guard_len..).ok_or_else(|| {
-        FindexServerError::InvalidRequest(format!(
-            "{error_prefix} Could not parse tasks to be written.",
+    let bindings = Bindings::deserialize(bytes.get(guard_len..).ok_or_else(|| {
+        ServerError::InvalidRequest(format!(
+            "{error_prefix} Could not parse bindings to be written.",
         ))
     })?)?;
 
     let (a_g, w_g) = guard.into_inner();
-    let bindings = tasks
+    let bindings = bindings
         .into_inner()
         .into_iter()
         .map(|(a, w)| (prepend_index_id(&a, &index_id), w))

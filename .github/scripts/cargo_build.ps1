@@ -15,16 +15,16 @@ function BuildProject {
     $env:OPENSSL_DIR = "$env:VCPKG_INSTALLATION_ROOT\packages\openssl_x64-windows-static"
     Get-ChildItem -Recurse $env:OPENSSL_DIR
 
-    # Build `cosmian_findex_cli`
+    # Build `cosmian`
     if ($BuildType -eq "release") {
-        cargo build -p cosmian_findex_cli --release --target x86_64-pc-windows-msvc
+        cargo build -p cosmian_cli --release --target x86_64-pc-windows-msvc
     }
     else {
-        cargo build -p cosmian_findex_cli --target x86_64-pc-windows-msvc
+        cargo build -p cosmian_cli --target x86_64-pc-windows-msvc
     }
 
     # Check dynamic links
-    $output = & "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.29.30133\bin\HostX64\x64\dumpbin.exe" /dependents target\x86_64-pc-windows-msvc\$BuildType\cosmian_findex_cli.exe | Select-String "libcrypto"
+    $output = & "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.29.30133\bin\HostX64\x64\dumpbin.exe" /dependents target\x86_64-pc-windows-msvc\$BuildType\cosmian.exe | Select-String "libcrypto"
     if ($output) {
         throw "OpenSSL (libcrypto) found in dynamic dependencies. Error: $output"
     }

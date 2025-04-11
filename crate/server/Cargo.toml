@@ -43,7 +43,7 @@ clap = { workspace = true, features = [
   "cargo",
 ] }
 cosmian_crypto_core = { workspace = true }
-cosmian_findex = { workspace = true, features = ["redis-mem"] }
+cosmian_findex = { workspace = true }
 cosmian_findex_structs = { path = "../structs" }
 cosmian_logger = { workspace = true }
 dotenvy = "0.15"
@@ -76,8 +76,8 @@ url = { workspace = true }
 uuid = { workspace = true, features = ["v4"] }
 
 [dev-dependencies]
-tempfile = { workspace = true }
 rand = "0.9.0"
+tempfile = { workspace = true }
 
 # ------------------------------------------------------------------------------
 # START DEBIAN PACKAGING

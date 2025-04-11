@@ -7,19 +7,19 @@ use std::{
 use actix_service::{Service, Transform};
 use actix_tls::accept::openssl::TlsStream;
 use actix_web::{
+    Error, HttpMessage, HttpResponse,
     body::{BoxBody, EitherBody},
     dev::{Extensions, ServiceRequest, ServiceResponse},
     rt::net::TcpStream,
-    Error, HttpMessage, HttpResponse,
 };
 use futures::{
-    future::{ok, Ready},
     Future,
+    future::{Ready, ok},
 };
 use openssl::{nid::Nid, x509::X509};
 use tracing::{error, trace};
 
-use crate::{error::result::FResult, findex_server_bail};
+use crate::{error::result::FResult, server_bail};
 
 // see this https://github.com/actix/actix-web/pull/1754#issuecomment-716192605
 // for inspiration
@@ -174,13 +174,13 @@ where
 /// Extract the common name from the client certificate
 pub(crate) fn extract_common_name(cert: &X509) -> FResult<String> {
     match cert.subject_name().entries_by_nid(Nid::COMMONNAME).next() {
-        None => findex_server_bail!("Client certificate has no common name"),
+        None => server_bail!("Client certificate has no common name"),
         Some(cn) => match cn.data().as_utf8() {
             Ok(cn) => {
                 trace!("Client certificate common name: {}", cn);
                 Ok(cn.to_string())
             }
-            Err(e) => findex_server_bail!("Client certificate common name is not UTF-8: {}", e),
+            Err(e) => server_bail!("Client certificate common name is not UTF-8: {}", e),
         },
     }
 }

@@ -1,7 +1,7 @@
 use clap::Args;
 use serde::{Deserialize, Serialize};
 
-use crate::{config::IdpConfig, error::server::FindexServerError, findex_server_ensure};
+use crate::{config::IdpConfig, error::server::ServerError, findex_server_ensure};
 
 // Support for JWT token inspired by the doc at : https://cloud.google.com/api-gateway/docs/authenticating-users-jwt
 // and following pages
@@ -67,7 +67,7 @@ impl JwtAuthConfig {
     ///
     /// Assert that when provided, JWKS URI and JWT audience are provided once
     /// per JWT issuer URI;
-    pub(crate) fn extract_idp_configs(self) -> Result<Option<Vec<IdpConfig>>, FindexServerError> {
+    pub(crate) fn extract_idp_configs(self) -> Result<Option<Vec<IdpConfig>>, ServerError> {
         self.jwt_issuer_uri
             .map(|issuer_uris| {
                 let option_vec_to_vec_option = |option_vec: Option<Vec<_>>| {

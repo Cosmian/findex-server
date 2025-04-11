@@ -15,7 +15,7 @@ if [ "$DEBUG_OR_RELEASE" = "release" ]; then
   rm -rf target/"$TARGET"/generate-rpm
   if [ -f /etc/redhat-release ]; then
     cd crate/server && cargo build --target "$TARGET" --release && cd -
-    cargo install --version 0.14.1 cargo-generate-rpm --force
+    cargo install --version 0.16.0 cargo-generate-rpm --force
     cd "$ROOT_FOLDER"
     cargo generate-rpm --target "$TARGET" -p crate/server --metadata-overwrite=pkg/rpm/scriptlets.toml
   elif [ -f /etc/lsb-release ]; then
@@ -40,10 +40,13 @@ fi
 
 rustup target add "$TARGET"
 
+if [ -f /etc/lsb-release ]; then
+  bash .github/scripts/test_utimaco.sh
+fi
+
 # shellcheck disable=SC2086
 cargo build --target $TARGET $RELEASE
 
-export RUST_LOG="cosmian_findex_cli=debug,cosmian_findex_client=debug,cosmian_findex_server=debug,test_findex_server=trace"
-
+export RUST_LOG="fatal,cosmian_cli=error,cosmian_findex_client=debug,cosmian_findex_server=debug"
 # shellcheck disable=SC2086
-cargo test --target $TARGET $RELEASE --workspace -- --nocapture $SKIP_SERVICES_TESTS --include-ignored
+cargo test --workspace --lib --target $TARGET $RELEASE $FEATURES -- --nocapture $SKIP_SERVICES_TESTS
