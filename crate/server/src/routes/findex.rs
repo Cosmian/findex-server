@@ -20,7 +20,7 @@ fn prepend_index_id(
     address: &Address<ADDRESS_LENGTH>,
     index_id: &Uuid,
 ) -> Address<SERVER_ADDRESS_LENGTH> {
-    let mut server_address = Address::<{ SERVER_ADDRESS_LENGTH }>::default();
+    let mut server_address = Address::<{ SERVER_ADDRESS_LENGTH }>::from([0; SERVER_ADDRESS_LENGTH]);
     server_address[..UID_LENGTH].copy_from_slice(index_id.as_bytes());
     server_address[UID_LENGTH..].copy_from_slice(&**address);
     server_address
