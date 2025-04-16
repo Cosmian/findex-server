@@ -48,10 +48,8 @@ cosmian_config_utils = { git = "https://www.github.com/Cosmian/http_client_serve
 cosmian_cover_crypt = "15.0"
 cosmian_cli = { path = "cli/crate/cli" }
 cosmian_crypto_core = { version = "10.1.0", default-features = false }
-# cosmian_findex = { path = "../findex/", features = ["redis-mem", "sqlite-mem"] }
 cosmian_findex = { git = "https://github.com/Cosmian/findex", features = [
   "redis-mem",
-  "sqlite-mem",
 ], rev = "6329b6b2f2b64b033e40b05cd12ca1c9b5ee376f" }
 cosmian_findex_client = { path = "cli/crate/findex_client" }
 cosmian_findex_server = { path = "crate/server" }
