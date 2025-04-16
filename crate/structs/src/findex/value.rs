@@ -1,7 +1,4 @@
 //! This module is a polyfill for the Value struct that was deleted from findex v7.0.0.
-//! This file should disappear once everything is stable .. ?
-// TODO: Maybe turn all that in a macro (maybe in CryptoCore?) to reuse it for the words and maybe
-// others.
 
 use std::string::FromUtf8Error;
 
