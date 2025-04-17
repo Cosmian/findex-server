@@ -1104,7 +1104,7 @@ dependencies = [
  "cosmian_findex_structs",
  "cosmian_kms_client",
  "cosmian_kms_crypto",
- "cosmian_logger",
+ "cosmian_logger 0.1.1",
  "csv",
  "der",
  "hex",
@@ -1135,8 +1135,9 @@ dependencies = [
 
 [[package]]
 name = "cosmian_config_utils"
-version = "0.1.0"
-source = "git+https://www.github.com/Cosmian/http_client_server?tag=0.1.0#66c4e05ebbfa6d205ae16bacf99d197bab3a70a9"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c7d173d00549fed16e64077526ff6ed2d2abbacd748ca57815734e0e6b74f8a3"
 dependencies = [
  "base64 0.21.7",
  "serde",
@@ -1259,7 +1260,9 @@ dependencies = [
  "cosmian_findex_structs",
  "cosmian_http_client",
  "cosmian_kms_client",
- "cosmian_logger",
+ "cosmian_logger 0.1.1",
+ "rand 0.9.0",
+ "rand_chacha 0.9.0",
  "reqwest 0.11.27",
  "serde",
  "test_kms_server",
@@ -1285,7 +1288,7 @@ dependencies = [
  "cosmian_crypto_core 10.1.0",
  "cosmian_findex 7.0.0",
  "cosmian_findex_structs",
- "cosmian_logger",
+ "cosmian_logger 0.1.1",
  "dotenvy",
  "futures",
  "openssl",
@@ -1317,8 +1320,9 @@ dependencies = [
 
 [[package]]
 name = "cosmian_http_client"
-version = "0.1.0"
-source = "git+https://www.github.com/Cosmian/http_client_server?tag=0.1.1#136f269493316677cce12bfa0a65456414e12d64"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "58f76ac31d536d790fded13033cd27725ac3cbd382662659671131b13810bdf3"
 dependencies = [
  "actix-web",
  "derive_more 0.99.19",
@@ -1341,7 +1345,7 @@ source = "git+https://www.github.com/Cosmian/kms?branch=develop#72f2bc5480348ed2
 dependencies = [
  "bitflags 2.9.0",
  "chrono",
- "cosmian_logger",
+ "cosmian_logger 0.1.0",
  "hex",
  "leb128",
  "num-bigint-dig",
@@ -1427,7 +1431,7 @@ dependencies = [
  "cosmian_cover_crypt",
  "cosmian_crypto_core 10.1.0",
  "cosmian_kmip",
- "cosmian_logger",
+ "cosmian_logger 0.1.0",
  "hex",
  "num-bigint-dig",
  "openssl",
@@ -1548,6 +1552,16 @@ dependencies = [
 name = "cosmian_logger"
 version = "0.1.0"
 source = "git+https://www.github.com/Cosmian/http_client_server?tag=0.1.0#66c4e05ebbfa6d205ae16bacf99d197bab3a70a9"
+dependencies = [
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
+name = "cosmian_logger"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1653b919f4235dc2f5a5fbdc6a822f309e0a992a828411e6f0ae4bfb19d66f16"
 dependencies = [
  "tracing",
  "tracing-subscriber",
@@ -2597,7 +2611,7 @@ dependencies = [
  "httpdate",
  "itoa",
  "pin-project-lite",
- "socket2 0.5.8",
+ "socket2 0.4.10",
  "tokio",
  "tower-service",
  "tracing",
@@ -5127,7 +5141,7 @@ dependencies = [
  "actix-server",
  "cosmian_findex_client",
  "cosmian_findex_server",
- "cosmian_logger",
+ "cosmian_logger 0.1.1",
  "criterion",
  "tokio",
  "tracing",
@@ -5143,7 +5157,7 @@ dependencies = [
  "cosmian_cli",
  "cosmian_kms_server",
  "cosmian_kms_server_database",
- "cosmian_logger",
+ "cosmian_logger 0.1.1",
  "criterion",
  "serde_json",
  "tempfile",
