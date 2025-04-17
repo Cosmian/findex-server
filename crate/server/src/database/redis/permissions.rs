@@ -401,13 +401,14 @@ mod tests {
         },
     }
 
+    #[allow(clippy::as_conversions)] //  an u32 in the [0,2] range will always convert to u8
     fn generate_random_operation(rng: &mut impl RngCore) -> Operation {
         match rng.next_u32() % 3 {
             0 => Operation::CreateIndex {
                 index_id: Uuid::new_v4(),
             },
             1 => Operation::SetPermission {
-                permission: Permission::try_from(rng.next_u32() as u8 % 3).unwrap(),
+                permission: Permission::try_from((rng.next_u32() % 3) as u8).unwrap(),
                 index_id: Uuid::new_v4(),
             },
             2 => Operation::RevokePermission {
@@ -440,13 +441,14 @@ mod tests {
     ///   - The actual permissions are retrieved from the database
     ///   - The actual state is compared with the expected state
     ///   - Any mismatch fails the test
+    #[allow(clippy::as_conversions)] // won't panic
     #[tokio::test]
     async fn test_permissions_concurrent_set_revoke_permissions() {
         const MAX_USERS: usize = 100;
         const MAX_OPS: usize = 100;
         let mut rng = CsRng::from_entropy();
 
-        let users: Vec<String> = (0..rng.next_u32() % MAX_USERS as u32 + 1)
+        let users: Vec<String> = (0..=(rng.next_u64() % MAX_USERS as u64))
             .map(|_| Uuid::new_v4().to_string())
             .collect();
 
@@ -486,7 +488,9 @@ mod tests {
                             index_id: Uuid::new_v4(),
                         };
                     } else {
-                        let chosen_index = rng.next_u32() as usize % available_indexes.len();
+                        let chosen_index = usize::try_from(rng.next_u64() % usize::MAX as u64)
+                            .expect("Failed to convert index")
+                            % available_indexes.len();
                         match &mut op {
                             Operation::SetPermission { index_id, .. }
                             | Operation::RevokePermission { index_id } => {
