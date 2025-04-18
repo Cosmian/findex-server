@@ -32,7 +32,7 @@ impl PermissionsTrait for Redis<CUSTOM_WORD_LENGTH> {
     async fn create_index_id(&self, user_id: &str) -> FResult<Uuid> {
         let index_id = Uuid::new_v4();
         hset_redis_permission(&self.manager, user_id, &index_id, Permission::Admin).await?;
-        trace!("New index with id {index_id} created for user {user_id}");
+        trace!("New index with id {index_id} created for user  {user_id}");
         Ok(index_id)
     }
 
@@ -126,7 +126,10 @@ impl PermissionsTrait for Redis<CUSTOM_WORD_LENGTH> {
 mod tests {
 
     use super::*;
-    use crate::config::{DBConfig, DatabaseType};
+    use crate::{
+        config::{DBConfig, DatabaseType},
+        database::database_traits::InstantializationTrait,
+    };
     use cosmian_crypto_core::{
         CsRng,
         reexport::rand_core::{RngCore, SeedableRng},
@@ -155,7 +158,7 @@ mod tests {
 
     async fn setup_test_db() -> Redis<CUSTOM_WORD_LENGTH> {
         let url = redis_db_config().database_url;
-        Redis::instantiate(url.as_str(), false)
+        Redis::instantiate(url.as_str(), None, false)
             .await
             .expect("Test failed to instantiate Redis")
     }
