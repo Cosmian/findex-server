@@ -1,4 +1,8 @@
-use crate::error::{result::FResult, server::ServerError};
+use crate::{
+    config::DatabaseType,
+    database::{database_traits::InstantiationTrait, findex_database::DatabaseResult},
+};
+use async_trait::async_trait;
 use cosmian_findex::{Address, RedisMemory};
 use cosmian_findex_structs::SERVER_ADDRESS_LENGTH;
 use redis::aio::ConnectionManager;
@@ -9,9 +13,20 @@ pub(crate) struct Redis<const WORD_LENGTH: usize> {
     pub(crate) manager: ConnectionManager,
 }
 
-impl<const WORD_LENGTH: usize> Redis<WORD_LENGTH> {
-    pub(crate) async fn instantiate(redis_url: &str, clear_database: bool) -> FResult<Self> {
-        let client = redis::Client::open(redis_url)?;
+#[async_trait]
+impl<const WORD_LENGTH: usize> InstantiationTrait for Redis<WORD_LENGTH> {
+    async fn instantiate(
+        db_type: DatabaseType,
+        db_url: &str,
+        clear_database: bool,
+    ) -> DatabaseResult<Self> {
+        if db_type != DatabaseType::Redis {
+            return Err(crate::database::DatabaseError::InvalidDatabaseType(
+                "Redis".to_owned(),
+                format!("{db_type:?}"),
+            ));
+        }
+        let client = redis::Client::open(db_url)?;
         let mut manager = client.get_connection_manager().await?;
 
         if clear_database {
@@ -20,9 +35,13 @@ impl<const WORD_LENGTH: usize> Redis<WORD_LENGTH> {
             if deletion_result.as_str() == "OK" {
                 info!("Database cleared");
             } else {
-                return Err(ServerError::DatabaseError(format!(
-                    "Database not cleared, Redis DB returned {deletion_result}"
-                )));
+                return Err(crate::database::DatabaseError::RedisCoreError(
+                    redis::RedisError::from((
+                        redis::ErrorKind::ResponseError,
+                        "Failed to clear the database",
+                        deletion_result,
+                    )),
+                ));
             }
         }
 

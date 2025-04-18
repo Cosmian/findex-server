@@ -63,3 +63,8 @@ pub mod routes;
 #[allow(clippy::panic, clippy::unwrap_used, clippy::expect_used)]
 #[cfg(test)]
 mod tests;
+
+// names of the used tables. Exposed to ease out low level db montitoring
+pub use database::{
+    FINDEX_DATASETS_TABLE_NAME, FINDEX_MEMORY_TABLE_NAME, FINDEX_PERMISSIONS_TABLE_NAME,
+};

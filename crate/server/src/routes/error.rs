@@ -18,7 +18,6 @@ impl actix_web::error::ResponseError for ServerError {
             Self::DatabaseError(_)
             | Self::ConversionError(_)
             | Self::CryptographicError(_)
-            | Self::Redis(_)
             | Self::Findex(_)
             | Self::SendError(_)
             | Self::Certificate(_)
