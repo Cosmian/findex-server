@@ -1,39 +1,23 @@
-use super::Redis;
+use super::Sqlite;
 use crate::{
     database::database_traits::PermissionsTrait,
     error::{result::FResult, server::ServerError},
 };
 use async_trait::async_trait;
 use cosmian_findex_structs::{CUSTOM_WORD_LENGTH, Permission, Permissions};
-use redis::{AsyncCommands, RedisError, aio::ConnectionManager};
 use tracing::{instrument, trace};
 use uuid::Uuid;
 
-const PERMISSIONS_PREFIX: &str = "permissions";
-
-async fn hset_redis_permission(
-    manager: &ConnectionManager,
-    user_id: &str,
-    index_id: &Uuid,
-    permission: Permission,
-) -> Result<(), RedisError> {
-    let user_redis_key = format!("{PERMISSIONS_PREFIX}:{user_id}");
-
-    manager
-        .clone()
-        .hset::<_, _, u8, _>(&user_redis_key, index_id.to_string(), u8::from(permission))
-        .await
-}
-
 #[async_trait]
-impl PermissionsTrait for Redis<CUSTOM_WORD_LENGTH> {
+impl PermissionsTrait for Sqlite<CUSTOM_WORD_LENGTH> {
     /// Creates a new index ID and sets admin privileges.
     #[instrument(ret(Display), err, skip(self), level = "trace")]
     async fn create_index_id(&self, user_id: &str) -> FResult<Uuid> {
-        let index_id = Uuid::new_v4();
-        hset_redis_permission(&self.manager, user_id, &index_id, Permission::Admin).await?;
-        trace!("New index with id {index_id} created for user  {user_id}");
-        Ok(index_id)
+        todo!("create_index_id: user_id: {user_id}");
+        // let index_id = Uuid::new_v4();
+        // hset_redis_permission(&self.manager, user_id, &index_id, Permission::Admin).await?;
+        // trace!("New index with id {index_id} created for user  {user_id}");
+        // Ok(index_id)
     }
 
     /// Sets a permission to a user for a specific index.
@@ -43,74 +27,80 @@ impl PermissionsTrait for Redis<CUSTOM_WORD_LENGTH> {
         permission: Permission,
         index_id: &Uuid,
     ) -> FResult<()> {
-        hset_redis_permission(&self.manager, user_id, index_id, permission).await?;
-        trace!("Set {permission:?} permission to {user_id} for index {index_id}");
-        Ok(())
+        todo!(
+            "set_permission: user_id: {user_id}, permission: {permission:?}, index_id: {index_id}"
+        );
+        // hset_redis_permission(&self.manager, user_id, index_id, permission).await?;
+        // trace!("Set {permission:?} permission to {user_id} for index {index_id}");
+        // Ok(())
     }
 
     #[instrument(ret(Display), err, skip(self), level = "trace")]
     async fn get_permissions(&self, user_id: &str) -> FResult<Permissions> {
-        let user_redis_key = format!("{PERMISSIONS_PREFIX}:{user_id}");
+        todo!("get_permissions: user_id: {user_id}");
+        // let user_redis_key = format!("{PERMISSIONS_PREFIX}:{user_id}");
 
-        let permissions: Permissions = self
-            .manager
-            .clone()
-            .hgetall::<_, Vec<(String, u8)>>(user_redis_key)
-            .await
-            .map_err(ServerError::from)?
-            .into_iter()
-            .map(|(index_str, perm)| {
-                Ok((
-                    Uuid::parse_str(&index_str).map_err(|e| {
-                        ServerError::DatabaseError(format!("Invalid index ID. {e}"))
-                    })?,
-                    Permission::try_from(perm).map_err(|e| {
-                        ServerError::DatabaseError(format!("Invalid permission. {e}"))
-                    })?,
-                ))
-            })
-            .collect::<FResult<_>>()?;
+        // let permissions: Permissions = self
+        //     .manager
+        //     .clone()
+        //     .hgetall::<_, Vec<(String, u8)>>(user_redis_key)
+        //     .await
+        //     .map_err(ServerError::from)?
+        //     .into_iter()
+        //     .map(|(index_str, perm)| {
+        //         Ok((
+        //             Uuid::parse_str(&index_str).map_err(|e| {
+        //                 ServerError::DatabaseError(format!("Invalid index ID. {e}"))
+        //             })?,
+        //             Permission::try_from(perm).map_err(|e| {
+        //                 ServerError::DatabaseError(format!("Invalid permission. {e}"))
+        //             })?,
+        //         ))
+        //     })
+        //     .collect::<FResult<_>>()?;
 
-        trace!("permissions for user {user_id}: {permissions:?}");
-        Ok(permissions)
+        // trace!("permissions for user {user_id}: {permissions:?}");
+        // Ok(permissions)
     }
 
     #[instrument(ret(Display), err, skip(self), level = "trace")]
     async fn get_permission(&self, user_id: &str, index_id: &Uuid) -> FResult<Permission> {
-        let user_key = format!("{PERMISSIONS_PREFIX}:{user_id}");
+        todo!("get_permission: user_id: {user_id}, index_id: {index_id}");
+        // let user_key = format!("{PERMISSIONS_PREFIX}:{user_id}");
 
-        let permission = self
-            .manager
-            .clone()
-            .hget::<_, _, Option<u8>>(&user_key, index_id.to_string())
-            .await
-            .map_err(ServerError::from)?
-            .ok_or_else(|| {
-                ServerError::DatabaseError(format!("No permission found for index {index_id}"))
-            })
-            .and_then(|p| {
-                Permission::try_from(p)
-                    .map_err(|e| ServerError::DatabaseError(format!("Invalid permission. {e}")))
-            })?;
+        // let permission = self
+        //     .manager
+        //     .clone()
+        //     .hget::<_, _, Option<u8>>(&user_key, index_id.to_string())
+        //     .await
+        //     .map_err(ServerError::from)?
+        //     .ok_or_else(|| {
+        //         ServerError::DatabaseError(format!("No permission found for index {index_id}"))
+        //     })
+        //     .and_then(|p| {
+        //         Permission::try_from(p)
+        //             .map_err(|e| ServerError::DatabaseError(format!("Invalid permission. {e}")))
+        //     })?;
 
-        trace!("Permissions for user {user_id}: {permission:?}");
-        Ok(permission)
+        // trace!("Permissions for user {user_id}: {permission:?}");
+        // Ok(permission)
     }
 
     #[instrument(ret, err, skip(self), level = "trace")]
     async fn revoke_permission(&self, user_id: &str, index_id: &Uuid) -> FResult<()> {
-        let user_key = format!("{PERMISSIONS_PREFIX}:{user_id}");
+        todo!("revoke_permission: user_id: {user_id}, index_id: {index_id}");
+        // let user_key = format!("{PERMISSIONS_PREFIX}:{user_id}");
 
-        // never type fallbacks will be deprecated in future Rust releases, hence this explicit typing
-        let _: () = self
-            .manager
-            .clone()
-            .hdel(&user_key, index_id.to_string())
-            .await
-            .map_err(ServerError::from)?;
+        // // never type fallbacks will be deprecated in future Rust releases, hence this explicit typing
+        // let _: () = self
+        //     .manager
+        //     .clone()
+        //     .hdel(&user_key, index_id.to_string())
+        //     .await
+        //     .map_err(ServerError::from)?;
 
-        trace!("Revoked permission for {user_id} on index {index_id}");
-        Ok(())
+        // trace!("Revoked permission for {user_id} on index {index_id}");
+        // Ok(())
     }
 }
 
@@ -158,7 +148,7 @@ mod tests {
 
     async fn setup_test_db() -> Redis<CUSTOM_WORD_LENGTH> {
         let url = redis_db_config().database_url;
-        Redis::instantiate(url.as_str(), false)
+        Redis::instantiate(url.as_str(), None, false)
             .await
             .expect("Test failed to instantiate Redis")
     }
@@ -455,11 +445,11 @@ mod tests {
             .map(|_| Uuid::new_v4().to_string())
             .collect();
 
-        let mut operations: HashMap<String, Vec<Operation>> = HashMap::new();
+        let mut operations: HashMap<&str, Vec<Operation>> = HashMap::new();
         let mut expected_state: HashMap<&str, HashMap<Uuid, Permission>> = HashMap::new();
         // Initialize empty vectors for each user
         for user in &users {
-            operations.insert(user.to_owned(), Vec::new()); // a long lived value is needed here
+            operations.insert(user, Vec::new());
             expected_state.insert(user, HashMap::new());
         }
         for user in &users {
@@ -515,19 +505,16 @@ mod tests {
 
         let mut handles = vec![];
         let db_arc = Arc::new(setup_test_db().await);
-        let operations = Arc::new(operations);
 
-        for user in users.clone() {
-            let operations = Arc::clone(&operations);
+        for user in &users {
             let db = Arc::clone(&db_arc);
+            let ops = operations.get(user.as_str()).unwrap().clone();
 
-            handles.push(tokio::spawn(async move {
-                let ops = operations.get(user.as_str()).unwrap().clone();
+            for op in ops {
+                let db = Arc::clone(&db);
+                let user = user.clone();
 
-                for op in ops {
-                    let db = Arc::clone(&db);
-                    let user = user.clone();
-
+                handles.push(tokio::spawn(async move {
                     match op {
                         Operation::CreateIndex { index_id } => {
                             // Simulate new index creation
@@ -550,8 +537,8 @@ mod tests {
                                 .expect("Failed to revoke permission");
                         }
                     }
-                }
-            }));
+                }));
+            }
         }
 
         // Wait for all tasks to complete

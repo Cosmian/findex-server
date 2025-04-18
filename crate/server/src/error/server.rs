@@ -1,4 +1,3 @@
-use cosmian_findex::RedisMemoryError as MemoryError;
 use std::sync::mpsc::SendError;
 
 use actix_web::dev::ServerHandle;
@@ -35,8 +34,12 @@ pub enum ServerError {
     Certificate(String),
     #[error("Redis Error: {0}")]
     Redis(String),
+    #[error("Async-sqlite Error: {0}")]
+    AsyncSqlite(String),
     #[error("Findex Error: {0}")]
     Findex(String),
+    #[error("Findex Memory Error: {0}")]
+    FindexMemory(String),
     #[error(transparent)]
     StructsError(#[from] StructsError),
     #[error(transparent)]
@@ -61,9 +64,21 @@ impl From<redis::RedisError> for ServerError {
     }
 }
 
-impl From<MemoryError> for ServerError {
-    fn from(e: MemoryError) -> Self {
-        Self::DatabaseError(e.to_string())
+impl From<async_sqlite::Error> for ServerError {
+    fn from(err: async_sqlite::Error) -> Self {
+        Self::AsyncSqlite(err.to_string())
+    }
+}
+
+impl From<cosmian_findex::RedisMemoryError> for ServerError {
+    fn from(e: cosmian_findex::RedisMemoryError) -> Self {
+        Self::FindexMemory(format!("[Redis database] {}", e))
+    }
+}
+
+impl From<cosmian_findex::SqliteMemoryError> for ServerError {
+    fn from(e: cosmian_findex::SqliteMemoryError) -> Self {
+        Self::FindexMemory(format!("[Sqlite database] {}", e))
     }
 }
 
