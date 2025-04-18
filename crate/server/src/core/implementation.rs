@@ -21,7 +21,7 @@ impl FindexServer {
     pub(crate) async fn instantiate(mut shared_config: ServerParams) -> FResult<Self> {
         let db = match &mut shared_config.db_params {
             DbParams::Redis(url) => {
-                Redis::instantiate(url.as_str(), None, shared_config.clear_db_on_start).await?
+                Redis::instantiate(url.as_str(), shared_config.clear_db_on_start).await?
             }
         };
 
