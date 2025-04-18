@@ -40,11 +40,7 @@ pub(crate) trait DatasetsTrait: Sync + Send {
 #[async_trait]
 pub(crate) trait InstantializationTrait: Sync + Send {
     /// Creates a new Redis database connection instance
-    async fn instantiate(
-        db_url: &str,
-        table_name: Option<&str>,
-        clear_database: bool,
-    ) -> FResult<Self>
+    async fn instantiate(db_url: &str, clear_database: bool) -> FResult<Self>
     where
         Self: Sized;
 }

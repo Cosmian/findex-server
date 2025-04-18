@@ -15,16 +15,7 @@ pub(crate) struct Redis<const WORD_LENGTH: usize> {
 
 #[async_trait]
 impl<const WORD_LENGTH: usize> InstantializationTrait for Redis<WORD_LENGTH> {
-    async fn instantiate(
-        redis_url: &str,
-        table_name: Option<&str>,
-        clear_database: bool,
-    ) -> FResult<Self> {
-        if table_name.is_some() {
-            return Err(ServerError::DatabaseError(
-                "Table name is not supported in Redis".to_string(),
-            ));
-        }
+    async fn instantiate(redis_url: &str, clear_database: bool) -> FResult<Self> {
         let client = redis::Client::open(redis_url)?;
         let mut manager = client.get_connection_manager().await?;
 
