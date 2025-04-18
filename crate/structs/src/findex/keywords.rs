@@ -1,7 +1,8 @@
 // Most of this file is from legacy findex code
-use cosmian_findex::Value;
 use std::collections::{HashMap, HashSet};
 use std::ops::{Deref, DerefMut};
+
+use super::Value;
 
 /// A [`Keyword`] is a byte vector used to index other values.
 #[derive(Clone, Debug, Hash, PartialEq, Eq)]

@@ -1,4 +1,4 @@
-use cosmian_findex::{Address, MemoryADT, MemoryError};
+use cosmian_findex::{Address, MemoryADT, RedisMemoryError as MemoryError};
 use cosmian_findex_structs::SERVER_ADDRESS_LENGTH;
 
 use super::Redis;

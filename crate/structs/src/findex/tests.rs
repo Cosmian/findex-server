@@ -2,23 +2,24 @@
 #[cfg(test)]
 mod findex_tests {
 
-    use cosmian_findex::{ADDRESS_LENGTH, Address, WORD_LENGTH};
-    use rand::rngs::StdRng;
-    use rand::{Rng, SeedableRng};
-
     use crate::findex::addresses::Addresses;
     use crate::findex::bindings::Bindings;
     use crate::findex::guard::Guard;
     use crate::findex::words::OptionalWords;
+    use cosmian_crypto_core::{
+        CsRng, Sampling,
+        reexport::rand_core::{RngCore, SeedableRng},
+    };
+    use cosmian_findex::{ADDRESS_LENGTH, Address, WORD_LENGTH};
 
     const SEED: [u8; 32] = [1_u8; 32]; // arbitrary seed for the RNG
 
     #[test]
     fn test_ser_deser_addresses() {
-        let mut rng = StdRng::from_seed(SEED);
+        let mut rng = CsRng::from_seed(SEED);
 
-        let address1: Address<ADDRESS_LENGTH> = rng.random::<u128>().to_be_bytes().into();
-        let address2: Address<ADDRESS_LENGTH> = rng.random::<u128>().to_be_bytes().into();
+        let address1: Address<ADDRESS_LENGTH> = Address::random(&mut rng);
+        let address2: Address<ADDRESS_LENGTH> = Address::random(&mut rng);
         let addresses = Addresses(vec![address1, address2]);
 
         let serialized = addresses.serialize().expect("Serialization failed");
@@ -29,12 +30,12 @@ mod findex_tests {
 
     #[test]
     fn test_ser_deser_optional_words() {
-        let mut rng = StdRng::from_seed(SEED);
+        let mut rng = CsRng::from_seed(SEED);
 
         let mut word1 = [0_u8; WORD_LENGTH];
         let mut word2 = [0_u8; WORD_LENGTH];
-        rng.fill(&mut word1[..]);
-        rng.fill(&mut word2[..]);
+        rng.fill_bytes(&mut word1[..]);
+        rng.fill_bytes(&mut word2[..]);
 
         let optional_words: OptionalWords<{ WORD_LENGTH }> = OptionalWords(vec![None, Some(word1)]);
 
@@ -46,11 +47,11 @@ mod findex_tests {
 
     #[test]
     fn test_ser_deser_guard() {
-        let mut rng = StdRng::from_seed(SEED);
+        let mut rng = CsRng::from_seed(SEED);
 
-        let address1: Address<ADDRESS_LENGTH> = rng.random::<u128>().to_be_bytes().into();
+        let address1: Address<ADDRESS_LENGTH> = Address::random(&mut rng);
         let mut word = [0_u8; WORD_LENGTH];
-        rng.fill(&mut word[..]);
+        rng.fill_bytes(&mut word[..]);
 
         let guard_some: Guard<WORD_LENGTH> = Guard(address1, Some(word));
         let serialized_some = guard_some.serialize().expect("Serialization failed");
@@ -62,7 +63,7 @@ mod findex_tests {
             "Guard with Some(word) does not match"
         );
 
-        let address2: Address<ADDRESS_LENGTH> = rng.random::<u128>().to_be_bytes().into();
+        let address2: Address<ADDRESS_LENGTH> = Address::random(&mut rng);
         let guard_none: Guard<WORD_LENGTH> = Guard(address2, None);
 
         let serialized_none = guard_none.serialize().expect("Serialization failed");
@@ -77,14 +78,14 @@ mod findex_tests {
 
     #[test]
     fn test_ser_deser_bindings() {
-        let mut rng = StdRng::from_seed(SEED);
+        let mut rng = CsRng::from_seed(SEED);
 
-        let address1: Address<ADDRESS_LENGTH> = rng.random::<u128>().to_be_bytes().into();
-        let address2: Address<ADDRESS_LENGTH> = rng.random::<u128>().to_be_bytes().into();
+        let address1: Address<ADDRESS_LENGTH> = Address::random(&mut rng);
+        let address2: Address<ADDRESS_LENGTH> = Address::random(&mut rng);
         let mut word1 = [0_u8; WORD_LENGTH];
         let mut word2 = [0_u8; WORD_LENGTH];
-        rng.fill(&mut word1[..]);
-        rng.fill(&mut word2[..]);
+        rng.fill_bytes(&mut word1[..]);
+        rng.fill_bytes(&mut word2[..]);
 
         let bindings = Bindings(vec![(address1, word1), (address2, word2)]);
 

@@ -1,6 +1,7 @@
-use cosmian_findex::Value;
 use std::collections::HashSet;
 use std::ops::Deref;
+
+use super::Value;
 
 #[derive(Debug)]
 pub struct SearchResults(pub HashSet<Value>);
