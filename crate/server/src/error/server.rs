@@ -15,7 +15,7 @@ pub enum ServerError {
     #[error("Invalid Request: {0}")]
     InvalidRequest(String),
     // Any errors related to a bad behavior of the DB but not related to the user input
-    #[error("Database Error: {0}")]
+    #[error("Database Error | {0}")]
     DatabaseError(String),
     // Any errors related to a bad behavior of the server but not related to the user input
     #[error("Unexpected server error: {0}")]
@@ -32,14 +32,10 @@ pub enum ServerError {
     // Error related to X509 Certificate
     #[error("Certificate error: {0}")]
     Certificate(String),
-    #[error("Redis Error: {0}")]
-    Redis(String),
-    #[error("Async-sqlite Error: {0}")]
-    AsyncSqlite(String),
     #[error("Findex Error: {0}")]
     Findex(String),
-    #[error("Findex Memory Error: {0}")]
-    FindexMemory(String),
+    #[error("Findex Memory Error | {0}")]
+    FindexMemoryError(String),
     #[error(transparent)]
     StructsError(#[from] StructsError),
     #[error(transparent)]
@@ -59,26 +55,26 @@ impl From<std::io::Error> for ServerError {
 }
 
 impl From<redis::RedisError> for ServerError {
-    fn from(err: redis::RedisError) -> Self {
-        Self::Redis(err.to_string())
+    fn from(e: redis::RedisError) -> Self {
+        Self::DatabaseError(format!("| Redis : {}", e))
     }
 }
 
 impl From<async_sqlite::Error> for ServerError {
-    fn from(err: async_sqlite::Error) -> Self {
-        Self::AsyncSqlite(err.to_string())
+    fn from(e: async_sqlite::Error) -> Self {
+        Self::DatabaseError(format!("| Sqlite : {}", e))
     }
 }
 
 impl From<cosmian_findex::RedisMemoryError> for ServerError {
     fn from(e: cosmian_findex::RedisMemoryError) -> Self {
-        Self::FindexMemory(format!("[Redis database] {}", e))
+        Self::FindexMemoryError(format!("| Redis : {}", e))
     }
 }
 
 impl From<cosmian_findex::SqliteMemoryError> for ServerError {
     fn from(e: cosmian_findex::SqliteMemoryError) -> Self {
-        Self::FindexMemory(format!("[Sqlite database] {}", e))
+        Self::FindexMemoryError(format!("| Sqlite : {}", e))
     }
 }
 
