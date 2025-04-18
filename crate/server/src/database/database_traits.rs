@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use cosmian_findex::MemoryADT;
 use cosmian_findex_structs::{EncryptedEntries, Permission, Permissions, Uuids};
 use uuid::Uuid;
 
@@ -36,6 +37,16 @@ pub(crate) trait DatasetsTrait: Sync + Send {
     ) -> FResult<EncryptedEntries>;
 }
 
+#[async_trait]
+pub(crate) trait InstantializationTrait: Sync + Send {
+    /// Creates a new Redis database connection instance
+    async fn instantiate(db_url: &str, clear_database: bool) -> FResult<Self>
+    where
+        Self: Sized;
+}
 #[allow(dead_code)] // false positive, used in crate/server/src/database/redis/mod.rs
 #[async_trait]
-pub(crate) trait DatabaseTraits: PermissionsTrait + DatasetsTrait {}
+pub(crate) trait DatabaseTraits:
+    PermissionsTrait + DatasetsTrait + InstantializationTrait + MemoryADT
+{
+}

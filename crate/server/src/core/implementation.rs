@@ -5,7 +5,10 @@ use uuid::Uuid;
 
 use crate::{
     config::{DbParams, ServerParams},
-    database::{database_traits::PermissionsTrait, redis::Redis},
+    database::{
+        database_traits::{InstantializationTrait, PermissionsTrait},
+        redis::Redis,
+    },
     error::{result::FResult, server::ServerError},
     middlewares::{JwtAuthClaim, PeerCommonName},
 };
