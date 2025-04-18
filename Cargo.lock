@@ -1098,7 +1098,7 @@ dependencies = [
  "const-oid",
  "cosmian_config_utils",
  "cosmian_cover_crypt",
- "cosmian_crypto_core 10.0.1",
+ "cosmian_crypto_core 10.1.0",
  "cosmian_findex 7.0.0",
  "cosmian_findex_client",
  "cosmian_findex_structs",
@@ -1115,8 +1115,6 @@ dependencies = [
  "openssl",
  "pem",
  "predicates",
- "rand 0.9.0",
- "rand_chacha 0.9.0",
  "regex",
  "reqwest 0.11.27",
  "serde",
@@ -1155,7 +1153,7 @@ version = "15.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f12eb7e96555b6b8841966fa264e7a6dfe5e39ad0733317c088c52259e99993c"
 dependencies = [
- "cosmian_crypto_core 10.0.1",
+ "cosmian_crypto_core 10.1.0",
  "ml-kem",
  "serde",
  "serde_json",
@@ -1201,9 +1199,9 @@ dependencies = [
 
 [[package]]
 name = "cosmian_crypto_core"
-version = "10.0.1"
+version = "10.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c2157c9264217f92e928ceb538b69c0b8ce04f8c1405ae4117fb4ef0ae639c9a"
+checksum = "aad6aef53776d68045907ec4c79a5135893b7d677ac92c683a4014b696c86ef9"
 dependencies = [
  "aead",
  "aes-gcm",
@@ -1213,6 +1211,7 @@ dependencies = [
  "crypto_box",
  "curve25519-dalek",
  "ed25519-dalek",
+ "gensym",
  "getrandom 0.2.15",
  "leb128",
  "rand_chacha 0.3.1",
@@ -1241,16 +1240,13 @@ dependencies = [
 [[package]]
 name = "cosmian_findex"
 version = "7.0.0"
-source = "git+https://github.com/Cosmian/findex?rev=98fcb6e97054e1bb9dddd7a0d620e27438cb91b7#98fcb6e97054e1bb9dddd7a0d620e27438cb91b7"
+source = "git+https://github.com/Cosmian/findex?rev=6329b6b2f2b64b033e40b05cd12ca1c9b5ee376f#6329b6b2f2b64b033e40b05cd12ca1c9b5ee376f"
 dependencies = [
  "aes",
- "rand 0.9.0",
- "rand_chacha 0.9.0",
- "rand_core 0.9.3",
+ "cosmian_crypto_core 10.1.0",
  "redis 0.28.2",
- "tiny-keccak",
+ "tokio",
  "xts-mode",
- "zeroize",
 ]
 
 [[package]]
@@ -1258,14 +1254,12 @@ name = "cosmian_findex_client"
 version = "0.3.0"
 dependencies = [
  "base64 0.22.1",
- "cosmian_crypto_core 10.0.1",
+ "cosmian_crypto_core 10.1.0",
  "cosmian_findex 7.0.0",
  "cosmian_findex_structs",
  "cosmian_http_client",
  "cosmian_kms_client",
  "cosmian_logger",
- "rand 0.9.0",
- "rand_chacha 0.9.0",
  "reqwest 0.11.27",
  "serde",
  "test_kms_server",
@@ -1288,14 +1282,13 @@ dependencies = [
  "async-trait",
  "chrono",
  "clap",
- "cosmian_crypto_core 10.0.1",
+ "cosmian_crypto_core 10.1.0",
  "cosmian_findex 7.0.0",
  "cosmian_findex_structs",
  "cosmian_logger",
  "dotenvy",
  "futures",
  "openssl",
- "rand 0.9.0",
  "redis 0.28.2",
  "reqwest 0.11.27",
  "serde",
@@ -1315,9 +1308,8 @@ name = "cosmian_findex_structs"
 version = "0.3.0"
 dependencies = [
  "base64 0.22.1",
- "cosmian_crypto_core 10.0.1",
+ "cosmian_crypto_core 10.1.0",
  "cosmian_findex 7.0.0",
- "rand 0.9.0",
  "thiserror 2.0.12",
  "tracing",
  "uuid",
@@ -1393,7 +1385,7 @@ dependencies = [
 name = "cosmian_kms_client"
 version = "0.3.0"
 dependencies = [
- "cosmian_crypto_core 10.0.1",
+ "cosmian_crypto_core 10.1.0",
  "cosmian_http_client",
  "cosmian_kms_client_utils",
  "der",
@@ -1433,7 +1425,7 @@ dependencies = [
  "argon2",
  "base64 0.22.1",
  "cosmian_cover_crypt",
- "cosmian_crypto_core 10.0.1",
+ "cosmian_crypto_core 10.1.0",
  "cosmian_kmip",
  "cosmian_logger",
  "hex",
@@ -1483,7 +1475,7 @@ dependencies = [
  "clap",
  "cloudproof_findex",
  "cosmian_cover_crypt",
- "cosmian_crypto_core 10.0.1",
+ "cosmian_crypto_core 10.1.0",
  "cosmian_kmip",
  "cosmian_kms_access",
  "cosmian_kms_crypto",
@@ -1529,7 +1521,7 @@ dependencies = [
  "async-trait",
  "clap",
  "cloudproof_findex",
- "cosmian_crypto_core 10.0.1",
+ "cosmian_crypto_core 10.1.0",
  "cosmian_kmip",
  "cosmian_kms_crypto",
  "cosmian_kms_interfaces",
@@ -2286,6 +2278,18 @@ dependencies = [
  "typenum",
  "version_check",
  "zeroize",
+]
+
+[[package]]
+name = "gensym"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "913dce4c5f06c2ea40fc178c06f777ac89fc6b1383e90c254fafb1abe4ba3c82"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+ "uuid",
 ]
 
 [[package]]

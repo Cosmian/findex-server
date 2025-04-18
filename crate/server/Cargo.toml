@@ -76,7 +76,6 @@ url = { workspace = true }
 uuid = { workspace = true, features = ["v4"] }
 
 [dev-dependencies]
-rand = "0.9.0"
 tempfile = { workspace = true }
 
 # ------------------------------------------------------------------------------
