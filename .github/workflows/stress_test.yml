@@ -1,6 +1,7 @@
 name: CI stress test
 
 on:
+  push:
   workflow_dispatch: 
 
 jobs:
@@ -13,4 +14,4 @@ jobs:
     uses: ./.github/workflows/main_base.yml
     with:
       toolchain: nightly-2025-01-01
-      debug_or_release: ${{ (matrix.run_id) % 2 == 0 && 'debug' || 'release' }}
+      debug_or_release: debug
