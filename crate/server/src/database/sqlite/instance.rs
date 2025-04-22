@@ -47,9 +47,9 @@ impl<const WORD_LENGTH: usize> InstantializationTrait for Sqlite<WORD_LENGTH> {
                         );
                         CREATE TABLE findex.datasets (
                             index_id BLOB NOT NULL,  
-                            uid      BLOB NOT NULL,  
-                            encryptedEntry     BLOB NOT NULL, 
-                            PRIMARY KEY (index_id, uid)
+                            user_id      BLOB NOT NULL,  
+                            encrypted_entry     BLOB NOT NULL, 
+                            PRIMARY KEY (index_id, user_id)
                         );
                         ",
             )
