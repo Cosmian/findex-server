@@ -8,6 +8,13 @@ use cosmian_findex_structs::{CUSTOM_WORD_LENGTH, Permission, Permissions};
 use tracing::{instrument, trace};
 use uuid::Uuid;
 
+// CREATE TABLE IF NOT EXISTS findex.permissions (
+//     user_id TEXT NOT NULL,
+//     index_id BLOB NOT NULL,
+//     permission INTEGER NOT NULL CHECK (permission IN (0,1,2)),
+//     PRIMARY KEY (user_id, index_id)
+// );
+
 #[async_trait]
 impl PermissionsTrait for Sqlite<CUSTOM_WORD_LENGTH> {
     /// Creates a new index ID and sets admin privileges.
