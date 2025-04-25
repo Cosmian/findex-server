@@ -1104,7 +1104,7 @@ dependencies = [
  "cosmian_findex_structs",
  "cosmian_kms_client",
  "cosmian_kms_crypto",
- "cosmian_logger 0.1.1",
+ "cosmian_logger",
  "csv",
  "der",
  "hex",
@@ -1260,9 +1260,7 @@ dependencies = [
  "cosmian_findex_structs",
  "cosmian_http_client",
  "cosmian_kms_client",
- "cosmian_logger 0.1.1",
- "rand 0.9.0",
- "rand_chacha 0.9.0",
+ "cosmian_logger",
  "reqwest 0.11.27",
  "serde",
  "test_kms_server",
@@ -1288,7 +1286,7 @@ dependencies = [
  "cosmian_crypto_core 10.1.0",
  "cosmian_findex 7.0.0",
  "cosmian_findex_structs",
- "cosmian_logger 0.1.1",
+ "cosmian_logger",
  "dotenvy",
  "futures",
  "openssl",
@@ -1340,12 +1338,12 @@ dependencies = [
 
 [[package]]
 name = "cosmian_kmip"
-version = "4.23.0"
-source = "git+https://www.github.com/Cosmian/kms?branch=develop#72f2bc5480348ed2db94cb32631ec074bdfdc92c"
+version = "4.24.0"
+source = "git+https://www.github.com/Cosmian/kms?branch=develop#190c0a2b840d62654925232c5cdf4cf6f7819a49"
 dependencies = [
  "bitflags 2.9.0",
  "chrono",
- "cosmian_logger 0.1.0",
+ "cosmian_logger",
  "hex",
  "leb128",
  "num-bigint-dig",
@@ -1361,8 +1359,8 @@ dependencies = [
 
 [[package]]
 name = "cosmian_kms_access"
-version = "4.23.0"
-source = "git+https://www.github.com/Cosmian/kms?branch=develop#72f2bc5480348ed2db94cb32631ec074bdfdc92c"
+version = "4.24.0"
+source = "git+https://www.github.com/Cosmian/kms?branch=develop#190c0a2b840d62654925232c5cdf4cf6f7819a49"
 dependencies = [
  "cosmian_kmip",
  "serde",
@@ -1370,8 +1368,8 @@ dependencies = [
 
 [[package]]
 name = "cosmian_kms_base_hsm"
-version = "4.23.0"
-source = "git+https://www.github.com/Cosmian/kms?branch=develop#72f2bc5480348ed2db94cb32631ec074bdfdc92c"
+version = "4.24.0"
+source = "git+https://www.github.com/Cosmian/kms?branch=develop#190c0a2b840d62654925232c5cdf4cf6f7819a49"
 dependencies = [
  "async-trait",
  "cosmian_kms_interfaces",
@@ -1422,8 +1420,8 @@ dependencies = [
 
 [[package]]
 name = "cosmian_kms_crypto"
-version = "4.23.0"
-source = "git+https://www.github.com/Cosmian/kms?branch=develop#72f2bc5480348ed2db94cb32631ec074bdfdc92c"
+version = "4.24.0"
+source = "git+https://www.github.com/Cosmian/kms?branch=develop#190c0a2b840d62654925232c5cdf4cf6f7819a49"
 dependencies = [
  "aes-gcm-siv",
  "argon2",
@@ -1431,7 +1429,7 @@ dependencies = [
  "cosmian_cover_crypt",
  "cosmian_crypto_core 10.1.0",
  "cosmian_kmip",
- "cosmian_logger 0.1.0",
+ "cosmian_logger",
  "hex",
  "num-bigint-dig",
  "openssl",
@@ -1446,8 +1444,8 @@ dependencies = [
 
 [[package]]
 name = "cosmian_kms_interfaces"
-version = "4.23.0"
-source = "git+https://www.github.com/Cosmian/kms?branch=develop#72f2bc5480348ed2db94cb32631ec074bdfdc92c"
+version = "4.24.0"
+source = "git+https://www.github.com/Cosmian/kms?branch=develop#190c0a2b840d62654925232c5cdf4cf6f7819a49"
 dependencies = [
  "async-trait",
  "cosmian_kmip",
@@ -1460,8 +1458,8 @@ dependencies = [
 
 [[package]]
 name = "cosmian_kms_server"
-version = "4.23.0"
-source = "git+https://www.github.com/Cosmian/kms?branch=develop#72f2bc5480348ed2db94cb32631ec074bdfdc92c"
+version = "4.24.0"
+source = "git+https://www.github.com/Cosmian/kms?branch=develop#190c0a2b840d62654925232c5cdf4cf6f7819a49"
 dependencies = [
  "actix-cors",
  "actix-files",
@@ -1519,8 +1517,8 @@ dependencies = [
 
 [[package]]
 name = "cosmian_kms_server_database"
-version = "4.23.0"
-source = "git+https://www.github.com/Cosmian/kms?branch=develop#72f2bc5480348ed2db94cb32631ec074bdfdc92c"
+version = "4.24.0"
+source = "git+https://www.github.com/Cosmian/kms?branch=develop#190c0a2b840d62654925232c5cdf4cf6f7819a49"
 dependencies = [
  "async-trait",
  "clap",
@@ -1546,15 +1544,6 @@ dependencies = [
  "uuid",
  "version-compare",
  "zeroize",
-]
-
-[[package]]
-name = "cosmian_logger"
-version = "0.1.0"
-source = "git+https://www.github.com/Cosmian/http_client_server?tag=0.1.0#66c4e05ebbfa6d205ae16bacf99d197bab3a70a9"
-dependencies = [
- "tracing",
- "tracing-subscriber",
 ]
 
 [[package]]
@@ -2611,7 +2600,7 @@ dependencies = [
  "httpdate",
  "itoa",
  "pin-project-lite",
- "socket2 0.4.10",
+ "socket2 0.5.8",
  "tokio",
  "tower-service",
  "tracing",
@@ -3793,7 +3782,7 @@ dependencies = [
 [[package]]
 name = "pkcs11_sys"
 version = "0.2.17"
-source = "git+https://www.github.com/Cosmian/kms?branch=develop#72f2bc5480348ed2db94cb32631ec074bdfdc92c"
+source = "git+https://www.github.com/Cosmian/kms?branch=develop#190c0a2b840d62654925232c5cdf4cf6f7819a49"
 
 [[package]]
 name = "pkcs5"
@@ -3939,8 +3928,8 @@ dependencies = [
 
 [[package]]
 name = "proteccio_pkcs11_loader"
-version = "4.23.0"
-source = "git+https://www.github.com/Cosmian/kms?branch=develop#72f2bc5480348ed2db94cb32631ec074bdfdc92c"
+version = "4.24.0"
+source = "git+https://www.github.com/Cosmian/kms?branch=develop#190c0a2b840d62654925232c5cdf4cf6f7819a49"
 dependencies = [
  "cosmian_kms_base_hsm",
  "cosmian_kms_interfaces",
@@ -4807,9 +4796,9 @@ dependencies = [
 
 [[package]]
 name = "sqlx"
-version = "0.8.3"
+version = "0.8.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4410e73b3c0d8442c5f99b425d7a435b5ee0ae4167b3196771dd3f7a01be745f"
+checksum = "f3c3a85280daca669cfd3bcb68a337882a8bc57ec882f72c5d13a430613a738e"
 dependencies = [
  "sqlx-core",
  "sqlx-macros",
@@ -4820,10 +4809,11 @@ dependencies = [
 
 [[package]]
 name = "sqlx-core"
-version = "0.8.3"
+version = "0.8.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6a007b6936676aa9ab40207cde35daab0a04b823be8ae004368c0793b96a61e0"
+checksum = "f743f2a3cea30a58cd479013f75550e879009e3a02f616f18ca699335aa248c3"
 dependencies = [
+ "base64 0.22.1",
  "bytes",
  "crc",
  "crossbeam-queue",
@@ -4854,9 +4844,9 @@ dependencies = [
 
 [[package]]
 name = "sqlx-macros"
-version = "0.8.3"
+version = "0.8.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3112e2ad78643fef903618d78cf0aec1cb3134b019730edb039b69eaf531f310"
+checksum = "7f4200e0fde19834956d4252347c12a083bdcb237d7a1a1446bffd8768417dce"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -4867,9 +4857,9 @@ dependencies = [
 
 [[package]]
 name = "sqlx-macros-core"
-version = "0.8.3"
+version = "0.8.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4e9f90acc5ab146a99bf5061a7eb4976b573f560bc898ef3bf8435448dd5e7ad"
+checksum = "882ceaa29cade31beca7129b6beeb05737f44f82dbe2a9806ecea5a7093d00b7"
 dependencies = [
  "dotenvy",
  "either",
@@ -4893,9 +4883,9 @@ dependencies = [
 
 [[package]]
 name = "sqlx-mysql"
-version = "0.8.3"
+version = "0.8.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4560278f0e00ce64938540546f59f590d60beee33fffbd3b9cd47851e5fff233"
+checksum = "0afdd3aa7a629683c2d750c2df343025545087081ab5942593a5288855b1b7a7"
 dependencies = [
  "atoi",
  "base64 0.22.1",
@@ -4935,9 +4925,9 @@ dependencies = [
 
 [[package]]
 name = "sqlx-postgres"
-version = "0.8.3"
+version = "0.8.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c5b98a57f363ed6764d5b3a12bfedf62f07aa16e1856a7ddc2a0bb190a959613"
+checksum = "a0bedbe1bbb5e2615ef347a5e9d8cd7680fb63e77d9dafc0f29be15e53f1ebe6"
 dependencies = [
  "atoi",
  "base64 0.22.1",
@@ -4972,9 +4962,9 @@ dependencies = [
 
 [[package]]
 name = "sqlx-sqlite"
-version = "0.8.3"
+version = "0.8.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f85ca71d3a5b24e64e1d08dd8fe36c6c95c339a896cc33068148906784620540"
+checksum = "c26083e9a520e8eb87a06b12347679b142dc2ea29e6e409f805644a7a979a5bc"
 dependencies = [
  "atoi",
  "flume",
@@ -4989,6 +4979,7 @@ dependencies = [
  "serde",
  "serde_urlencoded",
  "sqlx-core",
+ "thiserror 2.0.12",
  "tracing",
  "url",
 ]
@@ -5141,7 +5132,7 @@ dependencies = [
  "actix-server",
  "cosmian_findex_client",
  "cosmian_findex_server",
- "cosmian_logger 0.1.1",
+ "cosmian_logger",
  "criterion",
  "tokio",
  "tracing",
@@ -5157,7 +5148,7 @@ dependencies = [
  "cosmian_cli",
  "cosmian_kms_server",
  "cosmian_kms_server_database",
- "cosmian_logger 0.1.1",
+ "cosmian_logger",
  "criterion",
  "serde_json",
  "tempfile",
@@ -5716,8 +5707,8 @@ checksum = "b6c140620e7ffbb22c2dee59cafe6084a59b5ffc27a8859a5f0d494b5d52b6be"
 
 [[package]]
 name = "utimaco_pkcs11_loader"
-version = "4.23.0"
-source = "git+https://www.github.com/Cosmian/kms?branch=develop#72f2bc5480348ed2db94cb32631ec074bdfdc92c"
+version = "4.24.0"
+source = "git+https://www.github.com/Cosmian/kms?branch=develop#190c0a2b840d62654925232c5cdf4cf6f7819a49"
 dependencies = [
  "cosmian_kms_base_hsm",
  "cosmian_kms_interfaces",
