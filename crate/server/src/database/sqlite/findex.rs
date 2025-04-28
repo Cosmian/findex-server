@@ -1,9 +1,9 @@
 use cosmian_findex::{Address, MemoryADT, SqliteMemoryError};
 use cosmian_findex_structs::SERVER_ADDRESS_LENGTH;
 
-use super::Sqlite;
+use super::_Sqlite;
 
-impl<const WORD_LENGTH: usize> MemoryADT for Sqlite<WORD_LENGTH> {
+impl<const WORD_LENGTH: usize> MemoryADT for _Sqlite<WORD_LENGTH> {
     type Address = Address<SERVER_ADDRESS_LENGTH>;
     type Word = [u8; WORD_LENGTH];
     type Error = SqliteMemoryError;

@@ -4,7 +4,7 @@ mod instance;
 mod permissions;
 
 use cosmian_findex_structs::CUSTOM_WORD_LENGTH;
-pub(crate) use instance::Sqlite;
+pub(crate) use instance::_Sqlite;
 
 use crate::database::database_traits::DatabaseTraits;
-impl DatabaseTraits for Sqlite<CUSTOM_WORD_LENGTH> {}
+impl DatabaseTraits for _Sqlite<CUSTOM_WORD_LENGTH> {}

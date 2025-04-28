@@ -5,13 +5,15 @@ use cosmian_findex::{Address, SqliteMemory};
 use cosmian_findex_structs::SERVER_ADDRESS_LENGTH;
 use tracing::info;
 
-pub(crate) struct Sqlite<const WORD_LENGTH: usize> {
+pub(crate) struct _Sqlite<const WORD_LENGTH: usize> {
     pub(crate) memory: SqliteMemory<Address<SERVER_ADDRESS_LENGTH>, [u8; WORD_LENGTH]>,
     pub(crate) pool: Pool,
 }
 
 #[async_trait]
-impl<const WORD_LENGTH: usize> InstantializationTrait for Sqlite<WORD_LENGTH> {
+impl<const WORD_LENGTH: usize> InstantializationTrait for _Sqlite<WORD_LENGTH> {
+    // TODO: as optimization, we can warm up the pool by pre-creating connections and executing optimization pragmas like OPTIMIZE.
+
     async fn instantiate(db_url: &str, clear_database: bool) -> FResult<Self> {
         let pool = PoolBuilder::new()
             .path(db_url)
@@ -39,6 +41,8 @@ impl<const WORD_LENGTH: usize> InstantializationTrait for Sqlite<WORD_LENGTH> {
             conn.execute_batch(
                 "
                         PRAGMA synchronous = NORMAL;
+                        VACUUM;
+                        PRAGMA auto_vacuum = 1;
                         CREATE TABLE IF NOT EXISTS findex.permissions (
                             user_id TEXT NOT NULL,
                             index_id BLOB NOT NULL,

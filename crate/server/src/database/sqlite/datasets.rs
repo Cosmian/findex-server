@@ -5,7 +5,7 @@ use async_trait::async_trait;
 use cosmian_findex_structs::{CUSTOM_WORD_LENGTH, EncryptedEntries, Uuids};
 use tracing::instrument;
 use uuid::Uuid;
-use super::Sqlite;
+use super::_Sqlite;
 use crate::{
     database::database_traits::DatasetsTrait,
     error::{result::FResult, server::ServerError},
@@ -13,7 +13,7 @@ use crate::{
 
 
 #[async_trait]
-impl DatasetsTrait for Sqlite<CUSTOM_WORD_LENGTH> {
+impl DatasetsTrait for _Sqlite<CUSTOM_WORD_LENGTH> {
     //
     // Dataset management
     //
