@@ -23,6 +23,9 @@ impl FindexServer {
             DbParams::Redis(url) => {
                 Redis::instantiate(url.as_str(), shared_config.clear_db_on_start).await?
             }
+            DbParams::Sqlite(_path) => {
+                todo!("SQLite is not supported yet");
+            }
         };
 
         Ok(Self {
