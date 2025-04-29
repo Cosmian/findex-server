@@ -10,6 +10,10 @@ pub(crate) struct _Sqlite<const WORD_LENGTH: usize> {
     pub(crate) pool: Pool,
 }
 
+pub const FINDEX_MEMORY_TABLE_NAME: &str = "findex_memory";
+pub const FINDEX_PERMISSIONS_TABLE_NAME: &str = "findex_permissions";
+pub const FINDEX_DATASETS_TABLE_NAME: &str = "findex_datasets";
+
 #[async_trait]
 impl<const WORD_LENGTH: usize> InstantializationTrait for _Sqlite<WORD_LENGTH> {
     // TODO: as optimization, we can warm up the pool by pre-creating connections and executing optimization pragmas like OPTIMIZE.
@@ -24,39 +28,40 @@ impl<const WORD_LENGTH: usize> InstantializationTrait for _Sqlite<WORD_LENGTH> {
         if clear_database {
             info!("Warning: proceeding to clear the database, this operation is irreversible.");
             pool.conn(move |conn| {
-                conn.execute_batch(
+                conn.execute_batch(&format!(
                     "
-                    DROP TABLE IF EXISTS findex.memory;
-                    DROP TABLE IF EXISTS findex.permissions;
-                    DROP TABLE IF EXISTS findex.datasets;
-                    VACUUM;",
-                )
+                    DROP TABLE IF EXISTS {FINDEX_MEMORY_TABLE_NAME};
+                    DROP TABLE IF EXISTS {FINDEX_PERMISSIONS_TABLE_NAME};
+                    DROP TABLE IF EXISTS {FINDEX_DATASETS_TABLE_NAME};
+                    ",
+                ))
             })
             .await?;
         }
 
         let memory =
-            SqliteMemory::connect_with_pool(pool.clone(), "findex.memory".to_string()).await?;
+            SqliteMemory::connect_with_pool(pool.clone(), FINDEX_MEMORY_TABLE_NAME.to_string())
+                .await?;
         pool.conn(move |conn| {
-            conn.execute_batch(
+            conn.execute_batch(&format!(
                 "
                         PRAGMA synchronous = NORMAL;
                         VACUUM;
                         PRAGMA auto_vacuum = 1;
-                        CREATE TABLE IF NOT EXISTS findex.permissions (
+                        CREATE TABLE IF NOT EXISTS {FINDEX_PERMISSIONS_TABLE_NAME} (
                             user_id TEXT NOT NULL,
                             index_id BLOB NOT NULL,
                             permission INTEGER NOT NULL CHECK (permission IN (0,1,2)),
                             PRIMARY KEY (user_id, index_id)
                         );
-                        CREATE TABLE findex.datasets (
+                        CREATE TABLE IF NOT EXISTS  {FINDEX_DATASETS_TABLE_NAME} (
                             index_id BLOB NOT NULL,  
                             user_id      BLOB NOT NULL,  
                             encrypted_entry     BLOB NOT NULL, 
                             PRIMARY KEY (index_id, user_id)
                         );
                         ",
-            )
+            ))
         })
         .await?;
 
