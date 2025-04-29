@@ -1,16 +1,15 @@
 use std::{collections::HashMap, sync::Arc};
 
-use async_sqlite::rusqlite::params_from_iter;
-use async_trait::async_trait;
-use cosmian_findex_structs::{CUSTOM_WORD_LENGTH, EncryptedEntries, Uuids};
-use tracing::instrument;
-use uuid::Uuid;
 use super::{_Sqlite, FINDEX_DATASETS_TABLE_NAME};
 use crate::{
     database::database_traits::DatasetsTrait,
     error::{result::FResult, server::ServerError},
 };
-
+use async_sqlite::rusqlite::params_from_iter;
+use async_trait::async_trait;
+use cosmian_findex_structs::{CUSTOM_WORD_LENGTH, EncryptedEntries, Uuids};
+use tracing::instrument;
+use uuid::Uuid;
 
 #[async_trait]
 impl DatasetsTrait for _Sqlite<CUSTOM_WORD_LENGTH> {
@@ -33,7 +32,6 @@ impl DatasetsTrait for _Sqlite<CUSTOM_WORD_LENGTH> {
 
         self.pool
             .conn_mut(move |conn| {
-                
                 let tx = conn.transaction()?;
 
                 tx.execute(
@@ -42,15 +40,13 @@ impl DatasetsTrait for _Sqlite<CUSTOM_WORD_LENGTH> {
                         FINDEX_DATASETS_TABLE_NAME,
                         vec!["(?,?,?)"; entries.len()].join(",")
                     ),
-                    params_from_iter(
-                        entries
-                            .into_iter()
-                            .flat_map(|(user_id, entry)| [
-                                index_id_bytes.as_ref().clone(),
-                                user_id.into_bytes().to_vec(), 
-                                entry,           
-                        ]),                    
-                    ),
+                    params_from_iter(entries.into_iter().flat_map(|(user_id, entry)| {
+                        [
+                            index_id_bytes.as_ref().clone(),
+                            user_id.into_bytes().to_vec(),
+                            entry,
+                        ]
+                    })),
                 )?;
                 tx.commit()?;
                 Ok(())
@@ -86,10 +82,7 @@ impl DatasetsTrait for _Sqlite<CUSTOM_WORD_LENGTH> {
                     params_from_iter(
                         ids_owned
                             .iter()
-                            .flat_map(|id| [
-                                index_id.into_bytes(),
-                                id.into_bytes(), 
-                            ])
+                            .flat_map(|id| [index_id.into_bytes(), id.into_bytes()]),
                     ),
                 )?;
 
@@ -102,13 +95,13 @@ impl DatasetsTrait for _Sqlite<CUSTOM_WORD_LENGTH> {
 
     #[instrument(ret(Display), err, skip(self), level = "trace")]
     async fn dataset_get_entries(&self, index_id: &Uuid, ids: &Uuids) -> FResult<EncryptedEntries> {
-    // Early return for empty IDs
-    if ids.is_empty() {
-        return Ok(EncryptedEntries::from(HashMap::<Uuid, Vec<u8>>::new()));
-    }
+        // Early return for empty IDs
+        if ids.is_empty() {
+            return Ok(EncryptedEntries::from(HashMap::<Uuid, Vec<u8>>::new()));
+        }
 
-    let index_id = index_id.clone();
-    let ids = (*ids).clone();
+        let index_id = index_id.clone();
+        let ids = (*ids).clone();
 
         self.pool
         .conn(move |conn| {
@@ -117,25 +110,20 @@ impl DatasetsTrait for _Sqlite<CUSTOM_WORD_LENGTH> {
                   FINDEX_DATASETS_TABLE_NAME,
                   vec!["?"; ids.len()].join(",")
             );
-            
             let mut stmt = conn.prepare(&query)?;
-            
             let mut params = Vec::with_capacity(1 + ids.len()); //  the index_id, then all entry_ids
             params.push(index_id.into_bytes().to_vec());
             params.extend(ids.iter().map(|id| id.into_bytes().to_vec()));
-            
             let  rows = stmt.query_map(params_from_iter(params), |row| {
                 let entry_id = Uuid::from_bytes(row.get::<_,[u8; 16]>(0)?);
                 let encrypted_entry: Vec<u8> = row.get(1)?;
                 Ok((entry_id, encrypted_entry))
             })?
             .collect::<Result<HashMap<_, _>, _>>()?;
-            
             Ok(EncryptedEntries::from(rows))
         })
         .await.map_err(|e| {
             ServerError::from(e)
         })
-    
     }
 }

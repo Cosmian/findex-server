@@ -1,9 +1,9 @@
-use std::collections::HashMap;
 use super::{_Sqlite, FINDEX_PERMISSIONS_TABLE_NAME};
 use crate::{database::database_traits::PermissionsTrait, error::result::FResult};
 use async_sqlite::rusqlite::params;
 use async_trait::async_trait;
 use cosmian_findex_structs::{CUSTOM_WORD_LENGTH, Permission, Permissions};
+use std::collections::HashMap;
 use tracing::{instrument, trace};
 use uuid::Uuid;
 
@@ -26,8 +26,7 @@ impl PermissionsTrait for _Sqlite<CUSTOM_WORD_LENGTH> {
 
         self.pool
             .conn_mut(move |conn| {
-                conn.execute(
-&format!(                "INSERT INTO {FINDEX_PERMISSIONS_TABLE_NAME} (user_id, index_id, permission) VALUES (?1, ?2, ?3)",
+                conn.execute(&format!(                "INSERT INTO {FINDEX_PERMISSIONS_TABLE_NAME} (user_id, index_id, permission) VALUES (?1, ?2, ?3)",
                 ),
                 params![user_id_owned, index_id_bytes, permission],
             )?;
@@ -52,9 +51,7 @@ impl PermissionsTrait for _Sqlite<CUSTOM_WORD_LENGTH> {
 
         self.pool
         .conn_mut(move |conn| {
-            conn.execute(
-&format!(                "INSERT OR REPLACE INTO {FINDEX_PERMISSIONS_TABLE_NAME} (user_id, index_id, permission) VALUES (?1, ?2, ?3)",
-            ),
+            conn.execute(&format!("INSERT OR REPLACE INTO {FINDEX_PERMISSIONS_TABLE_NAME} (user_id, index_id, permission) VALUES (?1, ?2, ?3)",),
                 params![user_id_owned, index_id_bytes, permission_value],
             )?;
             Ok(())
@@ -73,10 +70,9 @@ impl PermissionsTrait for _Sqlite<CUSTOM_WORD_LENGTH> {
         let permission = self
             .pool
             .conn(move |conn| {
-                let query = format!( "SELECT permission FROM {FINDEX_PERMISSIONS_TABLE_NAME} WHERE user_id = ?1 AND index_id = ?2");
+                let query = format!("SELECT permission FROM {FINDEX_PERMISSIONS_TABLE_NAME} WHERE user_id = ?1 AND index_id = ?2");
                 let mut stmt = conn.prepare(&query)?;
                 let mut rows = stmt.query(params![user_id_owned, index_id_bytes])?;
-                
                 if let Some(row) = rows.next()? {
                     let permission_value: u8 = row.get(0)?;
                     Permission::try_from(permission_value).map_err(|e| {
@@ -192,7 +188,7 @@ mod tests {
 
     async fn setup_test_db() -> _Sqlite<CUSTOM_WORD_LENGTH> {
         // let url = redis_db_config().database_url;
-        _Sqlite::instantiate(&"../../target/debug/sqlite-test.db",  true)
+        _Sqlite::instantiate(&"../../target/debug/sqlite-test.db", true)
             .await
             .expect("Test failed to instantiate Sqlite")
     }
@@ -481,8 +477,8 @@ mod tests {
     #[allow(clippy::as_conversions)] // won't panic
     #[tokio::test]
     async fn test_permissions_concurrent_set_revoke_permissions() {
-        const MAX_USERS: usize = 2;
-        const MAX_OPS: usize = 5;
+        const MAX_USERS: usize = 100;
+        const MAX_OPS: usize = 100;
         let mut rng = CsRng::from_entropy();
 
         let users: Vec<String> = (0..=(rng.next_u64() % MAX_USERS as u64))
@@ -549,16 +545,17 @@ mod tests {
 
         let mut handles = vec![];
         let db_arc = Arc::new(setup_test_db().await);
+        let users2 = users.clone();
 
-        for user in &users {
+        for user in users2 {
             let db = Arc::clone(&db_arc);
             let ops = operations.get(user.as_str()).unwrap().clone();
 
-            for op in ops {
-                let db = Arc::clone(&db);
-                let user = user.clone();
+            handles.push(tokio::spawn(async move {
+                for op in ops {
+                    let db = Arc::clone(&db);
+                    let user = user.clone();
 
-                handles.push(tokio::spawn(async move {
                     match op {
                         Operation::CreateIndex { index_id } => {
                             // Simulate new index creation
@@ -581,8 +578,8 @@ mod tests {
                                 .expect("Failed to revoke permission");
                         }
                     }
-                }));
-            }
+                }
+            }));
         }
 
         // Wait for all tasks to complete
