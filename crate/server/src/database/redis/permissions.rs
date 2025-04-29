@@ -515,6 +515,7 @@ mod tests {
 
         let mut handles = vec![];
         let db_arc = Arc::new(setup_test_db().await);
+        // let rev = users.clone().into_iter().rev().collect::<Vec<_>>();
 
         for user in &users {
             let db = Arc::clone(&db_arc);
@@ -550,6 +551,8 @@ mod tests {
                 }));
             }
         }
+
+
 
         // Wait for all tasks to complete
         for handle in handles {
