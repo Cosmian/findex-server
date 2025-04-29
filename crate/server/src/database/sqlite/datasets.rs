@@ -5,7 +5,7 @@ use async_trait::async_trait;
 use cosmian_findex_structs::{CUSTOM_WORD_LENGTH, EncryptedEntries, Uuids};
 use tracing::instrument;
 use uuid::Uuid;
-use super::_Sqlite;
+use super::{_Sqlite, FINDEX_DATASETS_TABLE_NAME};
 use crate::{
     database::database_traits::DatasetsTrait,
     error::{result::FResult, server::ServerError},
@@ -38,7 +38,8 @@ impl DatasetsTrait for _Sqlite<CUSTOM_WORD_LENGTH> {
 
                 tx.execute(
                     &format!(
-                        "INSERT OR REPLACE INTO findex.permissions (index_id, user_id, encrypted_entry) VALUES {}",
+                        "INSERT OR REPLACE INTO {} (index_id, user_id, encrypted_entry) VALUES {}",
+                        FINDEX_DATASETS_TABLE_NAME,
                         vec!["(?,?,?)"; entries.len()].join(",")
                     ),
                     params_from_iter(
@@ -78,7 +79,8 @@ impl DatasetsTrait for _Sqlite<CUSTOM_WORD_LENGTH> {
                 // Build a query with placeholders for each ID
                 tx.execute(
                     &format!(
-                        "DELETE FROM findex.permissions WHERE (index_id, user_id) IN ({})",
+                        "DELETE FROM {} WHERE (index_id, user_id) IN ({})",
+                        FINDEX_DATASETS_TABLE_NAME,
                         vec!["(?,?)"; ids_owned.len()].join(",")
                     ),
                     params_from_iter(
@@ -111,13 +113,14 @@ impl DatasetsTrait for _Sqlite<CUSTOM_WORD_LENGTH> {
         self.pool
         .conn(move |conn| {
             let query = format!(
-                "SELECT index_id, encrypted_entry FROM findex.permissions WHERE index_id = ? AND user_id IN ({})",
+                "SELECT index_id, encrypted_entry FROM {} WHERE index_id = ? AND user_id IN ({})",
+                  FINDEX_DATASETS_TABLE_NAME,
                   vec!["?"; ids.len()].join(",")
             );
             
             let mut stmt = conn.prepare(&query)?;
             
-            let mut params: Vec<Vec<u8>> = Vec::with_capacity(1 + ids.len()); //  the index_id, then all entry_ids
+            let mut params = Vec::with_capacity(1 + ids.len()); //  the index_id, then all entry_ids
             params.push(index_id.into_bytes().to_vec());
             params.extend(ids.iter().map(|id| id.into_bytes().to_vec()));
             

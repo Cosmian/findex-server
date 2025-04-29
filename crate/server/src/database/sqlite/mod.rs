@@ -8,3 +8,7 @@ pub(crate) use instance::_Sqlite;
 
 use crate::database::database_traits::DatabaseTraits;
 impl DatabaseTraits for _Sqlite<CUSTOM_WORD_LENGTH> {}
+
+pub use instance::{
+    FINDEX_DATASETS_TABLE_NAME, FINDEX_MEMORY_TABLE_NAME, FINDEX_PERMISSIONS_TABLE_NAME,
+};
