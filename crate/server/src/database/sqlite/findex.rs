@@ -11,7 +11,7 @@ impl<const WORD_LENGTH: usize> MemoryADT for Sqlite<WORD_LENGTH> {
     async fn batch_read(
         &self,
         addresses: Vec<Address<SERVER_ADDRESS_LENGTH>>,
-    ) -> Result<Vec<Option<Self::Word>>, SqliteMemoryError> {
+    ) -> Result<Vec<Option<Self::Word>>, Self::Error> {
         self.memory.batch_read(addresses).await
     }
 
@@ -19,7 +19,7 @@ impl<const WORD_LENGTH: usize> MemoryADT for Sqlite<WORD_LENGTH> {
         &self,
         guard: (Self::Address, Option<Self::Word>),
         bindings: Vec<(Self::Address, Self::Word)>,
-    ) -> Result<Option<Self::Word>, SqliteMemoryError> {
+    ) -> Result<Option<Self::Word>, Self::Error> {
         self.memory.guarded_write(guard, bindings).await
     }
 }

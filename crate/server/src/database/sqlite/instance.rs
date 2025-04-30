@@ -1,4 +1,4 @@
-use crate::{database::database_traits::InstantializationTrait, error::result::FResult};
+use crate::database::{database_traits::InstantializationTrait, findex_database::FDBResult};
 use async_sqlite::{Pool, PoolBuilder};
 use async_trait::async_trait;
 use cosmian_findex::{Address, SqliteMemory};
@@ -18,7 +18,7 @@ pub const FINDEX_DATASETS_TABLE_NAME: &str = "findex_datasets";
 impl<const WORD_LENGTH: usize> InstantializationTrait for Sqlite<WORD_LENGTH> {
     // TODO: as optimization, we can warm up the pool by pre-creating connections and executing optimization pragmas like OPTIMIZE.
 
-    async fn instantiate(db_url: &str, clear_database: bool) -> FResult<Self> {
+    async fn instantiate(db_url: &str, clear_database: bool) -> FDBResult<Self> {
         let pool = PoolBuilder::new()
             .path(db_url)
             .journal_mode(async_sqlite::JournalMode::Wal)
@@ -26,6 +26,7 @@ impl<const WORD_LENGTH: usize> InstantializationTrait for Sqlite<WORD_LENGTH> {
             .open()
             .await?;
 
+        // INFO:  uncomment if some of the heavy tests fail
         // for _ in 0..99 {
         //     pool.conn(move |conn| {
         //         conn.execute_batch(&format!(

@@ -1,14 +1,13 @@
-use std::ops::Add;
-
 use actix_web::{HttpMessage, HttpRequest};
-use cosmian_findex_structs::{Addresses, CUSTOM_WORD_LENGTH, Permission};
+use cosmian_findex_structs::{CUSTOM_WORD_LENGTH, Permission};
 use tracing::{debug, trace};
 use uuid::Uuid;
 
 use crate::{
     config::{DbParams, ServerParams},
     database::{
-        database_traits::{DatabaseTraits, InstantializationTrait, PermissionsTrait},
+        FindexDatabase,
+        database_traits::{InstantializationTrait, PermissionsTrait},
         redis::Redis,
         sqlite::Sqlite,
     },
@@ -16,14 +15,9 @@ use crate::{
     middlewares::{JwtAuthClaim, PeerCommonName},
 };
 
-pub enum FindexDatabase {
-    Redis(Redis<CUSTOM_WORD_LENGTH>),
-    Sqlite(Sqlite<CUSTOM_WORD_LENGTH>),
-}
-
 pub(crate) struct FindexServer {
     pub(crate) params: ServerParams,
-    pub(crate) db: FindexDatabase,
+    pub(crate) db: FindexDatabase<CUSTOM_WORD_LENGTH>,
 }
 
 impl FindexServer {

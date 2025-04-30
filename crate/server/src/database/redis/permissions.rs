@@ -1,7 +1,6 @@
 use super::Redis;
-use crate::{
-    database::database_traits::PermissionsTrait,
-    error::{result::FResult, server::ServerError},
+use crate::database::{
+    DatabaseError, database_traits::PermissionsTrait, findex_database::FDBResult,
 };
 use async_trait::async_trait;
 use cosmian_findex_structs::{CUSTOM_WORD_LENGTH, Permission, Permissions};
@@ -29,7 +28,7 @@ async fn hset_redis_permission(
 impl PermissionsTrait for Redis<CUSTOM_WORD_LENGTH> {
     /// Creates a new index ID and sets admin privileges.
     #[instrument(ret(Display), err, skip(self), level = "trace")]
-    async fn create_index_id(&self, user_id: &str) -> FResult<Uuid> {
+    async fn create_index_id(&self, user_id: &str) -> FDBResult<Uuid> {
         let index_id = Uuid::new_v4();
         hset_redis_permission(&self.manager, user_id, &index_id, Permission::Admin).await?;
         trace!("New index with id {index_id} created for user  {user_id}");
@@ -42,55 +41,58 @@ impl PermissionsTrait for Redis<CUSTOM_WORD_LENGTH> {
         user_id: &str,
         permission: Permission,
         index_id: &Uuid,
-    ) -> FResult<()> {
+    ) -> FDBResult<()> {
         hset_redis_permission(&self.manager, user_id, index_id, permission).await?;
         trace!("Set {permission:?} permission to {user_id} for index {index_id}");
         Ok(())
     }
 
     #[instrument(ret(Display), err, skip(self), level = "trace")]
-    async fn get_permissions(&self, user_id: &str) -> FResult<Permissions> {
+    async fn get_permissions(&self, user_id: &str) -> FDBResult<Permissions> {
         let user_redis_key = format!("{PERMISSIONS_PREFIX}:{user_id}");
 
         let permissions: Permissions = self
             .manager
             .clone()
             .hgetall::<_, Vec<(String, u8)>>(user_redis_key)
-            .await
-            .map_err(ServerError::from)?
+            .await?
             .into_iter()
             .map(|(index_str, perm)| {
                 Ok((
                     Uuid::parse_str(&index_str).map_err(|e| {
-                        ServerError::DatabaseError(format!("Invalid index ID. {e}"))
+                        DatabaseError::InvalidDatabaseResponse(format!("Invalid index ID. {e}"))
                     })?,
                     Permission::try_from(perm).map_err(|e| {
-                        ServerError::DatabaseError(format!("Invalid permission. {e}"))
+                        DatabaseError::InvalidDatabaseResponse(format!("Invalid index ID. {e}"))
                     })?,
                 ))
             })
-            .collect::<FResult<_>>()?;
+            .collect::<FDBResult<_>>()?;
 
         trace!("permissions for user {user_id}: {permissions:?}");
         Ok(permissions)
     }
 
     #[instrument(ret(Display), err, skip(self), level = "trace")]
-    async fn get_permission(&self, user_id: &str, index_id: &Uuid) -> FResult<Permission> {
+    async fn get_permission(&self, user_id: &str, index_id: &Uuid) -> FDBResult<Permission> {
         let user_key = format!("{PERMISSIONS_PREFIX}:{user_id}");
 
         let permission = self
             .manager
             .clone()
             .hget::<_, _, Option<u8>>(&user_key, index_id.to_string())
-            .await
-            .map_err(ServerError::from)?
+            .await?
             .ok_or_else(|| {
-                ServerError::DatabaseError(format!("No permission found for index {index_id}"))
+                DatabaseError::InvalidDatabaseResponse(
+                    "No permission found for index {index_id}".to_string(),
+                )
             })
             .and_then(|p| {
-                Permission::try_from(p)
-                    .map_err(|e| ServerError::DatabaseError(format!("Invalid permission. {e}")))
+                Permission::try_from(p).map_err(|e| {
+                    DatabaseError::InvalidDatabaseResponse(format!(
+                        "An invalid permission value was returned by the database. {e}"
+                    ))
+                })
             })?;
 
         trace!("Permissions for user {user_id}: {permission:?}");
@@ -98,7 +100,7 @@ impl PermissionsTrait for Redis<CUSTOM_WORD_LENGTH> {
     }
 
     #[instrument(ret, err, skip(self), level = "trace")]
-    async fn revoke_permission(&self, user_id: &str, index_id: &Uuid) -> FResult<()> {
+    async fn revoke_permission(&self, user_id: &str, index_id: &Uuid) -> FDBResult<()> {
         let user_key = format!("{PERMISSIONS_PREFIX}:{user_id}");
 
         // never type fallbacks will be deprecated in future Rust releases, hence this explicit typing
@@ -107,7 +109,7 @@ impl PermissionsTrait for Redis<CUSTOM_WORD_LENGTH> {
             .clone()
             .hdel(&user_key, index_id.to_string())
             .await
-            .map_err(ServerError::from)?;
+            .map_err(DatabaseError::from)?;
 
         trace!("Revoked permission for {user_id} on index {index_id}");
         Ok(())

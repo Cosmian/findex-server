@@ -1,5 +1,7 @@
 use super::{FINDEX_PERMISSIONS_TABLE_NAME, Sqlite};
-use crate::{database::database_traits::PermissionsTrait, error::result::FResult};
+use crate::database::{
+    DatabaseError, database_traits::PermissionsTrait, findex_database::FDBResult,
+};
 use async_sqlite::rusqlite::params;
 use async_trait::async_trait;
 use cosmian_findex_structs::{CUSTOM_WORD_LENGTH, Permission, Permissions};
@@ -18,7 +20,7 @@ use uuid::Uuid;
 impl PermissionsTrait for Sqlite<CUSTOM_WORD_LENGTH> {
     /// Creates a new index ID and sets admin privileges.
     #[instrument(ret(Display), err, skip(self), level = "trace")]
-    async fn create_index_id(&self, user_id: &str) -> FResult<Uuid> {
+    async fn create_index_id(&self, user_id: &str) -> FDBResult<Uuid> {
         let index_id = Uuid::new_v4();
         let user_id_owned = user_id.to_string();
         let index_id_bytes = index_id.into_bytes();
@@ -44,7 +46,7 @@ impl PermissionsTrait for Sqlite<CUSTOM_WORD_LENGTH> {
         user_id: &str,
         permission: Permission,
         index_id: &Uuid,
-    ) -> FResult<()> {
+    ) -> FDBResult<()> {
         let user_id_owned = user_id.to_string();
         let index_id_bytes = index_id.into_bytes();
         let permission_value = u8::from(permission);
@@ -63,7 +65,7 @@ impl PermissionsTrait for Sqlite<CUSTOM_WORD_LENGTH> {
     }
 
     #[instrument(ret(Display), err, skip(self), level = "trace")]
-    async fn get_permission(&self, user_id: &str, index_id: &Uuid) -> FResult<Permission> {
+    async fn get_permission(&self, user_id: &str, index_id: &Uuid) -> FDBResult<Permission> {
         let user_id_owned = user_id.to_string();
         let index_id_bytes = index_id.into_bytes();
 
@@ -75,25 +77,23 @@ impl PermissionsTrait for Sqlite<CUSTOM_WORD_LENGTH> {
                 let mut rows = stmt.query(params![user_id_owned, index_id_bytes])?;
                 if let Some(row) = rows.next()? {
                     let permission_value: u8 = row.get(0)?;
-                    Permission::try_from(permission_value).map_err(|e| {
-                        async_sqlite::rusqlite::Error::FromSqlConversionFailure(
-                            0,
-                            async_sqlite::rusqlite::types::Type::Integer,
-                            Box::new(e),
-                        )
-                    })
+                    Ok(Permission::try_from(permission_value).map_err(|e| {
+                        DatabaseError::InvalidDatabaseResponse(format!(
+                            "An invalid permission value was returned by the database. {e}"
+                        ))
+                    }))
                 } else {
                     Err(async_sqlite::rusqlite::Error::QueryReturnedNoRows)
                 }
             })
-            .await?;
+            .await??;
 
         trace!("Permission for user {user_id} on index {index_id}: {permission:?}");
         Ok(permission)
     }
 
     #[instrument(ret(Display), err, skip(self), level = "trace")]
-    async fn get_permissions(&self, user_id: &str) -> FResult<Permissions> {
+    async fn get_permissions(&self, user_id: &str) -> FDBResult<Permissions> {
         let user_id_owned = user_id.to_string();
 
         let red_permissions = self
@@ -129,7 +129,7 @@ format!(                    "SELECT index_id,permission  FROM {FINDEX_PERMISSION
     }
 
     #[instrument(ret, err, skip(self), level = "trace")]
-    async fn revoke_permission(&self, user_id: &str, index_id: &Uuid) -> FResult<()> {
+    async fn revoke_permission(&self, user_id: &str, index_id: &Uuid) -> FDBResult<()> {
         let user_id_owned = user_id.to_string();
         let index_id_bytes = index_id.into_bytes();
 

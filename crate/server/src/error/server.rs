@@ -54,27 +54,25 @@ impl From<std::io::Error> for ServerError {
     }
 }
 
-impl From<redis::RedisError> for ServerError {
-    fn from(e: redis::RedisError) -> Self {
-        Self::DatabaseError(format!("| Redis : {}", e))
-    }
-}
+// Actual database error conversion is handled in the database module
+impl From<crate::database::DatabaseError> for ServerError {
+    fn from(e: crate::database::DatabaseError) -> Self {
+        match e {
+            crate::database::DatabaseError::RedisFindexMemoryError(e) => {
+                Self::FindexMemoryError(format!("| Redis : {}", e))
+            }
+            crate::database::DatabaseError::SqliteFindexMemoryError(e) => {
+                Self::FindexMemoryError(format!("| Sqlite : {}", e))
+            }
 
-impl From<async_sqlite::Error> for ServerError {
-    fn from(e: async_sqlite::Error) -> Self {
-        Self::DatabaseError(format!("| Sqlite : {}", e))
-    }
-}
+            crate::database::DatabaseError::RedisCoreError(e) => {
+                Self::FindexMemoryError(format!("| Redis connection : {}", e))
+            }
 
-impl From<cosmian_findex::RedisMemoryError> for ServerError {
-    fn from(e: cosmian_findex::RedisMemoryError) -> Self {
-        Self::FindexMemoryError(format!("| Redis : {}", e))
-    }
-}
-
-impl From<cosmian_findex::SqliteMemoryError> for ServerError {
-    fn from(e: cosmian_findex::SqliteMemoryError) -> Self {
-        Self::FindexMemoryError(format!("| Sqlite : {}", e))
+            crate::database::DatabaseError::AsyncSqliteCoreError(e) => {
+                Self::FindexMemoryError(format!("| Sqlite connection : {}", e))
+            }
+        }
     }
 }
 
