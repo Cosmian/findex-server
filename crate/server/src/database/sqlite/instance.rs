@@ -5,7 +5,7 @@ use cosmian_findex::{Address, SqliteMemory};
 use cosmian_findex_structs::SERVER_ADDRESS_LENGTH;
 use tracing::info;
 
-pub(crate) struct _Sqlite<const WORD_LENGTH: usize> {
+pub(crate) struct Sqlite<const WORD_LENGTH: usize> {
     pub(crate) memory: SqliteMemory<Address<SERVER_ADDRESS_LENGTH>, [u8; WORD_LENGTH]>,
     pub(crate) pool: Pool,
 }
@@ -15,15 +15,27 @@ pub const FINDEX_PERMISSIONS_TABLE_NAME: &str = "findex_permissions";
 pub const FINDEX_DATASETS_TABLE_NAME: &str = "findex_datasets";
 
 #[async_trait]
-impl<const WORD_LENGTH: usize> InstantializationTrait for _Sqlite<WORD_LENGTH> {
+impl<const WORD_LENGTH: usize> InstantializationTrait for Sqlite<WORD_LENGTH> {
     // TODO: as optimization, we can warm up the pool by pre-creating connections and executing optimization pragmas like OPTIMIZE.
 
     async fn instantiate(db_url: &str, clear_database: bool) -> FResult<Self> {
         let pool = PoolBuilder::new()
             .path(db_url)
             .journal_mode(async_sqlite::JournalMode::Wal)
+            .num_conns(4)
             .open()
             .await?;
+
+        // for _ in 0..99 {
+        //     pool.conn(move |conn| {
+        //         conn.execute_batch(&format!(
+        //             "
+        //             PRAGMA busy_timeout = 15000;
+        //             "
+        //         ))
+        //     })
+        //     .await?;
+        // }
 
         if clear_database {
             info!("Warning: proceeding to clear the database, this operation is irreversible.");

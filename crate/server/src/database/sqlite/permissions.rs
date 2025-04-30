@@ -1,4 +1,4 @@
-use super::{_Sqlite, FINDEX_PERMISSIONS_TABLE_NAME};
+use super::{FINDEX_PERMISSIONS_TABLE_NAME, Sqlite};
 use crate::{database::database_traits::PermissionsTrait, error::result::FResult};
 use async_sqlite::rusqlite::params;
 use async_trait::async_trait;
@@ -15,7 +15,7 @@ use uuid::Uuid;
 // );
 
 #[async_trait]
-impl PermissionsTrait for _Sqlite<CUSTOM_WORD_LENGTH> {
+impl PermissionsTrait for Sqlite<CUSTOM_WORD_LENGTH> {
     /// Creates a new index ID and sets admin privileges.
     #[instrument(ret(Display), err, skip(self), level = "trace")]
     async fn create_index_id(&self, user_id: &str) -> FResult<Uuid> {
@@ -167,14 +167,17 @@ mod tests {
     };
     use std::{
         collections::{HashMap, HashSet},
+        env,
         sync::Arc,
     };
     use tokio;
     use uuid::Uuid;
 
-    // fn get_sqlite_url(sqlite_url_var_env: &str) -> String {
-    //     env::var(sqlite_url_var_env).unwrap_or_else(|_| "./target/debug/sqlite-test.db".to_owned())
-    // }
+    const SQLITE_TEST_DB_URL: &str = "../../target/debug/sqlite-test.db";
+
+    fn get_sqlite_url(sqlite_url_var_env: &str) -> String {
+        env::var(sqlite_url_var_env).unwrap_or_else(|_| SQLITE_TEST_DB_URL.to_owned())
+    }
 
     // fn redis_db_config() -> DBConfig {
     //     let url = get_sqlite_url("SQLITE_URL");
@@ -186,9 +189,8 @@ mod tests {
     //     }
     // }
 
-    async fn setup_test_db() -> _Sqlite<CUSTOM_WORD_LENGTH> {
-        // let url = redis_db_config().database_url;
-        _Sqlite::instantiate(&"../../target/debug/sqlite-test.db", true)
+    async fn setup_test_db() -> Sqlite<CUSTOM_WORD_LENGTH> {
+        Sqlite::instantiate(&get_sqlite_url("SQLITE_URL"), true)
             .await
             .expect("Test failed to instantiate Sqlite")
     }
@@ -216,7 +218,7 @@ mod tests {
             &Permission::Admin
         );
     }
-
+    // Default Busy Timeout: When many tasks try to acquire the write lock simultaneously, some will time out waiting. The default busy timeout is often quite short, causing some operations to fail silently.
     #[tokio::test]
     async fn test_permissions_set_and_revoke_permissions() {
         let db = setup_test_db().await;
@@ -355,9 +357,12 @@ mod tests {
 
     #[tokio::test]
     async fn test_permissions_concurrent_create_index_id() {
-        let db = Arc::new(setup_test_db().await);
+        let d = Sqlite::instantiate(&"../../target/debug/sqlite-test2.db", true)
+            .await
+            .expect("Test failed to instantiate Sqlite");
+        let db = Arc::new(d);
         let user_id = Uuid::new_v4().to_string();
-        let tasks_count = 20;
+        let tasks_count = 99;
 
         // Create multiple concurrent tasks to create index IDs
         let tasks: Vec<_> = (0..tasks_count)
@@ -485,11 +490,11 @@ mod tests {
             .map(|_| Uuid::new_v4().to_string())
             .collect();
 
-        let mut operations: HashMap<&str, Vec<Operation>> = HashMap::new();
+        let mut operations: HashMap<String, Vec<Operation>> = HashMap::new();
         let mut expected_state: HashMap<&str, HashMap<Uuid, Permission>> = HashMap::new();
         // Initialize empty vectors for each user
         for user in &users {
-            operations.insert(user, Vec::new());
+            operations.insert(user.to_owned(), Vec::new()); // a long lived value is needed here
             expected_state.insert(user, HashMap::new());
         }
         for user in &users {
@@ -545,13 +550,15 @@ mod tests {
 
         let mut handles = vec![];
         let db_arc = Arc::new(setup_test_db().await);
-        let users2 = users.clone();
+        let operations = Arc::new(operations);
 
-        for user in users2 {
+        for user in users.clone() {
+            let operations = Arc::clone(&operations);
             let db = Arc::clone(&db_arc);
-            let ops = operations.get(user.as_str()).unwrap().clone();
 
             handles.push(tokio::spawn(async move {
+                let ops = operations.get(user.as_str()).unwrap().clone();
+
                 for op in ops {
                     let db = Arc::clone(&db);
                     let user = user.clone();
@@ -599,7 +606,7 @@ mod tests {
 
             assert_eq!(
                 current_permissions, expected_permissions,
-                "Final permissions mismatch for user {user}.\nExpected: {expected_permissions:?},\nGot: {current_permissions:?}"
+                "Final permissions mismatch for user {user}"
             );
         }
     }
