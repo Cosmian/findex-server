@@ -1,10 +1,7 @@
 use std::{collections::HashMap, sync::Arc};
 
 use super::{FINDEX_DATASETS_TABLE_NAME, Sqlite};
-use crate::{
-    database::database_traits::DatasetsTrait,
-    error::{result::FResult, server::ServerError},
-};
+use crate::database::{database_traits::DatasetsTrait, findex_database::FDBResult};
 use async_sqlite::rusqlite::params_from_iter;
 use async_trait::async_trait;
 use cosmian_findex_structs::{CUSTOM_WORD_LENGTH, EncryptedEntries, Uuids};
@@ -21,7 +18,7 @@ impl DatasetsTrait for Sqlite<CUSTOM_WORD_LENGTH> {
         &self,
         index_id: &Uuid,
         entries: &EncryptedEntries,
-    ) -> FResult<()> {
+    ) -> FDBResult<()> {
         if entries.is_empty() {
             return Ok(());
         }
@@ -56,7 +53,7 @@ impl DatasetsTrait for Sqlite<CUSTOM_WORD_LENGTH> {
     }
 
     #[instrument(ret, err, skip(self), level = "trace")]
-    async fn dataset_delete_entries(&self, index_id: &Uuid, ids: &Uuids) -> FResult<()> {
+    async fn dataset_delete_entries(&self, index_id: &Uuid, ids: &Uuids) -> FDBResult<()> {
         // Create owned copies for the closure
         let index_id = index_id.clone();
         let ids_owned = (*ids).clone();
@@ -94,7 +91,11 @@ impl DatasetsTrait for Sqlite<CUSTOM_WORD_LENGTH> {
     }
 
     #[instrument(ret(Display), err, skip(self), level = "trace")]
-    async fn dataset_get_entries(&self, index_id: &Uuid, ids: &Uuids) -> FResult<EncryptedEntries> {
+    async fn dataset_get_entries(
+        &self,
+        index_id: &Uuid,
+        ids: &Uuids,
+    ) -> FDBResult<EncryptedEntries> {
         // Early return for empty IDs
         if ids.is_empty() {
             return Ok(EncryptedEntries::from(HashMap::<Uuid, Vec<u8>>::new()));
@@ -102,8 +103,7 @@ impl DatasetsTrait for Sqlite<CUSTOM_WORD_LENGTH> {
 
         let index_id = index_id.clone();
         let ids = (*ids).clone();
-
-        self.pool
+        Ok(self.pool
         .conn(move |conn| {
             let query = format!(
                 "SELECT index_id, encrypted_entry FROM {} WHERE index_id = ? AND user_id IN ({})",
@@ -122,8 +122,6 @@ impl DatasetsTrait for Sqlite<CUSTOM_WORD_LENGTH> {
             .collect::<Result<HashMap<_, _>, _>>()?;
             Ok(EncryptedEntries::from(rows))
         })
-        .await.map_err(|e| {
-            ServerError::from(e)
-        })
+        .await?)
     }
 }
