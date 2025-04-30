@@ -1,6 +1,6 @@
 use std::{collections::HashMap, sync::Arc};
 
-use super::{_Sqlite, FINDEX_DATASETS_TABLE_NAME};
+use super::{FINDEX_DATASETS_TABLE_NAME, Sqlite};
 use crate::{
     database::database_traits::DatasetsTrait,
     error::{result::FResult, server::ServerError},
@@ -12,7 +12,7 @@ use tracing::instrument;
 use uuid::Uuid;
 
 #[async_trait]
-impl DatasetsTrait for _Sqlite<CUSTOM_WORD_LENGTH> {
+impl DatasetsTrait for Sqlite<CUSTOM_WORD_LENGTH> {
     //
     // Dataset management
     //

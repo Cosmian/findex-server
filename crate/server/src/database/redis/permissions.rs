@@ -455,11 +455,11 @@ mod tests {
             .map(|_| Uuid::new_v4().to_string())
             .collect();
 
-        let mut operations: HashMap<&str, Vec<Operation>> = HashMap::new();
+        let mut operations: HashMap<String, Vec<Operation>> = HashMap::new();
         let mut expected_state: HashMap<&str, HashMap<Uuid, Permission>> = HashMap::new();
         // Initialize empty vectors for each user
         for user in &users {
-            operations.insert(user, Vec::new());
+            operations.insert(user.to_owned(), Vec::new()); // a long lived value is needed here
             expected_state.insert(user, HashMap::new());
         }
         for user in &users {
@@ -515,17 +515,19 @@ mod tests {
 
         let mut handles = vec![];
         let db_arc = Arc::new(setup_test_db().await);
-        // let rev = users.clone().into_iter().rev().collect::<Vec<_>>();
+        let operations = Arc::new(operations);
 
-        for user in &users {
+        for user in users.clone() {
+            let operations = Arc::clone(&operations);
             let db = Arc::clone(&db_arc);
-            let ops = operations.get(user.as_str()).unwrap().clone();
 
-            for op in ops {
-                let db = Arc::clone(&db);
-                let user = user.clone();
+            handles.push(tokio::spawn(async move {
+                let ops = operations.get(user.as_str()).unwrap().clone();
 
-                handles.push(tokio::spawn(async move {
+                for op in ops {
+                    let db = Arc::clone(&db);
+                    let user = user.clone();
+
                     match op {
                         Operation::CreateIndex { index_id } => {
                             // Simulate new index creation
@@ -548,11 +550,9 @@ mod tests {
                                 .expect("Failed to revoke permission");
                         }
                     }
-                }));
-            }
+                }
+            }));
         }
-
-
 
         // Wait for all tasks to complete
         for handle in handles {
