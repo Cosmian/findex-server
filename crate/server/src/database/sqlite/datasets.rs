@@ -55,7 +55,7 @@ impl DatasetsTrait for Sqlite<CUSTOM_WORD_LENGTH> {
     #[instrument(ret, err, skip(self), level = "trace")]
     async fn dataset_delete_entries(&self, index_id: &Uuid, ids: &Uuids) -> FDBResult<()> {
         // Create owned copies for the closure
-        let index_id = index_id.clone();
+        let index_id = *index_id;
         let ids_owned = (*ids).clone();
 
         self.pool
@@ -101,7 +101,7 @@ impl DatasetsTrait for Sqlite<CUSTOM_WORD_LENGTH> {
             return Ok(EncryptedEntries::from(HashMap::<Uuid, Vec<u8>>::new()));
         }
 
-        let index_id = index_id.clone();
+        let index_id = *index_id;
         let ids = (*ids).clone();
         Ok(self.pool
         .conn(move |conn| {

@@ -17,7 +17,6 @@ pub const FINDEX_DATASETS_TABLE_NAME: &str = "findex_datasets";
 #[async_trait]
 impl<const WORD_LENGTH: usize> InstantializationTrait for Sqlite<WORD_LENGTH> {
     // TODO: as optimization, we can warm up the pool by pre-creating connections and executing optimization pragmas like OPTIMIZE.
-
     async fn instantiate(db_url: &str, clear_database: bool) -> FDBResult<Self> {
         let pool = PoolBuilder::new()
             .path(db_url)
@@ -53,7 +52,7 @@ impl<const WORD_LENGTH: usize> InstantializationTrait for Sqlite<WORD_LENGTH> {
         }
 
         let memory =
-            SqliteMemory::connect_with_pool(pool.clone(), FINDEX_MEMORY_TABLE_NAME.to_string())
+            SqliteMemory::connect_with_pool(pool.clone(), FINDEX_MEMORY_TABLE_NAME.to_owned())
                 .await?;
         pool.conn(move |conn| {
             conn.execute_batch(&format!(
