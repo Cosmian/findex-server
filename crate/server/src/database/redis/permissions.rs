@@ -84,7 +84,7 @@ impl PermissionsTrait for Redis<CUSTOM_WORD_LENGTH> {
             .await?
             .ok_or_else(|| {
                 DatabaseError::InvalidDatabaseResponse(
-                    "No permission found for index {index_id}".to_string(),
+                    "No permission found for index {index_id}".to_owned(),
                 )
             })
             .and_then(|p| {
