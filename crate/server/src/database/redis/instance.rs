@@ -1,4 +1,5 @@
-use crate::error::{result::FResult, server::ServerError};
+use crate::database::{database_traits::InstantializationTrait, findex_database::FDBResult};
+use async_trait::async_trait;
 use cosmian_findex::{Address, RedisMemory};
 use cosmian_findex_structs::SERVER_ADDRESS_LENGTH;
 use redis::aio::ConnectionManager;
@@ -9,8 +10,9 @@ pub(crate) struct Redis<const WORD_LENGTH: usize> {
     pub(crate) manager: ConnectionManager,
 }
 
-impl<const WORD_LENGTH: usize> Redis<WORD_LENGTH> {
-    pub(crate) async fn instantiate(redis_url: &str, clear_database: bool) -> FResult<Self> {
+#[async_trait]
+impl<const WORD_LENGTH: usize> InstantializationTrait for Redis<WORD_LENGTH> {
+    async fn instantiate(redis_url: &str, clear_database: bool) -> FDBResult<Self> {
         let client = redis::Client::open(redis_url)?;
         let mut manager = client.get_connection_manager().await?;
 
@@ -20,9 +22,13 @@ impl<const WORD_LENGTH: usize> Redis<WORD_LENGTH> {
             if deletion_result.as_str() == "OK" {
                 info!("Database cleared");
             } else {
-                return Err(ServerError::DatabaseError(format!(
-                    "Database not cleared, Redis DB returned {deletion_result}"
-                )));
+                return Err(crate::database::DatabaseError::RedisCoreError(
+                    redis::RedisError::from((
+                        redis::ErrorKind::ResponseError,
+                        "Failed to clear the database",
+                        deletion_result,
+                    )),
+                ));
             }
         }
 

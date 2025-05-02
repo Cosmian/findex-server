@@ -5,21 +5,34 @@ use uuid::Uuid;
 
 use crate::{
     config::{DbParams, ServerParams},
-    database::{database_traits::PermissionsTrait, redis::Redis},
+    database::{
+        FindexDatabase,
+        database_traits::{InstantializationTrait, PermissionsTrait},
+        redis::Redis,
+        sqlite::Sqlite,
+    },
     error::{result::FResult, server::ServerError},
     middlewares::{JwtAuthClaim, PeerCommonName},
 };
+
 pub(crate) struct FindexServer {
     pub(crate) params: ServerParams,
-    pub(crate) db: Redis<CUSTOM_WORD_LENGTH>,
+    pub(crate) db: FindexDatabase<CUSTOM_WORD_LENGTH>,
 }
 
 impl FindexServer {
     pub(crate) async fn instantiate(mut shared_config: ServerParams) -> FResult<Self> {
         let db = match &mut shared_config.db_params {
-            DbParams::Redis(url) => {
-                Redis::instantiate(url.as_str(), shared_config.clear_db_on_start).await?
-            }
+            DbParams::Redis(url) => FindexDatabase::Redis(
+                Redis::instantiate(url.as_str(), shared_config.clear_db_on_start).await?,
+            ),
+            DbParams::Sqlite(path) => FindexDatabase::Sqlite(
+                Sqlite::<CUSTOM_WORD_LENGTH>::instantiate(
+                    path.to_str().unwrap(),
+                    shared_config.clear_db_on_start,
+                )
+                .await?,
+            ),
         };
 
         Ok(Self {

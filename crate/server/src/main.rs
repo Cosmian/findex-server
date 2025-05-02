@@ -29,8 +29,7 @@ async fn main() -> FResult<()> {
         unsafe {
             std::env::set_var(
                 "RUST_LOG",
-                "info,cosmian=info,cosmian_findex_server=info,actix_web=info,sqlx::query=error,\
-                 mysql=info",
+                "info,cosmian=info,cosmian_findex_server=info,actix_web=info",
             );
         }
     }

@@ -1,9 +1,12 @@
-use std::fmt::{self, Display};
-
+use std::{
+    fmt::{self, Display},
+    path::PathBuf,
+};
 use url::Url;
 
 pub enum DbParams {
     Redis(Url),
+    Sqlite(PathBuf),
 }
 
 impl DbParams {
@@ -12,9 +15,11 @@ impl DbParams {
     pub const fn db_name(&self) -> &str {
         match &self {
             Self::Redis(_) => "Redis",
+            Self::Sqlite(_) => "SQLite",
         }
     }
 }
+
 impl Default for DbParams {
     #[allow(clippy::expect_used)] // Won't panic because the URL is valid
     fn default() -> Self {
@@ -27,6 +32,9 @@ impl Display for DbParams {
         match self {
             Self::Redis(url) => {
                 write!(f, "redis: {}", redact_url(url))
+            }
+            Self::Sqlite(path) => {
+                write!(f, "sqlite: {}", path.display())
             }
         }
     }
