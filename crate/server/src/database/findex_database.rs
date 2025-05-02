@@ -4,43 +4,23 @@
 //! It implements an abstraction layer that allows the application to work with any implemented DB backend.
 //! and use databases interchangeably through a common API defined by various traits.
 use async_trait::async_trait;
-use cosmian_findex::{Address, MemoryADT, RedisMemoryError, SqliteMemoryError};
+use cosmian_findex::{Address, MemoryADT};
 use cosmian_findex_structs::{
     CUSTOM_WORD_LENGTH, EncryptedEntries, Permission, Permissions, SERVER_ADDRESS_LENGTH, Uuids,
 };
-use thiserror::Error;
 use uuid::Uuid;
 
 use super::{
     database_traits::{DatabaseTraits, DatasetsTrait, InstantializationTrait, PermissionsTrait},
+    error::DatabaseError,
     redis::Redis,
     sqlite::Sqlite,
 };
 
-pub type FDBResult<R> = Result<R, DatabaseError>;
-
-/// An enum that wraps memory errors from different findex memories
-#[derive(Error, Debug)]
-pub(crate) enum DatabaseError {
-    #[error("Redis error: {0}")]
-    RedisFindexMemoryError(#[from] RedisMemoryError),
-
-    #[error("SQLite error: {0}")]
-    SqliteFindexMemoryError(#[from] SqliteMemoryError),
-
-    #[error("Redis connection error: {0}")]
-    RedisCoreError(#[from] redis::RedisError),
-
-    #[error("SQLite connection error: {0}")]
-    AsyncSqliteCoreError(#[from] async_sqlite::Error),
-    // maps to the cases when the server expects a specific type of data and the database returns
-    // something else that's not convertible to the expected type
-    #[error("Database returned invalid data : {0}")]
-    InvalidDatabaseResponse(String),
-}
+pub(crate) type FDBResult<R> = Result<R, DatabaseError>;
 
 /// A generic database enum that englobes the database backends that Findex server can use.
-pub enum FindexDatabase<const WORD_LENGTH: usize> {
+pub(crate) enum FindexDatabase<const WORD_LENGTH: usize> {
     Redis(Redis<WORD_LENGTH>),
     Sqlite(Sqlite<WORD_LENGTH>),
 }
