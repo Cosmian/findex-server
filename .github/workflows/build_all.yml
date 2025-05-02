@@ -78,5 +78,5 @@ jobs:
       - generic-linux
       - generic-macos
       - windows-2022
-    uses: Cosmian/reusable_workflows/.github/workflows/cleanup_cache.yml@develop
+    uses: Cosmian/reusable_workflows/.github/workflows/cleanup_cache.yml@move_ci_scripts
     secrets: inherit
