@@ -357,6 +357,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_permissions_concurrent_create_index_id() {
+        // TODO
         let d = Sqlite::instantiate(&"../../target/debug/sqlite-test2.db", true)
             .await
             .expect("Test failed to instantiate Sqlite");

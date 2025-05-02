@@ -24,7 +24,6 @@ impl actix_web::error::ResponseError for ServerError {
             | Self::StructsError(_)
             | Self::OpenSslError(_)
             | Self::UuidError(_)
-            | Self::FindexMemoryError(_)
             | Self::ServerError(_) => StatusCode::INTERNAL_SERVER_ERROR,
 
             Self::InvalidRequest(_) | Self::ClientConnectionError(_) | Self::UrlParseError(_) => {

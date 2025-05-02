@@ -34,8 +34,6 @@ pub enum ServerError {
     Certificate(String),
     #[error("Findex Error: {0}")]
     Findex(String),
-    #[error("Findex Memory Error | {0}")]
-    FindexMemoryError(String),
     #[error(transparent)]
     StructsError(#[from] StructsError),
     #[error(transparent)]
@@ -57,22 +55,7 @@ impl From<std::io::Error> for ServerError {
 // Actual database error conversion is handled in the database module
 impl From<crate::database::DatabaseError> for ServerError {
     fn from(e: crate::database::DatabaseError) -> Self {
-        match e {
-            crate::database::DatabaseError::RedisFindexMemoryError(e) => {
-                Self::FindexMemoryError(format!("| Redis : {}", e))
-            }
-            crate::database::DatabaseError::SqliteFindexMemoryError(e) => {
-                Self::FindexMemoryError(format!("| Sqlite : {}", e))
-            }
-
-            crate::database::DatabaseError::RedisCoreError(e) => {
-                Self::FindexMemoryError(format!("| Redis connection : {}", e))
-            }
-
-            crate::database::DatabaseError::AsyncSqliteCoreError(e) => {
-                Self::FindexMemoryError(format!("| Sqlite connection : {}", e))
-            }
-        }
+        Self::DatabaseError(format!("Database error : {}", e))
     }
 }
 
