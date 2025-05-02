@@ -20,7 +20,7 @@ pub enum DatabaseType {
 pub struct DBConfig {
     /// The database type of the Findex server
     /// - redis: Redis database. The Redis url must be provided
-    /// - sqlite: SQLite database. The SQLite file path must be provided
+    /// - sqlite: `SQLite` database. The `SQLite` file path must be provided
     #[clap(
         long,
         env("FINDEX_SERVER_DATABASE_TYPE"),
@@ -94,7 +94,7 @@ impl DBConfig {
             DatabaseType::Sqlite => {
                 let path =
                     ensure_sqlite_db(self.database_url.as_str(), "FINDEX_SERVER_SQLITE_URL")?;
-                Ok(DbParams::Sqlite(PathBuf::from(path)))
+                Ok(DbParams::Sqlite(path))
             }
         }
     }

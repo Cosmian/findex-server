@@ -4,7 +4,7 @@
     clippy::unwrap_used,
     clippy::assertions_on_result_states,
     clippy::expect_used,
-    clippy::unwrap_in_result_fn,
+    clippy::unwrap_in_result,
     clippy::get_unwrap,
     clippy::panic,
     clippy::cognitive_complexity,
