@@ -12,8 +12,8 @@ pub(crate) struct Redis<const WORD_LENGTH: usize> {
 
 #[async_trait]
 impl<const WORD_LENGTH: usize> InstantializationTrait for Redis<WORD_LENGTH> {
-    async fn instantiate(redis_url: &str, clear_database: bool) -> FDBResult<Self> {
-        let client = redis::Client::open(redis_url)?;
+    async fn instantiate(db_url: &str, clear_database: bool) -> FDBResult<Self> {
+        let client = redis::Client::open(db_url)?;
         let mut manager = client.get_connection_manager().await?;
 
         if clear_database {

@@ -1,4 +1,20 @@
-#[allow(clippy::as_conversions, clippy::indexing_slicing)]
+#[allow(
+    clippy::as_conversions,
+    clippy::indexing_slicing,
+    clippy::unwrap_used,
+    clippy::assertions_on_result_states,
+    clippy::expect_used,
+    clippy::unwrap_in_result_fn,
+    clippy::get_unwrap,
+    clippy::panic,
+    clippy::cognitive_complexity,
+    clippy::too_many_lines,
+    clippy::unwrap_in_result,
+    clippy::items_after_test_module,
+    clippy::uninlined_format_args,
+    clippy::use_self,
+    clippy::unreachable
+)] // The below module is only compiled for tests, and those lints are not useful in tests
 #[cfg(test)]
 pub(crate) mod tests_mod {
     // use async_trait::async_trait;
@@ -81,7 +97,6 @@ pub(crate) mod tests_mod {
     }
 
     /// Test revoking permissions for multiple permission types
-    #[allow(clippy::unwrap_used, clippy::assertions_on_result_states)]
     #[cfg(test)]
     pub(crate) async fn revoke_permission_test<T: PermissionsTrait>(db: T) -> FDBResult<()> {
         let (other_user_id, test_user_id) =

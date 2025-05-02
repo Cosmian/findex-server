@@ -21,7 +21,7 @@ impl PermissionsTrait for Sqlite<CUSTOM_WORD_LENGTH> {
     #[instrument(ret(Display), err, skip(self), level = "trace")]
     async fn create_index_id(&self, user_id: &str) -> FDBResult<Uuid> {
         let index_id = Uuid::new_v4();
-        let user_id_owned = user_id.to_string();
+        let user_id_owned = user_id.to_owned();
         let index_id_bytes = index_id.into_bytes();
         let permission = u8::from(Permission::Admin);
 
@@ -46,7 +46,7 @@ impl PermissionsTrait for Sqlite<CUSTOM_WORD_LENGTH> {
         permission: Permission,
         index_id: &Uuid,
     ) -> FDBResult<()> {
-        let user_id_owned = user_id.to_string();
+        let user_id_owned = user_id.to_owned();
         let index_id_bytes = index_id.into_bytes();
         let permission_value = u8::from(permission);
 
@@ -65,7 +65,7 @@ impl PermissionsTrait for Sqlite<CUSTOM_WORD_LENGTH> {
 
     #[instrument(ret(Display), err, skip(self), level = "trace")]
     async fn get_permission(&self, user_id: &str, index_id: &Uuid) -> FDBResult<Permission> {
-        let user_id_owned = user_id.to_string();
+        let user_id_owned = user_id.to_owned();
         let index_id_bytes = index_id.into_bytes();
 
         let permission = self
@@ -93,7 +93,7 @@ impl PermissionsTrait for Sqlite<CUSTOM_WORD_LENGTH> {
 
     #[instrument(ret(Display), err, skip(self), level = "trace")]
     async fn get_permissions(&self, user_id: &str) -> FDBResult<Permissions> {
-        let user_id_owned = user_id.to_string();
+        let user_id_owned = user_id.to_owned();
 
         let red_permissions = self
             .pool
@@ -129,7 +129,7 @@ format!(                    "SELECT index_id,permission  FROM {FINDEX_PERMISSION
 
     #[instrument(ret, err, skip(self), level = "trace")]
     async fn revoke_permission(&self, user_id: &str, index_id: &Uuid) -> FDBResult<()> {
-        let user_id_owned = user_id.to_string();
+        let user_id_owned = user_id.to_owned();
         let index_id_bytes = index_id.into_bytes();
 
         self.pool
@@ -207,6 +207,6 @@ mod tests {
                 .expect("Test failed to instantiate Sqlite"),
         )
         .await
-        .expect(&format!("Test {} failed", get_current_test_name()));
+        .unwrap_or_else(|_| panic!("Test {} failed", get_current_test_name()));
     }
 }

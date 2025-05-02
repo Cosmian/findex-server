@@ -55,7 +55,7 @@ impl From<std::io::Error> for ServerError {
 // Actual database error conversion is handled in the database module
 impl From<crate::database::DatabaseError> for ServerError {
     fn from(e: crate::database::DatabaseError) -> Self {
-        Self::DatabaseError(format!("Database error : {}", e))
+        Self::DatabaseError(format!("Database error : {e}"))
     }
 }
 
