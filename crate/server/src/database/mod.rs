@@ -10,3 +10,5 @@ pub(crate) use error::DatabaseError;
 pub use sqlite::{
     FINDEX_DATASETS_TABLE_NAME, FINDEX_MEMORY_TABLE_NAME, FINDEX_PERMISSIONS_TABLE_NAME,
 };
+
+pub(crate) mod test_utils;
