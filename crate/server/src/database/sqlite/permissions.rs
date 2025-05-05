@@ -198,7 +198,7 @@ mod tests {
     #[tokio::test]
     async fn test_permissions_concurrent_create_index_id() {
         debug!("RUNNING TEST: {}", get_current_test_name());
-        // This lock hungry boi gets pushes his processes to starvation and makes himself and the other tests fail
+        // This lock hungry test gets pushes his processes to starvation and makes himself and the other tests fail
         // He needs a configuration with a higher `busy_timeout` in order to run on the same db as the other tests
         // without ever failing. So far, editing the `busy_timeout` is not handled in the server, but it's a good feature idea.
         concurrent_create_index_id(
