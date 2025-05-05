@@ -5,7 +5,7 @@ use crate::database::{database_traits::DatasetsTrait, findex_database::FDBResult
 use async_sqlite::rusqlite::params_from_iter;
 use async_trait::async_trait;
 use cosmian_findex_structs::{CUSTOM_WORD_LENGTH, EncryptedEntries, Uuids};
-use tracing::instrument;
+use tracing::{instrument, trace};
 use uuid::Uuid;
 
 #[async_trait]
@@ -30,6 +30,7 @@ impl DatasetsTrait for Sqlite<CUSTOM_WORD_LENGTH> {
         self.pool
             .conn_mut(move |conn| {
                 let tx = conn.transaction()?;
+                let n = entries.len(); // for logging purposes
 
                 tx.execute(
                     &format!(
@@ -46,9 +47,11 @@ impl DatasetsTrait for Sqlite<CUSTOM_WORD_LENGTH> {
                     })),
                 )?;
                 tx.commit()?;
+                trace!("dataset_add_entries: {} entries added", n);
                 Ok(())
             })
             .await?;
+
         Ok(())
     }
 
@@ -60,7 +63,6 @@ impl DatasetsTrait for Sqlite<CUSTOM_WORD_LENGTH> {
 
         self.pool
             .conn_mut(move |conn| {
-                // let ids_owned = ids_owned.clone();
                 let tx = conn.transaction()?;
 
                 // If there are no IDs to delete, just commit and return
@@ -84,6 +86,12 @@ impl DatasetsTrait for Sqlite<CUSTOM_WORD_LENGTH> {
                 )?;
 
                 tx.commit()?;
+
+                trace!(
+                    "dataset_delete_entries: {} entries deleted",
+                    ids_owned.len()
+                );
+
                 Ok(())
             })
             .await?;
@@ -120,6 +128,9 @@ impl DatasetsTrait for Sqlite<CUSTOM_WORD_LENGTH> {
                 Ok((entry_id, encrypted_entry))
             })?
             .collect::<Result<HashMap<_, _>, _>>()?;
+
+            trace!("dataset_get_entries: {} entries retrieved", rows.len());
+
             Ok(EncryptedEntries::from(rows))
         })
         .await?)
