@@ -1264,6 +1264,7 @@ dependencies = [
 [[package]]
 name = "cosmian_findex"
 version = "7.0.0"
+source = "git+https://github.com/Cosmian/findex?rev=49914151a554273d08ad703347b5158b9f3832d3#49914151a554273d08ad703347b5158b9f3832d3"
 dependencies = [
  "aes",
  "async-sqlite",
