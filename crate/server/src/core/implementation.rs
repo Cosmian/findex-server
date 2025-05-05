@@ -28,7 +28,7 @@ impl FindexServer {
             ),
             DbParams::Sqlite(path) => FindexDatabase::Sqlite(
                 Sqlite::<CUSTOM_WORD_LENGTH>::instantiate(
-                    path.to_str().unwrap(),
+                    path.to_str().unwrap_or(""), // TODO
                     shared_config.clear_db_on_start,
                 )
                 .await?,
