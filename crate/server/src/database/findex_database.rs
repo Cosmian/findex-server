@@ -105,16 +105,15 @@ impl DatasetsTrait for FindexDatabase<CUSTOM_WORD_LENGTH> {
 
 #[async_trait]
 impl<const WORD_LENGTH: usize> InstantializationTrait for FindexDatabase<WORD_LENGTH> {
-    async fn instantiate(_db_url: &str, _clear_database: bool) -> FDBResult<Self> {
-        // TODO: I am changing the instantiate function signature bcs the method below is garbage
-        // if db_url.starts_with("redis://") || db_url.starts_with("rediss://") {
-        //     let redis = Redis::instantiate(db_url, clear_database).await?;
-        //     Ok(Self::Redis(redis))
-        // } else {
-        //     let sqlite = Sqlite::instantiate(db_url, clear_database).await?;
-        //     Ok(Self::Sqlite(sqlite))
-        // }
-        todo!("do it")
+    async fn instantiate(db_url: &str, clear_database: bool) -> FDBResult<Self> {
+        // TODO: this might need an update
+        if db_url.starts_with("redis://") {
+            let redis = Redis::instantiate(db_url, clear_database).await?;
+            Ok(Self::Redis(redis))
+        } else {
+            let sqlite = Sqlite::instantiate(db_url, clear_database).await?;
+            Ok(Self::Sqlite(sqlite))
+        }
     }
 }
 

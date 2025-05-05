@@ -24,18 +24,6 @@ impl<const WORD_LENGTH: usize> InstantializationTrait for Sqlite<WORD_LENGTH> {
             .open()
             .await?;
 
-        // INFO:  uncomment if some of the heavy tests fail
-        // for _ in 0..99 {
-        //     pool.conn(move |conn| {
-        //         conn.execute_batch(&format!(
-        //             "
-        //             PRAGMA busy_timeout = 15000;
-        //             "
-        //         ))
-        //     })
-        //     .await?;
-        // }
-
         if clear_database {
             info!("Warning: proceeding to clear the database, this operation is irreversible.");
             pool.conn(move |conn| {
