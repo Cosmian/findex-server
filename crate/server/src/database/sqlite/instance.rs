@@ -21,7 +21,6 @@ impl<const WORD_LENGTH: usize> InstantializationTrait for Sqlite<WORD_LENGTH> {
         let pool = PoolBuilder::new()
             .path(db_url)
             .journal_mode(async_sqlite::JournalMode::Wal)
-            .num_conns(4)
             .open()
             .await?;
 
