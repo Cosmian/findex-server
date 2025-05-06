@@ -25,7 +25,6 @@ RUN cargo build --release --no-default-features
 FROM debian:bullseye-slim AS findex-server
 
 COPY --from=builder /root/findex-server/target/release/cosmian_findex_server  /usr/bin/cosmian_findex_server
-COPY --from=builder /root/findex-server/target/release/cosmian               /usr/bin/cosmian
 
 #
 # Create working directory

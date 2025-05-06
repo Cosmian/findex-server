@@ -1,10 +1,11 @@
 [workspace]
-default-members = ["crate/server", "cli/crate/cli"]
+default-members = ["crate/server"]
 members = [
-  "cli/crate/cli",
-  "cli/crate/findex_client",
+  "crate/cli",
+  "crate/findex_client",
   "crate/structs",
   "crate/server",
+  "crate/test_findex_server"
 ]
 resolver = "2"
 
@@ -55,26 +56,7 @@ cosmian_findex = { git = "https://github.com/Cosmian/findex", rev = "08b3989f800
   "test-utils",
 ] }
 cosmian_http_client = "0.2"
-
-### Local crates have been also declared here to simplify publishing - centralizing the versions
-cosmian_findex_server = { path = "crate/server" }
-cosmian_findex_structs = { path = "crate/structs" }
-
-# Client crates
-cosmian_findex_client = { path = "cli/crate/findex_client" }
-cosmian_kms_client_utils = { path = "cli/crate/client_utils" }
-cosmian_kms_client = { path = "cli/crate/kms_client" }
-cosmian_cli = { path = "cli/crate/cli" }
-test_findex_server = { path = "cli/crate/test_findex_server" }
-test_kms_server = { path = "cli/crate/test_kms_server" }
-
-# KMS crates
-cosmian_kms_access = "5.0"
-cosmian_kms_crypto = "5.0"
-cosmian_kms_server = "5.0"
-cosmian_kms_server_database = "5.0"
-cosmian_kmip = "5.0"
-
+cosmian_kms_cli = { git = "https://github.com/Cosmian/kms.git", branch = "move_clap_actions" }
 cosmian_logger = "0.2"
 der = { version = "0.7", default-features = false }
 hex = "0.4"
