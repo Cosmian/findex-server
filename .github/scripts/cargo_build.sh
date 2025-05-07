@@ -41,7 +41,7 @@ fi
 rustup target add "$TARGET"
 
 if [ -f /etc/lsb-release ]; then
-  bash .github/scripts/test_utimaco.sh
+  bash ./reusable_scripts/.github/scripts/test_utimaco.sh
 fi
 
 # shellcheck disable=SC2086
