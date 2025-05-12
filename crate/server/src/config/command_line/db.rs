@@ -20,7 +20,7 @@ pub enum DatabaseType {
 pub struct DBConfig {
     /// The database type of the Findex server
     /// - redis: Redis database. The Redis url must be provided
-    /// - sqlite: `SQLite` database. The `SQLite` file path must be provided
+    /// - sqlite: SQLite database. The SQLite file path must be provided
     #[clap(
         long,
         env = "FINDEX_SERVER_DATABASE_TYPE",
@@ -31,11 +31,14 @@ pub struct DBConfig {
     pub database_type: DatabaseType,
 
     /// The url of the database
+    /// - redis: The Redis url. Default is `redis://localhost:6379`
+    /// - sqlite: The SQLite file path, for example `./sqlite-data.db`
     #[clap(
         long,
         env = "FINDEX_SERVER_DATABASE_URL",
         required_if_eq_any([("database_type", "redis"),("database_type", "sqlite")]),
-        default_value = "redis://localhost:6379"
+        default_value = "redis://localhost:6379",
+        verbatim_doc_comment
     )]
     pub database_url: String,
 

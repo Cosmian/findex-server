@@ -1264,15 +1264,15 @@ dependencies = [
 
 [[package]]
 name = "cosmian_findex"
-version = "7.0.0"
-source = "git+https://github.com/Cosmian/findex?rev=49914151a554273d08ad703347b5158b9f3832d3#49914151a554273d08ad703347b5158b9f3832d3"
+version = "7.1.0"
+source = "git+https://github.com/Cosmian/findex?branch=fix%2Fdowngrate_async_sqlite#7c9d277e3fdfaef0410af5cbedfa0157e0641ce8"
 dependencies = [
  "aes",
  "async-sqlite",
  "cosmian_crypto_core 10.1.0",
  "criterion",
  "futures",
- "rand 0.9.0",
+ "rand 0.9.1",
  "rand_distr",
  "redis 0.28.2",
  "tokio",
@@ -4213,7 +4213,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6a8615d50dcf34fa31f7ab52692afec947c4dd0ab803cc87cb3b0b4570ff7463"
 dependencies = [
  "num-traits",
- "rand 0.9.0",
+ "rand 0.9.1",
 ]
 
 [[package]]
