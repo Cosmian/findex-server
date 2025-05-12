@@ -193,7 +193,7 @@ pub(crate) mod tests_mod {
     ) -> FDBResult<()> {
         let db = Arc::new(db);
         let user_id = Uuid::new_v4().to_string();
-        let tasks_count = 30; // Reduced from 99 to avoid overloading the test system
+        let tasks_count = 99;
 
         // Create multiple concurrent tasks to create index IDs
         let tasks: Vec<_> = (0..tasks_count)
