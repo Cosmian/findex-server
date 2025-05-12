@@ -19,4 +19,8 @@ pub(crate) enum DatabaseError {
     // something else that's not convertible to the expected type
     #[error("Database returned invalid data : {0}")]
     InvalidDatabaseResponse(String),
+    #[error("Invalid database type: {0} expected, {1} passed")]
+    InvalidDatabaseType(String, String),
+    #[error("Invalid database url: {0}")]
+    InvalidDatabaseUrl(String),
 }

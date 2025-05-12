@@ -1,9 +1,14 @@
-use crate::database::{database_traits::InstantializationTrait, findex_database::FDBResult};
+use crate::{
+    config::DatabaseType,
+    database::{
+        DatabaseError, database_traits::InstantializationTrait, findex_database::FDBResult,
+    },
+};
 use async_sqlite::{Pool, PoolBuilder};
 use async_trait::async_trait;
 use cosmian_findex::{Address, SqliteMemory};
 use cosmian_findex_structs::SERVER_ADDRESS_LENGTH;
-use tracing::info;
+use tracing::warn;
 
 pub(crate) struct Sqlite<const WORD_LENGTH: usize> {
     pub(crate) memory: SqliteMemory<Address<SERVER_ADDRESS_LENGTH>, [u8; WORD_LENGTH]>,
@@ -17,7 +22,17 @@ pub const FINDEX_DATASETS_TABLE_NAME: &str = "findex_datasets";
 #[async_trait]
 impl<const WORD_LENGTH: usize> InstantializationTrait for Sqlite<WORD_LENGTH> {
     // TODO: as optimization, we can warm up the pool by pre-creating connections and executing optimization pragmas like OPTIMIZE.
-    async fn instantiate(db_url: &str, clear_database: bool) -> FDBResult<Self> {
+    async fn instantiate(
+        db_type: DatabaseType,
+        db_url: &str,
+        clear_database: bool,
+    ) -> FDBResult<Self> {
+        if db_type != DatabaseType::Sqlite {
+            return Err(DatabaseError::InvalidDatabaseType(
+                "Sqlite".to_owned(),
+                format!("{:?}", db_type),
+            ));
+        }
         let pool = PoolBuilder::new()
             .path(db_url)
             .journal_mode(async_sqlite::JournalMode::Wal)
@@ -25,7 +40,7 @@ impl<const WORD_LENGTH: usize> InstantializationTrait for Sqlite<WORD_LENGTH> {
             .await?;
 
         if clear_database {
-            info!("Warning: proceeding to clear the database, this operation is irreversible.");
+            warn!("clearing database, this operation is irreversible.");
             pool.conn(move |conn| {
                 conn.execute_batch(&format!(
                     "

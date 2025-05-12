@@ -10,6 +10,8 @@ use cosmian_findex_structs::{
 };
 use uuid::Uuid;
 
+use crate::config::DatabaseType;
+
 use super::{
     database_traits::{DatabaseTraits, DatasetsTrait, InstantializationTrait, PermissionsTrait},
     error::DatabaseError,
@@ -103,16 +105,24 @@ impl DatasetsTrait for FindexDatabase<CUSTOM_WORD_LENGTH> {
     }
 }
 
+// TODO: might consider eliminating this
 #[async_trait]
 impl<const WORD_LENGTH: usize> InstantializationTrait for FindexDatabase<WORD_LENGTH> {
-    async fn instantiate(db_url: &str, clear_database: bool) -> FDBResult<Self> {
-        // TODO: this might need an update
-        if db_url.starts_with("redis://") {
-            let redis = Redis::instantiate(db_url, clear_database).await?;
-            Ok(Self::Redis(redis))
-        } else {
-            let sqlite = Sqlite::instantiate(db_url, clear_database).await?;
-            Ok(Self::Sqlite(sqlite))
+    async fn instantiate(
+        db_type: DatabaseType,
+        db_url: &str,
+        clear_database: bool,
+    ) -> FDBResult<Self> {
+        match db_type {
+            DatabaseType::Redis => {
+                let redis = Redis::instantiate(DatabaseType::Redis, db_url, clear_database).await?;
+                Ok(Self::Redis(redis))
+            }
+            DatabaseType::Sqlite => {
+                let sqlite =
+                    Sqlite::instantiate(DatabaseType::Sqlite, db_url, clear_database).await?;
+                Ok(Self::Sqlite(sqlite))
+            }
         }
     }
 }

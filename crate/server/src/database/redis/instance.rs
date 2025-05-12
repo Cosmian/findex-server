@@ -1,4 +1,7 @@
-use crate::database::{database_traits::InstantializationTrait, findex_database::FDBResult};
+use crate::{
+    config::DatabaseType,
+    database::{database_traits::InstantializationTrait, findex_database::FDBResult},
+};
 use async_trait::async_trait;
 use cosmian_findex::{Address, RedisMemory};
 use cosmian_findex_structs::SERVER_ADDRESS_LENGTH;
@@ -12,7 +15,17 @@ pub(crate) struct Redis<const WORD_LENGTH: usize> {
 
 #[async_trait]
 impl<const WORD_LENGTH: usize> InstantializationTrait for Redis<WORD_LENGTH> {
-    async fn instantiate(db_url: &str, clear_database: bool) -> FDBResult<Self> {
+    async fn instantiate(
+        db_type: DatabaseType,
+        db_url: &str,
+        clear_database: bool,
+    ) -> FDBResult<Self> {
+        if db_type != DatabaseType::Redis {
+            return Err(crate::database::DatabaseError::InvalidDatabaseType(
+                "Redis".to_owned(),
+                format!("{:?}", db_type),
+            ));
+        }
         let client = redis::Client::open(db_url)?;
         let mut manager = client.get_connection_manager().await?;
 

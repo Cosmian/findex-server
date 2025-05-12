@@ -8,7 +8,7 @@ use crate::{config::params::DbParams, error::result::FResult, findex_server_erro
 
 const _DEFAULT_SQLITE_PATH: &str = "./sqlite-data.db"; // TODO: should this be public ?
 
-#[derive(ValueEnum, Clone, Deserialize, Serialize, PartialEq, Eq)]
+#[derive(ValueEnum, Clone, Deserialize, Serialize, PartialEq, Eq, Debug)]
 pub enum DatabaseType {
     Redis,
     Sqlite,

@@ -128,6 +128,7 @@ impl PermissionsTrait for Redis<CUSTOM_WORD_LENGTH> {
 mod tests {
     use super::*;
     use crate::{
+        config::DatabaseType,
         database::{
             database_traits::InstantializationTrait,
             test_utils::permission_tests::{
@@ -144,7 +145,7 @@ mod tests {
 
     async fn setup_test_db() -> Redis<CUSTOM_WORD_LENGTH> {
         let url = env::var("REDIS_URL").unwrap_or_else(|_| "redis://localhost:6379".to_owned());
-        Redis::instantiate(url.as_str(), false)
+        Redis::instantiate(DatabaseType::Redis, url.as_str(), false)
             .await
             .expect("Test failed to instantiate Redis")
     }

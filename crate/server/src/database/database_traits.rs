@@ -3,6 +3,8 @@ use cosmian_findex::MemoryADT;
 use cosmian_findex_structs::{EncryptedEntries, Permission, Permissions, Uuids};
 use uuid::Uuid;
 
+use crate::config::DatabaseType;
+
 use super::findex_database::FDBResult;
 
 #[async_trait]
@@ -42,8 +44,14 @@ pub(crate) trait DatasetsTrait: Sync + Send {
 
 #[async_trait]
 pub(crate) trait InstantializationTrait: Sync + Send {
-    /// Creates a new Redis database connection instance
-    async fn instantiate(db_url: &str, clear_database: bool) -> FDBResult<Self>
+    // The trait `InstantializationTrait` is a constructor trait, which means that
+    // we can not call the `instantiate` method with `&self` hence the need for this
+    // enum to know which type of database we are instantiating.
+    async fn instantiate(
+        db_type: DatabaseType,
+        db_url: &str,
+        clear_database: bool,
+    ) -> FDBResult<Self>
     where
         Self: Sized;
 }

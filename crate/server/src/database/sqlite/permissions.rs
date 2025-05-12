@@ -160,7 +160,9 @@ mod tests {
 
     use super::*;
     use crate::{
+        config::DatabaseType,
         database::{
+            FindexDatabase,
             database_traits::InstantializationTrait,
             test_utils::permission_tests::{
                 concurrent_create_index_id, concurrent_set_revoke_permissions,
@@ -181,7 +183,7 @@ mod tests {
     }
 
     async fn setup_test_db() -> Sqlite<CUSTOM_WORD_LENGTH> {
-        Sqlite::instantiate(&get_sqlite_url("SQLITE_URL"), false)
+        Sqlite::instantiate(DatabaseType::Sqlite, &get_sqlite_url("SQLITE_URL"), false)
             .await
             .expect("Test failed to instantiate Sqlite")
     }
@@ -202,9 +204,13 @@ mod tests {
         // He needs a configuration with a higher `busy_timeout` in order to run on the same db as the other tests
         // without ever failing. So far, editing the `busy_timeout` is not handled in the server, but it's a good feature idea.
         concurrent_create_index_id(
-            Sqlite::instantiate("../../target/debug/sqlite-test2.db", false)
-                .await
-                .expect("Test failed to instantiate Sqlite"),
+            FindexDatabase::<CUSTOM_WORD_LENGTH>::instantiate(
+                DatabaseType::Sqlite,
+                &get_sqlite_url("SQLITE_URL"),
+                false,
+            )
+            .await
+            .unwrap(),
         )
         .await
         .unwrap_or_else(|_| panic!("Test {} failed", get_current_test_name()));
