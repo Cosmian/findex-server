@@ -30,7 +30,7 @@ impl<const WORD_LENGTH: usize> InstantializationTrait for Sqlite<WORD_LENGTH> {
         if db_type != DatabaseType::Sqlite {
             return Err(DatabaseError::InvalidDatabaseType(
                 "Sqlite".to_owned(),
-                format!("{:?}", db_type),
+                format!("{db_type:?}"),
             ));
         }
         let pool = PoolBuilder::new()

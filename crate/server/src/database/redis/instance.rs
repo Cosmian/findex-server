@@ -23,7 +23,7 @@ impl<const WORD_LENGTH: usize> InstantializationTrait for Redis<WORD_LENGTH> {
         if db_type != DatabaseType::Redis {
             return Err(crate::database::DatabaseError::InvalidDatabaseType(
                 "Redis".to_owned(),
-                format!("{:?}", db_type),
+                format!("{db_type:?}"),
             ));
         }
         let client = redis::Client::open(db_url)?;
