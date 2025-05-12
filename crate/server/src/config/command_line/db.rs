@@ -23,9 +23,9 @@ pub struct DBConfig {
     /// - sqlite: `SQLite` database. The `SQLite` file path must be provided
     #[clap(
         long,
-        env("FINDEX_SERVER_DATABASE_TYPE"),
+        env = "FINDEX_SERVER_DATABASE_TYPE",
         default_value = "redis",
-        value_parser(["redis","sqlite"]),
+        value_enum,
         verbatim_doc_comment
     )]
     pub database_type: DatabaseType,

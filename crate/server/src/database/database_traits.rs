@@ -5,23 +5,23 @@ use uuid::Uuid;
 
 use crate::config::DatabaseType;
 
-use super::findex_database::FDBResult;
+use super::findex_database::DatabaseResult;
 
 #[async_trait]
 pub(crate) trait PermissionsTrait: Sync + Send {
     //
     // Permissions
     //
-    async fn create_index_id(&self, user_id: &str) -> FDBResult<Uuid>;
-    async fn get_permissions(&self, user_id: &str) -> FDBResult<Permissions>;
-    async fn get_permission(&self, user_id: &str, index_id: &Uuid) -> FDBResult<Permission>;
+    async fn create_index_id(&self, user_id: &str) -> DatabaseResult<Uuid>;
+    async fn get_permissions(&self, user_id: &str) -> DatabaseResult<Permissions>;
+    async fn get_permission(&self, user_id: &str, index_id: &Uuid) -> DatabaseResult<Permission>;
     async fn set_permission(
         &self,
         user_id: &str,
         permission: Permission,
         index_id: &Uuid,
-    ) -> FDBResult<()>;
-    async fn revoke_permission(&self, user_id: &str, index_id: &Uuid) -> FDBResult<()>;
+    ) -> DatabaseResult<()>;
+    async fn revoke_permission(&self, user_id: &str, index_id: &Uuid) -> DatabaseResult<()>;
 }
 
 #[async_trait]
@@ -33,31 +33,31 @@ pub(crate) trait DatasetsTrait: Sync + Send {
         &self,
         index_id: &Uuid,
         entries: &EncryptedEntries,
-    ) -> FDBResult<()>;
-    async fn dataset_delete_entries(&self, index_id: &Uuid, uuids: &Uuids) -> FDBResult<()>;
+    ) -> DatabaseResult<()>;
+    async fn dataset_delete_entries(&self, index_id: &Uuid, uuids: &Uuids) -> DatabaseResult<()>;
     async fn dataset_get_entries(
         &self,
         index_id: &Uuid,
         uuids: &Uuids,
-    ) -> FDBResult<EncryptedEntries>;
+    ) -> DatabaseResult<EncryptedEntries>;
 }
 
 #[async_trait]
-pub(crate) trait InstantializationTrait: Sync + Send {
-    // The trait `InstantializationTrait` is a constructor trait, which means that
+pub(crate) trait InstantiationTrait: Sync + Send {
+    // The trait `InstantiationTrait` is a constructor trait, which means that
     // we can not call the `instantiate` method with `&self` hence the need for this
     // enum to know which type of database we are instantiating.
     async fn instantiate(
         db_type: DatabaseType,
         db_url: &str,
         clear_database: bool,
-    ) -> FDBResult<Self>
+    ) -> DatabaseResult<Self>
     where
         Self: Sized;
 }
 #[allow(dead_code)] // false positive, used in crate/server/src/database/redis/mod.rs
 #[async_trait]
 pub(crate) trait DatabaseTraits:
-    PermissionsTrait + DatasetsTrait + InstantializationTrait + MemoryADT
+    PermissionsTrait + DatasetsTrait + InstantiationTrait + MemoryADT
 {
 }

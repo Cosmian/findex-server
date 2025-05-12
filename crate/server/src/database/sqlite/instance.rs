@@ -1,7 +1,7 @@
 use crate::{
     config::DatabaseType,
     database::{
-        DatabaseError, database_traits::InstantializationTrait, findex_database::FDBResult,
+        DatabaseError, database_traits::InstantiationTrait, findex_database::DatabaseResult,
     },
 };
 use async_sqlite::{Pool, PoolBuilder};
@@ -20,13 +20,13 @@ pub const FINDEX_PERMISSIONS_TABLE_NAME: &str = "findex_permissions";
 pub const FINDEX_DATASETS_TABLE_NAME: &str = "findex_datasets";
 
 #[async_trait]
-impl<const WORD_LENGTH: usize> InstantializationTrait for Sqlite<WORD_LENGTH> {
+impl<const WORD_LENGTH: usize> InstantiationTrait for Sqlite<WORD_LENGTH> {
     // TODO: as optimization, we can warm up the pool by pre-creating connections and executing optimization pragmas like OPTIMIZE.
     async fn instantiate(
         db_type: DatabaseType,
         db_url: &str,
         clear_database: bool,
-    ) -> FDBResult<Self> {
+    ) -> DatabaseResult<Self> {
         if db_type != DatabaseType::Sqlite {
             return Err(DatabaseError::InvalidDatabaseType(
                 "Sqlite".to_owned(),

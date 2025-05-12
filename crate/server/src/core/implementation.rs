@@ -7,7 +7,7 @@ use crate::{
     config::{DatabaseType, DbParams, ServerParams},
     database::{
         DatabaseError, FindexDatabase,
-        database_traits::{InstantializationTrait, PermissionsTrait},
+        database_traits::{InstantiationTrait, PermissionsTrait},
     },
     error::{result::FResult, server::ServerError},
     middlewares::{JwtAuthClaim, PeerCommonName},

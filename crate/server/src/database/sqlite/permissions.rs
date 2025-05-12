@@ -1,6 +1,6 @@
 use super::{FINDEX_PERMISSIONS_TABLE_NAME, Sqlite};
 use crate::database::{
-    DatabaseError, database_traits::PermissionsTrait, findex_database::FDBResult,
+    DatabaseError, database_traits::PermissionsTrait, findex_database::DatabaseResult,
 };
 use async_sqlite::rusqlite::params;
 use async_trait::async_trait;
@@ -19,7 +19,7 @@ use uuid::Uuid;
 impl PermissionsTrait for Sqlite<CUSTOM_WORD_LENGTH> {
     /// Creates a new index ID and sets admin privileges.
     #[instrument(ret(Display), err, skip(self), level = "trace")]
-    async fn create_index_id(&self, user_id: &str) -> FDBResult<Uuid> {
+    async fn create_index_id(&self, user_id: &str) -> DatabaseResult<Uuid> {
         let index_id = Uuid::new_v4();
         let user_id_owned = user_id.to_owned();
         let index_id_bytes = index_id.into_bytes();
@@ -45,7 +45,7 @@ impl PermissionsTrait for Sqlite<CUSTOM_WORD_LENGTH> {
         user_id: &str,
         permission: Permission,
         index_id: &Uuid,
-    ) -> FDBResult<()> {
+    ) -> DatabaseResult<()> {
         let user_id_owned = user_id.to_owned();
         let index_id_bytes = index_id.into_bytes();
         let permission_value = u8::from(permission);
@@ -64,7 +64,7 @@ impl PermissionsTrait for Sqlite<CUSTOM_WORD_LENGTH> {
     }
 
     #[instrument(ret(Display), err, skip(self), level = "trace")]
-    async fn get_permission(&self, user_id: &str, index_id: &Uuid) -> FDBResult<Permission> {
+    async fn get_permission(&self, user_id: &str, index_id: &Uuid) -> DatabaseResult<Permission> {
         let user_id_owned = user_id.to_owned();
         let index_id_bytes = index_id.into_bytes();
 
@@ -92,7 +92,7 @@ impl PermissionsTrait for Sqlite<CUSTOM_WORD_LENGTH> {
     }
 
     #[instrument(ret(Display), err, skip(self), level = "trace")]
-    async fn get_permissions(&self, user_id: &str) -> FDBResult<Permissions> {
+    async fn get_permissions(&self, user_id: &str) -> DatabaseResult<Permissions> {
         let user_id_owned = user_id.to_owned();
 
         let red_permissions = self
@@ -128,7 +128,7 @@ format!(                    "SELECT index_id,permission  FROM {FINDEX_PERMISSION
     }
 
     #[instrument(ret, err, skip(self), level = "trace")]
-    async fn revoke_permission(&self, user_id: &str, index_id: &Uuid) -> FDBResult<()> {
+    async fn revoke_permission(&self, user_id: &str, index_id: &Uuid) -> DatabaseResult<()> {
         let user_id_owned = user_id.to_owned();
         let index_id_bytes = index_id.into_bytes();
 
@@ -163,7 +163,7 @@ mod tests {
         config::DatabaseType,
         database::{
             FindexDatabase,
-            database_traits::InstantializationTrait,
+            database_traits::InstantiationTrait,
             test_utils::permission_tests::{
                 concurrent_create_index_id, concurrent_set_revoke_permissions,
                 create_index_id_test, get_current_test_name, nonexistent_user_and_permission_test,

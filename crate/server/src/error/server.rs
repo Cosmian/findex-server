@@ -14,8 +14,8 @@ pub enum ServerError {
     // Missing arguments in the request
     #[error("Invalid Request: {0}")]
     InvalidRequest(String),
-    // Any errors related to a bad behavior of the DB but not related to the user input
-    #[error("Database Error | {0}")]
+    // Any errors related to a bad behavior of the DB
+    #[error("Database Error: {0}")]
     DatabaseError(String),
     // Any errors related to a bad behavior of the server but not related to the user input
     #[error("Unexpected server error: {0}")]

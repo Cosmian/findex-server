@@ -7,7 +7,7 @@ use tracing::{instrument, trace};
 use uuid::Uuid;
 
 use super::Redis;
-use crate::database::{database_traits::DatasetsTrait, findex_database::FDBResult};
+use crate::database::{database_traits::DatasetsTrait, findex_database::DatabaseResult};
 
 /// Generate a Redis-key for the dataset table
 fn build_redis_key(index_id: &Uuid, uid: &Uuid) -> Vec<u8> {
@@ -27,7 +27,7 @@ impl DatasetsTrait for Redis<CUSTOM_WORD_LENGTH> {
         &self,
         index_id: &Uuid,
         entries: &EncryptedEntries,
-    ) -> FDBResult<()> {
+    ) -> DatabaseResult<()> {
         Ok(entries
             .iter()
             .map(|(id, data)| (build_redis_key(index_id, id), data))
@@ -38,7 +38,7 @@ impl DatasetsTrait for Redis<CUSTOM_WORD_LENGTH> {
     }
 
     #[instrument(ret, err, skip(self), level = "trace")]
-    async fn dataset_delete_entries(&self, index_id: &Uuid, ids: &Uuids) -> FDBResult<()> {
+    async fn dataset_delete_entries(&self, index_id: &Uuid, ids: &Uuids) -> DatabaseResult<()> {
         Ok(ids
             .iter()
             .map(|id| build_redis_key(index_id, id))
@@ -53,7 +53,7 @@ impl DatasetsTrait for Redis<CUSTOM_WORD_LENGTH> {
         &self,
         index_id: &Uuid,
         ids: &Uuids,
-    ) -> FDBResult<EncryptedEntries> {
+    ) -> DatabaseResult<EncryptedEntries> {
         let values = ids
             .iter()
             .map(|id| build_redis_key(index_id, id))

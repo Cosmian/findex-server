@@ -32,11 +32,11 @@ pub(crate) mod tests_mod {
     use tracing::trace;
     use uuid::Uuid;
 
-    use crate::database::{database_traits::PermissionsTrait, findex_database::FDBResult};
+    use crate::database::{database_traits::PermissionsTrait, findex_database::DatabaseResult};
 
     /// Test if creating an index ID also creates the correct Admin permission
     #[cfg(test)]
-    pub(crate) async fn create_index_id_test<T: PermissionsTrait>(db: T) -> FDBResult<()> {
+    pub(crate) async fn create_index_id_test<T: PermissionsTrait>(db: T) -> DatabaseResult<()> {
         let user_id = Uuid::new_v4().to_string();
 
         // Create new index
@@ -58,7 +58,7 @@ pub(crate) mod tests_mod {
     #[cfg(test)]
     pub(crate) async fn set_and_revoke_permissions_test<T: PermissionsTrait>(
         db: T,
-    ) -> FDBResult<()> {
+    ) -> DatabaseResult<()> {
         let user_id = "test_user_1";
         let index_id = Uuid::new_v4();
 
@@ -98,7 +98,7 @@ pub(crate) mod tests_mod {
 
     /// Test revoking permissions for multiple permission types
     #[cfg(test)]
-    pub(crate) async fn revoke_permission_test<T: PermissionsTrait>(db: T) -> FDBResult<()> {
+    pub(crate) async fn revoke_permission_test<T: PermissionsTrait>(db: T) -> DatabaseResult<()> {
         let (other_user_id, test_user_id) =
             (Uuid::new_v4().to_string(), Uuid::new_v4().to_string());
 
@@ -167,7 +167,7 @@ pub(crate) mod tests_mod {
     #[cfg(test)]
     pub(crate) async fn nonexistent_user_and_permission_test<T: PermissionsTrait>(
         db: T,
-    ) -> FDBResult<()> {
+    ) -> DatabaseResult<()> {
         let new_random_user = Uuid::new_v4().to_string();
         let index_id = Uuid::new_v4();
 
@@ -190,7 +190,7 @@ pub(crate) mod tests_mod {
     #[cfg(test)]
     pub(crate) async fn concurrent_create_index_id<T: PermissionsTrait + Send + Sync + 'static>(
         db: T,
-    ) -> FDBResult<()> {
+    ) -> DatabaseResult<()> {
         let db = Arc::new(db);
         let user_id = Uuid::new_v4().to_string();
         let tasks_count = 99;
@@ -236,7 +236,7 @@ pub(crate) mod tests_mod {
         T: PermissionsTrait + Send + Sync + 'static,
     >(
         db: T,
-    ) -> FDBResult<()> {
+    ) -> DatabaseResult<()> {
         #[derive(Clone, Eq, PartialEq)]
         enum Operation {
             CreateIndex {

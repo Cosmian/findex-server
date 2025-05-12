@@ -13,44 +13,44 @@ use uuid::Uuid;
 use crate::config::DatabaseType;
 
 use super::{
-    database_traits::{DatabaseTraits, DatasetsTrait, InstantializationTrait, PermissionsTrait},
+    database_traits::{DatabaseTraits, DatasetsTrait, InstantiationTrait, PermissionsTrait},
     error::DatabaseError,
     redis::Redis,
     sqlite::Sqlite,
 };
 
-pub(crate) type FDBResult<R> = Result<R, DatabaseError>;
+pub(crate) type DatabaseResult<R> = Result<R, DatabaseError>;
 
-/// A generic database enum that englobes the database backends that Findex server can use.
+/// A generic database enum that englobe the database backends that Findex server can use.
 pub(crate) enum FindexDatabase<const WORD_LENGTH: usize> {
     Redis(Redis<WORD_LENGTH>),
     Sqlite(Sqlite<WORD_LENGTH>),
 }
+
+macro_rules! delegate_to_db {
+        ($self:expr, $method:ident $(, $arg:expr)*) => {
+            match $self {
+                Self::Redis(redis) => redis.$method($($arg),*).await,
+                Self::Sqlite(sqlite) => sqlite.$method($($arg),*).await,
+            }
+        };
+    }
 
 #[async_trait]
 impl DatabaseTraits for FindexDatabase<CUSTOM_WORD_LENGTH> {}
 
 #[async_trait]
 impl PermissionsTrait for FindexDatabase<CUSTOM_WORD_LENGTH> {
-    async fn create_index_id(&self, user_id: &str) -> FDBResult<Uuid> {
-        match self {
-            Self::Redis(redis) => redis.create_index_id(user_id).await,
-            Self::Sqlite(sqlite) => sqlite.create_index_id(user_id).await,
-        }
+    async fn create_index_id(&self, user_id: &str) -> DatabaseResult<Uuid> {
+        delegate_to_db!(self, create_index_id, user_id)
     }
 
-    async fn get_permissions(&self, user_id: &str) -> FDBResult<Permissions> {
-        match self {
-            Self::Redis(redis) => redis.get_permissions(user_id).await,
-            Self::Sqlite(sqlite) => sqlite.get_permissions(user_id).await,
-        }
+    async fn get_permissions(&self, user_id: &str) -> DatabaseResult<Permissions> {
+        delegate_to_db!(self, get_permissions, user_id)
     }
 
-    async fn get_permission(&self, user_id: &str, index_id: &Uuid) -> FDBResult<Permission> {
-        match self {
-            Self::Redis(redis) => redis.get_permission(user_id, index_id).await,
-            Self::Sqlite(sqlite) => sqlite.get_permission(user_id, index_id).await,
-        }
+    async fn get_permission(&self, user_id: &str, index_id: &Uuid) -> DatabaseResult<Permission> {
+        delegate_to_db!(self, get_permission, user_id, index_id)
     }
 
     async fn set_permission(
@@ -58,18 +58,12 @@ impl PermissionsTrait for FindexDatabase<CUSTOM_WORD_LENGTH> {
         user_id: &str,
         permission: Permission,
         index_id: &Uuid,
-    ) -> FDBResult<()> {
-        match self {
-            Self::Redis(redis) => redis.set_permission(user_id, permission, index_id).await,
-            Self::Sqlite(sqlite) => sqlite.set_permission(user_id, permission, index_id).await,
-        }
+    ) -> DatabaseResult<()> {
+        delegate_to_db!(self, set_permission, user_id, permission, index_id)
     }
 
-    async fn revoke_permission(&self, user_id: &str, index_id: &Uuid) -> FDBResult<()> {
-        match self {
-            Self::Redis(redis) => redis.revoke_permission(user_id, index_id).await,
-            Self::Sqlite(sqlite) => sqlite.revoke_permission(user_id, index_id).await,
-        }
+    async fn revoke_permission(&self, user_id: &str, index_id: &Uuid) -> DatabaseResult<()> {
+        delegate_to_db!(self, revoke_permission, user_id, index_id)
     }
 }
 
@@ -79,40 +73,30 @@ impl DatasetsTrait for FindexDatabase<CUSTOM_WORD_LENGTH> {
         &self,
         index_id: &Uuid,
         entries: &EncryptedEntries,
-    ) -> FDBResult<()> {
-        match self {
-            Self::Redis(redis) => redis.dataset_add_entries(index_id, entries).await,
-            Self::Sqlite(sqlite) => sqlite.dataset_add_entries(index_id, entries).await,
-        }
+    ) -> DatabaseResult<()> {
+        delegate_to_db!(self, dataset_add_entries, index_id, entries)
     }
 
-    async fn dataset_delete_entries(&self, index_id: &Uuid, uuids: &Uuids) -> FDBResult<()> {
-        match self {
-            Self::Redis(redis) => redis.dataset_delete_entries(index_id, uuids).await,
-            Self::Sqlite(sqlite) => sqlite.dataset_delete_entries(index_id, uuids).await,
-        }
+    async fn dataset_delete_entries(&self, index_id: &Uuid, uuids: &Uuids) -> DatabaseResult<()> {
+        delegate_to_db!(self, dataset_delete_entries, index_id, uuids)
     }
 
     async fn dataset_get_entries(
         &self,
         index_id: &Uuid,
         uuids: &Uuids,
-    ) -> FDBResult<EncryptedEntries> {
-        match self {
-            Self::Redis(redis) => redis.dataset_get_entries(index_id, uuids).await,
-            Self::Sqlite(sqlite) => sqlite.dataset_get_entries(index_id, uuids).await,
-        }
+    ) -> DatabaseResult<EncryptedEntries> {
+        delegate_to_db!(self, dataset_get_entries, index_id, uuids)
     }
 }
 
-// TODO: might consider eliminating this
 #[async_trait]
-impl<const WORD_LENGTH: usize> InstantializationTrait for FindexDatabase<WORD_LENGTH> {
+impl<const WORD_LENGTH: usize> InstantiationTrait for FindexDatabase<WORD_LENGTH> {
     async fn instantiate(
         db_type: DatabaseType,
         db_url: &str,
         clear_database: bool,
-    ) -> FDBResult<Self> {
+    ) -> DatabaseResult<Self> {
         match db_type {
             DatabaseType::Redis => {
                 let redis = Redis::instantiate(DatabaseType::Redis, db_url, clear_database).await?;

@@ -1,6 +1,6 @@
 use super::Redis;
 use crate::database::{
-    DatabaseError, database_traits::PermissionsTrait, findex_database::FDBResult,
+    DatabaseError, database_traits::PermissionsTrait, findex_database::DatabaseResult,
 };
 use async_trait::async_trait;
 use cosmian_findex_structs::{CUSTOM_WORD_LENGTH, Permission, Permissions};
@@ -28,7 +28,7 @@ async fn hset_redis_permission(
 impl PermissionsTrait for Redis<CUSTOM_WORD_LENGTH> {
     /// Creates a new index ID and sets admin privileges.
     #[instrument(ret(Display), err, skip(self), level = "trace")]
-    async fn create_index_id(&self, user_id: &str) -> FDBResult<Uuid> {
+    async fn create_index_id(&self, user_id: &str) -> DatabaseResult<Uuid> {
         let index_id = Uuid::new_v4();
         hset_redis_permission(&self.manager, user_id, &index_id, Permission::Admin).await?;
         trace!("New index with id {index_id} created for user  {user_id}");
@@ -41,14 +41,14 @@ impl PermissionsTrait for Redis<CUSTOM_WORD_LENGTH> {
         user_id: &str,
         permission: Permission,
         index_id: &Uuid,
-    ) -> FDBResult<()> {
+    ) -> DatabaseResult<()> {
         hset_redis_permission(&self.manager, user_id, index_id, permission).await?;
         trace!("Set {permission:?} permission to {user_id} for index {index_id}");
         Ok(())
     }
 
     #[instrument(ret(Display), err, skip(self), level = "trace")]
-    async fn get_permissions(&self, user_id: &str) -> FDBResult<Permissions> {
+    async fn get_permissions(&self, user_id: &str) -> DatabaseResult<Permissions> {
         let user_redis_key = format!("{PERMISSIONS_PREFIX}:{user_id}");
 
         let permissions: Permissions = self
@@ -67,14 +67,14 @@ impl PermissionsTrait for Redis<CUSTOM_WORD_LENGTH> {
                     })?,
                 ))
             })
-            .collect::<FDBResult<_>>()?;
+            .collect::<DatabaseResult<_>>()?;
 
         trace!("permissions for user {user_id}: {permissions:?}");
         Ok(permissions)
     }
 
     #[instrument(ret(Display), err, skip(self), level = "trace")]
-    async fn get_permission(&self, user_id: &str, index_id: &Uuid) -> FDBResult<Permission> {
+    async fn get_permission(&self, user_id: &str, index_id: &Uuid) -> DatabaseResult<Permission> {
         let user_key = format!("{PERMISSIONS_PREFIX}:{user_id}");
 
         let permission = self
@@ -100,7 +100,7 @@ impl PermissionsTrait for Redis<CUSTOM_WORD_LENGTH> {
     }
 
     #[instrument(ret, err, skip(self), level = "trace")]
-    async fn revoke_permission(&self, user_id: &str, index_id: &Uuid) -> FDBResult<()> {
+    async fn revoke_permission(&self, user_id: &str, index_id: &Uuid) -> DatabaseResult<()> {
         let user_key = format!("{PERMISSIONS_PREFIX}:{user_id}");
 
         // never type fallbacks will be deprecated in future Rust releases, hence this explicit typing
@@ -130,7 +130,7 @@ mod tests {
     use crate::{
         config::DatabaseType,
         database::{
-            database_traits::InstantializationTrait,
+            database_traits::InstantiationTrait,
             test_utils::permission_tests::{
                 concurrent_create_index_id, concurrent_set_revoke_permissions,
                 create_index_id_test, nonexistent_user_and_permission_test, revoke_permission_test,

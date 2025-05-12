@@ -1,7 +1,7 @@
 use std::{collections::HashMap, sync::Arc};
 
 use super::{FINDEX_DATASETS_TABLE_NAME, Sqlite};
-use crate::database::{database_traits::DatasetsTrait, findex_database::FDBResult};
+use crate::database::{database_traits::DatasetsTrait, findex_database::DatabaseResult};
 use async_sqlite::rusqlite::params_from_iter;
 use async_trait::async_trait;
 use cosmian_findex_structs::{CUSTOM_WORD_LENGTH, EncryptedEntries, Uuids};
@@ -18,7 +18,7 @@ impl DatasetsTrait for Sqlite<CUSTOM_WORD_LENGTH> {
         &self,
         index_id: &Uuid,
         entries: &EncryptedEntries,
-    ) -> FDBResult<()> {
+    ) -> DatabaseResult<()> {
         if entries.is_empty() {
             return Ok(());
         }
@@ -56,7 +56,7 @@ impl DatasetsTrait for Sqlite<CUSTOM_WORD_LENGTH> {
     }
 
     #[instrument(ret, err, skip(self), level = "trace")]
-    async fn dataset_delete_entries(&self, index_id: &Uuid, ids: &Uuids) -> FDBResult<()> {
+    async fn dataset_delete_entries(&self, index_id: &Uuid, ids: &Uuids) -> DatabaseResult<()> {
         // Create owned copies for the closure
         let index_id = *index_id;
         let ids_owned = (*ids).clone();
@@ -103,7 +103,7 @@ impl DatasetsTrait for Sqlite<CUSTOM_WORD_LENGTH> {
         &self,
         index_id: &Uuid,
         ids: &Uuids,
-    ) -> FDBResult<EncryptedEntries> {
+    ) -> DatabaseResult<EncryptedEntries> {
         // Early return for empty IDs
         if ids.is_empty() {
             return Ok(EncryptedEntries::from(HashMap::<Uuid, Vec<u8>>::new()));
