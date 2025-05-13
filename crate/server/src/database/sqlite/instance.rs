@@ -6,8 +6,7 @@ use crate::{
 };
 use async_sqlite::{Pool, PoolBuilder};
 use async_trait::async_trait;
-use cosmian_findex::{Address, SqliteMemory, FINDEX_TABLE_NAME as FINDEX_MEMORY_TABLE_NAME};
-pub use FINDEX_MEMORY_TABLE_NAME;
+use cosmian_findex::{Address, SqliteMemory};
 use cosmian_findex_structs::SERVER_ADDRESS_LENGTH;
 use tracing::warn;
 
@@ -16,8 +15,7 @@ pub(crate) struct Sqlite<const WORD_LENGTH: usize> {
     pub(crate) pool: Pool,
 }
 
-use cosmian_findex::{FINDEX_TABLE_NAME as FINDEX_MEMORY_TABLE_NAME};
-pub use FINDEX_MEMORY_TABLE_NAME;
+pub use cosmian_findex::FINDEX_TABLE_NAME as FINDEX_MEMORY_TABLE_NAME;
 pub const FINDEX_PERMISSIONS_TABLE_NAME: &str = "findex_permissions";
 pub const FINDEX_DATASETS_TABLE_NAME: &str = "findex_datasets";
 
