@@ -54,6 +54,9 @@ cosmian_findex = { git = "https://github.com/Cosmian/findex", branch = "fix/down
   "sqlite-mem",
 ] }
 # git = "https://github.com/Cosmian/findex", 
+cosmian_kms_client_utils = { path = "cli/crate/client_utils" }
+test_findex_server = { path = "cli/crate/test_findex_server" }
+test_kms_server = { path = "cli/crate/test_kms_server" }
 cosmian_findex_client = { path = "cli/crate/findex_client" }
 cosmian_findex_server = { path = "crate/server" }
 cosmian_findex_structs = { path = "crate/structs" }
@@ -74,7 +77,7 @@ pem = "3.0"
 reqwest = { version = "0.11", default-features = false }
 serde = "1.0"
 serde_json = "1.0"
-strum = { version = "0.25", default-features = false }
+strum = { version = "0.27", default-features = false }
 tempfile = "3.17"
 thiserror = "2.0"
 tokio = { version = "1.43", default-features = false }
