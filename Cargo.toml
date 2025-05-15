@@ -52,6 +52,7 @@ cosmian_crypto_core = { version = "10.1.0", default-features = false }
 cosmian_findex = { git = "https://github.com/Cosmian/findex", branch = "fix/downgrate_async_sqlite", features = [
   "redis-mem",
   "sqlite-mem",
+  "test-utils",
 ] }
 # git = "https://github.com/Cosmian/findex", 
 cosmian_kms_client_utils = { path = "cli/crate/client_utils" }

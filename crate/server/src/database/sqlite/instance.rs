@@ -33,11 +33,7 @@ impl<const WORD_LENGTH: usize> InstantiationTrait for Sqlite<WORD_LENGTH> {
                 format!("{db_type:?}"),
             ));
         }
-        let pool = PoolBuilder::new()
-            .path(db_url)
-            .journal_mode(async_sqlite::JournalMode::Wal)
-            .open()
-            .await?;
+        let pool = PoolBuilder::new().path(db_url).open().await?;
 
         if clear_database {
             warn!("clearing database, this operation is irreversible.");
@@ -60,6 +56,7 @@ impl<const WORD_LENGTH: usize> InstantiationTrait for Sqlite<WORD_LENGTH> {
             conn.execute_batch(&format!(
                 "
                         PRAGMA synchronous = NORMAL;
+                        PARAGMA journal_mode = WAL;
                         VACUUM;
                         PRAGMA auto_vacuum = 1;
                         CREATE TABLE IF NOT EXISTS {FINDEX_PERMISSIONS_TABLE_NAME} (
