@@ -63,6 +63,11 @@ jwt_audience = ["[jwt audience 1]", "[jwt audience 2]"]
 #[test]
 fn test_read_write_toml() {
     let config = ClapConfig {
+        // db: DBConfig {
+        //     database_type: DatabaseType::Sqlite, // DatabaseType::Redis,
+        //     database_url: "../../target/debug/sqlite-test.db".to_owned(), // "redis://localhost:6379".to_owned(),
+        //     clear_database: false,
+        // },
         db: DBConfig {
             database_type: DatabaseType::Redis,
             database_url: "redis://localhost:6379".to_owned(),
