@@ -1348,7 +1348,7 @@ dependencies = [
 [[package]]
 name = "cosmian_findex"
 version = "7.1.0"
-source = "git+https://github.com/Cosmian/findex?branch=fix%2Fdowngrate_async_sqlite#e561732707f78852d9b10c3d54f0420ca1fbaed9"
+source = "git+https://github.com/Cosmian/findex?rev=08b3989f800b26b9ec3093f6f1b52ee0f739835e#08b3989f800b26b9ec3093f6f1b52ee0f739835e"
 dependencies = [
  "aes",
  "async-sqlite",

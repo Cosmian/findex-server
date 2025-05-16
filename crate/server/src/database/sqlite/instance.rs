@@ -21,7 +21,7 @@ pub const FINDEX_DATASETS_TABLE_NAME: &str = "findex_datasets";
 
 #[async_trait]
 impl<const WORD_LENGTH: usize> InstantiationTrait for Sqlite<WORD_LENGTH> {
-    // TODO: as optimization, we can warm up the pool by pre-creating connections and executing optimization pragmas like OPTIMIZE.
+    // TODO: we can warm up the pool by pre-creating connections and executing optimization pragmas like OPTIMIZE.
     async fn instantiate(
         db_type: DatabaseType,
         db_url: &str,
@@ -55,23 +55,23 @@ impl<const WORD_LENGTH: usize> InstantiationTrait for Sqlite<WORD_LENGTH> {
         pool.conn(move |conn| {
             conn.execute_batch(&format!(
                 "
-                        PRAGMA synchronous = NORMAL;
-                        PARAGMA journal_mode = WAL;
-                        VACUUM;
-                        PRAGMA auto_vacuum = 1;
-                        CREATE TABLE IF NOT EXISTS {FINDEX_PERMISSIONS_TABLE_NAME} (
-                            user_id TEXT NOT NULL,
-                            index_id BLOB NOT NULL,
-                            permission INTEGER NOT NULL CHECK (permission IN (0,1,2)),
-                            PRIMARY KEY (user_id, index_id)
-                        );
-                        CREATE TABLE IF NOT EXISTS  {FINDEX_DATASETS_TABLE_NAME} (
-                            index_id BLOB NOT NULL,  
-                            user_id      BLOB NOT NULL,  
-                            encrypted_entry     BLOB NOT NULL, 
-                            PRIMARY KEY (index_id, user_id)
-                        );
-                        ",
+                PRAGMA journal_mode = WAL;
+                PRAGMA synchronous = NORMAL;
+                VACUUM;
+                PRAGMA auto_vacuum = 1;
+                CREATE TABLE IF NOT EXISTS {FINDEX_PERMISSIONS_TABLE_NAME} (
+                    user_id TEXT NOT NULL,
+                    index_id BLOB NOT NULL,
+                    permission INTEGER NOT NULL CHECK (permission IN (0,1,2)),
+                    PRIMARY KEY (user_id, index_id)
+                );
+                CREATE TABLE IF NOT EXISTS  {FINDEX_DATASETS_TABLE_NAME} (
+                    index_id BLOB NOT NULL,  
+                    user_id      BLOB NOT NULL,  
+                    encrypted_entry     BLOB NOT NULL, 
+                    PRIMARY KEY (index_id, user_id)
+                );
+                ",
             ))
         })
         .await?;

@@ -50,7 +50,7 @@ cosmian_logger = { workspace = true }
 dotenvy = "0.15"
 futures = "0.3"
 openssl = { workspace = true, default-features = false }
-redis = { version = "0.28.2", features = [
+redis = { version = "0.28", features = [
   "aio",
   "script",
   "connection-manager",
@@ -71,7 +71,8 @@ toml = "0.8"
 tracing = { workspace = true }
 url = { workspace = true }
 uuid = { workspace = true, features = ["v4"] }
-paste = "1.0.15"
+paste = "1.0"
+
 
 [dev-dependencies]
 tempfile = { workspace = true }
