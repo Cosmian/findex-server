@@ -114,7 +114,7 @@ impl DatasetsTrait for Sqlite<CUSTOM_WORD_LENGTH> {
         Ok(self.pool
         .conn(move |conn| {
             let query = format!(
-                "SELECT index_id, encrypted_entry FROM {} WHERE index_id = ? AND user_id IN ({})",
+                "SELECT user_id, encrypted_entry FROM {} WHERE index_id = ? AND user_id IN ({})",
                   FINDEX_DATASETS_TABLE_NAME,
                   vec!["?"; ids.len()].join(",")
             );
@@ -123,9 +123,9 @@ impl DatasetsTrait for Sqlite<CUSTOM_WORD_LENGTH> {
             params.push(index_id.into_bytes().to_vec());
             params.extend(ids.iter().map(|id| id.into_bytes().to_vec()));
             let  rows = stmt.query_map(params_from_iter(params), |row| {
-                let entry_id = Uuid::from_bytes(row.get::<_,[u8; 16]>(0)?);
+                let user_id = Uuid::from_bytes(row.get::<_,[u8; 16]>(0)?);
                 let encrypted_entry: Vec<u8> = row.get(1)?;
-                Ok((entry_id, encrypted_entry))
+                Ok((user_id, encrypted_entry))
             })?
             .collect::<Result<HashMap<_, _>, _>>()?;
 
