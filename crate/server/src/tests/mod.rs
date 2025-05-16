@@ -6,41 +6,59 @@ use crate::config::{ClapConfig, DBConfig, DatabaseType, HttpConfig, JwtAuthConfi
 
 #[test]
 fn test_toml() {
-    let config = ClapConfig {
-        db: DBConfig {
+    assert_eq!(
+        DatabaseType::VARIANT_COUNT,
+        2,
+        "If this panic occurs, it means that a new database type has been added. Please update the test to include the new database type."
+    );
+
+    let db_types = vec!["Redis", "Sqlite"];
+
+    let db_configs = vec![
+        DBConfig {
             database_type: DatabaseType::Redis,
-            database_url: "[redis urls]".to_owned(),
+            database_url: "[some urls]".to_owned(),
             clear_database: false,
         },
-        http: HttpConfig {
-            port: 443,
-            hostname: "[hostname]".to_owned(),
-            https_p12_file: Some(PathBuf::from("[https p12 file]")),
-            https_p12_password: Some("[https p12 password]".to_owned()),
-            authority_cert_file: Some(PathBuf::from("[authority cert file]")),
+        DBConfig {
+            database_type: DatabaseType::Sqlite,
+            database_url: "[some urls]".to_owned(),
+            clear_database: false,
         },
-        auth: JwtAuthConfig {
-            jwt_issuer_uri: Some(vec![
-                "[jwt issuer uri 1]".to_owned(),
-                "[jwt issuer uri 2]".to_owned(),
-            ]),
-            jwks_uri: Some(vec!["[jwks uri 1]".to_owned(), "[jwks uri 2]".to_owned()]),
-            jwt_audience: Some(vec![
-                "[jwt audience 1]".to_owned(),
-                "[jwt audience 2]".to_owned(),
-            ]),
-        },
-        default_username: "[default username]".to_owned(),
-        force_default_username: false,
-    };
+    ];
 
-    let toml_string = r#"
+    for (i, db_config) in db_configs.iter().enumerate() {
+        let config = ClapConfig {
+            db: db_config.clone(),
+            http: HttpConfig {
+                port: 443,
+                hostname: "[hostname]".to_owned(),
+                https_p12_file: Some(PathBuf::from("[https p12 file]")),
+                https_p12_password: Some("[https p12 password]".to_owned()),
+                authority_cert_file: Some(PathBuf::from("[authority cert file]")),
+            },
+            auth: JwtAuthConfig {
+                jwt_issuer_uri: Some(vec![
+                    "[jwt issuer uri 1]".to_owned(),
+                    "[jwt issuer uri 2]".to_owned(),
+                ]),
+                jwks_uri: Some(vec!["[jwks uri 1]".to_owned(), "[jwks uri 2]".to_owned()]),
+                jwt_audience: Some(vec![
+                    "[jwt audience 1]".to_owned(),
+                    "[jwt audience 2]".to_owned(),
+                ]),
+            },
+            default_username: "[default username]".to_owned(),
+            force_default_username: false,
+        };
+        let expected_toml = format!(
+            r#"
 default_username = "[default username]"
 force_default_username = false
 
 [db]
-database_type = "Redis"
-database_url = "[redis urls]"
+database_type = "{}"
+database_url = "[some urls]"
 clear_database = false
 
 [http]
@@ -54,25 +72,29 @@ authority_cert_file = "[authority cert file]"
 jwt_issuer_uri = ["[jwt issuer uri 1]", "[jwt issuer uri 2]"]
 jwks_uri = ["[jwks uri 1]", "[jwks uri 2]"]
 jwt_audience = ["[jwt audience 1]", "[jwt audience 2]"]
-
-"#;
-
-    assert_eq!(toml_string.trim(), toml::to_string(&config).unwrap().trim());
+"#,
+            db_types[i]
+        );
+        assert_eq!(
+            expected_toml.trim(),
+            toml::to_string(&config).unwrap().trim()
+        );
+    }
 }
 
 #[test]
 fn test_read_write_toml() {
     let config = ClapConfig {
-        // db: DBConfig {
-        //     database_type: DatabaseType::Sqlite, // DatabaseType::Redis,
-        //     database_url: "../../target/debug/sqlite-test.db".to_owned(), // "redis://localhost:6379".to_owned(),
-        //     clear_database: false,
-        // },
         db: DBConfig {
-            database_type: DatabaseType::Redis,
-            database_url: "redis://localhost:6379".to_owned(),
+            database_type: DatabaseType::Sqlite, // DatabaseType::Redis,
+            database_url: "../../target/debug/sqlite-test.db".to_owned(), // "redis://localhost:6379".to_owned(),
             clear_database: false,
         },
+        // db: DBConfig {
+        //     database_type: DatabaseType::Redis,
+        //     database_url: "redis://localhost:6379".to_owned(),
+        //     clear_database: false,
+        // },
         http: HttpConfig {
             port: 443,
             hostname: "[hostname]".to_owned(),

@@ -76,6 +76,7 @@ paste = "1.0"
 
 [dev-dependencies]
 tempfile = { workspace = true }
+variant_count = "1.0"
 
 # ------------------------------------------------------------------------------
 # START DEBIAN PACKAGING
