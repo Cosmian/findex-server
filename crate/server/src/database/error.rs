@@ -22,5 +22,5 @@ pub(crate) enum DatabaseError {
     #[error("Invalid database type: {0} expected, {1} passed")]
     InvalidDatabaseType(String, String),
     #[error("Invalid database url: {0}")]
-    InvalidDatabaseUrl(String),
+    StdIoError(#[from] std::io::Error),
 }

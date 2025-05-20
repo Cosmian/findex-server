@@ -36,7 +36,7 @@ pub(crate) mod tests_mod {
 
     /// Test if creating an index ID also creates the correct Admin permission
     #[cfg(test)]
-    pub(crate) async fn create_index_id_test<T: PermissionsTrait>(db: T) -> DatabaseResult<()> {
+    pub(crate) async fn create_index_id<T: PermissionsTrait>(db: T) -> DatabaseResult<()> {
         let user_id = Uuid::new_v4().to_string();
 
         // Create new index
@@ -56,7 +56,7 @@ pub(crate) mod tests_mod {
 
     /// Test setting and revoking permissions for a user
     #[cfg(test)]
-    pub(crate) async fn set_and_revoke_permissions_test<T: PermissionsTrait>(
+    pub(crate) async fn set_and_revoke_permissions<T: PermissionsTrait>(
         db: T,
     ) -> DatabaseResult<()> {
         let user_id = "test_user_1";
@@ -98,7 +98,7 @@ pub(crate) mod tests_mod {
 
     /// Test revoking permissions for multiple permission types
     #[cfg(test)]
-    pub(crate) async fn revoke_permission_test<T: PermissionsTrait>(db: T) -> DatabaseResult<()> {
+    pub(crate) async fn revoke_permission<T: PermissionsTrait>(db: T) -> DatabaseResult<()> {
         let (other_user_id, test_user_id) =
             (Uuid::new_v4().to_string(), Uuid::new_v4().to_string());
 
@@ -165,7 +165,7 @@ pub(crate) mod tests_mod {
 
     /// Test behavior with non-existent users and permissions
     #[cfg(test)]
-    pub(crate) async fn nonexistent_user_and_permission_test<T: PermissionsTrait>(
+    pub(crate) async fn nonexistent_user_and_permission<T: PermissionsTrait>(
         db: T,
     ) -> DatabaseResult<()> {
         let new_random_user = Uuid::new_v4().to_string();
@@ -431,19 +431,6 @@ pub(crate) mod tests_mod {
         Ok(())
     }
 
-    // Debugging helper function
-    #[cfg(test)]
-    pub(crate) fn get_current_test_name() -> String {
-        let binding = std::thread::current();
-        let thread_name = binding.name().unwrap_or("unknown_test_thread");
-        // Test thread names are typically in the format "test_name-{some_hash}"
-        thread_name
-            .split('-')
-            .next()
-            .unwrap_or(thread_name)
-            .to_owned()
-    }
-
     #[macro_export]
     macro_rules! generate_permission_tests {
     (
@@ -452,19 +439,17 @@ pub(crate) mod tests_mod {
         $(,)? // Allow optional trailing comma for the names to avoid syntax errors in case of new formatting rules
     ) => {
         $(
-            // it seems unevitable to use the `paste` crate here, as re-using the same function name
-            // with no parameters will not compile
-            paste::paste! {
-            #[tokio::test]
-            async fn [<test_ $name>]() {
-                use $crate::database::test_utils::permission_tests::tests_mod::{get_current_test_name};
-                debug!("RUNNING TEST: {}", get_current_test_name());
-                let db = $setup;
-                $name(db)
-                    .await
-                    .unwrap_or_else(|e| panic!("Test {} failed: {:?}", get_current_test_name(), e));
-            }
-        })*
+            mod $name {
+                use super::*;
+                #[tokio::test]
+                async fn permissions_test() {
+                    debug!("RUNNING TEST: {}", stringify!($name));
+                    let db = $setup;
+                    $name(db)
+                        .await
+                        .unwrap_or_else(|e| panic!("Test {} failed: {:?}", stringify!($name), e));
+                }
+        })+
         };
     }
 }

@@ -6,8 +6,12 @@ use url::Url;
 
 use crate::{config::params::DbParams, error::result::FResult, findex_server_error};
 
-const _DEFAULT_SQLITE_PATH: &str = "./sqlite-data.db"; // TODO: should this be public ?
+#[cfg(test)]
+use variant_count::VariantCount;
 
+pub(crate) const DEFAULT_SQLITE_PATH: &str = "./sqlite-data.db"; // TODO: should this be public ?
+
+#[cfg_attr(test, derive(VariantCount))] // Used only in some tests to make sure they stay up to date after a new database type is added
 #[derive(ValueEnum, Clone, Deserialize, Serialize, PartialEq, Eq, Debug)]
 pub enum DatabaseType {
     Redis,

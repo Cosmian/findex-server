@@ -4,9 +4,9 @@ use tracing::{debug, trace};
 use uuid::Uuid;
 
 use crate::{
-    config::{DatabaseType, DbParams, ServerParams},
+    config::{DEFAULT_SQLITE_PATH, DatabaseType, DbParams, ServerParams},
     database::{
-        DatabaseError, FindexDatabase,
+        FindexDatabase,
         database_traits::{InstantiationTrait, PermissionsTrait},
     },
     error::{result::FResult, server::ServerError},
@@ -32,12 +32,7 @@ impl FindexServer {
             DbParams::Sqlite(path) => {
                 FindexDatabase::<CUSTOM_WORD_LENGTH>::instantiate(
                     DatabaseType::Sqlite,
-                    path.to_str().ok_or_else(|| {
-                        DatabaseError::InvalidDatabaseUrl(format!(
-                            "Failed to convert the provided path ({}) to a valid UTF-8 string",
-                            path.display()
-                        ))
-                    })?,
+                    path.to_str().unwrap_or(DEFAULT_SQLITE_PATH),
                     shared_config.clear_db_on_start,
                 )
                 .await?
@@ -54,7 +49,7 @@ impl FindexServer {
     /// The user is encoded in the JWT `Authorization` header
     /// If the header is not present, the user is extracted from the client
     /// certificate.
-    ///  If the client certificate is not present, the user is
+    /// If the client certificate is not present, the user is
     /// extracted from the configuration file
     pub(crate) fn get_user(&self, req_http: &HttpRequest) -> String {
         let default_username = self.params.default_username.clone();

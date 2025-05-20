@@ -95,6 +95,3 @@ uuid = { version = "=1.11.1", features = ["v4", "serde"] }
 x509-cert = { version = "0.2", default-features = false }
 x509-parser = "0.17"
 zeroize = { version = "1.8", default-features = false }
-
-[patch.crates-io]
-cosmian_findex = { git = "https://github.com/Cosmian/findex", rev = "08b3989f800b26b9ec3093f6f1b52ee0f739835e" }

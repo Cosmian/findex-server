@@ -8,12 +8,6 @@ use cosmian_findex_structs::{CUSTOM_WORD_LENGTH, Permission, Permissions};
 use std::collections::HashMap;
 use tracing::{instrument, trace};
 use uuid::Uuid;
-// CREATE TABLE IF NOT EXISTS findex.permissions (
-//     user_id TEXT NOT NULL,
-//     index_id BLOB NOT NULL,
-//     permission INTEGER NOT NULL CHECK (permission IN (0,1,2)),
-//     PRIMARY KEY (user_id, index_id)
-// );
 
 #[async_trait]
 impl PermissionsTrait for Sqlite<CUSTOM_WORD_LENGTH> {
@@ -127,7 +121,7 @@ format!(                    "SELECT index_id,permission  FROM {FINDEX_PERMISSION
         Ok(red_permissions)
     }
 
-    #[instrument(ret, err, skip(self), level = "trace")]
+    #[instrument(err, skip(self), level = "trace")]
     async fn revoke_permission(&self, user_id: &str, index_id: &Uuid) -> DatabaseResult<()> {
         let user_id_owned = user_id.to_owned();
         let index_id_bytes = index_id.into_bytes();
@@ -162,12 +156,10 @@ mod tests {
     use crate::{
         config::DatabaseType,
         database::{
-            FindexDatabase,
             database_traits::InstantiationTrait,
             test_utils::permission_tests::{
-                concurrent_create_index_id, concurrent_set_revoke_permissions,
-                create_index_id_test, get_current_test_name, nonexistent_user_and_permission_test,
-                revoke_permission_test, set_and_revoke_permissions_test,
+                concurrent_create_index_id, concurrent_set_revoke_permissions, create_index_id,
+                nonexistent_user_and_permission, revoke_permission, set_and_revoke_permissions,
             },
         },
         generate_permission_tests,
@@ -190,29 +182,11 @@ mod tests {
 
     generate_permission_tests! {
         setup_test_db().await;
-        create_index_id_test,
-        set_and_revoke_permissions_test,
-        revoke_permission_test,
-        nonexistent_user_and_permission_test,
+        create_index_id,
+        set_and_revoke_permissions,
+        revoke_permission,
+        nonexistent_user_and_permission,
         concurrent_set_revoke_permissions,
-    }
-
-    #[tokio::test]
-    async fn test_permissions_concurrent_create_index_id() {
-        debug!("RUNNING TEST: {}", get_current_test_name());
-        // This lock hungry test is likely to push his processes to starvation and make itself and the other tests fail
-        // It needs a configuration with a higher `busy_timeout` in order to run on the same db as the other tests
-        // without ever failing. So far, editing the `busy_timeout` is not handled in the server, but it's a good feature idea.
-        concurrent_create_index_id(
-            FindexDatabase::<CUSTOM_WORD_LENGTH>::instantiate(
-                DatabaseType::Sqlite,
-                &get_sqlite_url("SQLITE_URL"),
-                false,
-            )
-            .await
-            .unwrap(),
-        )
-        .await
-        .unwrap_or_else(|_| panic!("Test {} failed", get_current_test_name()));
+        concurrent_create_index_id
     }
 }

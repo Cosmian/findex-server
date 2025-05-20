@@ -132,9 +132,8 @@ mod tests {
         database::{
             database_traits::InstantiationTrait,
             test_utils::permission_tests::{
-                concurrent_create_index_id, concurrent_set_revoke_permissions,
-                create_index_id_test, nonexistent_user_and_permission_test, revoke_permission_test,
-                set_and_revoke_permissions_test,
+                concurrent_create_index_id, concurrent_set_revoke_permissions, create_index_id,
+                nonexistent_user_and_permission, revoke_permission, set_and_revoke_permissions,
             },
         },
         generate_permission_tests,
@@ -152,10 +151,10 @@ mod tests {
 
     generate_permission_tests! {
         setup_test_db().await;
-        create_index_id_test,
-        set_and_revoke_permissions_test,
-        revoke_permission_test,
-        nonexistent_user_and_permission_test,
+        create_index_id,
+        set_and_revoke_permissions,
+        revoke_permission,
+        nonexistent_user_and_permission,
         concurrent_set_revoke_permissions,
         concurrent_create_index_id
     }
