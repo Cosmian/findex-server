@@ -33,6 +33,7 @@ function BuildProject {
     if ($BuildType -eq "release") {
         cargo build -p cosmian_findex_server --release --target x86_64-pc-windows-msvc
         $env:FINDEX_TEST_DB="sqlite-findex"; cargo test -p cosmian_findex_server --target x86_64-pc-windows-msvc -- --nocapture --skip database::redis
+        cargo build -p cosmian_cli --target x86_64-pc-windows-msvc
         $env:FINDEX_TEST_DB="sqlite-findex"; cargo test -p cosmian_cli --target x86_64-pc-windows-msvc test_findex -- --nocapture
     }
     else {
