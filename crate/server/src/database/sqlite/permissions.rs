@@ -164,24 +164,32 @@ mod tests {
         },
         generate_permission_tests,
     };
-    use std::env;
+    use cosmian_crypto_core::{
+        CsRng,
+        reexport::rand_core::{RngCore, SeedableRng},
+    };
     use tokio;
     use tracing::debug;
 
-    const SQLITE_TEST_DB_URL: &str = "../../target/debug/sqlite-test.db";
+    const SQLITE_TEST_DB_URL: &str = "../../target/debug/sqlite-test";
 
-    fn get_sqlite_url(sqlite_url_var_env: &str) -> String {
-        env::var(sqlite_url_var_env).unwrap_or_else(|_| SQLITE_TEST_DB_URL.to_owned())
-    }
-
-    async fn setup_test_db() -> Sqlite<CUSTOM_WORD_LENGTH> {
-        Sqlite::instantiate(DatabaseType::Sqlite, &get_sqlite_url("SQLITE_URL"), false)
+    // This function is used to create a new SQLite database for testing purposes.
+    // In some slow filesystems, using only one database for all the tests can lead to
+    // starvation issues. The starving test will consume all of its budy timout time
+    // and throw a `DatabaseBusy` error.
+    async fn setup_a_random_test_db() -> Sqlite<CUSTOM_WORD_LENGTH> {
+        let random_db = format!(
+            "{}-{}.db",
+            SQLITE_TEST_DB_URL,
+            CsRng::from_entropy().next_u64()
+        );
+        Sqlite::instantiate(DatabaseType::Sqlite, &random_db, false)
             .await
             .expect("Test failed to instantiate Sqlite")
     }
 
     generate_permission_tests! {
-        setup_test_db().await;
+        setup_a_random_test_db().await;
         create_index_id,
         set_and_revoke_permissions,
         revoke_permission,
