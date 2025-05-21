@@ -31,12 +31,12 @@ function BuildProject {
 
     # Build `server`
     if ($BuildType -eq "release") {
-        cargo build -p cosmian_findex_server --release --target x86_64-pc-windows-msvc
-        $env:FINDEX_TEST_DB="sqlite-findex"; cargo test -p cosmian_findex_server --target x86_64-pc-windows-msvc -- --nocapture --skip database::redis
+        cargo build --release --target x86_64-pc-windows-msvc
+        $env:FINDEX_TEST_DB="sqlite-findex"; cargo test --target x86_64-pc-windows-msvc -- --nocapture --skip database::redis
     }
     else {
-        cargo build -p cosmian_findex_server --target x86_64-pc-windows-msvc
-        $env:FINDEX_TEST_DB="sqlite-findex"; cargo test -p cosmian_findex_server --target x86_64-pc-windows-msvc -- --nocapture --skip database::redis
+        cargo build --target x86_64-pc-windows-msvc
+        $env:FINDEX_TEST_DB="sqlite-findex"; cargo test --target x86_64-pc-windows-msvc -- --nocapture --skip database::redis
     }
 
     # Check dynamic links

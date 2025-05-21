@@ -48,5 +48,40 @@ fi
 cargo build --target $TARGET $RELEASE
 
 export RUST_LOG="fatal,cosmian_cli=error,cosmian_findex_client=debug,cosmian_findex_server=debug"
+
+declare -a DATABASES=('redis-findex' 'sqlite' 'postgresql' 'mysql')
+for KMS_TEST_DB in "${DATABASES[@]}"; do
+  echo "Database KMS: $KMS_TEST_DB"
+
+  # for now, discard tests on postgresql and mysql
+  if [ "$KMS_TEST_DB" = "postgresql" ] || [ "$KMS_TEST_DB" = "mysql" ]; then
+    continue
+  fi
+
+  # no docker containers on macOS Github runner
+  if [ "$(uname)" = "Darwin" ] && [ "$KMS_TEST_DB" != "sqlite" ]; then
+    continue
+  fi
+
+  # only tests all databases on release mode - keep sqlite for debug
+  if [ "$DEBUG_OR_RELEASE" = "debug" ] && [ "$KMS_TEST_DB" != "sqlite" ]; then
+    continue
+  fi
+
+  export KMS_TEST_DB="$KMS_TEST_DB"
+  # shellcheck disable=SC2086
+  cargo test --workspace --lib --target $TARGET $RELEASE $FEATURES \
+    --exclude cosmian_kms_client_utils \
+    --exclude cosmian_findex_client \
+    --exclude cosmian_gui \
+    --exclude cosmian_kms_client \
+    --exclude cosmian_pkcs11_module \
+    --exclude cosmian_pkcs11 \
+    --exclude test_findex_server \
+    --exclude test_kms_server \
+    --exclude cosmian_kms_client_wasm \
+    -- --nocapture $SKIP_SERVICES_TESTS
+done
+
 # shellcheck disable=SC2086
 cargo test --workspace --lib --target $TARGET $RELEASE $FEATURES -- --nocapture $SKIP_SERVICES_TESTS
