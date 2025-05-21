@@ -51,19 +51,7 @@ export RUST_LOG="fatal,cosmian_cli=error,cosmian_findex_client=debug,cosmian_fin
 
 declare -a DATABASES=('redis-findex' 'sqlite-findex')
 for FINDEX_TEST_DB in "${DATABASES[@]}"; do
-  echo "Database KMS: $FINDEX_TEST_DB"
-
-# really ?
-  # # no docker containers on macOS Github runner
-  # if [ "$(uname)" = "Darwin" ] && [ "$FINDEX_TEST_DB" != "sqlite" ]; then
-  #   continue
-  # fi
-
-# uncomment this later on 
-  # only tests all databases on release mode - keep sqlite for debug
-  # if [ "$DEBUG_OR_RELEASE" = "debug" ] && [ "$FINDEX_TEST_DB" != "sqlite" ]; then
-  #   continue
-  # fi
+  echo "Database FINDEX: $FINDEX_TEST_DB"
 
   export FINDEX_TEST_DB="$FINDEX_TEST_DB"
   # shellcheck disable=SC2086
