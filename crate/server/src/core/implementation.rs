@@ -4,21 +4,38 @@ use tracing::{debug, trace};
 use uuid::Uuid;
 
 use crate::{
-    config::{DbParams, ServerParams},
-    database::{database_traits::PermissionsTrait, redis::Redis},
+    config::{DEFAULT_SQLITE_PATH, DatabaseType, DbParams, ServerParams},
+    database::{
+        FindexDatabase,
+        database_traits::{InstantiationTrait, PermissionsTrait},
+    },
     error::{result::FResult, server::ServerError},
     middlewares::{JwtAuthClaim, PeerCommonName},
 };
+
 pub(crate) struct FindexServer {
     pub(crate) params: ServerParams,
-    pub(crate) db: Redis<CUSTOM_WORD_LENGTH>,
+    pub(crate) db: FindexDatabase<CUSTOM_WORD_LENGTH>,
 }
 
 impl FindexServer {
     pub(crate) async fn instantiate(mut shared_config: ServerParams) -> FResult<Self> {
         let db = match &mut shared_config.db_params {
             DbParams::Redis(url) => {
-                Redis::instantiate(url.as_str(), shared_config.clear_db_on_start).await?
+                FindexDatabase::<CUSTOM_WORD_LENGTH>::instantiate(
+                    DatabaseType::Redis,
+                    url.as_str(),
+                    shared_config.clear_db_on_start,
+                )
+                .await?
+            }
+            DbParams::Sqlite(path) => {
+                FindexDatabase::<CUSTOM_WORD_LENGTH>::instantiate(
+                    DatabaseType::Sqlite,
+                    path.to_str().unwrap_or(DEFAULT_SQLITE_PATH),
+                    shared_config.clear_db_on_start,
+                )
+                .await?
             }
         };
 
@@ -32,7 +49,7 @@ impl FindexServer {
     /// The user is encoded in the JWT `Authorization` header
     /// If the header is not present, the user is extracted from the client
     /// certificate.
-    ///  If the client certificate is not present, the user is
+    /// If the client certificate is not present, the user is
     /// extracted from the configuration file
     pub(crate) fn get_user(&self, req_http: &HttpRequest) -> String {
         let default_username = self.params.default_username.clone();

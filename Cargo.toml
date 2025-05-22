@@ -40,14 +40,20 @@ incremental = false
 opt-level = 0
 
 [workspace.dependencies]
+
 actix-server = { version = "2.5", default-features = false }
 actix-web = { version = "4.9", default-features = false }
+async-sqlite = { version = "0.4" }
 base64 = "0.22"
 clap = { version = "4.5", default-features = false }
 cosmian_config_utils = "0.2"
 cosmian_cover_crypt = "15.0"
 cosmian_crypto_core = { version = "10.1", default-features = false }
-cosmian_findex = { version = "7.1", features = ["redis-mem"] }
+cosmian_findex = { git = "https://github.com/Cosmian/findex", rev = "08b3989f800b26b9ec3093f6f1b52ee0f739835e", features = [
+  "redis-mem",
+  "sqlite-mem",
+  "test-utils",
+] }
 cosmian_http_client = "0.2"
 
 ### Local crates have been also declared here to simplify publishing - centralizing the versions

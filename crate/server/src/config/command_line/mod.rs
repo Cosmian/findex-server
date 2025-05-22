@@ -7,3 +7,5 @@ pub use clap_config::ClapConfig;
 pub use db::{DBConfig, DatabaseType};
 pub use http_config::HttpConfig;
 pub use jwt_auth_config::JwtAuthConfig;
+
+pub(crate) use db::DEFAULT_SQLITE_PATH;
