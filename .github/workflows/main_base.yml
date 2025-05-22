@@ -24,7 +24,7 @@ jobs:
   docker-image-release:
     if: inputs.debug_or_release == 'release'
     name: Build docker image for AMD64 and ARM64
-    uses: Cosmian/reusable_workflows/.github/workflows/build_docker_image.yml@develop
+    uses: Cosmian/reusable_workflows/.github/workflows/build_docker_image.yml@move_ci_scripts
     with:
       prefix: ''
       registry-image: ghcr.io/cosmian/findex-server
@@ -33,19 +33,19 @@ jobs:
   docker-image:
     if: inputs.debug_or_release == 'debug'
     name: Build docker image for AMD64
-    uses: Cosmian/reusable_workflows/.github/workflows/build_docker_image.yml@develop
+    uses: Cosmian/reusable_workflows/.github/workflows/build_docker_image.yml@move_ci_scripts
     with:
       prefix: ''
       registry-image: ghcr.io/cosmian/findex-server
       platforms: linux/amd64
 
   cargo-lint:
-    uses: Cosmian/reusable_workflows/.github/workflows/clippy.yml@develop
+    uses: Cosmian/reusable_workflows/.github/workflows/clippy.yml@move_ci_scripts
     with:
       toolchain: ${{ inputs.toolchain }}
 
   build-tests:
-    uses: Cosmian/reusable_workflows/.github/workflows/build_all.yml@develop
+    uses: Cosmian/reusable_workflows/.github/workflows/build_all.yml@move_ci_scripts
     secrets: inherit
     with:
       toolchain: ${{ inputs.toolchain }}
@@ -59,7 +59,7 @@ jobs:
       - cargo-audit
       - cargo-lint
       - build-tests
-    uses: Cosmian/reusable_workflows/.github/workflows/push-artifacts.yml@develop
+    uses: Cosmian/reusable_workflows/.github/workflows/push-artifacts.yml@move_ci_scripts
     with:
       project-name: findex-server
       destination: findex-server
