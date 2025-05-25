@@ -1,6 +1,7 @@
 use std::{fmt, path::PathBuf};
 
 use openssl::x509::X509;
+use tracing::warn;
 
 use super::{DbParams, HttpParams};
 use crate::{
@@ -163,6 +164,9 @@ impl fmt::Debug for ServerParams {
 /// since it may contain sensitive material
 impl Clone for ServerParams {
     fn clone(&self) -> Self {
+        warn!(
+            "Cloning ServerParams, the `DbParams` and PKCS#12 information is not copied since it may contain sensitive material and hence should be set manually"
+        );
         Self {
             identity_provider_configurations: self.identity_provider_configurations.clone(),
             default_username: self.default_username.clone(),
