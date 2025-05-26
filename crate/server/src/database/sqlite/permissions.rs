@@ -102,7 +102,7 @@ format!(                    "SELECT index_id,permission  FROM {FINDEX_PERMISSION
                         let permission =
                             Permission::try_from(row.get::<_, u8>(1)?).map_err(|e| {
                                 async_sqlite::rusqlite::Error::FromSqlConversionFailure(
-                                    // the closure signature dicates that the error type should be
+                                    // the closure signature dictates that the error type should be
                                     // rusqlite::Error, and this mapping is the closest we
                                     // can get to the original struct error (that should never happen anyway)
                                     0,
@@ -171,11 +171,11 @@ mod tests {
     use tokio;
     use tracing::debug;
 
-    const SQLITE_TEST_DB_URL: &str = "../../target/debug/sqlite-test";
+    const SQLITE_TEST_DB_URL: &str = "sqlite-test";
 
     // This function is used to create a new SQLite database for testing purposes.
     // In some slow filesystems, using only one database for all the tests can lead to
-    // starvation issues. The starving test will consume all of its budy timout time
+    // starvation issues. The starving test will consume all of its body timeout time
     // and throw a `DatabaseBusy` error.
     async fn setup_a_random_test_db() -> Sqlite<CUSTOM_WORD_LENGTH> {
         let random_db = format!(
