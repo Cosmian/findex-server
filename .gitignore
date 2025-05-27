@@ -6,3 +6,4 @@
 .env
 cosmian-findex-server/
 .venv/
+**/sqlite-test*

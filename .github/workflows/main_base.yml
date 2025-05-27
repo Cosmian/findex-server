@@ -26,7 +26,7 @@ jobs:
     name: Build docker image for AMD64 and ARM64
     uses: Cosmian/reusable_workflows/.github/workflows/build_docker_image.yml@develop
     with:
-      prefix: ''
+      prefix: ""
       registry-image: ghcr.io/cosmian/findex-server
       platforms: linux/amd64,linux/arm64
 
@@ -35,7 +35,7 @@ jobs:
     name: Build docker image for AMD64
     uses: Cosmian/reusable_workflows/.github/workflows/build_docker_image.yml@develop
     with:
-      prefix: ''
+      prefix: ""
       registry-image: ghcr.io/cosmian/findex-server
       platforms: linux/amd64
 
