@@ -49,10 +49,12 @@ base64 = "0.22"
 clap = { version = "4.5", default-features = false }
 cosmian_config_utils = "0.2"
 cosmian_crypto_core = { version = "10.1", default-features = false }
-cosmian_findex = { git = "https://github.com/Cosmian/findex", rev = "08b3989f800b26b9ec3093f6f1b52ee0f739835e", features = [
+cosmian_findex = { git = "https://github.com/Cosmian/findex", branch = "refactor/migrate_findex_memories", features = [
+  "test-utils",
+] }
+cosmian_findex_memories = { git = "https://github.com/Cosmian/findex-memories", branch = "feat/first_branch", features = [
   "redis-mem",
   "sqlite-mem",
-  "test-utils",
 ] }
 cosmian_http_client = "0.2"
 cosmian_kms_cli = { git = "https://github.com/Cosmian/kms", branch = "develop" }

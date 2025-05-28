@@ -1,4 +1,4 @@
-use cosmian_findex::{RedisMemoryError, SqliteMemoryError};
+use cosmian_findex_memories::{RedisMemoryError, SqliteMemoryError};
 use thiserror::Error;
 
 /// Wraps memory errors from different findex memories

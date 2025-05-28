@@ -45,12 +45,16 @@ clap = { workspace = true, features = [
 ] }
 cosmian_crypto_core = { workspace = true }
 cosmian_findex = { workspace = true }
+cosmian_findex_memories = { workspace = true, features = [
+  "redis-mem",
+  "sqlite-mem",
+] }
 cosmian_findex_structs = { path = "../structs" }
 cosmian_logger = { workspace = true }
 dotenvy = "0.15"
 futures = "0.3"
 openssl = { workspace = true, default-features = false }
-redis = { version = "0.28", features = [
+redis = { version = "0.31", features = [
   "aio",
   "script",
   "connection-manager",

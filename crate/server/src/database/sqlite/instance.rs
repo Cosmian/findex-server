@@ -16,7 +16,7 @@ pub(crate) struct Sqlite<const WORD_LENGTH: usize> {
     pub(crate) pool: Pool,
 }
 
-pub use cosmian_findex::FINDEX_TABLE_NAME as FINDEX_MEMORY_TABLE_NAME;
+pub use cosmian_findex_memories::FINDEX_TABLE_NAME as FINDEX_MEMORY_TABLE_NAME;
 pub const FINDEX_PERMISSIONS_TABLE_NAME: &str = "findex_permissions";
 pub const FINDEX_DATASETS_TABLE_NAME: &str = "findex_datasets";
 

@@ -1,4 +1,5 @@
-use cosmian_findex::{Address, MemoryADT, SqliteMemoryError};
+use cosmian_findex::{Address, MemoryADT};
+use cosmian_findex_memories::SqliteMemoryError;
 use cosmian_findex_structs::SERVER_ADDRESS_LENGTH;
 
 use super::Sqlite;
