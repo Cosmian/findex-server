@@ -3,9 +3,11 @@ use cosmian_findex_client::{
     RestClient,
     reexport::cosmian_findex_structs::{CUSTOM_WORD_LENGTH, Uuids},
 };
-use cosmian_kms_cli::actions::kms::symmetric::DecryptAction;
-use cosmian_kms_cli::reexport::cosmian_kms_client::{
-    KmsClient, reexport::cosmian_kms_client_utils::symmetric_utils::DataEncryptionAlgorithm,
+use cosmian_kms_cli::{
+    actions::kms::symmetric::DecryptAction,
+    reexport::cosmian_kms_client::{
+        KmsClient, reexport::cosmian_kms_client_utils::symmetric_utils::DataEncryptionAlgorithm,
+    },
 };
 use tracing::trace;
 

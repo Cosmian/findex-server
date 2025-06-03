@@ -1,8 +1,7 @@
-use std::sync::mpsc::SendError;
+use std::{fmt::Debug, sync::mpsc::SendError};
 
 use actix_web::dev::ServerHandle;
 use cosmian_findex_structs::StructsError;
-use std::fmt::Debug;
 use thiserror::Error;
 
 // Each error type must have a corresponding HTTP status code

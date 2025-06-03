@@ -11,13 +11,16 @@ use cosmian_findex_client::{
         cosmian_http_client::HttpClientError,
     },
 };
-use cosmian_kms_cli::reexport::cosmian_kms_client::{
-    KmsClientError, cosmian_kmip::ttlv::TtlvError,
-    reexport::cosmian_kms_client_utils::error::UtilsError,
-};
 use cosmian_kms_cli::{
     error::KmsCliError,
-    reexport::{cosmian_kmip::KmipError, cosmian_kms_crypto::CryptoError},
+    reexport::{
+        cosmian_kmip::KmipError,
+        cosmian_kms_client::{
+            KmsClientError, cosmian_kmip::ttlv::TtlvError,
+            reexport::cosmian_kms_client_utils::error::UtilsError,
+        },
+        cosmian_kms_crypto::CryptoError,
+    },
 };
 use thiserror::Error;
 

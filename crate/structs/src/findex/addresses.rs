@@ -1,9 +1,9 @@
-use crate::StructsError;
 use cosmian_crypto_core::bytes_ser_de::{Deserializer, Serializer};
 use cosmian_findex::{ADDRESS_LENGTH, Address};
 use tracing::debug;
 
 use super::SerializationResult;
+use crate::StructsError;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Addresses(pub Vec<Address<ADDRESS_LENGTH>>);

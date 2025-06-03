@@ -2,15 +2,15 @@
 #[cfg(test)]
 mod findex_tests {
 
-    use crate::findex::addresses::Addresses;
-    use crate::findex::bindings::Bindings;
-    use crate::findex::guard::Guard;
-    use crate::findex::words::OptionalWords;
     use cosmian_crypto_core::{
         CsRng, Sampling,
         reexport::rand_core::{RngCore, SeedableRng},
     };
     use cosmian_findex::{ADDRESS_LENGTH, Address, WORD_LENGTH};
+
+    use crate::findex::{
+        addresses::Addresses, bindings::Bindings, guard::Guard, words::OptionalWords,
+    };
 
     const SEED: [u8; 32] = [1_u8; 32]; // arbitrary seed for the RNG
 

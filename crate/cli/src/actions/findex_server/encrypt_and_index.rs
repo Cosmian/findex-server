@@ -12,9 +12,11 @@ use cosmian_findex_client::{
     },
 };
 use cosmian_findex_structs::Value;
-use cosmian_kms_cli::actions::kms::symmetric::{EncryptAction, KeyEncryptionAlgorithm};
-use cosmian_kms_cli::reexport::cosmian_kms_client::{
-    KmsClient, reexport::cosmian_kms_client_utils::symmetric_utils::DataEncryptionAlgorithm,
+use cosmian_kms_cli::{
+    actions::kms::symmetric::{EncryptAction, KeyEncryptionAlgorithm},
+    reexport::cosmian_kms_client::{
+        KmsClient, reexport::cosmian_kms_client_utils::symmetric_utils::DataEncryptionAlgorithm,
+    },
 };
 use tracing::{debug, trace};
 

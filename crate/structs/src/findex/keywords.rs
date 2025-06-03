@@ -1,6 +1,8 @@
 // Most of this file is from legacy findex code
-use std::collections::{HashMap, HashSet};
-use std::ops::{Deref, DerefMut};
+use std::{
+    collections::{HashMap, HashSet},
+    ops::{Deref, DerefMut},
+};
 
 use super::Value;
 

@@ -101,11 +101,13 @@ impl FindexServer {
     ) -> FResult<()> {
         let permission = self.get_permission(user, index_id).await?;
         trace!(
-            "ensure_minimum_permission: user {user} has permission {permission} on index {index_id}"
+            "ensure_minimum_permission: user {user} has permission {permission} on index \
+             {index_id}"
         );
         if permission < expected_permission {
             return Err(ServerError::Unauthorized(format!(
-                "User {user} with permission {permission} is not allowed to write on index {index_id}",
+                "User {user} with permission {permission} is not allowed to write on index \
+                 {index_id}",
             )));
         }
         Ok(())

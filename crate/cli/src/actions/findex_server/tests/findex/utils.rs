@@ -1,8 +1,9 @@
 use std::{ops::Deref, path::PathBuf};
 
 use cosmian_findex_client::{FindexRestClient, KmsEncryptionLayer, RestClient, RestClientConfig};
-use cosmian_kms_cli::reexport::cosmian_kms_client::KmsClient;
-use cosmian_kms_cli::reexport::test_kms_server::start_default_test_kms_server;
+use cosmian_kms_cli::reexport::{
+    cosmian_kms_client::KmsClient, test_kms_server::start_default_test_kms_server,
+};
 use test_findex_server::start_default_test_findex_server;
 use uuid::Uuid;
 

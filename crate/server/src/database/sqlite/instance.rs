@@ -1,14 +1,15 @@
+use async_sqlite::{Pool, PoolBuilder};
+use async_trait::async_trait;
+use cosmian_findex::{Address, SqliteMemory};
+use cosmian_findex_structs::SERVER_ADDRESS_LENGTH;
+use tracing::warn;
+
 use crate::{
     config::DatabaseType,
     database::{
         DatabaseError, database_traits::InstantiationTrait, findex_database::DatabaseResult,
     },
 };
-use async_sqlite::{Pool, PoolBuilder};
-use async_trait::async_trait;
-use cosmian_findex::{Address, SqliteMemory};
-use cosmian_findex_structs::SERVER_ADDRESS_LENGTH;
-use tracing::warn;
 
 pub(crate) struct Sqlite<const WORD_LENGTH: usize> {
     pub(crate) memory: SqliteMemory<Address<SERVER_ADDRESS_LENGTH>, [u8; WORD_LENGTH]>,

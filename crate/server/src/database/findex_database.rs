@@ -10,14 +10,13 @@ use cosmian_findex_structs::{
 };
 use uuid::Uuid;
 
-use crate::config::DatabaseType;
-
 use super::{
     database_traits::{DatabaseTraits, DatasetsTrait, InstantiationTrait, PermissionsTrait},
     error::DatabaseError,
     redis::Redis,
     sqlite::Sqlite,
 };
+use crate::config::DatabaseType;
 
 pub(crate) type DatabaseResult<R> = Result<R, DatabaseError>;
 
@@ -114,8 +113,8 @@ impl<const WORD_LENGTH: usize> InstantiationTrait for FindexDatabase<WORD_LENGTH
 impl<const WORD_LENGTH: usize> MemoryADT for FindexDatabase<WORD_LENGTH> {
     // Define the associated types required by the MemoryADT trait
     type Address = Address<SERVER_ADDRESS_LENGTH>;
-    type Word = [u8; WORD_LENGTH];
     type Error = DatabaseError;
+    type Word = [u8; WORD_LENGTH];
 
     async fn batch_read(
         &self,

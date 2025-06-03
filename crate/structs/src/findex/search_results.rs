@@ -1,5 +1,4 @@
-use std::collections::HashSet;
-use std::ops::Deref;
+use std::{collections::HashSet, ops::Deref};
 
 use super::Value;
 

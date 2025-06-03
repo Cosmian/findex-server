@@ -1,13 +1,15 @@
+use std::collections::HashMap;
+
+use async_sqlite::rusqlite::params;
+use async_trait::async_trait;
+use cosmian_findex_structs::{CUSTOM_WORD_LENGTH, Permission, Permissions};
+use tracing::{instrument, trace};
+use uuid::Uuid;
+
 use super::{FINDEX_PERMISSIONS_TABLE_NAME, Sqlite};
 use crate::database::{
     DatabaseError, database_traits::PermissionsTrait, findex_database::DatabaseResult,
 };
-use async_sqlite::rusqlite::params;
-use async_trait::async_trait;
-use cosmian_findex_structs::{CUSTOM_WORD_LENGTH, Permission, Permissions};
-use std::collections::HashMap;
-use tracing::{instrument, trace};
-use uuid::Uuid;
 
 #[async_trait]
 impl PermissionsTrait for Sqlite<CUSTOM_WORD_LENGTH> {
@@ -21,10 +23,13 @@ impl PermissionsTrait for Sqlite<CUSTOM_WORD_LENGTH> {
 
         self.pool
             .conn_mut(move |conn| {
-                conn.execute(&format!(                "INSERT INTO {FINDEX_PERMISSIONS_TABLE_NAME} (user_id, index_id, permission) VALUES (?1, ?2, ?3)",
-                ),
-                params![user_id_owned, index_id_bytes, permission],
-            )?;
+                conn.execute(
+                    &format!(
+                        "INSERT INTO {FINDEX_PERMISSIONS_TABLE_NAME} (user_id, index_id, \
+                         permission) VALUES (?1, ?2, ?3)",
+                    ),
+                    params![user_id_owned, index_id_bytes, permission],
+                )?;
                 Ok(())
             })
             .await?;
@@ -45,13 +50,17 @@ impl PermissionsTrait for Sqlite<CUSTOM_WORD_LENGTH> {
         let permission_value = u8::from(permission);
 
         self.pool
-        .conn_mut(move |conn| {
-            conn.execute(&format!("INSERT OR REPLACE INTO {FINDEX_PERMISSIONS_TABLE_NAME} (user_id, index_id, permission) VALUES (?1, ?2, ?3)",),
-                params![user_id_owned, index_id_bytes, permission_value],
-            )?;
-            Ok(())
-        })
-        .await?;
+            .conn_mut(move |conn| {
+                conn.execute(
+                    &format!(
+                        "INSERT OR REPLACE INTO {FINDEX_PERMISSIONS_TABLE_NAME} (user_id, \
+                         index_id, permission) VALUES (?1, ?2, ?3)",
+                    ),
+                    params![user_id_owned, index_id_bytes, permission_value],
+                )?;
+                Ok(())
+            })
+            .await?;
 
         trace!("Set {permission:?} permission to {user_id} for index {index_id}");
         Ok(())
@@ -65,7 +74,10 @@ impl PermissionsTrait for Sqlite<CUSTOM_WORD_LENGTH> {
         let permission = self
             .pool
             .conn(move |conn| {
-                let query = format!("SELECT permission FROM {FINDEX_PERMISSIONS_TABLE_NAME} WHERE user_id = ?1 AND index_id = ?2");
+                let query = format!(
+                    "SELECT permission FROM {FINDEX_PERMISSIONS_TABLE_NAME} WHERE user_id = ?1 \
+                     AND index_id = ?2"
+                );
                 let mut stmt = conn.prepare(&query)?;
                 let mut rows = stmt.query(params![user_id_owned, index_id_bytes])?;
                 if let Some(row) = rows.next()? {
@@ -92,8 +104,10 @@ impl PermissionsTrait for Sqlite<CUSTOM_WORD_LENGTH> {
         let red_permissions = self
             .pool
             .conn(move |conn| {
-                let query =
-format!(                    "SELECT index_id,permission  FROM {FINDEX_PERMISSIONS_TABLE_NAME} WHERE user_id = ?1");
+                let query = format!(
+                    "SELECT index_id,permission  FROM {FINDEX_PERMISSIONS_TABLE_NAME} WHERE \
+                     user_id = ?1"
+                );
                 let mut stmt = conn.prepare(&query)?;
 
                 let rows = stmt
@@ -129,7 +143,10 @@ format!(                    "SELECT index_id,permission  FROM {FINDEX_PERMISSION
         self.pool
             .conn_mut(move |conn| {
                 conn.execute(
-                    &format!("DELETE FROM {FINDEX_PERMISSIONS_TABLE_NAME} WHERE user_id = ?1 AND index_id = ?2",),
+                    &format!(
+                        "DELETE FROM {FINDEX_PERMISSIONS_TABLE_NAME} WHERE user_id = ?1 AND \
+                         index_id = ?2",
+                    ),
                     params![user_id_owned, index_id_bytes],
                 )?;
                 Ok(())
@@ -152,6 +169,13 @@ format!(                    "SELECT index_id,permission  FROM {FINDEX_PERMISSION
 )]
 mod tests {
 
+    use cosmian_crypto_core::{
+        CsRng,
+        reexport::rand_core::{RngCore, SeedableRng},
+    };
+    use tokio;
+    use tracing::debug;
+
     use super::*;
     use crate::{
         config::DatabaseType,
@@ -164,12 +188,6 @@ mod tests {
         },
         generate_permission_tests,
     };
-    use cosmian_crypto_core::{
-        CsRng,
-        reexport::rand_core::{RngCore, SeedableRng},
-    };
-    use tokio;
-    use tracing::debug;
 
     const SQLITE_TEST_DB_URL: &str = "sqlite-test";
 

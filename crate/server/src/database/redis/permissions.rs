@@ -1,12 +1,13 @@
-use super::Redis;
-use crate::database::{
-    DatabaseError, database_traits::PermissionsTrait, findex_database::DatabaseResult,
-};
 use async_trait::async_trait;
 use cosmian_findex_structs::{CUSTOM_WORD_LENGTH, Permission, Permissions};
 use redis::{AsyncCommands, RedisError, aio::ConnectionManager};
 use tracing::{instrument, trace};
 use uuid::Uuid;
+
+use super::Redis;
+use crate::database::{
+    DatabaseError, database_traits::PermissionsTrait, findex_database::DatabaseResult,
+};
 
 const PERMISSIONS_PREFIX: &str = "permissions";
 
@@ -126,6 +127,11 @@ impl PermissionsTrait for Redis<CUSTOM_WORD_LENGTH> {
     clippy::too_many_lines
 )]
 mod tests {
+    use std::env;
+
+    use tokio;
+    use tracing::debug;
+
     use super::*;
     use crate::{
         config::DatabaseType,
@@ -138,9 +144,6 @@ mod tests {
         },
         generate_permission_tests,
     };
-    use std::env;
-    use tokio;
-    use tracing::debug;
 
     async fn setup_test_db() -> Redis<CUSTOM_WORD_LENGTH> {
         let url = env::var("REDIS_URL").unwrap_or_else(|_| "redis://localhost:6379".to_owned());
