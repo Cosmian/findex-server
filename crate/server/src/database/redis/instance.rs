@@ -1,12 +1,13 @@
-use crate::{
-    config::DatabaseType,
-    database::{database_traits::InstantiationTrait, findex_database::DatabaseResult},
-};
 use async_trait::async_trait;
 use cosmian_findex::{Address, RedisMemory};
 use cosmian_findex_structs::SERVER_ADDRESS_LENGTH;
 use redis::aio::ConnectionManager;
 use tracing::info;
+
+use crate::{
+    config::DatabaseType,
+    database::{database_traits::InstantiationTrait, findex_database::DatabaseResult},
+};
 
 pub(crate) struct Redis<const WORD_LENGTH: usize> {
     pub(crate) memory: RedisMemory<Address<SERVER_ADDRESS_LENGTH>, [u8; WORD_LENGTH]>,

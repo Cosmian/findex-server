@@ -18,16 +18,17 @@
 #[cfg(test)]
 pub(crate) mod tests_mod {
     // use async_trait::async_trait;
+    use std::{
+        collections::{HashMap, HashSet},
+        sync::Arc,
+    };
+
     use cosmian_crypto_core::{
         CsRng,
         reexport::rand_core::{RngCore, SeedableRng},
     };
     use cosmian_findex_structs::{Permission, Permissions};
     use futures::future;
-    use std::{
-        collections::{HashMap, HashSet},
-        sync::Arc,
-    };
     use tokio;
     use tracing::trace;
     use uuid::Uuid;

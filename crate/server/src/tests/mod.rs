@@ -1,15 +1,18 @@
 #[allow(clippy::indexing_slicing)] // this is a test. Also the indexing is correctly done and won't panic
 #[cfg(test)]
 mod tests_inner {
-    use crate::config::{ClapConfig, DBConfig, DatabaseType, HttpConfig, JwtAuthConfig};
     use std::{io::Write, path::PathBuf};
+
     use tempfile::TempDir;
+
+    use crate::config::{ClapConfig, DBConfig, DatabaseType, HttpConfig, JwtAuthConfig};
 
     fn get_database_configurations() -> (Vec<String>, Vec<DBConfig>) {
         assert_eq!(
             DatabaseType::VARIANT_COUNT,
             2,
-            "If this panic occurs, it means that a new database type has been added. Please update the test to include the new database type."
+            "If this panic occurs, it means that a new database type has been added. Please \
+             update the test to include the new database type."
         );
 
         let db_names = vec!["Redis".to_owned(), "Sqlite".to_owned()];

@@ -1,7 +1,9 @@
 use clap::Parser;
-use cosmian_kms_cli::actions::kms::symmetric::keys::create_key::CreateKeyAction;
-use cosmian_kms_cli::reexport::cosmian_kms_client::{
-    KmsClient, reexport::cosmian_kms_client_utils::create_utils::SymmetricAlgorithm,
+use cosmian_kms_cli::{
+    actions::kms::symmetric::keys::create_key::CreateKeyAction,
+    reexport::cosmian_kms_client::{
+        KmsClient, reexport::cosmian_kms_client_utils::create_utils::SymmetricAlgorithm,
+    },
 };
 use tracing::trace;
 use uuid::Uuid;

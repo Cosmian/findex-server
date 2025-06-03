@@ -154,14 +154,16 @@ mod tests {
     use cosmian_crypto_core::{CsRng, Sampling, reexport::rand_core::SeedableRng};
     use cosmian_findex::{InMemory, gen_seed, test_single_write_and_read, test_wrong_guard};
     use cosmian_findex_structs::CUSTOM_WORD_LENGTH;
-    use cosmian_kms_cli::reexport::cosmian_kms_client::{
-        KmsClient, KmsClientConfig,
-        kmip_2_1::{
-            extra::tagging::EMPTY_TAGS, kmip_types::CryptographicAlgorithm,
-            requests::symmetric_key_create_request,
+    use cosmian_kms_cli::reexport::{
+        cosmian_kms_client::{
+            KmsClient, KmsClientConfig,
+            kmip_2_1::{
+                extra::tagging::EMPTY_TAGS, kmip_types::CryptographicAlgorithm,
+                requests::symmetric_key_create_request,
+            },
         },
+        test_kms_server::start_default_test_kms_server,
     };
-    use cosmian_kms_cli::reexport::test_kms_server::start_default_test_kms_server;
     use cosmian_logger::log_init;
     use tokio::task;
 

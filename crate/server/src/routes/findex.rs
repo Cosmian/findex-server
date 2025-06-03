@@ -5,7 +5,6 @@ use actix_web::{
     web::{self, Bytes, Data},
 };
 use cosmian_findex::{ADDRESS_LENGTH, Address, MemoryADT};
-
 use cosmian_findex_structs::{
     Addresses, Bindings, CUSTOM_WORD_LENGTH, Guard, OptionalWords, Permission,
     SERVER_ADDRESS_LENGTH, UID_LENGTH,

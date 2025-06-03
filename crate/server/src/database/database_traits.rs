@@ -3,9 +3,8 @@ use cosmian_findex::MemoryADT;
 use cosmian_findex_structs::{EncryptedEntries, Permission, Permissions, Uuids};
 use uuid::Uuid;
 
-use crate::config::DatabaseType;
-
 use super::findex_database::DatabaseResult;
+use crate::config::DatabaseType;
 
 #[async_trait]
 pub(crate) trait PermissionsTrait: Sync + Send {

@@ -44,6 +44,7 @@ impl From<&[Uuid]> for Uuids {
 
 impl TryFrom<SearchResults> for Uuids {
     type Error = StructsError;
+
     fn try_from(search_results: SearchResults) -> Result<Self, Self::Error> {
         let uuids = search_results
             .iter()

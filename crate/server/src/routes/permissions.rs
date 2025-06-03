@@ -1,18 +1,20 @@
-use crate::{
-    core::FindexServer,
-    database::database_traits::PermissionsTrait,
-    error::{result::FResult, server::ServerError},
-    routes::error::{ResponseBytes, SuccessResponse},
-};
+use std::{str::FromStr, sync::Arc};
+
 use actix_web::{
     HttpRequest, HttpResponse, post,
     web::{self, Data, Json},
 };
 use cosmian_crypto_core::bytes_ser_de::Serializable;
 use cosmian_findex_structs::Permission;
-use std::{str::FromStr, sync::Arc};
 use tracing::trace;
 use uuid::Uuid;
+
+use crate::{
+    core::FindexServer,
+    database::database_traits::PermissionsTrait,
+    error::{result::FResult, server::ServerError},
+    routes::error::{ResponseBytes, SuccessResponse},
+};
 
 #[post("/create/index")]
 pub(crate) async fn create_index_id(

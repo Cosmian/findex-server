@@ -5,8 +5,8 @@ use super::Redis;
 
 impl<const WORD_LENGTH: usize> MemoryADT for Redis<WORD_LENGTH> {
     type Address = Address<SERVER_ADDRESS_LENGTH>;
-    type Word = [u8; WORD_LENGTH];
     type Error = RedisMemoryError;
+    type Word = [u8; WORD_LENGTH];
 
     async fn batch_read(
         &self,

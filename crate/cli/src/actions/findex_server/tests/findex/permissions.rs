@@ -2,8 +2,9 @@ use std::{ops::Deref, path::PathBuf};
 
 use cosmian_findex_client::RestClient;
 use cosmian_findex_structs::{Permission, Value};
-use cosmian_kms_cli::reexport::cosmian_kms_client::KmsClient;
-use cosmian_kms_cli::reexport::test_kms_server::start_default_test_kms_server;
+use cosmian_kms_cli::reexport::{
+    cosmian_kms_client::KmsClient, test_kms_server::start_default_test_kms_server,
+};
 use cosmian_logger::log_init;
 use test_findex_server::start_default_test_findex_server_with_cert_auth;
 use tracing::{debug, trace};

@@ -3,11 +3,10 @@ use std::{fmt::Display, path::PathBuf};
 use clap::{Args, ValueEnum};
 use serde::{Deserialize, Serialize};
 use url::Url;
-
-use crate::{config::params::DbParams, error::result::FResult, findex_server_error};
-
 #[cfg(test)]
 use variant_count::VariantCount;
+
+use crate::{config::params::DbParams, error::result::FResult, findex_server_error};
 
 pub(crate) const DEFAULT_SQLITE_PATH: &str = "./sqlite-data.db";
 

@@ -1,12 +1,13 @@
 use std::{collections::HashMap, sync::Arc};
 
-use super::{FINDEX_DATASETS_TABLE_NAME, Sqlite};
-use crate::database::{database_traits::DatasetsTrait, findex_database::DatabaseResult};
 use async_sqlite::rusqlite::params_from_iter;
 use async_trait::async_trait;
 use cosmian_findex_structs::{CUSTOM_WORD_LENGTH, EncryptedEntries, Uuids};
 use tracing::{instrument, trace};
 use uuid::Uuid;
+
+use super::{FINDEX_DATASETS_TABLE_NAME, Sqlite};
+use crate::database::{database_traits::DatasetsTrait, findex_database::DatabaseResult};
 
 #[async_trait]
 impl DatasetsTrait for Sqlite<CUSTOM_WORD_LENGTH> {
@@ -111,28 +112,31 @@ impl DatasetsTrait for Sqlite<CUSTOM_WORD_LENGTH> {
 
         let index_id = *index_id;
         let ids = (*ids).clone();
-        Ok(self.pool
-        .conn(move |conn| {
-            let query = format!(
-                "SELECT user_id, encrypted_entry FROM {} WHERE index_id = ? AND user_id IN ({})",
-                  FINDEX_DATASETS_TABLE_NAME,
-                  vec!["?"; ids.len()].join(",")
-            );
-            let mut stmt = conn.prepare(&query)?;
-            let mut params = Vec::with_capacity(1 + ids.len()); //  the index_id, then all entry_ids
-            params.push(index_id.into_bytes().to_vec());
-            params.extend(ids.iter().map(|id| id.into_bytes().to_vec()));
-            let  rows = stmt.query_map(params_from_iter(params), |row| {
-                let user_id = Uuid::from_bytes(row.get::<_,[u8; 16]>(0)?);
-                let encrypted_entry: Vec<u8> = row.get(1)?;
-                Ok((user_id, encrypted_entry))
-            })?
-            .collect::<Result<HashMap<_, _>, _>>()?;
+        Ok(self
+            .pool
+            .conn(move |conn| {
+                let query = format!(
+                    "SELECT user_id, encrypted_entry FROM {} WHERE index_id = ? AND user_id IN \
+                     ({})",
+                    FINDEX_DATASETS_TABLE_NAME,
+                    vec!["?"; ids.len()].join(",")
+                );
+                let mut stmt = conn.prepare(&query)?;
+                let mut params = Vec::with_capacity(1 + ids.len()); //  the index_id, then all entry_ids
+                params.push(index_id.into_bytes().to_vec());
+                params.extend(ids.iter().map(|id| id.into_bytes().to_vec()));
+                let rows = stmt
+                    .query_map(params_from_iter(params), |row| {
+                        let user_id = Uuid::from_bytes(row.get::<_, [u8; 16]>(0)?);
+                        let encrypted_entry: Vec<u8> = row.get(1)?;
+                        Ok((user_id, encrypted_entry))
+                    })?
+                    .collect::<Result<HashMap<_, _>, _>>()?;
 
-            trace!("dataset_get_entries: {} entries retrieved", rows.len());
+                trace!("dataset_get_entries: {} entries retrieved", rows.len());
 
-            Ok(EncryptedEntries::from(rows))
-        })
-        .await?)
+                Ok(EncryptedEntries::from(rows))
+            })
+            .await?)
     }
 }
