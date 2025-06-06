@@ -1,5 +1,7 @@
-use cosmian_findex_memories::RedisMemoryError;
-use cosmian_findex_memories::reexport::cosmian_findex::{Address, MemoryADT};
+use cosmian_findex_memories::{
+    RedisMemoryError,
+    reexport::cosmian_findex::{Address, MemoryADT},
+};
 use cosmian_findex_structs::SERVER_ADDRESS_LENGTH;
 
 use super::Redis;
