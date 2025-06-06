@@ -6,9 +6,7 @@ use url::Url;
 #[cfg(test)]
 use variant_count::VariantCount;
 
-use crate::{config::params::DbParams, error::result::FResult, findex_server_error};
-
-pub(crate) const DEFAULT_SQLITE_PATH: &str = "./sqlite-data.db";
+pub(crate) const DEFAULT_SQLITE_PATH: &str = "../../target/sqlite-data.db";
 
 #[cfg_attr(test, derive(VariantCount))] // Used only in some tests to make sure they stay up to date after a new database type is added
 #[derive(ValueEnum, Clone, Deserialize, Serialize, PartialEq, Eq, Debug)]

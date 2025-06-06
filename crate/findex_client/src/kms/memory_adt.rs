@@ -1,6 +1,6 @@
 use std::iter::once;
 
-use cosmian_findex::{ADDRESS_LENGTH, Address, MemoryADT};
+use cosmian_findex_memories::reexport::cosmian_findex::{ADDRESS_LENGTH, Address, MemoryADT};
 use tracing::trace;
 
 use super::KmsEncryptionLayer;

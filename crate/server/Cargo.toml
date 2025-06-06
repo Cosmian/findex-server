@@ -44,7 +44,6 @@ clap = { workspace = true, features = [
   "cargo",
 ] }
 cosmian_crypto_core = { workspace = true }
-cosmian_findex = { workspace = true }
 cosmian_findex_memories = { workspace = true, features = [
   "redis-mem",
   "sqlite-mem",

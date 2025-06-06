@@ -52,7 +52,7 @@ mod findex;
 mod permissions;
 mod uuids;
 
-use cosmian_findex::ADDRESS_LENGTH;
+use cosmian_findex_memories::reexport::cosmian_findex::ADDRESS_LENGTH;
 pub use encrypted_entries::EncryptedEntries;
 pub use error::StructsError;
 pub use findex::{
@@ -70,5 +70,5 @@ pub const CUSTOM_WORD_LENGTH: usize = 200;
 pub const SERVER_ADDRESS_LENGTH: usize = ADDRESS_LENGTH + UID_LENGTH;
 
 pub mod reexport {
-    pub use cosmian_findex;
+    pub use cosmian_findex_memories::reexport::cosmian_findex;
 }

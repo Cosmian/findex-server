@@ -4,7 +4,7 @@
 //! It implements an abstraction layer that allows the application to work with any implemented DB backend.
 //! and use databases interchangeably through a common API defined by various traits.
 use async_trait::async_trait;
-use cosmian_findex::{Address, MemoryADT};
+use cosmian_findex_memories::reexport::cosmian_findex::{Address, MemoryADT};
 use cosmian_findex_structs::{
     CUSTOM_WORD_LENGTH, EncryptedEntries, Permission, Permissions, SERVER_ADDRESS_LENGTH, Uuids,
 };

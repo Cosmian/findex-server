@@ -18,10 +18,10 @@ doctest = false
 [dependencies]
 base64 = { workspace = true }
 cosmian_crypto_core = { workspace = true, features = ["ser"] }
-cosmian_findex = { workspace = true }
+cosmian_findex_memories = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }
 uuid = { workspace = true }
 
 [dev-dependencies]
-cosmian_findex = { workspace = true, features = ["test-utils"] }
+cosmian_findex_memories = { workspace = true }

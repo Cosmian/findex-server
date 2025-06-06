@@ -1,6 +1,6 @@
 use async_trait::async_trait;
-use cosmian_findex::Address;
 use cosmian_findex_memories::RedisMemory;
+use cosmian_findex_memories::reexport::cosmian_findex::Address;
 use cosmian_findex_structs::SERVER_ADDRESS_LENGTH;
 use redis::aio::ConnectionManager;
 use tracing::info;
