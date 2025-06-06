@@ -1,4 +1,4 @@
-use cosmian_findex::{ADDRESS_LENGTH, Address, MemoryADT};
+use cosmian_findex_memories::reexport::cosmian_findex::{ADDRESS_LENGTH, Address, MemoryADT};
 use cosmian_kms_cli::reexport::cosmian_kms_client::{
     cosmian_kmip::kmip_0::{
         kmip_messages::{RequestMessage, RequestMessageBatchItemVersioned, RequestMessageHeader},

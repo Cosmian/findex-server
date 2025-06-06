@@ -24,4 +24,4 @@ tracing = { workspace = true }
 uuid = { workspace = true }
 
 [dev-dependencies]
-cosmian_findex_memories = { workspace = true }
+cosmian_findex_memories = { workspace = true, features = ["test-utils"] }

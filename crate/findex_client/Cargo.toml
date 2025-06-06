@@ -20,6 +20,7 @@ non-fips = ["cosmian_kms_cli/non-fips"]
 base64 = { workspace = true }
 cosmian_findex = { workspace = true, features = ["redis-mem"] }
 cosmian_findex_structs = { path = "../structs" }
+cosmian_findex_memories = { workspace = true }
 cosmian_http_client = { workspace = true }
 cosmian_kms_cli = { workspace = true }
 cosmian_logger = { workspace = true }

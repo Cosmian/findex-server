@@ -1,6 +1,6 @@
 use std::io;
 
-use cosmian_findex::{ADDRESS_LENGTH, Address};
+use cosmian_findex_memories::reexport::cosmian_findex::{ADDRESS_LENGTH, Address};
 use cosmian_findex_structs::StructsError;
 use cosmian_kms_cli::reexport::cosmian_kms_client::{KmsClientError, cosmian_kmip::KmipError};
 use thiserror::Error;
@@ -14,7 +14,9 @@ pub enum ClientError {
     #[error("REST Request Failed: {0}")]
     RequestFailed(String),
     #[error(transparent)]
-    FindexError(#[from] cosmian_findex::Error<Address<ADDRESS_LENGTH>>),
+    FindexError(
+        #[from] cosmian_findex_memories::reexport::cosmian_findex::Error<Address<ADDRESS_LENGTH>>,
+    ),
     #[error(transparent)]
     StructsError(#[from] StructsError),
     #[error(transparent)]

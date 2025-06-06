@@ -53,7 +53,7 @@ mod findex_tests {
         let mut word = [0_u8; WORD_LENGTH];
         rng.fill_bytes(&mut word[..]);
 
-        let guard_some: Guard<WORD_LENGTH> = Guard(address1, Some(word));
+        let guard_some: Guard<{ WORD_LENGTH }> = Guard(address1, Some(word));
         let serialized_some = guard_some.serialize().expect("Serialization failed");
         let deserialized_some =
             Guard::deserialize(&serialized_some).expect("Deserialization failed");
@@ -64,7 +64,7 @@ mod findex_tests {
         );
 
         let address2: Address<ADDRESS_LENGTH> = Address::random(&mut rng);
-        let guard_none: Guard<WORD_LENGTH> = Guard(address2, None);
+        let guard_none: Guard<{ WORD_LENGTH }> = Guard(address2, None);
 
         let serialized_none = guard_none.serialize().expect("Serialization failed");
         let deserialized_none =

@@ -59,7 +59,7 @@ pub use kms::KmsEncryptionLayer;
 pub use rest_client::RestClient;
 
 pub mod reexport {
-    pub use cosmian_findex;
+    pub use cosmian_findex_memories::reexport::cosmian_findex;
     pub use cosmian_findex_structs;
     pub use cosmian_http_client;
 }
