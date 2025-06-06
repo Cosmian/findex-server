@@ -1,8 +1,9 @@
 use async_trait::async_trait;
-use cosmian_findex_memories::RedisMemory;
-use cosmian_findex_memories::reexport::cosmian_findex::Address;
+use cosmian_findex_memories::{
+    RedisMemory,
+    reexport::{cosmian_findex::Address, redis::aio::ConnectionManager},
+};
 use cosmian_findex_structs::SERVER_ADDRESS_LENGTH;
-use redis::aio::ConnectionManager;
 use tracing::info;
 
 use crate::{
@@ -28,18 +29,20 @@ impl<const WORD_LENGTH: usize> InstantiationTrait for Redis<WORD_LENGTH> {
                 format!("{db_type:?}"),
             ));
         }
-        let client = redis::Client::open(db_url)?;
+        let client = cosmian_findex_memories::reexport::redis::Client::open(db_url)?;
         let mut manager = client.get_connection_manager().await?;
 
         if clear_database {
             info!("Warning: proceeding to clear the database, this operation is irreversible.");
-            let deletion_result: String = redis::cmd("FLUSHDB").query_async(&mut manager).await?;
+            let deletion_result: String = cosmian_findex_memories::reexport::redis::cmd("FLUSHDB")
+                .query_async(&mut manager)
+                .await?;
             if deletion_result.as_str() == "OK" {
                 info!("Database cleared");
             } else {
                 return Err(crate::database::DatabaseError::RedisCoreError(
-                    redis::RedisError::from((
-                        redis::ErrorKind::ResponseError,
+                    cosmian_findex_memories::reexport::redis::RedisError::from((
+                        cosmian_findex_memories::reexport::redis::ErrorKind::ResponseError,
                         "Failed to clear the database",
                         deletion_result,
                     )),

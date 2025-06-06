@@ -6,6 +6,7 @@ use url::Url;
 #[cfg(test)]
 use variant_count::VariantCount;
 
+use crate::{config::DbParams, error::result::FResult, findex_server_error};
 pub(crate) const DEFAULT_SQLITE_PATH: &str = "../../target/sqlite-data.db";
 
 #[cfg_attr(test, derive(VariantCount))] // Used only in some tests to make sure they stay up to date after a new database type is added
@@ -129,9 +130,9 @@ fn ensure_url(database_url: &str, alternate_env_variable: &str) -> FResult<Url> 
 fn ensure_sqlite_db(database_url: &str, alternate_env_variable: &str) -> FResult<PathBuf> {
     let path = &retrieve_database_location(database_url, alternate_env_variable)?;
     drop(
-        async_sqlite::rusqlite::Connection::open(path).map_err(|e| {
-            findex_server_error!("Failed to open SQLite database at {}: {}", path, e)
-        })?,
+        cosmian_findex_memories::reexport::async_sqlite::rusqlite::Connection::open(path).map_err(
+            |e| findex_server_error!("Failed to open SQLite database at {}: {}", path, e),
+        )?,
     );
     Ok(PathBuf::from(path))
 }

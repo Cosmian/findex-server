@@ -1,6 +1,11 @@
-use async_sqlite::{Pool, PoolBuilder};
 use async_trait::async_trait;
-use cosmian_findex::{Address, SqliteMemory};
+use cosmian_findex_memories::{
+    SqliteMemory,
+    reexport::{
+        async_sqlite::{Pool, PoolBuilder},
+        cosmian_findex::Address,
+    },
+};
 use cosmian_findex_structs::SERVER_ADDRESS_LENGTH;
 use tracing::warn;
 

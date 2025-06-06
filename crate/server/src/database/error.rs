@@ -11,10 +11,10 @@ pub(crate) enum DatabaseError {
     SqliteFindexMemoryError(#[from] SqliteMemoryError),
 
     #[error("Redis connection error: {0}")]
-    RedisCoreError(#[from] redis::RedisError),
+    RedisCoreError(#[from] cosmian_findex_memories::reexport::redis::RedisError),
 
     #[error("SQLite connection error: {0}")]
-    AsyncSqliteCoreError(#[from] async_sqlite::Error),
+    AsyncSqliteCoreError(#[from] cosmian_findex_memories::reexport::async_sqlite::Error),
     // maps to the cases when the server expects a specific type of data and the database returns
     // something else that's not convertible to the expected type
     #[error("Database returned invalid data : {0}")]

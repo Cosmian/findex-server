@@ -1,6 +1,6 @@
 use async_trait::async_trait;
+use cosmian_findex_memories::reexport::redis::{AsyncCommands, RedisError, aio::ConnectionManager};
 use cosmian_findex_structs::{CUSTOM_WORD_LENGTH, Permission, Permissions};
-use redis::{AsyncCommands, RedisError, aio::ConnectionManager};
 use tracing::{instrument, trace};
 use uuid::Uuid;
 
