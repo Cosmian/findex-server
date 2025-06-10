@@ -58,6 +58,7 @@ actix-rt = "2.10"
 actix-server = { workspace = true }
 assert_cmd = "2.0"
 const-oid = { version = "0.9", features = ["db"] }
+cosmian_findex_memories = { workspace = true, features = ["test-utils"] }
 lazy_static = "1.5"
 openssl = { workspace = true }
 predicates = "3.1"
