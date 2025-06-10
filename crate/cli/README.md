@@ -1,7 +1,6 @@
 # Cosmian CLI
 
-KMS or Findex server can be managed using the `cosmian` command line interface (CLI) or its graphical
-client `cosmian_gui`.
+KMS or Findex server can be managed using the `cosmian` command line interface (CLI).
 
 ## Build
 
