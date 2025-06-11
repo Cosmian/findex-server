@@ -120,6 +120,14 @@ pub struct TestsContext {
 }
 
 impl TestsContext {
+    pub fn get_owner_client(&self) -> RestClient {
+        RestClient::new(self.owner_client_conf.clone()).expect("Can't create a Findex owner client")
+    }
+
+    pub fn get_user_client(&self) -> RestClient {
+        RestClient::new(self.user_client_conf.clone()).expect("Can't create a Findex user client")
+    }
+
     pub async fn stop_server(self) -> Result<(), ClientError> {
         self.server_handle.stop(false).await;
         self.thread_handle
