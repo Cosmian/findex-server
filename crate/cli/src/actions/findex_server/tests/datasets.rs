@@ -58,7 +58,6 @@ async fn dataset_get_entries(
 pub(crate) async fn test_datasets() -> FindexCliResult<()> {
     log_init(None);
     let ctx = start_default_test_findex_server().await;
-    let owner_rest_client = RestClient::new(ctx.owner_client_conf.clone())?;
 
     let index_id = Uuid::new_v4();
 
@@ -75,27 +74,22 @@ pub(crate) async fn test_datasets() -> FindexCliResult<()> {
     let uuids: Vec<Uuid> = encrypted_entries.iter().map(|(uuid, _)| *uuid).collect();
 
     // Add entries to the dataset
-    dataset_add_entries(
-        owner_rest_client.clone(),
-        &index_id,
-        encrypted_entries.clone(),
-    )
-    .await?;
+    dataset_add_entries(ctx.get_owner_client(), &index_id, encrypted_entries.clone()).await?;
 
     // Get the added entries from the dataset
     let added_entries =
-        dataset_get_entries(owner_rest_client.clone(), &index_id, uuids.clone()).await?;
+        dataset_get_entries(ctx.get_owner_client(), &index_id, uuids.clone()).await?;
     assert_eq!(added_entries.len(), entries_number);
 
     dataset_delete_entries(
-        owner_rest_client.clone(),
+        ctx.get_owner_client(),
         &index_id,
         added_entries.get_uuids().deref().to_owned(),
     )
     .await?;
 
     // Get the added entries from the dataset
-    let deleted_entries = dataset_get_entries(owner_rest_client, &index_id, uuids).await?;
+    let deleted_entries = dataset_get_entries(ctx.get_owner_client(), &index_id, uuids).await?;
     assert_eq!(deleted_entries.len(), 0);
 
     Ok(())
