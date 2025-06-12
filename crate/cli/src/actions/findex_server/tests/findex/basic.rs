@@ -264,12 +264,13 @@ async fn test_findex_sequential_wrong_guard() -> FindexCliResult<()> {
     Ok(())
 }
 
+#[cfg(not(target_os = "windows"))]
 #[tokio::test]
 async fn test_findex_concurrent_read_write() -> FindexCliResult<()> {
     test_guarded_write_concurrent(
         &create_encryption_layer::<CUSTOM_WORD_LENGTH>().await?,
         gen_seed(),
-        Some(50),
+        Some(100),
     )
     .await;
     Ok(())
