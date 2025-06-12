@@ -10,7 +10,7 @@ All notable changes to this project will be documented in this file.
 - Semaphore for CLI parallelism ([#46](https://github.com/Cosmian/findex-server/pull/46))
 - Parallelism for write only ([#50](https://github.com/Cosmian/findex-server/pull/50))
 - Delegate encryption to KMS writing a custom encryption layer ([#47](https://github.com/Cosmian/findex-server/pull/47))
-- Move all CLI relative crates on <https://github.com/Cosmian/client> ([#59](https://github.com/Cosmian/findex-server/pull/59))
+- Move all CLI relative crates on <https://github.com/Cosmian/cli> ([#59](https://github.com/Cosmian/findex-server/pull/59))
 
 ### 🐛 Bug Fixes
 
