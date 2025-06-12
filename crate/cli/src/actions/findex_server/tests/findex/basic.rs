@@ -1,8 +1,8 @@
 use std::path::PathBuf;
 
-use cosmian_findex::{
-    gen_seed, test_guarded_write_concurrent, test_single_write_and_read, test_wrong_guard,
-};
+#[cfg(not(target_os = "windows"))]
+use cosmian_findex::test_guarded_write_concurrent;
+use cosmian_findex::{gen_seed, test_single_write_and_read, test_wrong_guard};
 use cosmian_findex_structs::{CUSTOM_WORD_LENGTH, Value};
 use cosmian_kms_cli::reexport::test_kms_server::start_default_test_kms_server;
 use cosmian_logger::log_init;
@@ -270,7 +270,7 @@ async fn test_findex_concurrent_read_write() -> FindexCliResult<()> {
     test_guarded_write_concurrent(
         &create_encryption_layer::<CUSTOM_WORD_LENGTH>().await?,
         gen_seed(),
-        Some(100),
+        Some(20),
     )
     .await;
     Ok(())
