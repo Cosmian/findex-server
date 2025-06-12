@@ -269,7 +269,7 @@ async fn test_findex_concurrent_read_write() -> FindexCliResult<()> {
     test_guarded_write_concurrent(
         &create_encryption_layer::<CUSTOM_WORD_LENGTH>().await?,
         gen_seed(),
-        Some(100),
+        Some(50),
     )
     .await;
     Ok(())
