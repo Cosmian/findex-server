@@ -14,7 +14,7 @@ description = "Cosmian Findex REST Client"
 doctest = false
 
 [features]
-fips = ["cosmian_kms_cli/fips"]
+non-fips = ["cosmian_kms_cli/non-fips"]
 
 [dependencies]
 base64 = { workspace = true }

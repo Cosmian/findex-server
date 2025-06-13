@@ -5,7 +5,7 @@ members = [
   "crate/findex_client",
   "crate/structs",
   "crate/server",
-  "crate/test_findex_server"
+  "crate/test_findex_server",
 ]
 resolver = "2"
 
@@ -56,7 +56,7 @@ cosmian_findex = { git = "https://github.com/Cosmian/findex", rev = "08b3989f800
   "test-utils",
 ] }
 cosmian_http_client = "0.2"
-cosmian_kms_cli = "5.3"
+cosmian_kms_cli = { git = "https://github.com/Cosmian/kms", branch = "invert_fips_feature" }
 cosmian_logger = "0.2"
 der = { version = "0.7", default-features = false }
 hex = "0.4"
