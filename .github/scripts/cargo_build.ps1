@@ -19,12 +19,12 @@ function BuildProject {
     $env:RUST_LOG = "cosmian_findex_cli=error,cosmian_findex_server=error,test_findex_server=error"
     $env:FINDEX_TEST_DB = "sqlite-findex"
     if ($BuildType -eq "release") {
-        cargo build -p cosmian_findex_server -p cosmian_findex_cli --release --target x86_64-pc-windows-msvc
-        cargo  test -p cosmian_findex_server -p cosmian_findex_cli --target x86_64-pc-windows-msvc -- --nocapture --skip kms --skip hsm --skip redis
+        cargo build --features "non-fips" -p cosmian_findex_server -p cosmian_findex_cli --release --target x86_64-pc-windows-msvc
+        cargo  test --features "non-fips" -p cosmian_findex_server -p cosmian_findex_cli --target x86_64-pc-windows-msvc -- --nocapture --skip kms --skip hsm --skip redis
     }
     else {
-        cargo build -p cosmian_findex_server -p cosmian_findex_cli --target x86_64-pc-windows-msvc
-        cargo test -p cosmian_findex_server -p cosmian_findex_cli --target x86_64-pc-windows-msvc -- --nocapture --skip kms --skip hsm --skip redis
+        cargo build --features "non-fips" -p cosmian_findex_server -p cosmian_findex_cli --target x86_64-pc-windows-msvc
+        cargo  test --features "non-fips" -p cosmian_findex_server -p cosmian_findex_cli --target x86_64-pc-windows-msvc -- --nocapture --skip kms --skip hsm --skip redis
     }
 
     # Check dynamic links
