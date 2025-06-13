@@ -37,8 +37,6 @@ clap = { workspace = true, features = [
   "cargo",
 ] }
 cosmian_config_utils = { workspace = true }
-cosmian_cover_crypt = { workspace = true }
-cosmian_crypto_core = { workspace = true }
 cosmian_findex = { workspace = true, features = ["redis-mem", "test-utils"] }
 cosmian_findex_client = { path = "../findex_client" }
 cosmian_findex_structs = { path = "../structs" }

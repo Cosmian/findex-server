@@ -1326,8 +1326,6 @@ dependencies = [
  "clap",
  "const-oid",
  "cosmian_config_utils",
- "cosmian_cover_crypt",
- "cosmian_crypto_core 10.1.0",
  "cosmian_findex 7.1.0",
  "cosmian_findex_client",
  "cosmian_findex_structs",
@@ -1356,7 +1354,6 @@ name = "cosmian_findex_client"
 version = "0.3.0"
 dependencies = [
  "base64 0.22.1",
- "cosmian_crypto_core 10.1.0",
  "cosmian_findex 7.1.0",
  "cosmian_findex_structs",
  "cosmian_http_client",
@@ -1440,7 +1437,7 @@ dependencies = [
 [[package]]
 name = "cosmian_kmip"
 version = "5.3.3"
-source = "git+https://github.com/Cosmian/kms?branch=invert_fips_feature#63ef2a368fad508ad76e11cb0ea56b0ec35e6428"
+source = "git+https://github.com/Cosmian/kms?branch=invert_fips_feature#f9d19ff8458ec27ec32ddf247ded6f4db4fa3f4e"
 dependencies = [
  "bitflags 2.9.0",
  "cosmian_logger 0.1.1",
@@ -1461,7 +1458,7 @@ dependencies = [
 [[package]]
 name = "cosmian_kms_access"
 version = "5.3.3"
-source = "git+https://github.com/Cosmian/kms?branch=invert_fips_feature#63ef2a368fad508ad76e11cb0ea56b0ec35e6428"
+source = "git+https://github.com/Cosmian/kms?branch=invert_fips_feature#f9d19ff8458ec27ec32ddf247ded6f4db4fa3f4e"
 dependencies = [
  "cosmian_kmip",
  "serde",
@@ -1470,7 +1467,7 @@ dependencies = [
 [[package]]
 name = "cosmian_kms_base_hsm"
 version = "5.3.3"
-source = "git+https://github.com/Cosmian/kms?branch=invert_fips_feature#63ef2a368fad508ad76e11cb0ea56b0ec35e6428"
+source = "git+https://github.com/Cosmian/kms?branch=invert_fips_feature#f9d19ff8458ec27ec32ddf247ded6f4db4fa3f4e"
 dependencies = [
  "async-trait",
  "cosmian_kms_interfaces",
@@ -1487,13 +1484,11 @@ dependencies = [
 [[package]]
 name = "cosmian_kms_cli"
 version = "5.3.3"
-source = "git+https://github.com/Cosmian/kms?branch=invert_fips_feature#63ef2a368fad508ad76e11cb0ea56b0ec35e6428"
+source = "git+https://github.com/Cosmian/kms?branch=invert_fips_feature#f9d19ff8458ec27ec32ddf247ded6f4db4fa3f4e"
 dependencies = [
  "base64 0.22.1",
  "clap",
  "cosmian_config_utils",
- "cosmian_cover_crypt",
- "cosmian_crypto_core 10.1.0",
  "cosmian_kmip",
  "cosmian_kms_client",
  "cosmian_kms_crypto",
@@ -1522,7 +1517,7 @@ dependencies = [
 [[package]]
 name = "cosmian_kms_client"
 version = "5.3.3"
-source = "git+https://github.com/Cosmian/kms?branch=invert_fips_feature#63ef2a368fad508ad76e11cb0ea56b0ec35e6428"
+source = "git+https://github.com/Cosmian/kms?branch=invert_fips_feature#f9d19ff8458ec27ec32ddf247ded6f4db4fa3f4e"
 dependencies = [
  "cosmian_crypto_core 10.1.0",
  "cosmian_http_client",
@@ -1540,7 +1535,7 @@ dependencies = [
 [[package]]
 name = "cosmian_kms_client_utils"
 version = "5.3.3"
-source = "git+https://github.com/Cosmian/kms?branch=invert_fips_feature#63ef2a368fad508ad76e11cb0ea56b0ec35e6428"
+source = "git+https://github.com/Cosmian/kms?branch=invert_fips_feature#f9d19ff8458ec27ec32ddf247ded6f4db4fa3f4e"
 dependencies = [
  "base64 0.22.1",
  "clap",
@@ -1559,7 +1554,7 @@ dependencies = [
 [[package]]
 name = "cosmian_kms_crypto"
 version = "5.3.3"
-source = "git+https://github.com/Cosmian/kms?branch=invert_fips_feature#63ef2a368fad508ad76e11cb0ea56b0ec35e6428"
+source = "git+https://github.com/Cosmian/kms?branch=invert_fips_feature#f9d19ff8458ec27ec32ddf247ded6f4db4fa3f4e"
 dependencies = [
  "aes-gcm-siv",
  "argon2",
@@ -1584,7 +1579,7 @@ dependencies = [
 [[package]]
 name = "cosmian_kms_interfaces"
 version = "5.3.3"
-source = "git+https://github.com/Cosmian/kms?branch=invert_fips_feature#63ef2a368fad508ad76e11cb0ea56b0ec35e6428"
+source = "git+https://github.com/Cosmian/kms?branch=invert_fips_feature#f9d19ff8458ec27ec32ddf247ded6f4db4fa3f4e"
 dependencies = [
  "async-trait",
  "cosmian_kmip",
@@ -1599,7 +1594,7 @@ dependencies = [
 [[package]]
 name = "cosmian_kms_server"
 version = "5.3.3"
-source = "git+https://github.com/Cosmian/kms?branch=invert_fips_feature#63ef2a368fad508ad76e11cb0ea56b0ec35e6428"
+source = "git+https://github.com/Cosmian/kms?branch=invert_fips_feature#f9d19ff8458ec27ec32ddf247ded6f4db4fa3f4e"
 dependencies = [
  "actix-cors",
  "actix-files",
@@ -1615,13 +1610,7 @@ dependencies = [
  "base64 0.22.1",
  "chrono",
  "clap",
- "cloudproof_findex",
- "cosmian_cover_crypt",
- "cosmian_crypto_core 10.1.0",
- "cosmian_kmip",
  "cosmian_kms_access",
- "cosmian_kms_crypto",
- "cosmian_kms_interfaces",
  "cosmian_kms_server_database",
  "cosmian_logger 0.2.0",
  "dotenvy",
@@ -1655,11 +1644,10 @@ dependencies = [
 [[package]]
 name = "cosmian_kms_server_database"
 version = "5.3.3"
-source = "git+https://github.com/Cosmian/kms?branch=invert_fips_feature#63ef2a368fad508ad76e11cb0ea56b0ec35e6428"
+source = "git+https://github.com/Cosmian/kms?branch=invert_fips_feature#f9d19ff8458ec27ec32ddf247ded6f4db4fa3f4e"
 dependencies = [
  "async-trait",
  "cloudproof_findex",
- "cosmian_crypto_core 10.1.0",
  "cosmian_kmip",
  "cosmian_kms_crypto",
  "cosmian_kms_interfaces",
@@ -3275,7 +3263,7 @@ dependencies = [
 [[package]]
 name = "kmip-derive"
 version = "5.3.3"
-source = "git+https://github.com/Cosmian/kms?branch=invert_fips_feature#63ef2a368fad508ad76e11cb0ea56b0ec35e6428"
+source = "git+https://github.com/Cosmian/kms?branch=invert_fips_feature#f9d19ff8458ec27ec32ddf247ded6f4db4fa3f4e"
 dependencies = [
  "quote",
  "syn 2.0.100",
@@ -4265,7 +4253,7 @@ dependencies = [
 [[package]]
 name = "proteccio_pkcs11_loader"
 version = "5.3.3"
-source = "git+https://github.com/Cosmian/kms?branch=invert_fips_feature#63ef2a368fad508ad76e11cb0ea56b0ec35e6428"
+source = "git+https://github.com/Cosmian/kms?branch=invert_fips_feature#f9d19ff8458ec27ec32ddf247ded6f4db4fa3f4e"
 dependencies = [
  "cosmian_kms_base_hsm",
  "cosmian_kms_interfaces",
@@ -5580,7 +5568,7 @@ dependencies = [
 [[package]]
 name = "test_kms_server"
 version = "5.3.3"
-source = "git+https://github.com/Cosmian/kms?branch=invert_fips_feature#63ef2a368fad508ad76e11cb0ea56b0ec35e6428"
+source = "git+https://github.com/Cosmian/kms?branch=invert_fips_feature#f9d19ff8458ec27ec32ddf247ded6f4db4fa3f4e"
 dependencies = [
  "actix-server",
  "cosmian_kms_client",
@@ -6148,7 +6136,7 @@ checksum = "b6c140620e7ffbb22c2dee59cafe6084a59b5ffc27a8859a5f0d494b5d52b6be"
 [[package]]
 name = "utimaco_pkcs11_loader"
 version = "5.3.3"
-source = "git+https://github.com/Cosmian/kms?branch=invert_fips_feature#63ef2a368fad508ad76e11cb0ea56b0ec35e6428"
+source = "git+https://github.com/Cosmian/kms?branch=invert_fips_feature#f9d19ff8458ec27ec32ddf247ded6f4db4fa3f4e"
 dependencies = [
  "cosmian_kms_base_hsm",
  "cosmian_kms_interfaces",

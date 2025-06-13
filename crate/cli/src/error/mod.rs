@@ -11,6 +11,8 @@ use cosmian_findex_client::{
         cosmian_http_client::HttpClientError,
     },
 };
+#[cfg(feature = "non-fips")]
+use cosmian_kms_cli::reexport::cosmian_kms_crypto::reexport::cosmian_cover_crypt;
 use cosmian_kms_cli::{
     error::KmsCliError,
     reexport::{
@@ -41,6 +43,7 @@ pub enum FindexCliError {
     Conversion(String),
     #[error(transparent)]
     ConfigUtilsError(#[from] ConfigUtilsError),
+    #[cfg(feature = "non-fips")]
     #[error(transparent)]
     CovercryptError(#[from] cosmian_cover_crypt::Error),
     #[error(transparent)]
