@@ -151,7 +151,6 @@ impl<
 mod tests {
     use std::sync::Arc;
 
-    use cosmian_crypto_core::{CsRng, Sampling, reexport::rand_core::SeedableRng};
     use cosmian_findex::{
         InMemory, gen_seed, test_guarded_write_concurrent, test_single_write_and_read,
         test_wrong_guard,
@@ -164,6 +163,9 @@ mod tests {
                 extra::tagging::EMPTY_TAGS, kmip_types::CryptographicAlgorithm,
                 requests::symmetric_key_create_request,
             },
+        },
+        cosmian_kms_crypto::reexport::cosmian_crypto_core::{
+            CsRng, Sampling, reexport::rand_core::SeedableRng,
         },
         test_kms_server::start_default_test_kms_server,
     };

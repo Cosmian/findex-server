@@ -14,11 +14,10 @@ description = "Cosmian Findex REST Client"
 doctest = false
 
 [features]
-fips = ["cosmian_kms_cli/fips"]
+non-fips = ["cosmian_kms_cli/non-fips"]
 
 [dependencies]
 base64 = { workspace = true }
-cosmian_crypto_core = { workspace = true }
 cosmian_findex = { workspace = true, features = ["redis-mem"] }
 cosmian_findex_structs = { path = "../structs" }
 cosmian_http_client = { workspace = true }

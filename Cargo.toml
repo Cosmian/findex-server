@@ -5,7 +5,7 @@ members = [
   "crate/findex_client",
   "crate/structs",
   "crate/server",
-  "crate/test_findex_server"
+  "crate/test_findex_server",
 ]
 resolver = "2"
 
@@ -48,7 +48,6 @@ async-sqlite = { version = "0.4" }
 base64 = "0.22"
 clap = { version = "4.5", default-features = false }
 cosmian_config_utils = "0.2"
-cosmian_cover_crypt = "15.0"
 cosmian_crypto_core = { version = "10.1", default-features = false }
 cosmian_findex = { git = "https://github.com/Cosmian/findex", rev = "08b3989f800b26b9ec3093f6f1b52ee0f739835e", features = [
   "redis-mem",
@@ -56,7 +55,7 @@ cosmian_findex = { git = "https://github.com/Cosmian/findex", rev = "08b3989f800
   "test-utils",
 ] }
 cosmian_http_client = "0.2"
-cosmian_kms_cli = "5.3"
+cosmian_kms_cli = { git = "https://github.com/Cosmian/kms", branch = "develop" }
 cosmian_logger = "0.2"
 der = { version = "0.7", default-features = false }
 hex = "0.4"

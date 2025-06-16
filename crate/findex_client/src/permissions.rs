@@ -1,5 +1,5 @@
-use cosmian_crypto_core::bytes_ser_de::Serializable;
 use cosmian_findex_structs::{Permission, Permissions};
+use cosmian_kms_cli::reexport::cosmian_kms_crypto::reexport::cosmian_crypto_core::bytes_ser_de::Serializable;
 use tracing::{instrument, trace};
 use uuid::Uuid;
 

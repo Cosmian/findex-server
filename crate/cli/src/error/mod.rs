@@ -13,14 +13,7 @@ use cosmian_findex_client::{
 };
 use cosmian_kms_cli::{
     error::KmsCliError,
-    reexport::{
-        cosmian_kmip::KmipError,
-        cosmian_kms_client::{
-            KmsClientError, cosmian_kmip::ttlv::TtlvError,
-            reexport::cosmian_kms_client_utils::error::UtilsError,
-        },
-        cosmian_kms_crypto::CryptoError,
-    },
+    reexport::{cosmian_kmip::KmipError, cosmian_kms_client::KmsClientError},
 };
 use thiserror::Error;
 
@@ -42,69 +35,29 @@ pub enum FindexCliError {
     #[error(transparent)]
     ConfigUtilsError(#[from] ConfigUtilsError),
     #[error(transparent)]
-    CovercryptError(#[from] cosmian_cover_crypt::Error),
-    #[error(transparent)]
-    CryptoError(#[from] CryptoError),
-    #[error(transparent)]
     CsvError(#[from] csv::Error),
     #[error("{0}")]
     Default(String),
-    #[error(transparent)]
-    DerError(#[from] der::Error),
     #[error(transparent)]
     Findex(#[from] cosmian_findex::Error<Address<ADDRESS_LENGTH>>),
     #[error(transparent)]
     FindexClientConfig(#[from] ClientError),
     #[error(transparent)]
-    FmtError(#[from] std::fmt::Error),
-    #[error(transparent)]
-    FromHexError(#[from] hex::FromHexError),
-    #[error(transparent)]
-    FromUtf8Error(#[from] std::string::FromUtf8Error),
-    #[error("Error interacting with Gmail API: {0}")]
-    GmailApiError(String),
-    #[error(transparent)]
     HttpClientError(#[from] HttpClientError),
-    #[error("Inconsistent operation: {0}")]
-    InconsistentOperation(String),
-    #[error("Invalid Request: {0}")]
-    InvalidRequest(String),
     #[error(transparent)]
     IoError(#[from] std::io::Error),
-    #[error("Item not found: {0}")]
-    ItemNotFound(String),
     #[error(transparent)]
     KmipError(#[from] KmipError),
     #[error(transparent)]
     KmsClientError(#[from] KmsClientError),
     #[error(transparent)]
     KmsCliError(#[from] KmsCliError),
-    #[error("Not Supported: {0}")]
-    NotSupported(String),
-    #[error("Not Supported route: {0}")]
-    RouteNotFound(String),
-    #[error(transparent)]
-    SerdeJsonError(#[from] serde_json::Error),
-    #[error("Server error: {0}")]
-    ServerError(String),
     #[error(transparent)]
     StructsError(#[from] StructsError),
-    #[error(transparent)]
-    TryFromIntError(#[from] std::num::TryFromIntError),
-    #[error(transparent)]
-    TTLVError(#[from] TtlvError),
-    #[error(transparent)]
-    UrlParsing(#[from] url::ParseError),
-    #[error("invalid options: {0}")]
-    UserError(String),
     #[error(transparent)]
     Utf8Error(#[from] Utf8Error),
     #[error(transparent)]
     UuidError(#[from] uuid::Error),
-    #[error("Access denied: {0}")]
-    Unauthorized(String),
-    #[error(transparent)]
-    UtilsError(#[from] UtilsError),
 }
 
 /// Return early with an error if a condition is not satisfied.
