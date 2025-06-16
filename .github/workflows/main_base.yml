@@ -45,7 +45,7 @@ jobs:
       toolchain: ${{ inputs.toolchain }}
 
   build-tests:
-    uses: Cosmian/reusable_workflows/.github/workflows/build_all.yml@invert_fips_feature
+    uses: Cosmian/reusable_workflows/.github/workflows/build_all.yml@develop
     secrets: inherit
     with:
       toolchain: ${{ inputs.toolchain }}
