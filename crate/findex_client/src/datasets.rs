@@ -10,6 +10,9 @@ use crate::{
 };
 
 impl RestClient {
+    /// Add encrypted entries to a dataset.
+    /// # Errors
+    /// Returns an error if the request fails or if the response is not successful.
     #[instrument(ret(Display), err, skip_all, level = "trace")]
     pub async fn add_entries(
         &self,
@@ -31,6 +34,9 @@ impl RestClient {
         handle_status_code(response, &endpoint).await
     }
 
+    /// Delete entries from a dataset using their UUIDs.
+    /// # Errors
+    /// Returns an error if the request fails or if the response is not successful.
     #[instrument(ret(Display), err, skip(self), level = "trace")]
     pub async fn delete_entries(
         &self,
@@ -53,6 +59,9 @@ impl RestClient {
         handle_status_code(response, &endpoint).await
     }
 
+    /// Get entries from a dataset using their UUIDs.
+    /// # Errors
+    /// Returns an error if the request fails or if the response is not successful.
     #[instrument(ret(Display), err, skip(self), level = "trace")]
     pub async fn get_entries(
         &self,

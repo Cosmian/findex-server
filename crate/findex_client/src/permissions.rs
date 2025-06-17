@@ -9,6 +9,9 @@ use crate::{
 };
 
 impl RestClient {
+    /// Create a new index ID.
+    /// # Errors
+    /// Returns an error if the request fails or if the response is not successful.
     #[instrument(ret(Display), err, skip(self), level = "trace")]
     pub async fn create_index_id(&self) -> ClientResult<SuccessResponse> {
         let endpoint = "/create/index";
@@ -19,6 +22,9 @@ impl RestClient {
         handle_status_code(response, endpoint).await
     }
 
+    /// Set a permission for a user on an index.
+    /// # Errors
+    /// Returns an error if the request fails or if the response is not successful.
     #[instrument(ret(Display), err, skip(self), level = "trace")]
     pub async fn set_permission(
         &self,
@@ -34,6 +40,9 @@ impl RestClient {
         handle_status_code(response, &endpoint).await
     }
 
+    /// List all permissions for a user.
+    /// # Errors
+    /// Returns an error if the request fails or if the response is not successful.
     #[instrument(ret(Display), err, skip(self), level = "trace")]
     pub async fn list_permission(&self, user_id: &str) -> ClientResult<Permissions> {
         let endpoint = format!("/permission/list/{user_id}");
@@ -50,6 +59,9 @@ impl RestClient {
         Err(ClientError::RequestFailed(p))
     }
 
+    /// Revoke a permission for a user on an index.
+    /// # Errors
+    /// Returns an error if the request fails or if the response is not successful.
     #[instrument(ret(Display), err, skip(self), level = "trace")]
     pub async fn revoke_permission(
         &self,
