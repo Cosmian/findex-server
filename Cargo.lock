@@ -1323,7 +1323,7 @@ dependencies = [
  "clap",
  "const-oid",
  "cosmian_config_utils",
- "cosmian_findex 7.1.0",
+ "cosmian_findex 7.2.0",
  "cosmian_findex_client",
  "cosmian_findex_memories",
  "cosmian_findex_structs",
@@ -1349,7 +1349,8 @@ name = "cosmian_findex_client"
 version = "0.3.0"
 dependencies = [
  "base64 0.22.1",
- "cosmian_findex 7.1.0",
+ "cosmian_findex 7.2.0",
+ "cosmian_findex_memories",
  "cosmian_findex_structs",
  "cosmian_http_client",
  "cosmian_kms_cli",
@@ -1383,6 +1384,7 @@ dependencies = [
  "actix-tls",
  "actix-web",
  "alcoholic_jwt",
+ "async-sqlite",
  "async-trait",
  "chrono",
  "clap",
@@ -1443,7 +1445,7 @@ name = "cosmian_kmip"
 version = "5.3.3"
 source = "git+https://github.com/Cosmian/kms?branch=develop#cff8f98da59daa73fded0ab658388173236265c2"
 dependencies = [
- "bitflags 2.9.0",
+ "bitflags 2.9.1",
  "hex",
  "kmip-derive",
  "leb128",
@@ -5573,7 +5575,7 @@ dependencies = [
  "cosmian_findex_client",
  "cosmian_findex_server",
  "cosmian_logger",
- "criterion",
+ "criterion 0.5.1",
  "tokio",
  "tracing",
  "zeroize",

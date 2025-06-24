@@ -189,7 +189,7 @@ mod tests {
         generate_permission_tests,
     };
 
-    const SQLITE_TEST_DB_URL: &str = "../../sqlite-test";
+    const SQLITE_TEST_DB_URL: &str = "../../target/sqlite-test";
 
     // This function is used to create a new SQLite database for testing purposes.
     // In some slow filesystems, using only one database for all the tests can lead to
