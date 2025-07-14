@@ -22,7 +22,9 @@ impl<
     ) -> Result<Option<Self::Word>, Self::Error> {
         // Cryptographic operations being delegated to the KMS, it is better to
         // perform them in batch. Since permuted addresses are used as tweak in
-        // the AES-XTS encryption of the words, two batches are required.
+        // the AES-XTS encryption of the words, two batches are required. A
+        // third and final call is required to decrypt the guard value returned
+        // by the memory.
 
         trace!("guarded_write: {guard:?}, {bindings:?}");
 

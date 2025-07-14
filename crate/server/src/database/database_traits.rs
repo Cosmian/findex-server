@@ -42,17 +42,12 @@ pub(crate) trait DatasetsTrait: Sync + Send {
 }
 
 #[async_trait]
-pub(crate) trait InstantiationTrait: Sync + Send {
-    // The trait `InstantiationTrait` is a constructor trait, which means that
-    // we can not call the `instantiate` method with `&self` hence the need for this
-    // enum to know which type of database we are instantiating.
+pub(crate) trait InstantiationTrait: Sync + Send + Sized {
     async fn instantiate(
         db_type: DatabaseType,
         db_url: &str,
         clear_database: bool,
-    ) -> DatabaseResult<Self>
-    where
-        Self: Sized;
+    ) -> DatabaseResult<Self>;
 }
 #[allow(dead_code)] // false positive, used in crate/server/src/database/redis/mod.rs
 #[async_trait]

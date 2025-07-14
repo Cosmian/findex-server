@@ -11,8 +11,6 @@ use crate::{
 
 impl RestClient {
     /// Add encrypted entries to a dataset.
-    /// # Errors
-    /// Returns an error if the request fails or if the response is not successful.
     #[instrument(ret(Display), err, skip_all, level = "trace")]
     pub async fn add_entries(
         &self,
@@ -35,7 +33,6 @@ impl RestClient {
     }
 
     /// Delete entries from a dataset using their UUIDs.
-    /// # Errors
     /// Returns an error if the request fails or if the response is not successful.
     #[instrument(ret(Display), err, skip(self), level = "trace")]
     pub async fn delete_entries(
@@ -60,8 +57,6 @@ impl RestClient {
     }
 
     /// Get entries from a dataset using their UUIDs.
-    /// # Errors
-    /// Returns an error if the request fails or if the response is not successful.
     #[instrument(ret(Display), err, skip(self), level = "trace")]
     pub async fn get_entries(
         &self,
@@ -85,8 +80,10 @@ impl RestClient {
             let encrypted_entries = EncryptedEntries::deserialize(&response_bytes)?;
             return Ok(encrypted_entries);
         }
+
         // process error
-        let p = handle_error(&endpoint, response).await?;
-        Err(ClientError::RequestFailed(p))
+        Err(ClientError::RequestFailed(
+            handle_error(&endpoint, response).await?,
+        ))
     }
 }
