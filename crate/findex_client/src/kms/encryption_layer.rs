@@ -59,7 +59,7 @@ impl<
                 .iter()
                 .map(|c| {
                     <[u8; WORD_LENGTH]>::try_from(c.as_slice())
-                        .map_err(|_| ClientError::Default("wrong slice length".to_string()))
+                        .map_err(|e| ClientError::Default(format!("wrong slice length: {e}")))
                 })
                 .collect()
         } else {

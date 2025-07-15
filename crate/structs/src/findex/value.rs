@@ -1,4 +1,7 @@
-//! This module is a polyfill for the Value struct that was deleted from findex v7.0.0.
+//! A generic byte container for Findex data values.
+//!
+//! This module provides the [`Value`] struct, which serves as a type-safe wrapper
+//! around byte vectors for storing the values returned upon searching with Findex.
 
 use std::string::FromUtf8Error;
 
