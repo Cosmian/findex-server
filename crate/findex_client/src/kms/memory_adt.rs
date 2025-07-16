@@ -8,7 +8,7 @@ use crate::ClientError;
 
 impl<
     const WORD_LENGTH: usize,
-    Memory: MemoryADT<Address = Address<ADDRESS_LENGTH>, Word = [u8; WORD_LENGTH]>,
+    Memory: Send + Sync + MemoryADT<Address = Address<ADDRESS_LENGTH>, Word = [u8; WORD_LENGTH]>,
 > MemoryADT for KmsEncryptionLayer<WORD_LENGTH, Memory>
 {
     type Address = Address<ADDRESS_LENGTH>;
