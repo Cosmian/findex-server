@@ -150,11 +150,10 @@ mod tests {
             let initialization_script = format!(
                 "   PRAGMA synchronous = NORMAL;
                     PRAGMA journal_mode = WAL;
-                    CREATE TABLE IF NOT EXISTS {} (
+                    CREATE TABLE IF NOT EXISTS {table_name} (
                         a BLOB PRIMARY KEY,
                         w BLOB NOT NULL
-                    );",
-                table_name
+                    );"
             );
 
             pool.conn(move |conn| conn.execute_batch(&initialization_script))
