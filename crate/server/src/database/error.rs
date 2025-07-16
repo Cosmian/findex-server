@@ -1,13 +1,15 @@
-use cosmian_findex::{RedisMemoryError, SqliteMemoryError};
+use cosmian_findex::RedisMemoryError;
 use thiserror::Error;
+
+use crate::database::sqlite::SqliteMemoryError;
 
 /// Wraps memory errors from different findex memories
 #[derive(Error, Debug)]
 pub(crate) enum DatabaseError {
-    #[error("Redis error: {0}")]
+    #[error("Redis memory implementation error: {0}")]
     RedisFindexMemoryError(#[from] RedisMemoryError),
 
-    #[error("SQLite error: {0}")]
+    #[error("SQLite memory implementation error: {0}")]
     SqliteFindexMemoryError(#[from] SqliteMemoryError),
 
     #[error("Redis connection error: {0}")]
