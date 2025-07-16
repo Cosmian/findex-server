@@ -1,7 +1,7 @@
-use cosmian_findex::{Address, MemoryADT, SqliteMemoryError};
+use cosmian_findex::{Address, MemoryADT};
 use cosmian_findex_structs::SERVER_ADDRESS_LENGTH;
 
-use super::Sqlite;
+use crate::database::sqlite::{Sqlite, SqliteMemoryError};
 
 impl<const WORD_LENGTH: usize> MemoryADT for Sqlite<WORD_LENGTH> {
     type Address = Address<SERVER_ADDRESS_LENGTH>;
