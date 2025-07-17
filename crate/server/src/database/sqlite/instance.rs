@@ -17,9 +17,9 @@ pub(crate) struct Sqlite<const WORD_LENGTH: usize> {
     pub(crate) pool: Pool,
 }
 
-pub const FINDEX_MEMORY_TABLE_NAME: &str = "findex_memory";
-pub const FINDEX_PERMISSIONS_TABLE_NAME: &str = "findex_permissions";
-pub const FINDEX_DATASETS_TABLE_NAME: &str = "findex_datasets";
+pub const FINDEX_MEMORY_TABLE_NAME: &str = "findex_server_memory";
+pub const FINDEX_PERMISSIONS_TABLE_NAME: &str = "findex_server_permissions";
+pub const FINDEX_DATASETS_TABLE_NAME: &str = "findex_server_datasets";
 
 #[async_trait]
 #[allow(clippy::expect_used)]

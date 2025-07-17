@@ -193,9 +193,11 @@ mod tests {
 
     #[tokio::test]
     async fn test_rw_ccr() {
-        let m = SqliteMemory::<_, [u8; 129]>::new_with_path(DB_PATH, TABLE_NAME.to_owned())
-            .await
-            .unwrap();
+        // This test is ran on a different table to avoid sqlite locking issues on some systems.
+        let m =
+            SqliteMemory::<_, [u8; 129]>::new_with_path(DB_PATH, "test_rw_ccr_table".to_owned())
+                .await
+                .unwrap();
         test_guarded_write_concurrent(&m, gen_seed(), Some(100)).await;
     }
 }
