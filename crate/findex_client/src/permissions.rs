@@ -49,7 +49,6 @@ impl RestClient {
             return Ok(permissions);
         }
 
-        // process error
         Err(ClientError::RequestFailed(
             handle_error(&endpoint, response).await?,
         ))

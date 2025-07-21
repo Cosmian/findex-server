@@ -33,7 +33,6 @@ impl RestClient {
     }
 
     /// Delete entries from a dataset using their UUIDs.
-    /// Returns an error if the request fails or if the response is not successful.
     #[instrument(ret(Display), err, skip(self), level = "trace")]
     pub async fn delete_entries(
         &self,
@@ -81,7 +80,6 @@ impl RestClient {
             return Ok(encrypted_entries);
         }
 
-        // process error
         Err(ClientError::RequestFailed(
             handle_error(&endpoint, response).await?,
         ))

@@ -67,9 +67,9 @@ impl RestClient {
             return Ok(response.json::<String>().await?);
         }
 
-        // process error
-        let p = handle_error(endpoint, response).await?;
-        Err(ClientError::RequestFailed(p))
+        Err(ClientError::RequestFailed(
+            handle_error(endpoint, response).await?,
+        ))
     }
 }
 
@@ -81,8 +81,9 @@ pub(crate) async fn handle_status_code(
     if response.status().is_success() {
         Ok(response.json::<SuccessResponse>().await?)
     } else {
-        let p = handle_error(endpoint, response).await?;
-        Err(ClientError::RequestFailed(p))
+        Err(ClientError::RequestFailed(
+            handle_error(endpoint, response).await?,
+        ))
     }
 }
 
