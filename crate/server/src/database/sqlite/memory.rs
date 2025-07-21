@@ -137,7 +137,7 @@ mod tests {
 
     use super::*;
 
-    const DB_PATH: &str = "../../target/debug/sqlite-test.sqlite.db";
+    const DB_PATH: &str = "sqlite-test.sqlite.db";
     const TABLE_NAME: &str = "findex_memory";
 
     impl<Address, Word> SqliteMemory<Address, Word> {

@@ -123,9 +123,7 @@ impl<const WORD_LENGTH: usize> MemoryADT for FindexRestClient<WORD_LENGTH> {
                     "Unexpected response from server. Expected 1 word, got {n}"
                 )));
             }
-            #[allow(clippy::indexing_slicing)]
-            // This is safe because we check the length of the response.
-            words[0]
+            words.first().copied().flatten()
         };
 
         trace!(
