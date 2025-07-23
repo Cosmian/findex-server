@@ -31,7 +31,8 @@ actix-service = "2.0"
 actix-tls = "3.4"
 actix-web = { workspace = true, features = ["macros", "openssl"] }
 alcoholic_jwt = "4091"
-async-trait = "0.1.86"
+async-trait = "0.1.88"
+async-sqlite = { workspace = true }
 chrono = "0.4"
 clap = { workspace = true, features = [
   "help",
@@ -49,7 +50,7 @@ cosmian_logger = { workspace = true }
 dotenvy = "0.15"
 futures = "0.3"
 openssl = { workspace = true, default-features = false }
-redis = { version = "0.28.2", features = [
+redis = { version = "0.28", features = [
   "aio",
   "script",
   "connection-manager",
@@ -64,10 +65,6 @@ redis = { version = "0.28.2", features = [
 reqwest = { workspace = true, features = ["default", "json"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
-sqlx = { version = "0.8.3", default-features = false, features = [
-  "json",
-  "runtime-tokio-native-tls",
-] }
 thiserror = { workspace = true }
 tokio = { workspace = true, features = ["full"] }
 toml = "0.8"
@@ -75,9 +72,10 @@ tracing = { workspace = true }
 url = { workspace = true }
 uuid = { workspace = true, features = ["v4"] }
 
+
 [dev-dependencies]
-rand = "0.9.0"
 tempfile = { workspace = true }
+variant_count = "1.1"
 
 # ------------------------------------------------------------------------------
 # START DEBIAN PACKAGING

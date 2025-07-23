@@ -40,13 +40,16 @@ fi
 
 rustup target add "$TARGET"
 
-if [ -f /etc/lsb-release ]; then
-  bash .github/scripts/test_utimaco.sh
-fi
-
 # shellcheck disable=SC2086
 cargo build --target $TARGET $RELEASE
 
-export RUST_LOG="fatal,cosmian_cli=error,cosmian_findex_client=debug,cosmian_findex_server=debug"
-# shellcheck disable=SC2086
-cargo test --workspace --lib --target $TARGET $RELEASE $FEATURES -- --nocapture $SKIP_SERVICES_TESTS
+export RUST_LOG="fatal,cosmian_findex_cli=error,cosmian_findex_client=debug,cosmian_findex_server=debug"
+
+declare -a DATABASES=('redis-findex' 'sqlite-findex')
+for FINDEX_TEST_DB in "${DATABASES[@]}"; do
+  echo "Database FINDEX: $FINDEX_TEST_DB"
+
+  export FINDEX_TEST_DB="$FINDEX_TEST_DB"
+  # shellcheck disable=SC2086
+  cargo test --workspace --lib --target $TARGET $RELEASE $FEATURES -- --nocapture $SKIP_SERVICES_TESTS
+done

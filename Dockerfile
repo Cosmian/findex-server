@@ -1,6 +1,6 @@
 FROM rust:1.85.0-bullseye AS builder
 
-LABEL version="0.3.0"
+LABEL version="0.4.0"
 LABEL name="Cosmian Findex server docker container"
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -25,7 +25,6 @@ RUN cargo build --release --no-default-features
 FROM debian:bullseye-slim AS findex-server
 
 COPY --from=builder /root/findex-server/target/release/cosmian_findex_server  /usr/bin/cosmian_findex_server
-COPY --from=builder /root/findex-server/target/release/cosmian               /usr/bin/cosmian
 
 #
 # Create working directory

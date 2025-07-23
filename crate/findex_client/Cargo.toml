@@ -1,0 +1,34 @@
+[package]
+name = "cosmian_findex_client"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+description = "Cosmian Findex REST Client"
+
+[lib]
+# doc test linking as a separate binary is extremely slow
+# and is not needed for internal lib
+doctest = false
+
+[features]
+non-fips = ["cosmian_kms_cli/non-fips"]
+
+[dependencies]
+base64 = { workspace = true }
+cosmian_findex = { workspace = true, features = ["redis-mem"] }
+cosmian_findex_structs = { path = "../structs" }
+cosmian_http_client = { workspace = true }
+cosmian_kms_cli = { workspace = true }
+cosmian_logger = { workspace = true }
+reqwest = { workspace = true, features = ["default", "json", "native-tls"] }
+serde = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+uuid = { workspace = true }
+
+[dev-dependencies]
+cosmian_findex = { workspace = true, features = ["test-utils"] }
+tokio = { workspace = true }

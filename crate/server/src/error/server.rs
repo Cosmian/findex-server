@@ -1,9 +1,7 @@
-use cosmian_findex::MemoryError;
-use std::sync::mpsc::SendError;
+use std::{fmt::Debug, sync::mpsc::SendError};
 
 use actix_web::dev::ServerHandle;
 use cosmian_findex_structs::StructsError;
-use std::fmt::Debug;
 use thiserror::Error;
 
 // Each error type must have a corresponding HTTP status code
@@ -15,7 +13,7 @@ pub enum ServerError {
     // Missing arguments in the request
     #[error("Invalid Request: {0}")]
     InvalidRequest(String),
-    // Any errors related to a bad behavior of the DB but not related to the user input
+    // Any errors related to a bad behavior of the DB
     #[error("Database Error: {0}")]
     DatabaseError(String),
     // Any errors related to a bad behavior of the server but not related to the user input
@@ -33,8 +31,6 @@ pub enum ServerError {
     // Error related to X509 Certificate
     #[error("Certificate error: {0}")]
     Certificate(String),
-    #[error("Redis Error: {0}")]
-    Redis(String),
     #[error("Findex Error: {0}")]
     Findex(String),
     #[error(transparent)]
@@ -55,15 +51,10 @@ impl From<std::io::Error> for ServerError {
     }
 }
 
-impl From<redis::RedisError> for ServerError {
-    fn from(err: redis::RedisError) -> Self {
-        Self::Redis(err.to_string())
-    }
-}
-
-impl From<MemoryError> for ServerError {
-    fn from(e: MemoryError) -> Self {
-        Self::DatabaseError(e.to_string())
+// Actual database error conversion is handled in the database module
+impl From<crate::database::DatabaseError> for ServerError {
+    fn from(e: crate::database::DatabaseError) -> Self {
+        Self::DatabaseError(format!("Database error : {e}"))
     }
 }
 

@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.0] - 2025-07-23
+
+### 🚀 Features
+
+- SQLITE DB (#76)
+- Use Findex 7.1 and add SqliteMemory with MemoryADT impl (#91)
+
+### 🐛 Bug Fixes
+
+- Concurrency bug (#72)
+- Guarded write concurrent test (#88)
+- Invert fips feature (#89)
+
+### 🚜 Refactor
+
+- Move clap actions from client repo (#83)
+- Remove packaging of cli
+
+### 🧪 Testing
+
+- Add helper for RestClient instantiation
+
 ## [0.3.0] - 2025-04-11
 
 ### 🚀 Features
@@ -10,7 +32,7 @@ All notable changes to this project will be documented in this file.
 - Semaphore for CLI parallelism ([#46](https://github.com/Cosmian/findex-server/pull/46))
 - Parallelism for write only ([#50](https://github.com/Cosmian/findex-server/pull/50))
 - Delegate encryption to KMS writing a custom encryption layer ([#47](https://github.com/Cosmian/findex-server/pull/47))
-- Move all CLI relative crates on <https://github.com/Cosmian/client> ([#59](https://github.com/Cosmian/findex-server/pull/59))
+- Move all CLI relative crates on <https://github.com/Cosmian/cli> ([#59](https://github.com/Cosmian/findex-server/pull/59))
 
 ### 🐛 Bug Fixes
 
