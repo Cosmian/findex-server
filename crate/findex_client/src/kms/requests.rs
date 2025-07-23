@@ -17,7 +17,7 @@ use crate::ClientResult;
 
 impl<
     const WORD_LENGTH: usize,
-    Memory: Send + Sync + Clone + MemoryADT<Address = Address<ADDRESS_LENGTH>, Word = [u8; WORD_LENGTH]>,
+    Memory: Send + Sync + MemoryADT<Address = Address<ADDRESS_LENGTH>, Word = [u8; WORD_LENGTH]>,
 > KmsEncryptionLayer<WORD_LENGTH, Memory>
 {
     fn build_message_request(

@@ -32,10 +32,6 @@ reorder_impl_items = true
 # Default value: Preserve
 group_imports = "StdExternalCrate"
 
-# Add trailing semicolon after break, continue and return
-# Default value: true
-trailing_semicolon = false
-
 # Enable unstable features on the unstable channel.
 # Default value: false
 unstable_features = true

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# on MacOS, you should pass a link to an actually installed openssl binary, and nopt use the default `libressl`
+# on MacOS, you should pass a link to an actually installed openssl binary, and not use the default `libressl`
 # which generates PKCS12 files qith the deprecated RC2 algorithm
 OPENSSL_BIN=${1:-openssl}
 

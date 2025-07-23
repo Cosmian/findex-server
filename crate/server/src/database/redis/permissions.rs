@@ -84,9 +84,9 @@ impl PermissionsTrait for Redis<CUSTOM_WORD_LENGTH> {
             .hget::<_, _, Option<u8>>(&user_key, index_id.to_string())
             .await?
             .ok_or_else(|| {
-                DatabaseError::InvalidDatabaseResponse(
-                    "No permission found for index {index_id}".to_owned(),
-                )
+                DatabaseError::InvalidDatabaseResponse(format!(
+                    "No permission found for index {index_id}"
+                ))
             })
             .and_then(|p| {
                 Permission::try_from(p).map_err(|e| {

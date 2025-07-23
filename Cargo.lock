@@ -1301,10 +1301,10 @@ dependencies = [
 [[package]]
 name = "cosmian_findex"
 version = "7.1.0"
-source = "git+https://github.com/Cosmian/findex?rev=08b3989f800b26b9ec3093f6f1b52ee0f739835e#08b3989f800b26b9ec3093f6f1b52ee0f739835e"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "abc2ce562374fb7bd202a123bce41f26328895901d8161923fa62c41dd551235"
 dependencies = [
  "aes",
- "async-sqlite",
  "cosmian_crypto_core 10.1.0",
  "criterion",
  "futures",
@@ -5517,9 +5517,9 @@ dependencies = [
 
 [[package]]
 name = "tempfile"
-version = "3.19.1"
+version = "3.20.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7437ac7763b9b123ccf33c338a5cc1bac6f69b45a136c19bdd8a65e3916435bf"
+checksum = "e8a64e3985349f2441a1a9ef0b853f869006c3855f2cda6862a94d26ebb9d6a1"
 dependencies = [
  "fastrand",
  "getrandom 0.3.2",

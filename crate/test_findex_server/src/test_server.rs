@@ -218,7 +218,7 @@ async fn wait_for_server_to_start(rest_client: &RestClient) -> Result<(), Client
                 "The server is not up yet, retrying in {}s... ({err:?}) ",
                 2 * i
             );
-            thread::sleep(Duration::from_secs(2 * i));
+            let _ = tokio::time::sleep(Duration::from_secs(2 * i)).await;
         } else {
             info!("UP!");
             return Ok(());

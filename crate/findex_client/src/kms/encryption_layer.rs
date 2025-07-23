@@ -17,7 +17,7 @@ use crate::{ClientError, ClientResult};
 #[derive(Clone)]
 pub struct KmsEncryptionLayer<
     const WORD_LENGTH: usize,
-    Memory: Send + Sync + Clone + MemoryADT<Address = Address<ADDRESS_LENGTH>>,
+    Memory: Send + Sync + MemoryADT<Address = Address<ADDRESS_LENGTH>>,
 > {
     pub(crate) kms_client: KmsClient,
     pub(crate) hmac_key_id: String,
@@ -27,7 +27,7 @@ pub struct KmsEncryptionLayer<
 
 impl<
     const WORD_LENGTH: usize,
-    Memory: Send + Sync + Clone + MemoryADT<Address = Address<ADDRESS_LENGTH>, Word = [u8; WORD_LENGTH]>,
+    Memory: Send + Sync + MemoryADT<Address = Address<ADDRESS_LENGTH>, Word = [u8; WORD_LENGTH]>,
 > KmsEncryptionLayer<WORD_LENGTH, Memory>
 {
     /// Instantiates a new memory encryption layer.
@@ -46,25 +46,27 @@ impl<
     }
 
     fn extract_words(message_response: &ResponseMessage) -> ClientResult<Vec<[u8; WORD_LENGTH]>> {
-        if !message_response.batch_item.iter().all(|item| {
+        let valid_item = |item: &ResponseMessageBatchItemVersioned| {
             if let ResponseMessageBatchItemVersioned::V21(item) = item {
-                return item.result_status == ResultStatusEnumeration::Success;
+                item.result_status == ResultStatusEnumeration::Success
+            } else {
+                false
             }
-            false
-        }) {
-            return Err(ClientError::Default(
+        };
+        if message_response.batch_item.iter().all(valid_item) {
+            message_response
+                .extract_items_data()?
+                .iter()
+                .map(|c| {
+                    <[u8; WORD_LENGTH]>::try_from(c.as_slice())
+                        .map_err(|e| ClientError::Default(format!("wrong slice length: {e}")))
+                })
+                .collect()
+        } else {
+            Err(ClientError::Default(
                 "One or more operations failed in the batch".to_owned(),
-            ));
+            ))
         }
-        message_response
-            .extract_items_data()?
-            .into_iter()
-            .map(|c| {
-                c.as_slice()
-                    .try_into()
-                    .map_err(|e| ClientError::Default(format!("Conversion error: {e}")))
-            })
-            .collect::<Result<Vec<_>, _>>()
     }
 
     /// Compute multiple HMAC on given memory addresses.
