@@ -7,3 +7,4 @@
 cosmian-findex-server/
 .venv/
 **/sqlite-test*
+crate/server/*.db*

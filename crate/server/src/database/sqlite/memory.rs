@@ -186,7 +186,7 @@ mod tests {
     #[tokio::test]
     async fn test_collision_seq() {
         let m = SqliteMemory::<_, [u8; 87]>::new_with_path(
-            format!("test_collision_seq_{}", DB_PATH),
+            format!("test_collision_seq_{DB_PATH}"),
             TABLE_NAME.to_owned(),
         )
         .await
@@ -198,7 +198,7 @@ mod tests {
     async fn test_rw_ccr() {
         // This test is ran on a different table to avoid sqlite locking issues on some systems.
         let m = SqliteMemory::<_, [u8; 129]>::new_with_path(
-            format!("test_rw_ccr_{}", DB_PATH),
+            format!("test_rw_ccr_{DB_PATH}"),
             TABLE_NAME.to_owned(),
         )
         .await
