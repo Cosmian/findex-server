@@ -4,18 +4,16 @@ use cosmian_findex_client::{RestClient, RestClientConfig};
 use cosmian_findex_structs::Uuids;
 use cosmian_kms_cli::{
     actions::kms::symmetric::keys::create_key::CreateKeyAction,
-    reexport::{
-        cosmian_kms_client::{
-            KmsClient, KmsClientConfig, kmip_2_1::kmip_types::UniqueIdentifier,
-            reexport::cosmian_kms_client_utils::symmetric_utils::DataEncryptionAlgorithm,
-        },
-        test_kms_server::start_default_test_kms_server,
+    reexport::cosmian_kms_client::{
+        KmsClient, KmsClientConfig, kmip_2_1::kmip_types::UniqueIdentifier,
+        reexport::cosmian_kms_client_utils::symmetric_utils::DataEncryptionAlgorithm,
     },
 };
 use cosmian_logger::log_init;
 use test_findex_server::{
     start_default_test_findex_server, start_default_test_findex_server_with_cert_auth,
 };
+use test_kms_server::start_default_test_kms_server;
 use tracing::{info, trace};
 use uuid::Uuid;
 

@@ -24,7 +24,7 @@ doctest = false
 non-fips = [
   "cosmian_findex_client/non-fips",
   "cosmian_kms_cli/non-fips",
-  "test_findex_server/non-fips",
+  "test_kms_server/non-fips",
 ]
 
 [dependencies]
@@ -46,7 +46,6 @@ cosmian_kms_cli = { workspace = true }
 cosmian_logger = { workspace = true }
 csv = "1.3.1"
 hex = { workspace = true }
-test_findex_server = { path = "../test_findex_server" }
 thiserror = { workspace = true }
 tokio = { workspace = true, features = ["full"] }
 tracing = { workspace = true }
@@ -62,4 +61,6 @@ openssl = { workspace = true }
 predicates = "3.1"
 regex = { version = "1.11", default-features = false }
 tempfile = "3.20"
+test_findex_server = { path = "../test_findex_server" }
+test_kms_server = { workspace = true }
 x509-parser = { workspace = true, features = ["verify"] }

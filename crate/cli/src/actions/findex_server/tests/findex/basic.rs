@@ -4,11 +4,11 @@ use std::path::PathBuf;
 use cosmian_findex::test_guarded_write_concurrent;
 use cosmian_findex::{gen_seed, test_single_write_and_read, test_wrong_guard};
 use cosmian_findex_structs::{CUSTOM_WORD_LENGTH, Value};
-use cosmian_kms_cli::reexport::test_kms_server::start_default_test_kms_server;
 use cosmian_logger::log_init;
 use test_findex_server::{
     start_default_test_findex_server, start_default_test_findex_server_with_cert_auth,
 };
+use test_kms_server::start_default_test_kms_server;
 use tracing::trace;
 use uuid::Uuid;
 
