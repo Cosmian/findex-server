@@ -70,9 +70,9 @@ impl<const WORD_LENGTH: usize> InstantiationTrait for Sqlite<WORD_LENGTH> {
                     PRIMARY KEY (user_id, index_id)
                 );
                 CREATE TABLE IF NOT EXISTS  {FINDEX_DATASETS_TABLE_NAME} (
-                    index_id BLOB NOT NULL,  
-                    user_id      BLOB NOT NULL,  
-                    encrypted_entry     BLOB NOT NULL, 
+                    index_id BLOB NOT NULL,
+                    user_id      BLOB NOT NULL,
+                    encrypted_entry     BLOB NOT NULL,
                     PRIMARY KEY (index_id, user_id)
                 );
                 ",

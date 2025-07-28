@@ -14,7 +14,7 @@ description = "Cosmian Findex REST Client"
 doctest = false
 
 [features]
-non-fips = ["cosmian_kms_cli/non-fips"]
+non-fips = ["cosmian_kms_cli/non-fips", "test_kms_server/non-fips"]
 
 [dependencies]
 base64 = { workspace = true }
@@ -32,3 +32,4 @@ uuid = { workspace = true }
 [dev-dependencies]
 cosmian_findex = { workspace = true, features = ["test-utils"] }
 tokio = { workspace = true }
+test_kms_server = { workspace = true }

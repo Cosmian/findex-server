@@ -169,9 +169,9 @@ mod tests {
         cosmian_kms_crypto::reexport::cosmian_crypto_core::{
             CsRng, Sampling, reexport::rand_core::SeedableRng,
         },
-        test_kms_server::start_default_test_kms_server,
     };
     use cosmian_logger::log_init;
+    use test_kms_server::start_default_test_kms_server;
     use tokio::task;
 
     use super::*;

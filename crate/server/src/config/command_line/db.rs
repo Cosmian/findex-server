@@ -126,7 +126,7 @@ fn ensure_url(database_url: &str, alternate_env_variable: &str) -> FResult<Url> 
     )?)?)
 }
 
-// Open and immediatly close a connection from the provided path to check if it is valid
+// Open and immediately close a connection from the provided path to check if it is valid
 // This creates the database if it does not exist, and tries to open it if it does
 fn ensure_sqlite_db(database_url: &str, alternate_env_variable: &str) -> FResult<PathBuf> {
     let path = &retrieve_database_location(database_url, alternate_env_variable)?;
