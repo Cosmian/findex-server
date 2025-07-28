@@ -11,6 +11,8 @@ use crate::{
 
 impl RestClient {
     /// Add encrypted entries to a dataset.
+    /// # Errors
+    /// Fails if entries cannot be added to the dataset.
     #[instrument(ret(Display), err, skip_all, level = "trace")]
     pub async fn add_entries(
         &self,
@@ -33,6 +35,8 @@ impl RestClient {
     }
 
     /// Delete entries from a dataset using their UUIDs.
+    /// # Errors
+    /// Fails if entries cannot be deleted from the dataset.
     #[instrument(ret(Display), err, skip(self), level = "trace")]
     pub async fn delete_entries(
         &self,
@@ -56,6 +60,8 @@ impl RestClient {
     }
 
     /// Get entries from a dataset using their UUIDs.
+    /// # Errors
+    /// Fails if entries cannot be retrieved from the dataset.
     #[instrument(ret(Display), err, skip(self), level = "trace")]
     pub async fn get_entries(
         &self,

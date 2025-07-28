@@ -52,8 +52,6 @@ cosmian_findex = { version = "7.1", features = ["redis-mem", "test-utils"] }
 cosmian_http_client = "0.2"
 cosmian_kms_cli = { git = "https://github.com/Cosmian/kms", branch = "fix/static_links" }
 test_kms_server = { git = "https://github.com/Cosmian/kms", branch = "fix/static_links" }
-# cosmian_kms_cli = { path = "../kms/crate/cli" }
-# test_kms_server = { path = "../kms/crate/test_kms_server" }
 cosmian_logger = "0.2"
 der = { version = "0.7", default-features = false }
 hex = "0.4"
