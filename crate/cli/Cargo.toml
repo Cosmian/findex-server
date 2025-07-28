@@ -24,6 +24,7 @@ doctest = false
 non-fips = [
   "cosmian_findex_client/non-fips",
   "cosmian_kms_cli/non-fips",
+  "test_findex_server/non-fips",
   "test_kms_server/non-fips",
 ]
 
