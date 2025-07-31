@@ -50,17 +50,17 @@ cosmian_config_utils = "0.3"
 cosmian_crypto_core = { version = "10.2", default-features = false }
 cosmian_findex = { git = "https://github.com/Cosmian/findex", branch = "develop", version = "8.0" }
 cosmian_memories = { git = "https://github.com/Cosmian/findex", branch = "develop", version = "8.0" }
-cosmian_http_client = "0.2"
+cosmian_http_client = "0.3"                                                                           # note : needs to bumb reqwest
 cosmian_kms_cli = { git = "https://github.com/Cosmian/kms", branch = "develop", version = "5.6.1" }
 test_kms_server = { git = "https://github.com/Cosmian/kms", branch = "develop", version = "5.6.1" }
-cosmian_logger = "0.2"
+cosmian_logger = "0.3"
 der = { version = "0.7", default-features = false }
 hex = "0.4"
 leb128 = "0.2"
 num-format = "0.4"
 openssl = { version = "0.10", default-features = false }
 pem = "3.0"
-reqwest = { version = "0.12", default-features = false }
+reqwest = { version = "0.11", default-features = false }
 serde = "1.0"
 serde_json = "1.0"
 strum = { version = "0.27", default-features = false }

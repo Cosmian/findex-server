@@ -105,7 +105,8 @@ impl<const WORD_LENGTH: usize> MemoryADT for FindexRestClient<WORD_LENGTH> {
             .post(&server_url)
             .body(request_bytes)
             .send()
-            .await?;
+            .await
+            .unwrap(); // todo
 
         if !response.status().is_success() {
             warn!("guarded_write failed on server url {}.", server_url);

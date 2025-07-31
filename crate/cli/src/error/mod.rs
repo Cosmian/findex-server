@@ -5,16 +5,13 @@ use assert_cmd::cargo::CargoError;
 use cosmian_config_utils::ConfigUtilsError;
 use cosmian_findex_client::{
     ClientError,
-    reexport::{
-        cosmian_findex::{self, ADDRESS_LENGTH, Address},
-        cosmian_findex_structs::StructsError,
-        cosmian_http_client::HttpClientError,
-    },
+    reexport::{cosmian_findex_structs::StructsError, cosmian_http_client::HttpClientError},
 };
 use cosmian_kms_cli::{
     error::KmsCliError,
     reexport::{cosmian_kmip::KmipError, cosmian_kms_client::KmsClientError},
 };
+use cosmian_memories::{self, ADDRESS_LENGTH, Address};
 use thiserror::Error;
 
 pub mod result;

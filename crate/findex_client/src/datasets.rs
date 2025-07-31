@@ -79,7 +79,8 @@ impl RestClient {
             .post(server_url)
             .body(uuids.to_vec())
             .send()
-            .await?;
+            .await
+            .unwrap(); // TODO
         if response.status().is_success() {
             let response_bytes = response.bytes().await.map(|r| r.to_vec())?;
             let encrypted_entries = EncryptedEntries::deserialize(&response_bytes)?;
