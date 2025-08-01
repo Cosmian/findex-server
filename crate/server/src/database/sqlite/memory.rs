@@ -6,7 +6,7 @@ use async_sqlite::{
     Pool,
     rusqlite::{OptionalExtension, params_from_iter},
 };
-use cosmian_memories::{Address, MemoryADT};
+use cosmian_sse_memories::{Address, MemoryADT};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -130,7 +130,7 @@ impl<const ADDRESS_LENGTH: usize, const WORD_LENGTH: usize> MemoryADT
 mod tests {
 
     use async_sqlite::PoolBuilder;
-    use cosmian_memories::test_utils::{
+    use cosmian_sse_memories::test_utils::{
         gen_seed, test_guarded_write_concurrent, test_rw_same_address, test_single_write_and_read,
         test_wrong_guard,
     };

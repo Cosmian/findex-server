@@ -7,7 +7,7 @@ use async_trait::async_trait;
 use cosmian_findex_structs::{
     CUSTOM_WORD_LENGTH, EncryptedEntries, Permission, Permissions, SERVER_ADDRESS_LENGTH, Uuids,
 };
-use cosmian_memories::{Address, MemoryADT};
+use cosmian_sse_memories::{Address, MemoryADT};
 use uuid::Uuid;
 
 use super::{

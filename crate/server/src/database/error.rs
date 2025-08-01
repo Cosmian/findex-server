@@ -1,4 +1,4 @@
-use cosmian_memories::RedisMemoryError;
+use cosmian_sse_memories::RedisMemoryError;
 use thiserror::Error;
 
 use crate::database::sqlite::SqliteMemoryError;

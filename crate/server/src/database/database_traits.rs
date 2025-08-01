@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use cosmian_findex_structs::{EncryptedEntries, Permission, Permissions, Uuids};
-use cosmian_memories::MemoryADT;
+use cosmian_sse_memories::MemoryADT;
 use uuid::Uuid;
 
 use super::findex_database::DatabaseResult;

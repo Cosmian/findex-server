@@ -8,7 +8,7 @@ use cosmian_findex_structs::{
     Addresses, Bindings, CUSTOM_WORD_LENGTH, Guard, OptionalWords, Permission,
     SERVER_ADDRESS_LENGTH, UID_LENGTH,
 };
-use cosmian_memories::{ADDRESS_LENGTH, Address, MemoryADT};
+use cosmian_sse_memories::{ADDRESS_LENGTH, Address, MemoryADT};
 use tracing::trace;
 use uuid::Uuid;
 

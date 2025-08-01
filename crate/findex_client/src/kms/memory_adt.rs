@@ -1,6 +1,6 @@
 use std::iter::once;
 
-use cosmian_memories::{ADDRESS_LENGTH, Address, MemoryADT};
+use cosmian_sse_memories::{ADDRESS_LENGTH, Address, MemoryADT};
 use tracing::trace;
 
 use super::KmsEncryptionLayer;
@@ -167,7 +167,7 @@ mod tests {
         },
     };
     use cosmian_logger::log_init;
-    use cosmian_memories::{
+    use cosmian_sse_memories::{
         InMemory,
         test_utils::{
             gen_seed, test_guarded_write_concurrent, test_rw_same_address,

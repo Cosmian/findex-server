@@ -11,7 +11,7 @@ use cosmian_kms_cli::{
     error::KmsCliError,
     reexport::{cosmian_kmip::KmipError, cosmian_kms_client::KmsClientError},
 };
-use cosmian_memories::{self, ADDRESS_LENGTH, Address};
+use cosmian_sse_memories::{self, ADDRESS_LENGTH, Address};
 use thiserror::Error;
 
 pub mod result;

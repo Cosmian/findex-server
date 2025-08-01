@@ -3,8 +3,8 @@ use std::path::PathBuf;
 use cosmian_findex_structs::{CUSTOM_WORD_LENGTH, Value};
 use cosmian_logger::log_init;
 #[cfg(not(target_os = "windows"))]
-use cosmian_memories::test_utils::test_guarded_write_concurrent;
-use cosmian_memories::test_utils::{gen_seed, test_single_write_and_read, test_wrong_guard};
+use cosmian_sse_memories::test_utils::test_guarded_write_concurrent;
+use cosmian_sse_memories::test_utils::{gen_seed, test_single_write_and_read, test_wrong_guard};
 use test_findex_server::{
     start_default_test_findex_server, start_default_test_findex_server_with_cert_auth,
 };

@@ -24,7 +24,7 @@ cosmian_findex_structs = { path = "../structs", version = "0.4.0"}
 cosmian_http_client = { workspace = true }
 cosmian_kms_cli = { workspace = true }
 cosmian_logger = { workspace = true }
-cosmian_memories = { workspace = true, features = ["redis-mem"] }
+cosmian_sse_memories = { workspace = true, features = ["redis-mem"] }
 reqwest = { workspace = true, features = ["default", "json", "native-tls"] }
 serde = { workspace = true }
 thiserror = { workspace = true }
@@ -33,6 +33,6 @@ uuid = { workspace = true }
 
 [dev-dependencies]
 cosmian_findex = { workspace = true, features = ["test-utils"] }
-cosmian_memories = { workspace = true, features = ["test-utils"] }
+cosmian_sse_memories = { workspace = true, features = ["test-utils"] }
 test_kms_server = { workspace = true }
 tokio = { workspace = true }

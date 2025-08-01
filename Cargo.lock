@@ -1516,12 +1516,12 @@ dependencies = [
 [[package]]
 name = "cosmian_findex"
 version = "8.0.0"
-source = "git+https://github.com/Cosmian/findex?branch=develop#db8327610067828cce0505ce0cd782358902fcf3"
+source = "git+https://github.com/Cosmian/findex?branch=chore%2Frename_memories_and_update_features#6ad1e67f7cb98b1bd94637bbacf8938e1e52fa2a"
 dependencies = [
  "aes",
  "agnostic-lite",
  "cosmian_crypto_core 10.2.0",
- "cosmian_memories",
+ "cosmian_sse_memories",
  "criterion 0.6.0",
  "xts-mode",
 ]
@@ -1542,7 +1542,7 @@ dependencies = [
  "cosmian_findex_structs",
  "cosmian_kms_cli",
  "cosmian_logger",
- "cosmian_memories",
+ "cosmian_sse_memories",
  "csv",
  "hex",
  "lazy_static",
@@ -1569,7 +1569,7 @@ dependencies = [
  "cosmian_http_client",
  "cosmian_kms_cli",
  "cosmian_logger",
- "cosmian_memories",
+ "cosmian_sse_memories",
  "reqwest 0.11.27",
  "serde",
  "test_kms_server",
@@ -1597,7 +1597,7 @@ dependencies = [
  "cosmian_findex 8.0.0",
  "cosmian_findex_structs",
  "cosmian_logger",
- "cosmian_memories",
+ "cosmian_sse_memories",
  "dotenvy",
  "futures",
  "openssl",
@@ -1622,7 +1622,7 @@ dependencies = [
  "base64 0.22.1",
  "cosmian_crypto_core 10.2.0",
  "cosmian_findex 8.0.0",
- "cosmian_memories",
+ "cosmian_sse_memories",
  "thiserror 2.0.12",
  "tracing",
  "uuid",
@@ -1905,9 +1905,9 @@ dependencies = [
 ]
 
 [[package]]
-name = "cosmian_memories"
+name = "cosmian_sse_memories"
 version = "8.0.0"
-source = "git+https://github.com/Cosmian/findex?branch=develop#db8327610067828cce0505ce0cd782358902fcf3"
+source = "git+https://github.com/Cosmian/findex?branch=chore%2Frename_memories_and_update_features#6ad1e67f7cb98b1bd94637bbacf8938e1e52fa2a"
 dependencies = [
  "agnostic-lite",
  "cosmian_crypto_core 10.2.0",
