@@ -31,8 +31,8 @@ actix-service = "2.0"
 actix-tls = "3.4"
 actix-web = { workspace = true, features = ["macros", "openssl"] }
 alcoholic_jwt = "4091"
-async-trait = "0.1.88"
 async-sqlite = { workspace = true }
+async-trait = "0.1"
 chrono = "0.4"
 clap = { workspace = true, features = [
   "help",
@@ -48,6 +48,7 @@ cosmian_findex = { workspace = true }
 cosmian_memories = { workspace = true, features = ["redis-mem"] }
 cosmian_findex_structs = { path = "../structs", version = "0.4.0"}
 cosmian_logger = { workspace = true }
+cosmian_memories = { workspace = true, features = ["redis-mem"] }
 dotenvy = "0.15"
 futures = "0.3"
 openssl = { workspace = true, default-features = false }
@@ -68,11 +69,10 @@ tracing = { workspace = true }
 url = { workspace = true }
 uuid = { workspace = true, features = ["v4"] }
 
-
 [dev-dependencies]
-tempfile = { workspace = true }
 cosmian_findex = { workspace = true, features = ["test-utils"] }
 cosmian_memories = { workspace = true, features = ["test-utils"] }
+tempfile = { workspace = true }
 variant_count = "1.1"
 
 # ------------------------------------------------------------------------------
