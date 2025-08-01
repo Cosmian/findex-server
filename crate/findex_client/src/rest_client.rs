@@ -64,7 +64,7 @@ impl RestClient {
         let server_url = format!("{}{endpoint}", self.http_client.server_url);
         let response = self.http_client.client.get(server_url).send().await?;
         if response.status().is_success() {
-            return Ok(response.json::<String>().await.unwrap()); // todo: handle error
+            return Ok(response.json::<String>().await?);
         }
 
         Err(ClientError::RequestFailed(
