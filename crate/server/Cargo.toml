@@ -51,12 +51,7 @@ cosmian_logger = { workspace = true }
 dotenvy = "0.15"
 futures = "0.3"
 openssl = { workspace = true, default-features = false }
-redis = { version = "0.32", features = [
-  "aio",
-  "script",
-  "connection-manager", # todo clean
-  "tokio-comp",
-] }
+redis = { version = "0.32" }
 # Important: align the rustls version with reqwest rustls dependency
 # When using client certificate authentication, reqwest will use the
 # native-tls crate to create an Identity; this will be different backend
@@ -68,7 +63,7 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true, features = ["full"] }
-toml = "0.8"
+toml = "0.9"
 tracing = { workspace = true }
 url = { workspace = true }
 uuid = { workspace = true, features = ["v4"] }
@@ -76,6 +71,7 @@ uuid = { workspace = true, features = ["v4"] }
 
 [dev-dependencies]
 tempfile = { workspace = true }
+cosmian_findex = { workspace = true, features = ["test-utils"] }
 cosmian_memories = { workspace = true, features = ["test-utils"] }
 variant_count = "1.1"
 
