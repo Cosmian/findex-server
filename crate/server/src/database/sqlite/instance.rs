@@ -1,7 +1,7 @@
 use async_sqlite::{Pool, PoolBuilder};
 use async_trait::async_trait;
-use cosmian_findex::Address;
 use cosmian_findex_structs::SERVER_ADDRESS_LENGTH;
+use cosmian_memories::Address;
 use tracing::warn;
 
 use crate::{

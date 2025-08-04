@@ -45,15 +45,16 @@ clap = { workspace = true, features = [
 ] }
 cosmian_crypto_core = { workspace = true }
 cosmian_findex = { workspace = true }
+cosmian_memories = { workspace = true, features = ["redis-mem"] }
 cosmian_findex_structs = { path = "../structs", version = "0.4.0"}
 cosmian_logger = { workspace = true }
 dotenvy = "0.15"
 futures = "0.3"
 openssl = { workspace = true, default-features = false }
-redis = { version = "0.28", features = [
+redis = { version = "0.32", features = [
   "aio",
   "script",
-  "connection-manager",
+  "connection-manager", # todo clean
   "tokio-comp",
 ] }
 # Important: align the rustls version with reqwest rustls dependency
@@ -75,6 +76,7 @@ uuid = { workspace = true, features = ["v4"] }
 
 [dev-dependencies]
 tempfile = { workspace = true }
+cosmian_memories = { workspace = true, features = ["test-utils"] }
 variant_count = "1.1"
 
 # ------------------------------------------------------------------------------

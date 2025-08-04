@@ -6,7 +6,7 @@ use async_sqlite::{
     Pool,
     rusqlite::{OptionalExtension, params_from_iter},
 };
-use cosmian_findex::{Address, MemoryADT};
+use cosmian_memories::{Address, MemoryADT};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -130,7 +130,7 @@ impl<const ADDRESS_LENGTH: usize, const WORD_LENGTH: usize> MemoryADT
 mod tests {
 
     use async_sqlite::PoolBuilder;
-    use cosmian_findex::{
+    use cosmian_memories::test_utils::{
         gen_seed, test_guarded_write_concurrent, test_rw_same_address, test_single_write_and_read,
         test_wrong_guard,
     };
@@ -168,7 +168,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_rw_seq() {
+    async fn test_sequential_read_write() {
         let m = SqliteMemory::<_, [u8; 52]>::new_with_path(DB_PATH, TABLE_NAME.to_owned())
             .await
             .unwrap();
@@ -176,7 +176,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_guard_seq() {
+    async fn test_sequential_wrong_guard() {
         let m = SqliteMemory::<_, [u8; 999]>::new_with_path(DB_PATH, TABLE_NAME.to_owned())
             .await
             .unwrap();
@@ -184,9 +184,9 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_collision_seq() {
+    async fn test_sequential_same_address() {
         let m = SqliteMemory::<_, [u8; 87]>::new_with_path(
-            format!("test_collision_seq_{DB_PATH}"),
+            format!("test_sequential_same_address{DB_PATH}"),
             TABLE_NAME.to_owned(),
         )
         .await
@@ -195,14 +195,21 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_rw_ccr() {
-        // This test is ran on a different table to avoid sqlite locking issues on some systems.
-        let m = SqliteMemory::<_, [u8; 129]>::new_with_path(
-            format!("test_rw_ccr_{DB_PATH}"),
+    // This test is ran on a different table to avoid sqlite locking issues on some systems.
+    // It can be flaky on some systems, do not hesitate to re-run it if it makes an automated workflow fail.
+    async fn test_concurrent_read_write() {
+        const WORD_LENGTH: usize = 129;
+        let m = SqliteMemory::<_, [u8; WORD_LENGTH]>::new_with_path(
+            format!("test_concurrent_read_write{DB_PATH}"),
             TABLE_NAME.to_owned(),
         )
         .await
         .unwrap();
-        test_guarded_write_concurrent(&m, gen_seed(), Some(100)).await;
+        test_guarded_write_concurrent::<
+            WORD_LENGTH,
+            _,
+            cosmian_findex::reexport::tokio::TokioSpawner,
+        >(&m, gen_seed(), Some(100))
+        .await;
     }
 }

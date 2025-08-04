@@ -4,11 +4,11 @@ use actix_web::{
     HttpRequest, HttpResponse, post,
     web::{self, Bytes, Data},
 };
-use cosmian_findex::{ADDRESS_LENGTH, Address, MemoryADT};
 use cosmian_findex_structs::{
     Addresses, Bindings, CUSTOM_WORD_LENGTH, Guard, OptionalWords, Permission,
     SERVER_ADDRESS_LENGTH, UID_LENGTH,
 };
+use cosmian_memories::{ADDRESS_LENGTH, Address, MemoryADT};
 use tracing::trace;
 use uuid::Uuid;
 
