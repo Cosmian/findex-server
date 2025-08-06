@@ -41,8 +41,8 @@ clap = { workspace = true, features = [
 ] }
 cosmian_config_utils = { workspace = true }
 cosmian_findex = { workspace = true, features = ["test-utils"] }
-cosmian_findex_client = { path = "../findex_client", version = "0.4.0"}
-cosmian_findex_structs = { path = "../structs", version = "0.4.0"}
+cosmian_findex_client = { path = "../findex_client", version = "0.4.0" }
+cosmian_findex_structs = { path = "../structs", version = "0.4.0" }
 cosmian_kms_cli = { workspace = true }
 cosmian_logger = { workspace = true }
 cosmian_sse_memories = { workspace = true }
@@ -54,16 +54,7 @@ tracing = { workspace = true }
 uuid = { workspace = true }
 
 [dev-dependencies]
-actix-rt = "2.10"
-actix-server = { workspace = true }
 assert_cmd = "2.0"
-const-oid = { version = "0.9", features = ["db"] }
 cosmian_sse_memories = { workspace = true, features = ["test-utils"] }
-lazy_static = "1.5"
-openssl = { workspace = true }
-predicates = "3.1"
-regex = { version = "1.11", default-features = false }
-tempfile = "3.20"
 test_findex_server = { path = "../test_findex_server" }
 test_kms_server = { workspace = true }
-x509-parser = { workspace = true, features = ["verify"] }

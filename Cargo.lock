@@ -1522,7 +1522,7 @@ dependencies = [
  "agnostic-lite",
  "cosmian_crypto_core 10.2.0",
  "cosmian_sse_memories",
- "criterion 0.6.0",
+ "criterion",
  "xts-mode",
 ]
 
@@ -1530,12 +1530,9 @@ dependencies = [
 name = "cosmian_findex_cli"
 version = "0.4.0"
 dependencies = [
- "actix-rt",
- "actix-server",
  "assert_cmd",
  "base64 0.22.1",
  "clap",
- "const-oid",
  "cosmian_config_utils",
  "cosmian_findex 8.0.0",
  "cosmian_findex_client",
@@ -1545,18 +1542,12 @@ dependencies = [
  "cosmian_sse_memories",
  "csv",
  "hex",
- "lazy_static",
- "openssl",
- "predicates",
- "regex",
- "tempfile",
  "test_findex_server",
  "test_kms_server",
  "thiserror 2.0.12",
  "tokio",
  "tracing",
  "uuid",
- "x509-parser",
 ]
 
 [[package]]
@@ -1946,32 +1937,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9481c1c90cbf2ac953f07c8d4a58aa3945c425b7185c9154d67a65e4230da511"
 dependencies = [
  "cfg-if",
-]
-
-[[package]]
-name = "criterion"
-version = "0.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f2b12d017a929603d80db1831cd3a24082f8137ce19c69e6447f54f5fc8d692f"
-dependencies = [
- "anes",
- "cast",
- "ciborium",
- "clap",
- "criterion-plot",
- "futures",
- "is-terminal",
- "itertools 0.10.5",
- "num-traits",
- "once_cell",
- "oorandom",
- "regex",
- "serde",
- "serde_derive",
- "serde_json",
- "tinytemplate",
- "tokio",
- "walkdir",
 ]
 
 [[package]]
@@ -2593,15 +2558,6 @@ checksum = "4a3d7db9596fecd151c5f638c0ee5d5bd487b6e0ea232e5dc96d5250f6f94b1d"
 dependencies = [
  "crc32fast",
  "miniz_oxide",
-]
-
-[[package]]
-name = "float-cmp"
-version = "0.10.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b09cf3155332e944990140d967ff5eceb70df778b34f77d8075db46e4704e6d8"
-dependencies = [
- "num-traits",
 ]
 
 [[package]]
@@ -3479,17 +3435,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "is-terminal"
-version = "0.4.16"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e04d7f318608d35d4b61ddd75cbdaee86b023ebe2bd5a66ee0915f0bf93095a9"
-dependencies = [
- "hermit-abi",
- "libc",
- "windows-sys 0.59.0",
-]
-
-[[package]]
 name = "itertools"
 version = "0.10.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3891,12 +3836,6 @@ dependencies = [
  "memchr",
  "minimal-lexical",
 ]
-
-[[package]]
-name = "normalize-line-endings"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "61807f77802ff30975e01f4f071c8ba10c022052f98b3294119f3e615d13e5be"
 
 [[package]]
 name = "nu-ansi-term"
@@ -4600,10 +4539,7 @@ checksum = "a5d19ee57562043d37e82899fade9a22ebab7be9cef5026b07fda9cdd4293573"
 dependencies = [
  "anstyle",
  "difflib",
- "float-cmp",
- "normalize-line-endings",
  "predicates-core",
- "regex",
 ]
 
 [[package]]
@@ -6045,10 +5981,8 @@ dependencies = [
  "cosmian_findex_client",
  "cosmian_findex_server",
  "cosmian_logger",
- "criterion 0.5.1",
  "tokio",
  "tracing",
- "zeroize",
 ]
 
 [[package]]
@@ -7328,7 +7262,6 @@ dependencies = [
  "lazy_static",
  "nom",
  "oid-registry",
- "ring",
  "rusticata-macros",
  "thiserror 2.0.12",
  "time",
