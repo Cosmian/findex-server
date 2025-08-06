@@ -45,8 +45,7 @@ clap = { workspace = true, features = [
 ] }
 cosmian_crypto_core = { workspace = true }
 cosmian_findex = { workspace = true }
-cosmian_memories = { workspace = true, features = ["redis-mem"] }
-cosmian_findex_structs = { path = "../structs", version = "0.4.0"}
+cosmian_findex_structs = { path = "../structs", version = "0.4.0" }
 cosmian_logger = { workspace = true }
 cosmian_sse_memories = { workspace = true, features = ["redis-mem"] }
 dotenvy = "0.15"

@@ -1516,7 +1516,7 @@ dependencies = [
 [[package]]
 name = "cosmian_findex"
 version = "8.0.0"
-source = "git+https://github.com/Cosmian/findex?branch=chore%2Frename_memories_and_update_features#eedc87278e1f7d46379299d0670126d6a08b5128"
+source = "git+https://github.com/Cosmian/findex?branch=develop#c553cc1a87b4441a1787e8a68b365752e71660ae"
 dependencies = [
  "aes",
  "agnostic-lite",
@@ -1907,7 +1907,7 @@ dependencies = [
 [[package]]
 name = "cosmian_sse_memories"
 version = "8.0.0"
-source = "git+https://github.com/Cosmian/findex?branch=chore%2Frename_memories_and_update_features#eedc87278e1f7d46379299d0670126d6a08b5128"
+source = "git+https://github.com/Cosmian/findex?branch=develop#c553cc1a87b4441a1787e8a68b365752e71660ae"
 dependencies = [
  "agnostic-lite",
  "cosmian_crypto_core 10.2.0",

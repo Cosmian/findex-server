@@ -20,6 +20,34 @@ jobs:
         with:
           submodules: recursive
       - uses: EmbarkStudios/cargo-deny-action@v2
+      
+  cargo-machete:
+    name: Check for unused dependencies
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.87.0
+      - name: Install cargo-machete
+        run: cargo install cargo-machete
+      - name: Check unused dependencies
+        run: cargo machete --with-metadata
+  
+  cargo-lint:
+    uses: Cosmian/reusable_workflows/.github/workflows/clippy.yml@develop
+    with:
+      toolchain: ${{ inputs.toolchain }}
+
+  build-tests:
+    uses: Cosmian/reusable_workflows/.github/workflows/build_all.yml@develop
+    secrets: inherit
+    with:
+      toolchain: ${{ inputs.toolchain }}
+      debug_or_release: ${{ inputs.debug_or_release }}
 
   docker-image-release:
     if: inputs.debug_or_release == 'release'
@@ -38,18 +66,6 @@ jobs:
       prefix: ''
       registry-image: ghcr.io/cosmian/findex-server
       platforms: linux/amd64
-
-  cargo-lint:
-    uses: Cosmian/reusable_workflows/.github/workflows/clippy.yml@develop
-    with:
-      toolchain: ${{ inputs.toolchain }}
-
-  build-tests:
-    uses: Cosmian/reusable_workflows/.github/workflows/build_all.yml@develop
-    secrets: inherit
-    with:
-      toolchain: ${{ inputs.toolchain }}
-      debug_or_release: ${{ inputs.debug_or_release }}
 
   ##############################################################################
   ### Releases
