@@ -1516,7 +1516,8 @@ dependencies = [
 [[package]]
 name = "cosmian_findex"
 version = "8.0.0"
-source = "git+https://github.com/Cosmian/findex?branch=develop#c553cc1a87b4441a1787e8a68b365752e71660ae"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b0b68f0bc9f2fdcdd01cbe32e2061c0a7c670a39b66d4178f394fa108ffbcfe5"
 dependencies = [
  "aes",
  "agnostic-lite",
@@ -1898,7 +1899,8 @@ dependencies = [
 [[package]]
 name = "cosmian_sse_memories"
 version = "8.0.0"
-source = "git+https://github.com/Cosmian/findex?branch=develop#c553cc1a87b4441a1787e8a68b365752e71660ae"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f21de5515e966a676e8d85097960e9c69c134eafdb6044b381d7ffff60c6b8c1"
 dependencies = [
  "agnostic-lite",
  "cosmian_crypto_core 10.2.0",

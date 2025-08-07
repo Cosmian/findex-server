@@ -48,8 +48,8 @@ base64 = "0.22"
 clap = { version = "4.5", default-features = false }
 cosmian_config_utils = "0.3"
 cosmian_crypto_core = { version = "10.2", default-features = false }
-cosmian_findex = { git = "https://github.com/Cosmian/findex", branch = "develop", version = "8.0" }
-cosmian_sse_memories = { git = "https://github.com/Cosmian/findex", branch = "develop", version = "8.0" }
+cosmian_findex = "8.0"
+cosmian_sse_memories = "8.0"
 cosmian_http_client = "0.3"
 cosmian_kms_cli = { git = "https://github.com/Cosmian/kms", branch = "develop", version = "5.6.1" }
 test_kms_server = { git = "https://github.com/Cosmian/kms", branch = "develop", version = "5.6.1" }
