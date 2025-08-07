@@ -52,7 +52,7 @@ mod findex;
 mod permissions;
 mod uuids;
 
-use cosmian_findex::ADDRESS_LENGTH;
+use cosmian_sse_memories::ADDRESS_LENGTH;
 pub use encrypted_entries::EncryptedEntries;
 pub use error::StructsError;
 pub use findex::{

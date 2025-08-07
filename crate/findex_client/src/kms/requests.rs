@@ -1,4 +1,3 @@
-use cosmian_findex::{ADDRESS_LENGTH, Address, MemoryADT};
 use cosmian_kms_cli::reexport::cosmian_kms_client::{
     cosmian_kmip::kmip_0::{
         kmip_messages::{RequestMessage, RequestMessageBatchItemVersioned, RequestMessageHeader},
@@ -11,6 +10,7 @@ use cosmian_kms_cli::reexport::cosmian_kms_client::{
         requests::encrypt_request,
     },
 };
+use cosmian_sse_memories::{ADDRESS_LENGTH, Address, MemoryADT};
 
 use super::KmsEncryptionLayer;
 use crate::ClientResult;

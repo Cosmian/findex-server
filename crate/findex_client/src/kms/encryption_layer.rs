@@ -1,4 +1,3 @@
-use cosmian_findex::{ADDRESS_LENGTH, Address, MemoryADT};
 use cosmian_kms_cli::reexport::cosmian_kms_client::{
     KmsClient,
     cosmian_kmip::kmip_0::{
@@ -6,6 +5,7 @@ use cosmian_kms_cli::reexport::cosmian_kms_client::{
         kmip_types::ResultStatusEnumeration,
     },
 };
+use cosmian_sse_memories::{ADDRESS_LENGTH, Address, MemoryADT};
 use tracing::trace;
 
 use crate::{ClientError, ClientResult};

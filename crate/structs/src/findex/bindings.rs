@@ -1,5 +1,5 @@
 use cosmian_crypto_core::bytes_ser_de::{Deserializer, Serializer};
-use cosmian_findex::{ADDRESS_LENGTH, Address};
+use cosmian_sse_memories::{ADDRESS_LENGTH, Address};
 use tracing::debug;
 
 use super::SerializationResult;

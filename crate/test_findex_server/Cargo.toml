@@ -18,15 +18,10 @@ non-fips = ["cosmian_findex_client/non-fips"]
 
 [dependencies]
 actix-server = { workspace = true }
-cosmian_findex_client = { path = "../findex_client", version = "0.4.0"}
-cosmian_findex_server = { path = "../server", features = ["insecure"], version = "0.4.0" }
+cosmian_findex_client = { path = "../findex_client", version = "0.4.0" }
+cosmian_findex_server = { path = "../server", features = [
+  "insecure",
+], version = "0.4.0" }
 cosmian_logger = { workspace = true }
 tokio = { workspace = true, features = ["rt-multi-thread"] }
 tracing = { workspace = true }
-
-[dev-dependencies]
-criterion = { version = "0.5", features = [
-  "html_reports",
-  "async_tokio",
-], default-features = false }
-zeroize = { workspace = true }

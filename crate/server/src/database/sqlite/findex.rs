@@ -1,5 +1,5 @@
-use cosmian_findex::{Address, MemoryADT};
 use cosmian_findex_structs::SERVER_ADDRESS_LENGTH;
+use cosmian_sse_memories::{Address, MemoryADT};
 
 use crate::database::sqlite::{Sqlite, SqliteMemoryError};
 

@@ -31,8 +31,8 @@ actix-service = "2.0"
 actix-tls = "3.4"
 actix-web = { workspace = true, features = ["macros", "openssl"] }
 alcoholic_jwt = "4091"
-async-trait = "0.1.88"
 async-sqlite = { workspace = true }
+async-trait = "0.1"
 chrono = "0.4"
 clap = { workspace = true, features = [
   "help",
@@ -45,17 +45,13 @@ clap = { workspace = true, features = [
 ] }
 cosmian_crypto_core = { workspace = true }
 cosmian_findex = { workspace = true }
-cosmian_findex_structs = { path = "../structs", version = "0.4.0"}
+cosmian_findex_structs = { path = "../structs", version = "0.4.0" }
 cosmian_logger = { workspace = true }
+cosmian_sse_memories = { workspace = true, features = ["redis-mem"] }
 dotenvy = "0.15"
 futures = "0.3"
 openssl = { workspace = true, default-features = false }
-redis = { version = "0.28", features = [
-  "aio",
-  "script",
-  "connection-manager",
-  "tokio-comp",
-] }
+redis = { version = "0.32" }
 # Important: align the rustls version with reqwest rustls dependency
 # When using client certificate authentication, reqwest will use the
 # native-tls crate to create an Identity; this will be different backend
@@ -67,13 +63,14 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true, features = ["full"] }
-toml = "0.8"
+toml = "0.9"
 tracing = { workspace = true }
 url = { workspace = true }
 uuid = { workspace = true, features = ["v4"] }
 
-
 [dev-dependencies]
+cosmian_findex = { workspace = true, features = ["test-utils"] }
+cosmian_sse_memories = { workspace = true, features = ["test-utils"] }
 tempfile = { workspace = true }
 variant_count = "1.1"
 

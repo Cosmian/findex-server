@@ -1,8 +1,6 @@
 use base64::{Engine as _, engine::general_purpose};
-use cosmian_findex_structs::{
-    Addresses, Bindings, Guard, OptionalWords,
-    reexport::cosmian_findex::{ADDRESS_LENGTH, Address, MemoryADT},
-};
+use cosmian_findex_structs::{Addresses, Bindings, Guard, OptionalWords};
+use cosmian_sse_memories::{ADDRESS_LENGTH, Address, MemoryADT};
 use tracing::{debug, trace, warn};
 use uuid::Uuid;
 
