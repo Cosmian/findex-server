@@ -24,6 +24,13 @@ jobs:
       toolchain: ${{ inputs.toolchain }}
       debug_or_release: ${{ inputs.debug_or_release }}
 
+  cargo-publish:
+    uses: Cosmian/reusable_workflows/.github/workflows/cargo-publish-workspace.yml@develop
+    with:
+      toolchain: ${{ inputs.toolchain }}
+    secrets:
+      token: ${{ secrets.CRATES_IO }}
+
   docker-image-release:
     if: inputs.debug_or_release == 'release'
     name: Build docker image for AMD64 and ARM64
@@ -54,16 +61,6 @@ jobs:
       project-name: findex-server
       destination: findex-server
       debug_or_release: ${{ inputs.debug_or_release }}
-
-  cargo-publish:
-    needs:
-      - cargo-lint
-      - build-tests
-    uses: Cosmian/reusable_workflows/.github/workflows/cargo-publish-workspace.yml@develop
-    with:
-      toolchain: ${{ inputs.toolchain }}
-    secrets:
-      token: ${{ secrets.CRATES_IO }}
 
   public_documentation:
     runs-on: ubuntu-latest
