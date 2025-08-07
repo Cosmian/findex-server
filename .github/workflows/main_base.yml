@@ -12,35 +12,13 @@ on:
         type: string
 
 jobs:
-  cargo-audit:
-    name: Security Audit
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-      - uses: EmbarkStudios/cargo-deny-action@v2
-      
-  cargo-machete:
-    name: Check for unused dependencies
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          toolchain: 1.87.0
-      - name: Install cargo-machete
-        run: cargo install cargo-machete
-      - name: Check unused dependencies
-        run: cargo machete --with-metadata
-  
   cargo-lint:
-    uses: Cosmian/reusable_workflows/.github/workflows/clippy.yml@develop
+    uses: Cosmian/reusable_workflows/.github/workflows/cargo-nursery.yml@develop
     with:
       toolchain: ${{ inputs.toolchain }}
+      workspace: true
+    secrets:
+      token: ${{ secrets.CRATES_IO }}
 
   build-tests:
     uses: Cosmian/reusable_workflows/.github/workflows/build_all.yml@develop
@@ -72,7 +50,6 @@ jobs:
   ##############################################################################
   push-artifacts:
     needs:
-      - cargo-audit
       - cargo-lint
       - build-tests
     uses: Cosmian/reusable_workflows/.github/workflows/push-artifacts.yml@develop
@@ -80,16 +57,6 @@ jobs:
       project-name: findex-server
       destination: findex-server
       debug_or_release: ${{ inputs.debug_or_release }}
-
-  cargo-publish:
-    needs:
-      - cargo-audit
-      - cargo-lint
-      - build-tests
-    uses: Cosmian/reusable_workflows/.github/workflows/cargo-publish-workspace.yml@develop
-    with:
-      toolchain: ${{ inputs.toolchain }}
-    secrets: inherit
 
   public_documentation:
     runs-on: ubuntu-latest
