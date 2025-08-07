@@ -12,8 +12,18 @@ on:
         type: string
 
 jobs:
-  cargo-lint:
-    uses: Cosmian/reusable_workflows/.github/workflows/cargo-nursery-base.yml@develop
+  cargo-clippy:
+    uses: Cosmian/reusable_workflows/.github/workflows/clippy.yml@develop
+    with:
+      toolchain: ${{ inputs.toolchain }}
+
+  cargo-deny:
+    uses: Cosmian/reusable_workflows/.github/workflows/cargo-audit.yml@develop
+    with:
+      toolchain: ${{ inputs.toolchain }}
+
+  cargo-machete:
+    uses: Cosmian/reusable_workflows/.github/workflows/cargo-machete.yml@develop
     with:
       toolchain: ${{ inputs.toolchain }}
 
@@ -54,7 +64,9 @@ jobs:
   ##############################################################################
   push-artifacts:
     needs:
-      - cargo-lint
+      - cargo-clippy
+      - cargo-deny
+      - cargo-machete
       - build-tests
     uses: Cosmian/reusable_workflows/.github/workflows/push-artifacts.yml@develop
     with:
