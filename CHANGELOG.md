@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.1] - 2025-08-07
+
+### 🚀 Features
+
+- Update findex to 8.0 (#100)
+
+### 🐛 Bug Fixes
+
+- Test_findex_server must remain dev-dependency (#99)
+- Set crates version independently of workspace version (#104)
+
+### ⚙️ Miscellaneous Tasks
+
+- Update version of GH action cargo-deny (#101)
+- Add publish crates GH action
+- Split workflow nursery into several
+
 ## [0.4.0] - 2025-07-23
 
 ### 🚀 Features
