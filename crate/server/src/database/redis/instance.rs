@@ -1,6 +1,6 @@
 use async_trait::async_trait;
-use cosmian_findex::{Address, RedisMemory};
 use cosmian_findex_structs::SERVER_ADDRESS_LENGTH;
+use cosmian_sse_memories::{Address, RedisMemory};
 use redis::aio::ConnectionManager;
 use tracing::info;
 
@@ -46,7 +46,7 @@ impl<const WORD_LENGTH: usize> InstantiationTrait for Redis<WORD_LENGTH> {
             }
         }
 
-        let memory = RedisMemory::connect_with_manager(manager.clone()).await?;
+        let memory = RedisMemory::new_with_manager(manager.clone()).await?;
 
         Ok(Self { memory, manager })
     }

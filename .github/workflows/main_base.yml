@@ -12,14 +12,34 @@ on:
         type: string
 
 jobs:
-  cargo-audit:
-    name: Security Audit
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-      - uses: EmbarkStudios/cargo-deny-action@v1
+  cargo-clippy:
+    uses: Cosmian/reusable_workflows/.github/workflows/clippy.yml@develop
+    with:
+      toolchain: ${{ inputs.toolchain }}
+
+  cargo-deny:
+    uses: Cosmian/reusable_workflows/.github/workflows/cargo-audit.yml@develop
+    with:
+      toolchain: ${{ inputs.toolchain }}
+
+  cargo-machete:
+    uses: Cosmian/reusable_workflows/.github/workflows/cargo-machete.yml@develop
+    with:
+      toolchain: ${{ inputs.toolchain }}
+
+  build-tests:
+    uses: Cosmian/reusable_workflows/.github/workflows/build_all.yml@develop
+    secrets: inherit
+    with:
+      toolchain: ${{ inputs.toolchain }}
+      debug_or_release: ${{ inputs.debug_or_release }}
+
+  cargo-publish:
+    uses: Cosmian/reusable_workflows/.github/workflows/cargo-publish-workspace.yml@develop
+    with:
+      toolchain: ${{ inputs.toolchain }}
+    secrets:
+      token: ${{ secrets.CRATES_IO }}
 
   docker-image-release:
     if: inputs.debug_or_release == 'release'
@@ -39,25 +59,14 @@ jobs:
       registry-image: ghcr.io/cosmian/findex-server
       platforms: linux/amd64
 
-  cargo-lint:
-    uses: Cosmian/reusable_workflows/.github/workflows/clippy.yml@develop
-    with:
-      toolchain: ${{ inputs.toolchain }}
-
-  build-tests:
-    uses: Cosmian/reusable_workflows/.github/workflows/build_all.yml@develop
-    secrets: inherit
-    with:
-      toolchain: ${{ inputs.toolchain }}
-      debug_or_release: ${{ inputs.debug_or_release }}
-
   ##############################################################################
   ### Releases
   ##############################################################################
   push-artifacts:
     needs:
-      - cargo-audit
-      - cargo-lint
+      - cargo-clippy
+      - cargo-deny
+      - cargo-machete
       - build-tests
     uses: Cosmian/reusable_workflows/.github/workflows/push-artifacts.yml@develop
     with:

@@ -1,6 +1,6 @@
 use std::iter::once;
 
-use cosmian_findex::{ADDRESS_LENGTH, Address, MemoryADT};
+use cosmian_sse_memories::{ADDRESS_LENGTH, Address, MemoryADT};
 use tracing::trace;
 
 use super::KmsEncryptionLayer;
@@ -153,10 +153,6 @@ impl<
 mod tests {
     use std::sync::Arc;
 
-    use cosmian_findex::{
-        InMemory, gen_seed, test_guarded_write_concurrent, test_single_write_and_read,
-        test_wrong_guard,
-    };
     use cosmian_findex_structs::CUSTOM_WORD_LENGTH;
     use cosmian_kms_cli::reexport::{
         cosmian_kms_client::{
@@ -169,9 +165,16 @@ mod tests {
         cosmian_kms_crypto::reexport::cosmian_crypto_core::{
             CsRng, Sampling, reexport::rand_core::SeedableRng,
         },
-        test_kms_server::start_default_test_kms_server,
     };
     use cosmian_logger::log_init;
+    use cosmian_sse_memories::{
+        InMemory,
+        test_utils::{
+            gen_seed, test_guarded_write_concurrent, test_rw_same_address,
+            test_single_write_and_read, test_wrong_guard,
+        },
+    };
+    use test_kms_server::start_default_test_kms_server;
     use tokio::task;
 
     use super::*;
@@ -408,12 +411,24 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn test_sequential_same_address() -> ClientResult<()> {
+        let ctx = start_default_test_kms_server().await;
+        let memory = create_test_layer(ctx.owner_client_config.clone()).await?;
+        test_rw_same_address::<CUSTOM_WORD_LENGTH, _>(&memory, gen_seed()).await;
+        Ok(())
+    }
+
+    #[tokio::test]
     async fn test_concurrent_read_write() -> ClientResult<()> {
         log_init(None);
         let ctx = start_default_test_kms_server().await;
         let memory = create_test_layer(ctx.owner_client_config.clone()).await?;
-        test_guarded_write_concurrent::<CUSTOM_WORD_LENGTH, _>(&memory, gen_seed(), Some(100))
-            .await;
+        test_guarded_write_concurrent::<
+            CUSTOM_WORD_LENGTH,
+            _,
+            cosmian_findex::reexport::tokio::TokioSpawner,
+        >(&memory, gen_seed(), Some(100))
+        .await;
         Ok(())
     }
 }

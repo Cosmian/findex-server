@@ -35,7 +35,6 @@ pub mod reexport {
     pub use cosmian_findex_client;
     pub use cosmian_findex_structs;
     pub use cosmian_kms_cli;
-    pub use test_findex_server;
 }
 
 #[cfg(test)]

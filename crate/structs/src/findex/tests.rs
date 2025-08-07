@@ -6,7 +6,8 @@ mod findex_tests {
         CsRng, Sampling,
         reexport::rand_core::{RngCore, SeedableRng},
     };
-    use cosmian_findex::{ADDRESS_LENGTH, Address, WORD_LENGTH};
+    use cosmian_findex::WORD_LENGTH;
+    use cosmian_sse_memories::{ADDRESS_LENGTH, Address};
 
     use crate::findex::{
         addresses::Addresses, bindings::Bindings, guard::Guard, words::OptionalWords,
