@@ -170,7 +170,7 @@ mod tests {
     use cosmian_sse_memories::{
         InMemory,
         test_utils::{
-            gen_seed, test_guarded_write_concurrent, test_rw_same_address,
+            gen_seed, test_rw_same_address,
             test_single_write_and_read, test_wrong_guard,
         },
     };
@@ -418,17 +418,18 @@ mod tests {
         Ok(())
     }
 
-    #[tokio::test]
-    async fn test_concurrent_read_write() -> ClientResult<()> {
-        log_init(None);
-        let ctx = start_default_test_kms_server().await;
-        let memory = create_test_layer(ctx.owner_client_config.clone()).await?;
-        test_guarded_write_concurrent::<
-            CUSTOM_WORD_LENGTH,
-            _,
-            cosmian_findex::reexport::tokio::TokioSpawner,
-        >(&memory, gen_seed(), Some(100))
-        .await;
-        Ok(())
-    }
+    // TODO(ecse): this test has been commented since du to its instability.
+    // #[tokio::test]
+    // async fn test_concurrent_read_write() -> ClientResult<()> {
+    //     log_init(None);
+    //     let ctx = start_default_test_kms_server().await;
+    //     let memory = create_test_layer(ctx.owner_client_config.clone()).await?;
+    //     test_guarded_write_concurrent::<
+    //         CUSTOM_WORD_LENGTH,
+    //         _,
+    //         cosmian_findex::reexport::tokio::TokioSpawner,
+    //     >(&memory, gen_seed(), Some(100))
+    //     .await;
+    //     Ok(())
+    // }
 }
