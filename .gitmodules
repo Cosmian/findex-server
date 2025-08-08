@@ -2,3 +2,6 @@
     path = .github/reusable_scripts
     url = https://github.com/Cosmian/reusable_scripts.git
     branch = develop
+[submodule "test_data"]
+	path = test_data
+	url = https://github.com/Cosmian/test_data.git
