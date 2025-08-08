@@ -170,8 +170,7 @@ mod tests {
     use cosmian_sse_memories::{
         InMemory,
         test_utils::{
-            gen_seed, test_rw_same_address,
-            test_single_write_and_read, test_wrong_guard,
+            gen_seed, test_rw_same_address, test_single_write_and_read, test_wrong_guard,
         },
     };
     use test_kms_server::start_default_test_kms_server;
