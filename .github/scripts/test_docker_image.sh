@@ -3,14 +3,14 @@
 # Config paths
 CONFIG=~/.cosmian/cosmian.toml
 TLS_CONFIG=~/.cosmian/cosmian-tls.toml
-KMS_URL_HTTP="http://0.0.0.0:9998"
-KMS_URL_HTTPS="https://0.0.0.0:9999"
+FS_URL_HTTP="http://0.0.0.0:6668"
+FS_URL_HTTPS="https://0.0.0.0:6669"
 
 # Cert paths
-CA_CERT="/home/runner/work/kms/kms/test_data/client_server/ca/ca.crt"
-CLIENT_CERT="/home/runner/work/kms/kms/test_data/client_server/owner/owner.client.acme.com.crt"
-CLIENT_KEY="/home/runner/work/kms/kms/test_data/client_server/owner/owner.client.acme.com.key"
-CLIENT_PKCS12_PATH="/home/runner/work/kms/kms/test_data/client_server/owner/owner.client.acme.com.p12"
+CA_CERT="/home/runner/work/findex-server/findex-server/test_data/client_server/ca/ca.crt"
+CLIENT_CERT="/home/runner/work/findex-server/findex-server/test_data/client_server/owner/owner.client.acme.com.crt"
+CLIENT_KEY="/home/runner/work/findex-server/findex-server/test_data/client_server/owner/owner.client.acme.com.key"
+CLIENT_PKCS12_PATH="/home/runner/work/findex-server/findex-server/test_data/client_server/owner/owner.client.acme.com.p12"
 
 set -ex
 
@@ -28,13 +28,19 @@ sudo chmod 666 $CONFIG $TLS_CONFIG
 sudo chown root:docker $CONFIG $TLS_CONFIG
 
 echo '
+[kms_config.http_config]
+server_url = "http://0.0.0.0:6668"
+
 [findex_config.http_config]
-server_url = "'$KMS_URL_HTTP'"
+server_url = "'$FS_URL_HTTP'"
 ' | sudo tee $CONFIG
 
 echo '
 [kms_config.http_config]
-server_url = "'$KMS_URL_HTTPS'"
+server_url = "http://0.0.0.0:6668"
+
+[findex_config.http_config]
+server_url = "'$FS_URL_HTTPS'"
 accept_invalid_certs = true
 ssl_client_pkcs12_path = "'$CLIENT_PKCS12_PATH'"
 ssl_client_pkcs12_password = "password"
@@ -57,18 +63,10 @@ openssl_test() {
     -key "$CLIENT_KEY"
 }
 
-# Create symmetric keys
-cosmian -c "$CONFIG" --kms-url "$KMS_URL_HTTP" kms sym keys create
-cosmian -c "$TLS_CONFIG" --kms-url "$KMS_URL_HTTPS" --kms-accept-invalid-certs kms sym keys create
-
-# Test UI endpoints
-curl -I http://127.0.0.1:9998/ui/index.html
-curl --insecure -I https://127.0.0.1:9999/ui/index.html
+# Display server version
+cosmian -c "$CONFIG" --findex-url "$FS_URL_HTTP" findex server-version
+cosmian -c "$TLS_CONFIG" --findex-url "$FS_URL_HTTPS" --findex-accept-invalid-certs findex server-version
 
 # Test TLS HTTPS server
-openssl_test "127.0.0.1:9999" "tls1_2"
-openssl_test "127.0.0.1:9999" "tls1_3"
-
-# Test TLS socket server
-openssl_test "127.0.0.1:5696" "tls1_2"
-openssl_test "127.0.0.1:5696" "tls1_3"
+openssl_test "127.0.0.1:6669" "tls1_2"
+openssl_test "127.0.0.1:6669" "tls1_3"
