@@ -24,7 +24,6 @@ cosmian --version
 # update cli conf
 mkdir -p ~/.cosmian
 touch $CONFIG $TLS_CONFIG
-# chmod 666 $CONFIG $TLS_CONFIG
 
 echo '
 [kms_config.http_config]

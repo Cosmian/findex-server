@@ -4,6 +4,9 @@ services:
     image: ${DOCKER_IMAGE_NAME}
     ports:
       - 6668:6668
+    environment:
+      - FINDEX_SERVER_DATABASE_TYPE=sqlite
+      - FINDEX_SERVER_DATABASE_URL=./sqlite.db
   tls-authentication:
     image: ${DOCKER_IMAGE_NAME}
     volumes:
@@ -14,3 +17,7 @@ services:
       --authority-cert-file /data/client_server/ca/ca.crt
     ports:
       - 6669:6669
+    environment:
+      - FINDEX_SERVER_DATABASE_TYPE=sqlite
+      - FINDEX_SERVER_DATABASE_URL=./sqlite_auth.db
+      - FINDEX_SERVER_PORT=6669
