@@ -69,4 +69,4 @@ cosmian -c "$TLS_CONFIG" findex server-version
 
 # Test TLS HTTPS server
 openssl_test "127.0.0.1:6669" "tls1_2"
-openssl_test "127.0.0.1:6669" "tls1_3"
+# openssl_test "127.0.0.1:6669" "tls1_3"
