@@ -29,7 +29,7 @@ sudo chown root:docker $CONFIG $TLS_CONFIG
 
 echo '
 [kms_config.http_config]
-server_url = "http://0.0.0.0:6668"
+server_url = "http://0.0.0.0:9998"
 
 [findex_config.http_config]
 server_url = "'$FS_URL_HTTP'"
@@ -37,7 +37,7 @@ server_url = "'$FS_URL_HTTP'"
 
 echo '
 [kms_config.http_config]
-server_url = "http://0.0.0.0:6668"
+server_url = "http://0.0.0.0:9998"
 
 [findex_config.http_config]
 server_url = "'$FS_URL_HTTPS'"
