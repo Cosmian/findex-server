@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -ex
+
 # Config paths
 CONFIG=~/.cosmian/cosmian-no-tls.toml
 TLS_CONFIG=~/.cosmian/cosmian-tls.toml
