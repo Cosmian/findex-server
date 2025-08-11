@@ -15,7 +15,6 @@ CLIENT_CERT="test_data/client_server/owner/owner.client.acme.com.crt"
 CLIENT_KEY="test_data/client_server/owner/owner.client.acme.com.key"
 CLIENT_PKCS12_PATH="test_data/client_server/owner/owner.client.acme.com.p12"
 
-set -ex
 
 # install cli
 sudo apt update && sudo apt install -y wget
