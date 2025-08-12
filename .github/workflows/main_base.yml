@@ -10,6 +10,9 @@ on:
       debug_or_release:
         required: true
         type: string
+      platforms:
+        required: true
+        type: string
 
 jobs:
   cargo-clippy:
@@ -41,23 +44,13 @@ jobs:
     secrets:
       token: ${{ secrets.CRATES_IO }}
 
-  docker-image-release:
-    if: inputs.debug_or_release == 'release'
-    name: Build docker image for AMD64 and ARM64
-    uses: Cosmian/reusable_workflows/.github/workflows/build_docker_image.yml@develop
-    with:
-      prefix: ''
-      registry-image: ghcr.io/cosmian/findex-server
-      platforms: linux/amd64,linux/arm64
-
   docker-image:
-    if: inputs.debug_or_release == 'debug'
-    name: Build docker image for AMD64
+    name: Build docker image
     uses: Cosmian/reusable_workflows/.github/workflows/build_docker_image.yml@develop
     with:
       prefix: ''
       registry-image: ghcr.io/cosmian/findex-server
-      platforms: linux/amd64
+      platforms: ${{ inputs.platforms }}
 
   ##############################################################################
   ### Releases
