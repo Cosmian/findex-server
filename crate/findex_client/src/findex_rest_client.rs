@@ -1,5 +1,4 @@
-use base64::{Engine as _, engine::general_purpose};
-use cosmian_findex_structs::{Addresses, Bindings, Guard, OptionalWords};
+use cosmian_findex_structs::{Addresses, Bindings, Guard, OptionalWords, Word};
 use cosmian_sse_memories::{ADDRESS_LENGTH, Address, MemoryADT};
 use tracing::{debug, trace, warn};
 use uuid::Uuid;
@@ -126,9 +125,8 @@ impl<const WORD_LENGTH: usize> MemoryADT for FindexRestClient<WORD_LENGTH> {
         trace!(
             "guarded_write successful on server url {}. guard: {}",
             server_url,
-            guard.map_or("None".to_owned(), |g| general_purpose::STANDARD.encode(g))
+            guard.map_or_else(|| "None".to_owned(), |g| format!("{}", Word::from(g)))
         );
-
         Ok(guard)
     }
 }

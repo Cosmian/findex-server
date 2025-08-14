@@ -7,6 +7,68 @@ use tracing::debug;
 use super::SerializationResult;
 use crate::StructsError;
 
+/// A wrapper around `[u8; WORD_LENGTH]` that provides base64 display functionality.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct Word<const WORD_LENGTH: usize>([u8; WORD_LENGTH]);
+
+impl<const WORD_LENGTH: usize> Word<WORD_LENGTH> {
+    /// Creates a new `Word` instance.
+    #[must_use]
+    pub const fn new(word: [u8; WORD_LENGTH]) -> Self {
+        Self(word)
+    }
+
+    /// Returns the inner byte array.
+    #[must_use]
+    pub const fn into_inner(self) -> [u8; WORD_LENGTH] {
+        self.0
+    }
+
+    /// Returns a reference to the inner byte array.
+    #[must_use]
+    pub const fn as_bytes(&self) -> &[u8; WORD_LENGTH] {
+        &self.0
+    }
+}
+
+impl<const WORD_LENGTH: usize> std::fmt::Display for Word<WORD_LENGTH> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", general_purpose::STANDARD.encode(self.0))
+    }
+}
+
+impl<const WORD_LENGTH: usize> From<[u8; WORD_LENGTH]> for Word<WORD_LENGTH> {
+    fn from(word: [u8; WORD_LENGTH]) -> Self {
+        Self(word)
+    }
+}
+
+impl<const WORD_LENGTH: usize> From<Word<WORD_LENGTH>> for [u8; WORD_LENGTH] {
+    fn from(word: Word<WORD_LENGTH>) -> Self {
+        word.0
+    }
+}
+
+impl<const WORD_LENGTH: usize> AsRef<[u8; WORD_LENGTH]> for Word<WORD_LENGTH> {
+    fn as_ref(&self) -> &[u8; WORD_LENGTH] {
+        &self.0
+    }
+}
+
+impl<const WORD_LENGTH: usize> AsRef<[u8]> for Word<WORD_LENGTH> {
+    fn as_ref(&self) -> &[u8] {
+        &self.0
+    }
+}
+
+impl<const WORD_LENGTH: usize> Deref for Word<WORD_LENGTH> {
+    type Target = [u8; WORD_LENGTH];
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
 /// Returns a `SerializationError` if any step of the serialization process fails.
 fn ser_optional_word<const WORD_LENGTH: usize>(
     ser: &mut Serializer,
@@ -77,10 +139,8 @@ impl<const WORD_LENGTH: usize> std::fmt::Display for OptionalWords<WORD_LENGTH> 
             .0
             .iter()
             .map(|word| {
-                word.as_ref().map_or_else(
-                    || "None".to_owned(),
-                    |w| general_purpose::STANDARD.encode(w),
-                )
+                word.as_ref()
+                    .map_or_else(|| "None".to_owned(), |w| format!("{}", Word::new(*w)))
             })
             .collect();
         write!(f, "{base64_words:?}")
