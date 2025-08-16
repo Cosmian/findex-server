@@ -4,6 +4,6 @@
 [advisories]
 # List of advisory IDs to ignore (extracted from deny.toml)
 ignore = [
-    { id = "RUSTSEC-2023-0071", reason = "rsa" },
-    { id = "RUSTSEC-2024-0436", reason = "A transitive dependency (`paste`) is not maintained anymore and should be replaced by its follow up `pastry` on the `agnostic_lite` project." }, #  this is temporary, an issue was opened on the culprit crate : https://github.com/al8n/agnostic/issues/26
+    "RUSTSEC-2023-0071", # rsa
+    "RUSTSEC-2024-0436", # unmaintained paste
 ]
