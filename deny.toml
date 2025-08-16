@@ -101,15 +101,15 @@ allow = [
   "BSD-3-Clause",
   "BUSL-1.1",
   "GPL-3.0",
-  "GPL-3.0-or-later",
   "AGPL-3.0",
-  "AGPL-3.0-only",
   "CC0-1.0",
   "MPL-2.0",
   "Unicode-3.0",
   "CDLA-Permissive-2.0",
   "OpenSSL",
   "CDLA-Permissive-2.0",
+  "GPL-3.0-or-later",               # alcoholic_jwt-4091.0.0
+  "AGPL-3.0-only",                  # synthesized
 ]
 # The confidence threshold for detecting a license from license text.
 # The higher the value, the more closely the license text must be to the
