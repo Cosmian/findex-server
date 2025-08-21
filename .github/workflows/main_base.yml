@@ -30,6 +30,11 @@ jobs:
     with:
       toolchain: ${{ inputs.toolchain }}
 
+  cargo-semver:
+    uses: Cosmian/reusable_workflows/.github/workflows/cargo-semver.yml@develop
+    with:
+      toolchain: ${{ inputs.toolchain }}
+
   build-tests:
     uses: Cosmian/reusable_workflows/.github/workflows/build_all.yml@develop
     secrets: inherit
