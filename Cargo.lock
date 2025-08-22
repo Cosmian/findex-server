@@ -1558,7 +1558,7 @@ dependencies = [
  "base64 0.22.1",
  "cosmian_findex 8.0.0",
  "cosmian_findex_structs",
- "cosmian_http_client",
+ "cosmian_http_client 0.3.1",
  "cosmian_kms_cli",
  "cosmian_logger",
  "cosmian_sse_memories",
@@ -1618,6 +1618,25 @@ dependencies = [
  "thiserror 2.0.12",
  "tracing",
  "uuid",
+]
+
+[[package]]
+name = "cosmian_http_client"
+version = "0.3.1"
+dependencies = [
+ "actix-web",
+ "derive_more 0.99.20",
+ "oauth2 4.4.2",
+ "reqwest 0.11.27",
+ "rustls 0.21.12",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.12",
+ "tokio",
+ "tracing",
+ "url",
+ "webpki-roots 0.22.6",
+ "x509-cert",
 ]
 
 [[package]]
@@ -1724,7 +1743,7 @@ version = "5.7.0"
 source = "git+https://github.com/Cosmian/kms?branch=develop#714ff9cb8f2b0aa8306e8cf2d830e4fe062b5402"
 dependencies = [
  "cosmian_crypto_core 10.2.0",
- "cosmian_http_client",
+ "cosmian_http_client 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "cosmian_kms_client_utils",
  "der",
  "pem",
