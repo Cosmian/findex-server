@@ -3,6 +3,10 @@ name: CI debug
 
 on:
   push:
+    branches:
+      - '**'
+    tags-ignore:
+      - '**'
 
 jobs:
   main:
@@ -11,3 +15,4 @@ jobs:
     with:
       toolchain: nightly-2025-03-31
       debug_or_release: debug
+      platforms: linux/amd64

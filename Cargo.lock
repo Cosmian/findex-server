@@ -955,7 +955,7 @@ dependencies = [
  "bitflags 2.9.1",
  "cexpr",
  "clang-sys",
- "itertools 0.12.1",
+ "itertools 0.10.5",
  "lazy_static",
  "lazycell",
  "log",
@@ -1529,7 +1529,7 @@ dependencies = [
 
 [[package]]
 name = "cosmian_findex_cli"
-version = "0.4.1"
+version = "0.4.2"
 dependencies = [
  "assert_cmd",
  "base64 0.22.1",
@@ -1553,7 +1553,7 @@ dependencies = [
 
 [[package]]
 name = "cosmian_findex_client"
-version = "0.4.1"
+version = "0.4.2"
 dependencies = [
  "base64 0.22.1",
  "cosmian_findex 8.0.0",
@@ -1573,7 +1573,7 @@ dependencies = [
 
 [[package]]
 name = "cosmian_findex_server"
-version = "0.4.1"
+version = "0.4.2"
 dependencies = [
  "actix-cors",
  "actix-identity",
@@ -1609,7 +1609,7 @@ dependencies = [
 
 [[package]]
 name = "cosmian_findex_structs"
-version = "0.4.1"
+version = "0.4.2"
 dependencies = [
  "base64 0.22.1",
  "cosmian_crypto_core 10.2.0",
@@ -1622,9 +1622,9 @@ dependencies = [
 
 [[package]]
 name = "cosmian_http_client"
-version = "0.3.1"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0be6c5aff7d8d56057bb9f9940824cd578c5ecd50b0acd6aa39b6f3d6567f023"
+checksum = "2113a48291d755038c78edac362864ad0f5c43738a51f05108069db19e10ec5c"
 dependencies = [
  "actix-web",
  "derive_more 0.99.20",
@@ -1635,6 +1635,7 @@ dependencies = [
  "serde_json",
  "thiserror 2.0.12",
  "tokio",
+ "tracing",
  "url",
  "webpki-roots 0.22.6",
  "x509-cert",
@@ -1642,8 +1643,8 @@ dependencies = [
 
 [[package]]
 name = "cosmian_kmip"
-version = "5.6.2"
-source = "git+https://github.com/Cosmian/kms?branch=develop#f8624086bd4271370b5eb2851fb3945ea87cec7a"
+version = "5.7.1"
+source = "git+https://github.com/Cosmian/kms?branch=develop#7494da515b3f899cd80725194667300f1d9fec7d"
 dependencies = [
  "bitflags 2.9.1",
  "hex",
@@ -1662,8 +1663,8 @@ dependencies = [
 
 [[package]]
 name = "cosmian_kms_access"
-version = "5.6.2"
-source = "git+https://github.com/Cosmian/kms?branch=develop#f8624086bd4271370b5eb2851fb3945ea87cec7a"
+version = "5.7.1"
+source = "git+https://github.com/Cosmian/kms?branch=develop#7494da515b3f899cd80725194667300f1d9fec7d"
 dependencies = [
  "cosmian_kmip",
  "serde",
@@ -1671,8 +1672,8 @@ dependencies = [
 
 [[package]]
 name = "cosmian_kms_base_hsm"
-version = "5.6.2"
-source = "git+https://github.com/Cosmian/kms?branch=develop#f8624086bd4271370b5eb2851fb3945ea87cec7a"
+version = "5.7.1"
+source = "git+https://github.com/Cosmian/kms?branch=develop#7494da515b3f899cd80725194667300f1d9fec7d"
 dependencies = [
  "async-trait",
  "cosmian_kms_interfaces",
@@ -1687,8 +1688,8 @@ dependencies = [
 
 [[package]]
 name = "cosmian_kms_cli"
-version = "5.6.2"
-source = "git+https://github.com/Cosmian/kms?branch=develop#f8624086bd4271370b5eb2851fb3945ea87cec7a"
+version = "5.7.1"
+source = "git+https://github.com/Cosmian/kms?branch=develop#7494da515b3f899cd80725194667300f1d9fec7d"
 dependencies = [
  "base64 0.22.1",
  "clap",
@@ -1720,8 +1721,8 @@ dependencies = [
 
 [[package]]
 name = "cosmian_kms_client"
-version = "5.6.2"
-source = "git+https://github.com/Cosmian/kms?branch=develop#f8624086bd4271370b5eb2851fb3945ea87cec7a"
+version = "5.7.1"
+source = "git+https://github.com/Cosmian/kms?branch=develop#7494da515b3f899cd80725194667300f1d9fec7d"
 dependencies = [
  "cosmian_crypto_core 10.2.0",
  "cosmian_http_client",
@@ -1738,8 +1739,8 @@ dependencies = [
 
 [[package]]
 name = "cosmian_kms_client_utils"
-version = "5.6.2"
-source = "git+https://github.com/Cosmian/kms?branch=develop#f8624086bd4271370b5eb2851fb3945ea87cec7a"
+version = "5.7.1"
+source = "git+https://github.com/Cosmian/kms?branch=develop#7494da515b3f899cd80725194667300f1d9fec7d"
 dependencies = [
  "base64 0.22.1",
  "clap",
@@ -1758,8 +1759,8 @@ dependencies = [
 
 [[package]]
 name = "cosmian_kms_crypto"
-version = "5.6.2"
-source = "git+https://github.com/Cosmian/kms?branch=develop#f8624086bd4271370b5eb2851fb3945ea87cec7a"
+version = "5.7.1"
+source = "git+https://github.com/Cosmian/kms?branch=develop#7494da515b3f899cd80725194667300f1d9fec7d"
 dependencies = [
  "aes-gcm-siv",
  "argon2",
@@ -1782,8 +1783,8 @@ dependencies = [
 
 [[package]]
 name = "cosmian_kms_interfaces"
-version = "5.6.2"
-source = "git+https://github.com/Cosmian/kms?branch=develop#f8624086bd4271370b5eb2851fb3945ea87cec7a"
+version = "5.7.1"
+source = "git+https://github.com/Cosmian/kms?branch=develop#7494da515b3f899cd80725194667300f1d9fec7d"
 dependencies = [
  "async-trait",
  "cosmian_kmip",
@@ -1797,8 +1798,8 @@ dependencies = [
 
 [[package]]
 name = "cosmian_kms_server"
-version = "5.6.2"
-source = "git+https://github.com/Cosmian/kms?branch=develop#f8624086bd4271370b5eb2851fb3945ea87cec7a"
+version = "5.7.1"
+source = "git+https://github.com/Cosmian/kms?branch=develop#7494da515b3f899cd80725194667300f1d9fec7d"
 dependencies = [
  "actix-cors",
  "actix-files",
@@ -1828,7 +1829,6 @@ dependencies = [
  "pem",
  "proteccio_pkcs11_loader",
  "reqwest 0.11.27",
- "rsa",
  "rustls 0.23.31",
  "serde",
  "serde_json",
@@ -1848,8 +1848,8 @@ dependencies = [
 
 [[package]]
 name = "cosmian_kms_server_database"
-version = "5.6.2"
-source = "git+https://github.com/Cosmian/kms?branch=develop#f8624086bd4271370b5eb2851fb3945ea87cec7a"
+version = "5.7.1"
+source = "git+https://github.com/Cosmian/kms?branch=develop#7494da515b3f899cd80725194667300f1d9fec7d"
 dependencies = [
  "async-trait",
  "cloudproof_findex",
@@ -3447,27 +3447,9 @@ dependencies = [
 
 [[package]]
 name = "itertools"
-version = "0.12.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ba291022dbbd398a455acf126c1e341954079855bc60dfdda641363bd6922569"
-dependencies = [
- "either",
-]
-
-[[package]]
-name = "itertools"
 version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "413ee7dfc52ee1a4949ceeb7dbc8a33f2d6c088194d9f922fb8318faf1f01186"
-dependencies = [
- "either",
-]
-
-[[package]]
-name = "itertools"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2b192c782037fadd9cfa75548310488aabdbf3d2da73885b31bd0abd03351285"
 dependencies = [
  "either",
 ]
@@ -3574,8 +3556,8 @@ dependencies = [
 
 [[package]]
 name = "kmip-derive"
-version = "5.6.2"
-source = "git+https://github.com/Cosmian/kms?branch=develop#f8624086bd4271370b5eb2851fb3945ea87cec7a"
+version = "5.7.1"
+source = "git+https://github.com/Cosmian/kms?branch=develop#7494da515b3f899cd80725194667300f1d9fec7d"
 dependencies = [
  "quote",
  "syn",
@@ -4605,7 +4587,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8a56d757972c98b346a9b766e3f02746cde6dd1cd1d1d563472929fdd74bec4d"
 dependencies = [
  "anyhow",
- "itertools 0.14.0",
+ "itertools 0.13.0",
  "proc-macro2",
  "quote",
  "syn",
@@ -4613,8 +4595,8 @@ dependencies = [
 
 [[package]]
 name = "proteccio_pkcs11_loader"
-version = "5.6.2"
-source = "git+https://github.com/Cosmian/kms?branch=develop#f8624086bd4271370b5eb2851fb3945ea87cec7a"
+version = "5.7.1"
+source = "git+https://github.com/Cosmian/kms?branch=develop#7494da515b3f899cd80725194667300f1d9fec7d"
 dependencies = [
  "cosmian_kms_base_hsm",
  "cosmian_kms_interfaces",
@@ -5543,9 +5525,9 @@ dependencies = [
 
 [[package]]
 name = "slab"
-version = "0.4.10"
+version = "0.4.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "04dc19736151f35336d325007ac991178d504a119863a2fcb3758cdb5e52c50d"
+checksum = "7a2ae44ef20feb57a68b23d846850f861394c2e02dc425a50098ae8c90267589"
 
 [[package]]
 name = "smallvec"
@@ -5605,8 +5587,8 @@ dependencies = [
 
 [[package]]
 name = "softhsm2_pkcs11_loader"
-version = "5.6.2"
-source = "git+https://github.com/Cosmian/kms?branch=develop#f8624086bd4271370b5eb2851fb3945ea87cec7a"
+version = "5.7.1"
+source = "git+https://github.com/Cosmian/kms?branch=develop#7494da515b3f899cd80725194667300f1d9fec7d"
 dependencies = [
  "cosmian_kms_base_hsm",
  "cosmian_kms_interfaces",
@@ -5977,7 +5959,7 @@ checksum = "8f50febec83f5ee1df3015341d8bd429f2d1cc62bcba7ea2076759d315084683"
 
 [[package]]
 name = "test_findex_server"
-version = "0.4.1"
+version = "0.4.2"
 dependencies = [
  "actix-server",
  "cosmian_findex_client",
@@ -5989,8 +5971,8 @@ dependencies = [
 
 [[package]]
 name = "test_kms_server"
-version = "5.6.2"
-source = "git+https://github.com/Cosmian/kms?branch=develop#f8624086bd4271370b5eb2851fb3945ea87cec7a"
+version = "5.7.1"
+source = "git+https://github.com/Cosmian/kms?branch=develop#7494da515b3f899cd80725194667300f1d9fec7d"
 dependencies = [
  "actix-server",
  "cosmian_kms_client",
@@ -6619,8 +6601,8 @@ checksum = "b6c140620e7ffbb22c2dee59cafe6084a59b5ffc27a8859a5f0d494b5d52b6be"
 
 [[package]]
 name = "utimaco_pkcs11_loader"
-version = "5.6.2"
-source = "git+https://github.com/Cosmian/kms?branch=develop#f8624086bd4271370b5eb2851fb3945ea87cec7a"
+version = "5.7.1"
+source = "git+https://github.com/Cosmian/kms?branch=develop#7494da515b3f899cd80725194667300f1d9fec7d"
 dependencies = [
  "cosmian_kms_base_hsm",
  "cosmian_kms_interfaces",

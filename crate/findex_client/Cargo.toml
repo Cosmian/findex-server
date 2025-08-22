@@ -1,6 +1,6 @@
 [package]
 name = "cosmian_findex_client"
-version = "0.4.1"
+version = "0.4.2"
 authors.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -19,8 +19,8 @@ non-fips = ["cosmian_kms_cli/non-fips", "test_kms_server/non-fips"]
 [dependencies]
 base64 = { workspace = true }
 cosmian_findex = { workspace = true }
-cosmian_findex_structs = { path = "../structs", version = "0.4.1" }
-cosmian_http_client = { workspace = true }
+cosmian_findex_structs = { path = "../structs", version = "0.4.2" }
+cosmian_http_client = "0.4"
 cosmian_kms_cli = { workspace = true }
 cosmian_logger = { workspace = true }
 cosmian_sse_memories = { workspace = true, features = ["redis-mem"] }
