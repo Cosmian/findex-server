@@ -17,4 +17,4 @@ pub use guard::Guard;
 pub use keywords::{Keyword, KeywordToDataSetsMap, Keywords};
 pub use search_results::SearchResults;
 pub use value::Value;
-pub use words::OptionalWords;
+pub use words::{OptionalWords, Word};

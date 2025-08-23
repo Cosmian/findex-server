@@ -26,7 +26,7 @@
     clippy::renamed_function_params,
     clippy::verbose_file_reads,
     clippy::str_to_string,
-    clippy::string_to_string,
+    clippy::implicit_clone,
     clippy::unreachable,
     clippy::as_conversions,
     clippy::print_stdout,

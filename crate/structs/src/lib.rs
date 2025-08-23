@@ -27,7 +27,7 @@
     clippy::renamed_function_params,
     clippy::verbose_file_reads,
     clippy::str_to_string,
-    clippy::string_to_string,
+    clippy::implicit_clone,
     clippy::unreachable,
     clippy::as_conversions,
     clippy::print_stdout,
@@ -57,7 +57,7 @@ pub use encrypted_entries::EncryptedEntries;
 pub use error::StructsError;
 pub use findex::{
     Addresses, Bindings, Guard, Keyword, KeywordToDataSetsMap, Keywords, OptionalWords,
-    SearchResults, SerializationResult, Value,
+    SearchResults, SerializationResult, Value, Word,
 };
 pub use permissions::{Permission, Permissions};
 pub use uuids::Uuids;
