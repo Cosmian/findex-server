@@ -72,7 +72,7 @@ uuid = { workspace = true, features = ["v4"] }
 cosmian_findex = { workspace = true, features = ["test-utils"] }
 cosmian_sse_memories = { workspace = true, features = ["test-utils"] }
 tempfile = { workspace = true }
-variant_count = "1.1"
+variant_count = "1.2"
 
 # ------------------------------------------------------------------------------
 # START DEBIAN PACKAGING
