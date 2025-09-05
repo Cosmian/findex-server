@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.3] - 2025-09-05
+
+### 🐛 Bug Fixes
+
+- Update http client and kms cli (#119)
+
+### ⚙️ Miscellaneous Tasks
+
+- Merge branch 'release/0.4.2' into develop
+
 ## [0.4.2] - 2025-08-22
 
 ### 🚀 Features
