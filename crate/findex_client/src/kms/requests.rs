@@ -88,7 +88,7 @@ impl<
                 self.build_encrypt_request(word.to_vec(), address.to_vec())
                     .map(|encrypt_request| {
                         RequestMessageBatchItemVersioned::V21(RequestMessageBatchItem::new(
-                            Operation::Encrypt(encrypt_request),
+                            Operation::Encrypt(Box::new(encrypt_request)),
                         ))
                     })
             })
@@ -117,7 +117,9 @@ impl<
         let items = bindings
             .map(|(address, word)| {
                 RequestMessageBatchItemVersioned::V21(RequestMessageBatchItem::new(
-                    Operation::Decrypt(self.build_decrypt_request(word.to_vec(), address.to_vec())),
+                    Operation::Decrypt(Box::new(
+                        self.build_decrypt_request(word.to_vec(), address.to_vec()),
+                    )),
                 ))
             })
             .collect::<Vec<_>>();
