@@ -1478,7 +1478,6 @@ dependencies = [
 name = "cosmian_findex_client"
 version = "0.4.5"
 dependencies = [
- "base64 0.22.1",
  "cosmian_findex 8.0.0",
  "cosmian_findex_structs",
  "cosmian_http_client",
