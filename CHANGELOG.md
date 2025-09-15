@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.5] - 2025-09-15
+
+### ⚙️ Miscellaneous Tasks
+
+- Merge tag '0.4.4' into develop
+
 ## [0.4.4] - 2025-09-15
 
 ### 🚀 Features

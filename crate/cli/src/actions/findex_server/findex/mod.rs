@@ -27,7 +27,7 @@ pub async fn retrieve_key_from_kms(
             .await?
             .object
             .key_block()?
-            .symmetric_key_bytes()
+            .key_bytes()
             .context("findex::retrieve_key_from_kms")?,
     );
     Ok(Secret::from_unprotected_bytes(&mut secret))
