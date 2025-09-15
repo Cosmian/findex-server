@@ -1,6 +1,6 @@
 FROM rust:1.85.0-bullseye AS builder
 
-LABEL version="0.4.3"
+LABEL version="0.4.4"
 LABEL name="Cosmian Findex server docker container"
 
 ENV DEBIAN_FRONTEND=noninteractive
