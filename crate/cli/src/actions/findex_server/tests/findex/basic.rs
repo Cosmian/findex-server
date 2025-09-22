@@ -139,13 +139,13 @@ async fn run_huge_dataset_test(use_remote_crypto: bool) -> FindexCliResult<()> {
     .await
 }
 
-#[ignore]
+#[ignore = "takes too long for CI"]
 #[tokio::test]
 pub(crate) async fn test_findex_huge_dataset_remote_crypto() -> FindexCliResult<()> {
     run_huge_dataset_test(true).await
 }
 
-#[ignore]
+#[ignore = "takes too long for CI"]
 #[tokio::test]
 pub(crate) async fn test_findex_huge_dataset_local_crypto() -> FindexCliResult<()> {
     run_huge_dataset_test(false).await

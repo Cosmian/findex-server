@@ -9,7 +9,6 @@
     clippy::panic,
     clippy::cognitive_complexity,
     clippy::too_many_lines,
-    clippy::unwrap_in_result,
     clippy::items_after_test_module,
     clippy::uninlined_format_args,
     clippy::use_self,
