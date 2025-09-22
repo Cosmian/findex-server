@@ -120,10 +120,12 @@ pub struct TestsContext {
 }
 
 impl TestsContext {
+    #[must_use]
     pub fn get_owner_client(&self) -> RestClient {
         RestClient::new(self.owner_client_conf.clone()).expect("Can't create a Findex owner client")
     }
 
+    #[must_use]
     pub fn get_user_client(&self) -> RestClient {
         RestClient::new(self.user_client_conf.clone()).expect("Can't create a Findex user client")
     }
@@ -218,7 +220,7 @@ async fn wait_for_server_to_start(rest_client: &RestClient) -> Result<(), Client
                 "The server is not up yet, retrying in {}s... ({err:?}) ",
                 2 * i
             );
-            let _ = tokio::time::sleep(Duration::from_secs(2 * i)).await;
+            let () = tokio::time::sleep(Duration::from_secs(2 * i)).await;
         } else {
             info!("UP!");
             return Ok(());

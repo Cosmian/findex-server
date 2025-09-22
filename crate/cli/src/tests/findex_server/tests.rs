@@ -180,7 +180,7 @@ async fn test_encrypt_and_index_cert_auth() -> FindexCliResult<()> {
     ctx.run_test_sequence().await
 }
 
-#[ignore]
+#[ignore = "takes too long for CI"]
 #[tokio::test]
 async fn test_encrypt_and_index_huge() -> FindexCliResult<()> {
     log_init(None);

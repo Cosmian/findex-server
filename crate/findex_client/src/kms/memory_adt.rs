@@ -1,3 +1,4 @@
+#![allow(clippy::unwrap_in_result)]
 use std::iter::once;
 
 use cosmian_sse_memories::{ADDRESS_LENGTH, Address, MemoryADT};
