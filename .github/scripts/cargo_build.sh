@@ -13,15 +13,6 @@ if [ "$DEBUG_OR_RELEASE" = "release" ]; then
   RELEASE="--release"
 fi
 
-if [ -n "$FEATURES" ]; then
-  FEATURES="--features $FEATURES"
-fi
-
-if [ -z "$FEATURES" ]; then
-  echo "Info: FEATURES is not set."
-  unset FEATURES
-fi
-
 if [ -z "$OPENSSL_DIR" ]; then
   echo "Error: OPENSSL_DIR is not set. Example OPENSSL_DIR=/usr/local/openssl"
   exit 1
@@ -30,7 +21,7 @@ fi
 rustup target add "$TARGET"
 
 # shellcheck disable=SC2086
-cargo build -p cosmian_findex_server --target $TARGET $RELEASE $FEATURES
+cargo build -p cosmian_findex_server --target $TARGET $RELEASE
 
 COSMIAN_FINDEX_SERVER_EXE="target/$TARGET/$DEBUG_OR_RELEASE/cosmian_findex_server"
 
