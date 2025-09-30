@@ -20,11 +20,11 @@ function BuildProject {
     $env:FINDEX_TEST_DB = "sqlite-findex"
     if ($BuildType -eq "release") {
         cargo build --features "non-fips" -p cosmian_findex_server -p cosmian_findex_cli --release --target x86_64-pc-windows-msvc
-        cargo  test --features "non-fips" -p cosmian_findex_server -p cosmian_findex_cli --target x86_64-pc-windows-msvc -- --nocapture --skip kms --skip hsm --skip redis
+        cargo  test --features "non-fips" -p cosmian_findex_server -p cosmian_findex_cli --target x86_64-pc-windows-msvc -- --nocapture
     }
     else {
         cargo build --features "non-fips" -p cosmian_findex_server -p cosmian_findex_cli --target x86_64-pc-windows-msvc
-        cargo  test --features "non-fips" -p cosmian_findex_server -p cosmian_findex_cli --target x86_64-pc-windows-msvc -- --nocapture --skip kms --skip hsm --skip redis
+        cargo  test --features "non-fips" -p cosmian_findex_server -p cosmian_findex_cli --target x86_64-pc-windows-msvc -- --nocapture
     }
 
     # Check dynamic links

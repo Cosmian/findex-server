@@ -132,11 +132,10 @@ repos:
       - id: docker-compose-up
       - id: cargo-build
       - id: cargo-test
-        args: [--, --skip, test_wrap_auth, --skip, google_cse, --skip, hsm]
       - id: cargo-build-all
       - id: cargo-test
         alias: cargo-test-all
-        args: [--all-features, --, --skip, test_wrap_auth, --skip, google_cse, --skip, hsm]
+        args: [--all-features]
       - id: clippy-autofix-unreachable-pub
       - id: clippy-autofix-all-targets-all-features
       - id: clippy-autofix-all-targets
