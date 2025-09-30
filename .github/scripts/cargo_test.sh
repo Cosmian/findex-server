@@ -32,7 +32,7 @@ export RUST_LOG="cosmian_findex_cli=error,cosmian_findex_server=error,cosmian_fi
 # shellcheck disable=SC2086
 cargo test --workspace --bins --target $TARGET $RELEASE $FEATURES
 
-# shellcheck disable=SC2086
+# TODO: Add benchmarking step here if/when benchmarking is required.
 # cargo bench --target $TARGET $FEATURES --no-run
 
 echo "SQLite is running on filesystem"

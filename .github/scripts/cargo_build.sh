@@ -2,8 +2,6 @@
 
 set -exo pipefail
 
-# export FEATURES="non-fips"
-
 if [ -z "$TARGET" ]; then
   echo "Error: TARGET is not set. Examples of TARGET are x86_64-unknown-linux-gnu, x86_64-apple-darwin, aarch64-apple-darwin."
   exit 1

@@ -9,15 +9,6 @@ if [ -z "$TARGET" ]; then
   exit 1
 fi
 
-if [ -n "$FEATURES" ]; then
-  FEATURES="--features $FEATURES"
-fi
-
-if [ -z "$FEATURES" ]; then
-  echo "Info: FEATURES is not set."
-  unset FEATURES
-fi
-
 if [ -z "$OPENSSL_DIR" ]; then
   echo "Error: OPENSSL_DIR is not set. Example OPENSSL_DIR=/usr/local/openssl"
   exit 1
@@ -37,10 +28,6 @@ if [ "$DEBUG_OR_RELEASE" = "release" ]; then
     cargo generate-rpm --target "$TARGET" -p crate/server --metadata-overwrite=pkg/rpm/scriptlets.toml
   elif [ -f /etc/debian_version ]; then
     cargo install --version 2.4.0 cargo-deb --force
-    if [ -n "$FEATURES" ]; then
-      cargo deb --target "$TARGET" -p cosmian_findex_server
-    else
-      cargo deb --target "$TARGET" -p cosmian_findex_server --variant fips
-    fi
+    cargo deb --target "$TARGET" -p cosmian_findex_server
   fi
 fi
