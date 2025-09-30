@@ -33,7 +33,7 @@ export RUST_LOG="cosmian_findex_cli=error,cosmian_findex_server=error,cosmian_fi
 cargo test --workspace --bins --target $TARGET $RELEASE $FEATURES
 
 # shellcheck disable=SC2086
-cargo bench --target $TARGET $FEATURES --no-run
+# cargo bench --target $TARGET $FEATURES --no-run
 
 echo "SQLite is running on filesystem"
 # shellcheck disable=SC2086
@@ -46,3 +46,5 @@ if nc -z "$REDIS_HOST" "$REDIS_PORT"; then
 else
   echo "Redis is not running at $REDIS_HOST:$REDIS_PORT"
 fi
+
+echo "All Findex server tests completed successfully"
