@@ -186,7 +186,6 @@ mod tests {
                 nonexistent_user_and_permission, revoke_permission, set_and_revoke_permissions,
             },
         },
-        generate_permission_tests,
     };
 
     const SQLITE_TEST_DB_URL: &str = "sqlite-test";
@@ -206,13 +205,57 @@ mod tests {
             .expect("Test failed to instantiate Sqlite")
     }
 
-    generate_permission_tests! {
-        setup_a_random_test_db().await;
-        create_index_id,
-        set_and_revoke_permissions,
-        revoke_permission,
-        nonexistent_user_and_permission,
-        concurrent_set_revoke_permissions,
-        concurrent_create_index_id
+    #[tokio::test]
+    async fn create_index_id_test() {
+        debug!("RUNNING TEST: create_index_id");
+        let db = setup_a_random_test_db().await;
+        create_index_id(db)
+            .await
+            .unwrap_or_else(|e| panic!("Test create_index_id failed: {e:?}"));
+    }
+
+    #[tokio::test]
+    async fn set_and_revoke_permissions_test() {
+        debug!("RUNNING TEST: set_and_revoke_permissions");
+        let db = setup_a_random_test_db().await;
+        set_and_revoke_permissions(db)
+            .await
+            .unwrap_or_else(|e| panic!("Test set_and_revoke_permissions failed: {e:?}"));
+    }
+
+    #[tokio::test]
+    async fn revoke_permission_test() {
+        debug!("RUNNING TEST: revoke_permission");
+        let db = setup_a_random_test_db().await;
+        revoke_permission(db)
+            .await
+            .unwrap_or_else(|e| panic!("Test revoke_permission failed: {e:?}"));
+    }
+
+    #[tokio::test]
+    async fn nonexistent_user_and_permission_test() {
+        debug!("RUNNING TEST: nonexistent_user_and_permission");
+        let db = setup_a_random_test_db().await;
+        nonexistent_user_and_permission(db)
+            .await
+            .unwrap_or_else(|e| panic!("Test nonexistent_user_and_permission failed: {e:?}"));
+    }
+
+    #[tokio::test]
+    async fn concurrent_set_revoke_permissions_test() {
+        debug!("RUNNING TEST: concurrent_set_revoke_permissions");
+        let db = setup_a_random_test_db().await;
+        concurrent_set_revoke_permissions(db)
+            .await
+            .unwrap_or_else(|e| panic!("Test concurrent_set_revoke_permissions failed: {e:?}"));
+    }
+
+    #[tokio::test]
+    async fn concurrent_create_index_id_test() {
+        debug!("RUNNING TEST: concurrent_create_index_id");
+        let db = setup_a_random_test_db().await;
+        concurrent_create_index_id(db)
+            .await
+            .unwrap_or_else(|e| panic!("Test concurrent_create_index_id failed: {e:?}"));
     }
 }

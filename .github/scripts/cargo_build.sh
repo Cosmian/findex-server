@@ -30,7 +30,7 @@ fi
 rustup target add "$TARGET"
 
 # shellcheck disable=SC2086
-cargo build -p cosmian_findex_server -p cosmian_findex_cli --target $TARGET $RELEASE $FEATURES
+cargo build -p cosmian_findex_server --target $TARGET $RELEASE $FEATURES
 
 COSMIAN_FINDEX_SERVER_EXE="target/$TARGET/$DEBUG_OR_RELEASE/cosmian_findex_server"
 
