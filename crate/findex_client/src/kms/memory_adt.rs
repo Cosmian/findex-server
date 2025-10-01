@@ -79,6 +79,7 @@ impl<
         Ok(wg_cur)
     }
 
+    #[allow(clippy::cognitive_complexity)]
     async fn batch_read(
         &self,
         addresses: Vec<Self::Address>,

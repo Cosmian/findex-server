@@ -75,6 +75,7 @@ impl TestsCliContext {
         })
     }
 
+    #[allow(clippy::cognitive_complexity)]
     async fn run_test_sequence(&self) -> FindexCliResult<()> {
         let findex_parameters =
             FindexParameters::new(self.index_id, self.kms.clone(), true, Some(1)).await?;
