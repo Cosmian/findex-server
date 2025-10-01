@@ -9,7 +9,7 @@ Always reference these instructions first and fallback to search or bash command
 ### Initial Repository Setup
 
 - Initialize git submodules (REQUIRED for test data): `git submodule update --init --recursive`
-- The repository requires the nightly Rust toolchain: `nightly-2025-09-15` (configured in `rust-toolchain.toml`)
+- The repository requires the stable Rust toolchain: `1.90.0` (configured in `rust-toolchain.toml`)
 - Verify Rust toolchain: `rustc --version && cargo --version`
 
 ### Building the Project
@@ -107,7 +107,7 @@ Always reference these instructions first and fallback to search or bash command
 ### Important Files
 
 - `Cargo.toml` - Workspace configuration
-- `rust-toolchain.toml` - Specifies required nightly toolchain
+- `rust-toolchain.toml` - Specifies required stable toolchain
 - `docker-compose.yml` - Redis for development
 - `docker-compose-quick-start.yml` - Full stack (Redis + Findex server)
 - `.rustfmt.toml` - Rust formatting configuration
