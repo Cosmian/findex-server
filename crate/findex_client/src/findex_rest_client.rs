@@ -69,6 +69,7 @@ impl<const WORD_LENGTH: usize> MemoryADT for FindexRestClient<WORD_LENGTH> {
     }
 
     #[inline]
+    #[allow(clippy::cognitive_complexity)]
     async fn guarded_write(
         &self,
         guard: (Self::Address, Option<Self::Word>),

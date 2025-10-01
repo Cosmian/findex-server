@@ -55,6 +55,7 @@ fn extract_user_claim(
     Err(jwt_log_errors)
 }
 
+#[allow(clippy::cognitive_complexity)]
 pub(crate) async fn manage_jwt(
     configs: Arc<Vec<JwtConfig>>,
     req: &ServiceRequest,
