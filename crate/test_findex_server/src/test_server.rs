@@ -323,7 +323,9 @@ fn generate_owner_conf(server_params: &ServerParams) -> Result<RestClientConfig,
     let owner_client_conf = RestClientConfig {
         http_config: HttpClientConfig {
             server_url: format!(
-                "{}://localhost:{}",
+                // Use 127.0.0.1 instead of localhost to avoid IPv6 (::1) resolution on macOS
+                // when the server binds on IPv4 (0.0.0.0), which can cause intermittent failures.
+                "{}://127.0.0.1:{}",
                 if matches!(server_params.http_params, HttpParams::Https(_)) {
                     "https"
                 } else {
