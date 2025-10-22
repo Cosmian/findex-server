@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.6] - 2025-10-22
+
+### 🐛 Bug Fixes
+
+- Use stable toolchain (#122)
+- *(client)* Make 127.0.0.1 default server URL (#123)
+
+### ⚙️ Miscellaneous Tasks
+
+- Split cargo cargo_build.sh into multiple files (#121)
+
 ## [0.4.5] - 2025-09-15
 
 ### ⚙️ Miscellaneous Tasks
