@@ -69,6 +69,7 @@ impl<const WORD_LENGTH: usize> MemoryADT for FindexRestClient<WORD_LENGTH> {
     }
 
     #[inline]
+    #[allow(clippy::cognitive_complexity)]
     async fn guarded_write(
         &self,
         guard: (Self::Address, Option<Self::Word>),
@@ -126,7 +127,10 @@ impl<const WORD_LENGTH: usize> MemoryADT for FindexRestClient<WORD_LENGTH> {
         trace!(
             "guarded_write successful on server url {}. guard: {}",
             server_url,
-            guard.map_or("None".to_owned(), |g| general_purpose::STANDARD.encode(g))
+            guard.map_or_else(
+                || "None".to_owned(),
+                |g| general_purpose::STANDARD.encode(g)
+            )
         );
 
         Ok(guard)

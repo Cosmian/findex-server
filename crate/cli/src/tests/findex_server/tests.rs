@@ -75,6 +75,7 @@ impl TestsCliContext {
         })
     }
 
+    #[allow(clippy::cognitive_complexity)]
     async fn run_test_sequence(&self) -> FindexCliResult<()> {
         let findex_parameters =
             FindexParameters::new(self.index_id, self.kms.clone(), true, Some(1)).await?;
@@ -180,7 +181,7 @@ async fn test_encrypt_and_index_cert_auth() -> FindexCliResult<()> {
     ctx.run_test_sequence().await
 }
 
-#[ignore]
+#[ignore = "takes too long for CI"]
 #[tokio::test]
 async fn test_encrypt_and_index_huge() -> FindexCliResult<()> {
     log_init(None);

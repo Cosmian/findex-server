@@ -1,3 +1,4 @@
+#![allow(clippy::unwrap_in_result)]
 use std::iter::once;
 
 use cosmian_sse_memories::{ADDRESS_LENGTH, Address, MemoryADT};
@@ -78,6 +79,7 @@ impl<
         Ok(wg_cur)
     }
 
+    #[allow(clippy::cognitive_complexity)]
     async fn batch_read(
         &self,
         addresses: Vec<Self::Address>,

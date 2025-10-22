@@ -60,11 +60,14 @@ fn sqlite_db_config(sqlite_url_var_env: &str) -> DBConfig {
 }
 
 pub fn get_db_config() -> DBConfig {
-    env::var_os("FINDEX_TEST_DB").map_or_else(redis_db_config, |v| match v.to_str().unwrap_or("") {
-        "redis-findex" => redis_db_config(),
-        "sqlite-findex" => sqlite_db_config("FINDEX_SQLITE_URL"),
-        _ => redis_db_config(),
-    })
+    env::var_os("FINDEX_TEST_DB").map_or_else(
+        || sqlite_db_config("FINDEX_SQLITE_URL"),
+        |v| match v.to_str().unwrap_or("") {
+            "redis-findex" => redis_db_config(),
+            "sqlite-findex" => sqlite_db_config("FINDEX_SQLITE_URL"),
+            _ => sqlite_db_config("FINDEX_SQLITE_URL"),
+        },
+    )
 }
 
 /// Start a test Findex server in a thread with the default options:
@@ -120,10 +123,12 @@ pub struct TestsContext {
 }
 
 impl TestsContext {
+    #[must_use]
     pub fn get_owner_client(&self) -> RestClient {
         RestClient::new(self.owner_client_conf.clone()).expect("Can't create a Findex owner client")
     }
 
+    #[must_use]
     pub fn get_user_client(&self) -> RestClient {
         RestClient::new(self.user_client_conf.clone()).expect("Can't create a Findex user client")
     }
@@ -218,7 +223,7 @@ async fn wait_for_server_to_start(rest_client: &RestClient) -> Result<(), Client
                 "The server is not up yet, retrying in {}s... ({err:?}) ",
                 2 * i
             );
-            let _ = tokio::time::sleep(Duration::from_secs(2 * i)).await;
+            let () = tokio::time::sleep(Duration::from_secs(2 * i)).await;
         } else {
             info!("UP!");
             return Ok(());
@@ -318,7 +323,9 @@ fn generate_owner_conf(server_params: &ServerParams) -> Result<RestClientConfig,
     let owner_client_conf = RestClientConfig {
         http_config: HttpClientConfig {
             server_url: format!(
-                "{}://localhost:{}",
+                // Use 127.0.0.1 instead of localhost to avoid IPv6 (::1) resolution on macOS
+                // when the server binds on IPv4 (0.0.0.0), which can cause intermittent failures.
+                "{}://127.0.0.1:{}",
                 if matches!(server_params.http_params, HttpParams::Https(_)) {
                     "https"
                 } else {

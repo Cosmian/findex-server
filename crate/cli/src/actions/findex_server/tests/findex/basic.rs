@@ -139,13 +139,13 @@ async fn run_huge_dataset_test(use_remote_crypto: bool) -> FindexCliResult<()> {
     .await
 }
 
-#[ignore]
+#[ignore = "takes too long for CI"]
 #[tokio::test]
 pub(crate) async fn test_findex_huge_dataset_remote_crypto() -> FindexCliResult<()> {
     run_huge_dataset_test(true).await
 }
 
-#[ignore]
+#[ignore = "takes too long for CI"]
 #[tokio::test]
 pub(crate) async fn test_findex_huge_dataset_local_crypto() -> FindexCliResult<()> {
     run_huge_dataset_test(false).await
@@ -247,7 +247,7 @@ pub(crate) async fn test_findex_sequential_read_write() -> FindexCliResult<()> {
     log_init(None);
 
     test_single_write_and_read::<CUSTOM_WORD_LENGTH, _>(
-        &create_encryption_layer::<CUSTOM_WORD_LENGTH>().await?,
+        &Box::pin(create_encryption_layer::<CUSTOM_WORD_LENGTH>()).await?,
         gen_seed(),
     )
     .await;
@@ -257,7 +257,7 @@ pub(crate) async fn test_findex_sequential_read_write() -> FindexCliResult<()> {
 #[tokio::test]
 async fn test_findex_sequential_wrong_guard() -> FindexCliResult<()> {
     test_wrong_guard(
-        &create_encryption_layer::<CUSTOM_WORD_LENGTH>().await?,
+        &Box::pin(create_encryption_layer::<CUSTOM_WORD_LENGTH>()).await?,
         gen_seed(),
     )
     .await;
@@ -272,7 +272,7 @@ async fn test_findex_concurrent_read_write() -> FindexCliResult<()> {
         _,
         cosmian_findex::reexport::tokio::TokioSpawner,
     >(
-        &create_encryption_layer::<CUSTOM_WORD_LENGTH>().await?,
+        &Box::pin(create_encryption_layer::<CUSTOM_WORD_LENGTH>()).await?,
         gen_seed(),
         Some(20),
     )

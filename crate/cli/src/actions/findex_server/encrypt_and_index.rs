@@ -256,6 +256,7 @@ impl EncryptAndIndexAction {
     /// - There is an error adding the data to the Findex index.
     /// - There is an error writing the result to the console.
     #[expect(clippy::print_stdout)]
+    #[allow(clippy::cognitive_complexity)]
     pub async fn run(
         &self,
         rest_client: RestClient,

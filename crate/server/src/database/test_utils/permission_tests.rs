@@ -9,7 +9,6 @@
     clippy::panic,
     clippy::cognitive_complexity,
     clippy::too_many_lines,
-    clippy::unwrap_in_result,
     clippy::items_after_test_module,
     clippy::uninlined_format_args,
     clippy::use_self,
@@ -430,28 +429,6 @@ pub(crate) mod tests_mod {
         }
 
         Ok(())
-    }
-
-    #[macro_export]
-    macro_rules! generate_permission_tests {
-    (
-        $setup:expr; // Capture the single mandatory setup DBS expression
-        $($name:ident),+ // Capture one or more test names separated by commas
-        $(,)? // Allow optional trailing comma for the names to avoid syntax errors in case of new formatting rules
-    ) => {
-        $(
-            mod $name {
-                use super::*;
-                #[tokio::test]
-                async fn permissions_test() {
-                    debug!("RUNNING TEST: {}", stringify!($name));
-                    let db = $setup;
-                    $name(db)
-                        .await
-                        .unwrap_or_else(|e| panic!("Test {} failed: {:?}", stringify!($name), e));
-                }
-        })+
-        };
     }
 }
 
