@@ -28,7 +28,7 @@ function BuildProject {
     }
 
     # Check dynamic links
-    $output = & "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.29.30133\bin\HostX64\x64\dumpbin.exe" /dependents target\x86_64-pc-windows-msvc\$BuildType\cosmian_findex_server.exe | Select-String "libcrypto"
+    $output = & "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.29.30133\bin\HostX64\x64\dumpbin.exe" /dependents target\$BuildType\cosmian_findex_server.exe | Select-String "libcrypto"
     if ($output) {
         throw "OpenSSL (libcrypto) found in dynamic dependencies. Error: $output"
     }
