@@ -19,16 +19,16 @@ function BuildProject {
     $env:RUST_LOG = "cosmian_findex_cli=error,cosmian_findex_server=error,test_findex_server=error"
     $env:FINDEX_TEST_DB = "sqlite-findex"
     if ($BuildType -eq "release") {
-        cargo build --features "non-fips" -p cosmian_findex_server -p cosmian_findex_cli --release --target x86_64-pc-windows-msvc
-        cargo  test --features "non-fips" -p cosmian_findex_server -p cosmian_findex_cli --target x86_64-pc-windows-msvc -- --nocapture
+        cargo build --features "non-fips" -p cosmian_findex_server -p cosmian_findex_cli --release
+        cargo  test --features "non-fips" -p cosmian_findex_server -p cosmian_findex_cli -- --nocapture
     }
     else {
-        cargo build --features "non-fips" -p cosmian_findex_server -p cosmian_findex_cli --target x86_64-pc-windows-msvc
-        cargo  test --features "non-fips" -p cosmian_findex_server -p cosmian_findex_cli --target x86_64-pc-windows-msvc -- --nocapture
+        cargo build --features "non-fips" -p cosmian_findex_server -p cosmian_findex_cli
+        cargo  test --features "non-fips" -p cosmian_findex_server -p cosmian_findex_cli -- --nocapture
     }
 
     # Check dynamic links
-    $output = & "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.29.30133\bin\HostX64\x64\dumpbin.exe" /dependents target\x86_64-pc-windows-msvc\$BuildType\cosmian_findex_server.exe | Select-String "libcrypto"
+    $output = & "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.29.30133\bin\HostX64\x64\dumpbin.exe" /dependents target\$BuildType\cosmian_findex_server.exe | Select-String "libcrypto"
     if ($output) {
         throw "OpenSSL (libcrypto) found in dynamic dependencies. Error: $output"
     }

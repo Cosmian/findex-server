@@ -38,7 +38,7 @@ Multiple options are available to run the Findex server, including using Docker,
 === "Ubuntu 24.04"
 
     An other option include running the server binary directly installing the
-    Debian package [available here](https://package.cosmian.com/findex-server/0.4.6/ubuntu-24.04/).
+    Debian package [available here](https://package.cosmian.com/findex-server/0.4.8/ubuntu-24.04/).
 
     First, run the Redis server independently:
 
@@ -50,8 +50,8 @@ Multiple options are available to run the Findex server, including using Docker,
 
     ```console title="On local machine"
     sudo apt update && sudo apt install -y wget
-    wget https://package.cosmian.com/findex-server/0.4.6/ubuntu-24.04/cosmian-findex-server_0.4.6-1_amd64.deb
-    sudo apt install ./cosmian-findex-server_0.4.6-1_amd64.deb
+    wget https://package.cosmian.com/findex-server/0.4.8/ubuntu-24.04/cosmian-findex-server_0.4.8-1_amd64.deb
+    sudo apt install ./cosmian-findex-server_0.4.8-1_amd64.deb
     cosmian_findex_server --version
     ```
 
@@ -60,7 +60,7 @@ Multiple options are available to run the Findex server, including using Docker,
 === "RHEL 9"
 
     An other option include running the server binary directly installing the
-    Debian package [available here](https://package.cosmian.com/findex-server/0.4.6/rhel9/).
+    Debian package [available here](https://package.cosmian.com/findex-server/0.4.8/rhel9/).
 
     First, run the Redis server independently:
 
@@ -72,8 +72,8 @@ Multiple options are available to run the Findex server, including using Docker,
 
     ```console title="On local machine"
     sudo dnf update && dnf install -y wget
-    wget https://package.cosmian.com/findex-server/0.4.6/rhel9/cosmian_findex_server-0.4.6-1.x86_64.rpm
-    sudo dnf install ./cosmian_findex_server-0.4.6-1.x86_64.rpm
+    wget https://package.cosmian.com/findex-server/0.4.8/rhel9/cosmian_findex_server-0.4.8-1.x86_64.rpm
+    sudo dnf install ./cosmian_findex_server-0.4.8-1.x86_64.rpm
     cosmian_findex_server --version
     ```
 
@@ -84,7 +84,7 @@ Multiple options are available to run the Findex server, including using Docker,
     On ARM MacOS, download the build archive and extract it:
 
     ```console title="On local machine"
-    wget https://package.cosmian.com/findex-server/0.4.6/macos_arm-release.zip
+    wget https://package.cosmian.com/findex-server/0.4.8/macos_arm-release.zip
     unzip macos_arm-release.zip
     cp ./macos_arm-release/cosmian_findex_server /usr/local/bin/
     chmod u+x /usr/local/bin/cosmian_findex_server
@@ -96,7 +96,7 @@ Multiple options are available to run the Findex server, including using Docker,
     On Windows, download the build archive:
 
     ```console title="Build archive"
-     https://package.cosmian.com/findex-server/0.4.6/windows-release.zip
+     https://package.cosmian.com/findex-server/0.4.8/windows-release.zip
     ```
 
     Extract the cosmian_findex_server from:
