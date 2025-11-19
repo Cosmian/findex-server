@@ -35,4 +35,4 @@ SED "s/$OLD_VERSION/$NEW_VERSION/g" documentation/docs/quick_start.md
 SED "s/$OLD_VERSION/$NEW_VERSION/g" README.md
 
 cargo build
-git cliff -u -p CHANGELOG.md -t "$NEW_VERSION"
+git cliff -w "$(pwd)" -u -p CHANGELOG.md -t "$NEW_VERSION"
