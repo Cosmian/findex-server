@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.8] - 2025-11-19
+
+### 🚀 Features
+
+- Bump KMS CLI crate from 5.11.0 to 5.12.0
+
+### ⚙️ Miscellaneous Tasks
+
+- *(windows)* Fix artifacts path
+- *(windows)* Fix path cosmian_findex_server in dumpbin command
+
 ## [0.4.7] - 2025-10-28
 
 ### 🚀 Features
