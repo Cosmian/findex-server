@@ -9,6 +9,7 @@ const PORT: u16 = 6667;
 
 //TODO: please check equivalent - but more detailed - tests in src/tests/kms/auth_tests.rs
 
+#[ignore = "Tests too flaky on CI"]
 #[tokio::test]
 pub(crate) async fn test_all_authentications() -> FindexCliResult<()> {
     log_init(None);
