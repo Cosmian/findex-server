@@ -157,7 +157,8 @@ impl EncryptAndIndexAction {
         nonce: Option<Vec<u8>>,
         authentication_data: Option<Vec<u8>>,
     ) -> FindexCliResult<(EncryptedEntries, KeywordToDataSetsMap)> {
-        let (dek, encapsulation) = EncryptAction::default()
+        let encrypt_action = EncryptAction::default();
+        let (dek, encapsulation) = encrypt_action
             .client_side_kem_encapsulation(
                 kms_rest_client,
                 key_encryption_key_id,
@@ -165,40 +166,35 @@ impl EncryptAndIndexAction {
             )
             .await?;
 
-        let mut entries_and_keywords: (EncryptedEntries, HashMap<Keyword, HashSet<Value>>) =
-            (EncryptedEntries::new(), HashMap::new());
-        for result in csv::Reader::from_reader(File::open(csv)?).byte_records() {
+        let mut encrypted_entries = EncryptedEntries::new();
+        let mut keywords_map: HashMap<Keyword, HashSet<Value>> = HashMap::new();
+
+        let mut reader = csv::Reader::from_reader(File::open(csv)?);
+        for result in reader.byte_records() {
             let record = result?;
             let new_uuid = uuid::Uuid::new_v4();
-            entries_and_keywords.0.insert(
-                new_uuid,
-                EncryptAction::default().client_side_encrypt_with_buffer(
-                    &dek,
-                    &encapsulation,
-                    self.data_encryption_algorithm,
-                    nonce.clone(),
-                    record.as_slice(),
-                    authentication_data.clone(),
-                )?,
-            );
+
+            let encrypted_record = encrypt_action.client_side_encrypt_with_buffer(
+                &dek,
+                &encapsulation,
+                self.data_encryption_algorithm,
+                nonce.clone(),
+                record.as_slice(),
+                authentication_data.clone(),
+            )?;
+            encrypted_entries.insert(new_uuid, encrypted_record);
 
             let indexed_value = Value::from(new_uuid.as_bytes().to_vec());
-            for keyword in record
-                .iter()
-                .map(|kw| Keyword::from(kw.to_ascii_lowercase().as_slice()))
-            {
-                entries_and_keywords
-                    .1
+            for kw in &record {
+                let keyword = Keyword::from(kw.to_ascii_lowercase().as_slice());
+                keywords_map
                     .entry(keyword)
                     .or_default()
                     .insert(indexed_value.clone());
             }
         }
 
-        Ok((
-            entries_and_keywords.0,
-            KeywordToDataSetsMap(entries_and_keywords.1),
-        ))
+        Ok((encrypted_entries, KeywordToDataSetsMap(keywords_map)))
     }
 
     pub(crate) async fn server_side_encrypt_entries(
@@ -209,13 +205,16 @@ impl EncryptAndIndexAction {
         nonce: Option<Vec<u8>>,
         authentication_data: Option<Vec<u8>>,
     ) -> FindexCliResult<(EncryptedEntries, KeywordToDataSetsMap)> {
+        let encrypt_action = EncryptAction::default();
         let mut encrypted_entries = EncryptedEntries::new();
-        let mut keywords_map = HashMap::<Keyword, HashSet<Value>>::new();
+        let mut keywords_map: HashMap<Keyword, HashSet<Value>> = HashMap::new();
 
-        for result in csv::Reader::from_reader(File::open(csv)?).byte_records() {
+        let mut reader = csv::Reader::from_reader(File::open(csv)?);
+        for result in reader.byte_records() {
             let record = result?;
             let new_uuid = uuid::Uuid::new_v4();
-            let (encrypted_nonce, encrypted_data, encrypted_tag) = EncryptAction::default()
+
+            let (encrypted_nonce, encrypted_data, encrypted_tag) = encrypt_action
                 .server_side_encrypt(
                     kms_rest_client,
                     data_encryption_key_id,
@@ -226,16 +225,19 @@ impl EncryptAndIndexAction {
                 )
                 .await?;
 
-            encrypted_entries.insert(
-                new_uuid,
-                [(&*encrypted_nonce), (&*encrypted_data), (&*encrypted_tag)].concat(),
-            );
+            let mut payload = Vec::new();
+            if let Some(nonce_bytes) = encrypted_nonce.as_ref() {
+                payload.extend_from_slice(nonce_bytes);
+            }
+            payload.extend_from_slice(&encrypted_data);
+            if let Some(tag_bytes) = encrypted_tag.as_ref() {
+                payload.extend_from_slice(tag_bytes);
+            }
+            encrypted_entries.insert(new_uuid, payload);
 
             let indexed_value = Value::from(new_uuid.as_bytes().to_vec());
-            for keyword in record
-                .iter()
-                .map(|kw| Keyword::from(kw.to_ascii_lowercase().as_slice()))
-            {
+            for kw in &record {
+                let keyword = Keyword::from(kw.to_ascii_lowercase().as_slice());
                 keywords_map
                     .entry(keyword)
                     .or_default()
