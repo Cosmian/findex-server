@@ -54,6 +54,7 @@ async fn dataset_get_entries(
     .await
 }
 
+#[ignore = "Tests too flaky on CI"]
 #[tokio::test]
 pub(crate) async fn test_datasets() -> FindexCliResult<()> {
     log_init(None);

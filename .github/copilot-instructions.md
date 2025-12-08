@@ -9,7 +9,7 @@ Always reference these instructions first and fallback to search or bash command
 ### Initial Repository Setup
 
 - Initialize git submodules (REQUIRED for test data): `git submodule update --init --recursive`
-- The repository requires the stable Rust toolchain: `1.90.0` (configured in `rust-toolchain.toml`)
+- The repository requires the stable Rust toolchain: `1.91.0` (configured in `rust-toolchain.toml`)
 - Verify Rust toolchain: `rustc --version && cargo --version`
 
 ### Building the Project
