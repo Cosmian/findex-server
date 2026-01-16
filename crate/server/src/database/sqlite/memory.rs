@@ -2,22 +2,22 @@
 //! conflicts with the memory implementation provided by the upstream Findex library.
 use std::{collections::HashMap, marker::PhantomData, ops::Deref};
 
-use async_sqlite::{
-    Pool,
-    rusqlite::{OptionalExtension, params_from_iter},
-};
 use cosmian_sse_memories::{Address, MemoryADT};
+use rusqlite::{OptionalExtension, params_from_iter};
 use thiserror::Error;
+use tokio_rusqlite;
+
+use super::instance::SqlitePool;
 
 #[derive(Error, Debug)]
 pub(crate) enum SqliteMemoryError {
-    #[error("async_sqlite error: {0}")]
-    AsyncSqliteCoreError(#[from] async_sqlite::Error),
+    #[error("sqlite error: {0}")]
+    TokioRusqliteCoreError(#[from] tokio_rusqlite::Error<rusqlite::Error>),
 }
 
 #[derive(Clone)]
 pub(crate) struct SqliteMemory<Address, Word> {
-    pool: Pool,
+    pool: SqlitePool,
     table_name: String,
     _marker: PhantomData<(Address, Word)>,
 }
@@ -26,7 +26,7 @@ pub(crate) struct SqliteMemory<Address, Word> {
 impl<Address, Word> SqliteMemory<Address, Word> {
     /// Returns a new memory instance using a pool of connections to an `SQLite`
     /// database.
-    pub(crate) const fn new_with_pool(pool: Pool, table_name: String) -> Self {
+    pub(crate) const fn new_with_pool(pool: SqlitePool, table_name: String) -> Self {
         Self {
             pool,
             table_name,
@@ -58,8 +58,9 @@ impl<const ADDRESS_LENGTH: usize, const WORD_LENGTH: usize> MemoryADT
                     .query_map(
                         params_from_iter(addresses.iter().map(Deref::deref)),
                         |row| {
-                            let a = Address::from(row.get::<_, [u8; ADDRESS_LENGTH]>(0)?);
-                            let w = row.get(1)?;
+                            let a: [u8; ADDRESS_LENGTH] = row.get(0)?;
+                            let a = Address::from(a);
+                            let w: [u8; WORD_LENGTH] = row.get(1)?;
                             Ok((a, w))
                         },
                     )?
@@ -89,9 +90,8 @@ impl<const ADDRESS_LENGTH: usize, const WORD_LENGTH: usize> MemoryADT
 
         self.pool
             .conn_mut(move |conn| {
-                let tx = conn.transaction_with_behavior(
-                    async_sqlite::rusqlite::TransactionBehavior::Immediate,
-                )?;
+                let tx =
+                    conn.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate)?;
 
                 let current_word = tx
                     .query_row(
@@ -102,18 +102,18 @@ impl<const ADDRESS_LENGTH: usize, const WORD_LENGTH: usize> MemoryADT
                     .optional()?;
 
                 if current_word == wg {
+                    let params: Vec<Vec<u8>> = bindings
+                        .iter()
+                        // There seems to be no way to avoid cloning here.
+                        .flat_map(|(a, w)| [a.to_vec(), w.to_vec()])
+                        .collect();
                     tx.execute(
                         &format!(
                             "INSERT OR REPLACE INTO {} (a, w) VALUES {}",
                             findex_table_name,
                             vec!["(?,?)"; bindings.len()].join(",")
                         ),
-                        params_from_iter(
-                            bindings
-                                .iter()
-                                // There seems to be no way to avoid cloning here.
-                                .flat_map(|(a, w)| [a.to_vec(), w.to_vec()]),
-                        ),
+                        params_from_iter(params),
                     )?;
                     tx.commit()?;
                 }
@@ -129,7 +129,6 @@ impl<const ADDRESS_LENGTH: usize, const WORD_LENGTH: usize> MemoryADT
 #[allow(clippy::unwrap_used)] // this is a test module, unwraps are acceptable
 mod tests {
 
-    use async_sqlite::PoolBuilder;
     use cosmian_sse_memories::test_utils::{
         gen_seed, test_guarded_write_concurrent, test_rw_same_address, test_wrong_guard,
     };
@@ -144,7 +143,7 @@ mod tests {
             path: impl AsRef<std::path::Path>,
             table_name: String,
         ) -> Result<Self, SqliteMemoryError> {
-            let pool = PoolBuilder::new().path(path).open().await?; // default pool size is the number of logical CPUs
+            let pool = SqlitePool::open(path).await?;
 
             let initialization_script = format!(
                 "   PRAGMA synchronous = NORMAL;
@@ -155,7 +154,7 @@ mod tests {
                     );"
             );
 
-            pool.conn(move |conn| conn.execute_batch(&initialization_script))
+            pool.conn_mut(move |conn| conn.execute_batch(&initialization_script))
                 .await?;
 
             Ok(Self {
@@ -208,11 +207,6 @@ mod tests {
         )
         .await
         .unwrap();
-        test_guarded_write_concurrent::<
-            WORD_LENGTH,
-            _,
-            cosmian_findex::reexport::tokio::TokioSpawner,
-        >(&m, gen_seed(), Some(100))
-        .await;
+        test_guarded_write_concurrent::<WORD_LENGTH, _>(&m, gen_seed(), Some(100)).await;
     }
 }

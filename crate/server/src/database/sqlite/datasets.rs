@@ -1,8 +1,8 @@
 use std::{collections::HashMap, sync::Arc};
 
-use async_sqlite::rusqlite::params_from_iter;
 use async_trait::async_trait;
 use cosmian_findex_structs::{CUSTOM_WORD_LENGTH, EncryptedEntries, Uuids};
+use rusqlite::params_from_iter;
 use tracing::{instrument, trace};
 use uuid::Uuid;
 

@@ -16,7 +16,7 @@ pub(crate) enum DatabaseError {
     RedisCoreError(#[from] redis::RedisError),
 
     #[error("SQLite connection error: {0}")]
-    AsyncSqliteCoreError(#[from] async_sqlite::Error),
+    TokioRusqliteCoreError(#[from] tokio_rusqlite::Error<rusqlite::Error>),
     // maps to the cases when the server expects a specific type of data and the database returns
     // something else that's not convertible to the expected type
     #[error("Database returned invalid data : {0}")]
