@@ -1,6 +1,6 @@
 [package]
 name = "cosmian_findex_server"
-version = "0.4.11"
+version = "0.4.12"
 authors.workspace = true
 categories.workspace = true
 edition.workspace = true
@@ -31,7 +31,6 @@ actix-service = "2.0"
 actix-tls = "3.4"
 actix-web = { workspace = true, features = ["macros", "openssl"] }
 alcoholic_jwt = "4091"
-async-sqlite = { workspace = true }
 async-trait = "0.1"
 chrono = "0.4"
 clap = { workspace = true, features = [
@@ -44,8 +43,7 @@ clap = { workspace = true, features = [
   "cargo",
 ] }
 cosmian_crypto_core = { workspace = true }
-cosmian_findex = { workspace = true }
-cosmian_findex_structs = { path = "../structs", version = "0.4.11" }
+cosmian_findex_structs = { path = "../structs", version = "0.4.12" }
 cosmian_logger = { workspace = true }
 cosmian_sse_memories = { workspace = true, features = ["redis-mem"] }
 dotenvy = "0.15"
@@ -63,13 +61,14 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true, features = ["full"] }
+tokio-rusqlite = "0.7"
 toml = "0.9"
 tracing = { workspace = true }
 url = { workspace = true }
 uuid = { workspace = true, features = ["v4"] }
+rusqlite = { version = "0.37", features = ["bundled", "serde_json"] }
 
 [dev-dependencies]
-cosmian_findex = { workspace = true, features = ["test-utils"] }
 cosmian_sse_memories = { workspace = true, features = ["test-utils"] }
 tempfile = { workspace = true }
 variant_count = "1.1"

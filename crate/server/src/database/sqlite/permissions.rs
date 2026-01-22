@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
-use async_sqlite::rusqlite::params;
 use async_trait::async_trait;
 use cosmian_findex_structs::{CUSTOM_WORD_LENGTH, Permission, Permissions};
+use rusqlite::params;
 use tracing::{instrument, trace};
 use uuid::Uuid;
 
@@ -88,7 +88,7 @@ impl PermissionsTrait for Sqlite<CUSTOM_WORD_LENGTH> {
                         ))
                     }))
                 } else {
-                    Err(async_sqlite::rusqlite::Error::QueryReturnedNoRows)
+                    Err(rusqlite::Error::QueryReturnedNoRows)
                 }
             })
             .await??;
@@ -115,12 +115,12 @@ impl PermissionsTrait for Sqlite<CUSTOM_WORD_LENGTH> {
                         let index_id = Uuid::from_bytes(row.get::<_, [u8; 16]>(0)?);
                         let permission =
                             Permission::try_from(row.get::<_, u8>(1)?).map_err(|e| {
-                                async_sqlite::rusqlite::Error::FromSqlConversionFailure(
+                                rusqlite::Error::FromSqlConversionFailure(
                                     // the closure signature dictates that the error type should be
                                     // rusqlite::Error, and this mapping is the closest we
                                     // can get to the original struct error (that should never happen anyway)
                                     0,
-                                    async_sqlite::rusqlite::types::Type::Integer,
+                                    rusqlite::types::Type::Integer,
                                     Box::new(e),
                                 )
                             })?;

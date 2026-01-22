@@ -1,6 +1,6 @@
 [package]
 name = "cosmian_findex_cli"
-version = "0.4.11"
+version = "0.4.12"
 authors.workspace = true
 categories = ["security"]
 edition.workspace = true
@@ -24,8 +24,6 @@ doctest = false
 non-fips = [
   "cosmian_findex_client/non-fips",
   "cosmian_kms_cli/non-fips",
-  "test_findex_server/non-fips",
-  "test_kms_server/non-fips",
 ]
 
 [dependencies]
@@ -41,8 +39,8 @@ clap = { workspace = true, features = [
 ] }
 cosmian_config_utils = { workspace = true }
 cosmian_findex = { workspace = true, features = ["test-utils"] }
-cosmian_findex_client = { path = "../findex_client", version = "0.4.11" }
-cosmian_findex_structs = { path = "../structs", version = "0.4.11" }
+cosmian_findex_client = { path = "../findex_client", version = "0.4.12" }
+cosmian_findex_structs = { path = "../structs", version = "0.4.12" }
 cosmian_kms_cli = { workspace = true }
 cosmian_logger = { workspace = true }
 cosmian_sse_memories = { workspace = true }
@@ -56,5 +54,5 @@ uuid = { workspace = true }
 [dev-dependencies]
 assert_cmd = "2.0"
 cosmian_sse_memories = { workspace = true, features = ["test-utils"] }
-test_findex_server = { path = "../test_findex_server" }
-test_kms_server = { workspace = true }
+test_findex_server = { path = "../test_findex_server", features = ["non-fips"] }
+test_kms_server = { workspace = true, features = ["non-fips"] }
