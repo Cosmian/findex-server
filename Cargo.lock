@@ -1177,7 +1177,7 @@ dependencies = [
 [[package]]
 name = "cosmian_kmip"
 version = "5.15.0"
-source = "git+https://github.com/Cosmian/kms?branch=develop#c33791cc26656aa659248088751299e12125fad5"
+source = "git+https://github.com/Cosmian/kms?tag=5.15.0#3ea3fc849de6f21231118602440657ed90917c38"
 dependencies = [
  "base64 0.22.1",
  "bitflags",
@@ -1204,7 +1204,7 @@ dependencies = [
 [[package]]
 name = "cosmian_kms_access"
 version = "5.15.0"
-source = "git+https://github.com/Cosmian/kms?branch=develop#c33791cc26656aa659248088751299e12125fad5"
+source = "git+https://github.com/Cosmian/kms?tag=5.15.0#3ea3fc849de6f21231118602440657ed90917c38"
 dependencies = [
  "cosmian_kmip",
  "serde",
@@ -1213,7 +1213,7 @@ dependencies = [
 [[package]]
 name = "cosmian_kms_base_hsm"
 version = "5.15.0"
-source = "git+https://github.com/Cosmian/kms?branch=develop#c33791cc26656aa659248088751299e12125fad5"
+source = "git+https://github.com/Cosmian/kms?tag=5.15.0#3ea3fc849de6f21231118602440657ed90917c38"
 dependencies = [
  "async-trait",
  "cosmian_kms_interfaces",
@@ -1231,7 +1231,7 @@ dependencies = [
 [[package]]
 name = "cosmian_kms_cli"
 version = "5.15.0"
-source = "git+https://github.com/Cosmian/kms?branch=develop#c33791cc26656aa659248088751299e12125fad5"
+source = "git+https://github.com/Cosmian/kms?tag=5.15.0#3ea3fc849de6f21231118602440657ed90917c38"
 dependencies = [
  "base64 0.22.1",
  "clap",
@@ -1263,7 +1263,7 @@ dependencies = [
 [[package]]
 name = "cosmian_kms_client"
 version = "5.15.0"
-source = "git+https://github.com/Cosmian/kms?branch=develop#c33791cc26656aa659248088751299e12125fad5"
+source = "git+https://github.com/Cosmian/kms?tag=5.15.0#3ea3fc849de6f21231118602440657ed90917c38"
 dependencies = [
  "cosmian_crypto_core",
  "cosmian_http_client",
@@ -1280,7 +1280,7 @@ dependencies = [
 [[package]]
 name = "cosmian_kms_client_utils"
 version = "5.15.0"
-source = "git+https://github.com/Cosmian/kms?branch=develop#c33791cc26656aa659248088751299e12125fad5"
+source = "git+https://github.com/Cosmian/kms?tag=5.15.0#3ea3fc849de6f21231118602440657ed90917c38"
 dependencies = [
  "base64 0.22.1",
  "clap",
@@ -1300,7 +1300,7 @@ dependencies = [
 [[package]]
 name = "cosmian_kms_crypto"
 version = "5.15.0"
-source = "git+https://github.com/Cosmian/kms?branch=develop#c33791cc26656aa659248088751299e12125fad5"
+source = "git+https://github.com/Cosmian/kms?tag=5.15.0#3ea3fc849de6f21231118602440657ed90917c38"
 dependencies = [
  "aes-gcm-siv",
  "argon2",
@@ -1327,7 +1327,7 @@ dependencies = [
 [[package]]
 name = "cosmian_kms_interfaces"
 version = "5.15.0"
-source = "git+https://github.com/Cosmian/kms?branch=develop#c33791cc26656aa659248088751299e12125fad5"
+source = "git+https://github.com/Cosmian/kms?tag=5.15.0#3ea3fc849de6f21231118602440657ed90917c38"
 dependencies = [
  "async-trait",
  "cosmian_kmip",
@@ -1341,7 +1341,7 @@ dependencies = [
 [[package]]
 name = "cosmian_kms_server"
 version = "5.15.0"
-source = "git+https://github.com/Cosmian/kms?branch=develop#c33791cc26656aa659248088751299e12125fad5"
+source = "git+https://github.com/Cosmian/kms?tag=5.15.0#3ea3fc849de6f21231118602440657ed90917c38"
 dependencies = [
  "actix-cors",
  "actix-files",
@@ -1394,7 +1394,7 @@ dependencies = [
 [[package]]
 name = "cosmian_kms_server_database"
 version = "5.15.0"
-source = "git+https://github.com/Cosmian/kms?branch=develop#c33791cc26656aa659248088751299e12125fad5"
+source = "git+https://github.com/Cosmian/kms?tag=5.15.0#3ea3fc849de6f21231118602440657ed90917c38"
 dependencies = [
  "async-trait",
  "cosmian_findex",
@@ -1578,7 +1578,7 @@ checksum = "460fbee9c2c2f33933d720630a6a0bac33ba7053db5344fac858d4b8952d77d5"
 [[package]]
 name = "crypt2pay_pkcs11_loader"
 version = "5.15.0"
-source = "git+https://github.com/Cosmian/kms?branch=develop#c33791cc26656aa659248088751299e12125fad5"
+source = "git+https://github.com/Cosmian/kms?tag=5.15.0#3ea3fc849de6f21231118602440657ed90917c38"
 dependencies = [
  "cosmian_kms_base_hsm",
 ]
@@ -2858,7 +2858,7 @@ dependencies = [
 [[package]]
 name = "kmip-derive"
 version = "5.15.0"
-source = "git+https://github.com/Cosmian/kms?branch=develop#c33791cc26656aa659248088751299e12125fad5"
+source = "git+https://github.com/Cosmian/kms?tag=5.15.0#3ea3fc849de6f21231118602440657ed90917c38"
 dependencies = [
  "quote",
  "syn",
@@ -3931,7 +3931,7 @@ dependencies = [
 [[package]]
 name = "proteccio_pkcs11_loader"
 version = "5.15.0"
-source = "git+https://github.com/Cosmian/kms?branch=develop#c33791cc26656aa659248088751299e12125fad5"
+source = "git+https://github.com/Cosmian/kms?tag=5.15.0#3ea3fc849de6f21231118602440657ed90917c38"
 dependencies = [
  "cosmian_kms_base_hsm",
 ]
@@ -4560,7 +4560,7 @@ checksum = "67b1b7a3b5fe4f1376887184045fcf45c69e92af734b7aaddc05fb777b6fbd03"
 [[package]]
 name = "smartcardhsm_pkcs11_loader"
 version = "5.15.0"
-source = "git+https://github.com/Cosmian/kms?branch=develop#c33791cc26656aa659248088751299e12125fad5"
+source = "git+https://github.com/Cosmian/kms?tag=5.15.0#3ea3fc849de6f21231118602440657ed90917c38"
 dependencies = [
  "cosmian_kms_base_hsm",
 ]
@@ -4588,7 +4588,7 @@ dependencies = [
 [[package]]
 name = "softhsm2_pkcs11_loader"
 version = "5.15.0"
-source = "git+https://github.com/Cosmian/kms?branch=develop#c33791cc26656aa659248088751299e12125fad5"
+source = "git+https://github.com/Cosmian/kms?tag=5.15.0#3ea3fc849de6f21231118602440657ed90917c38"
 dependencies = [
  "cosmian_kms_base_hsm",
 ]
@@ -4765,7 +4765,7 @@ dependencies = [
 [[package]]
 name = "test_kms_server"
 version = "5.15.0"
-source = "git+https://github.com/Cosmian/kms?branch=develop#c33791cc26656aa659248088751299e12125fad5"
+source = "git+https://github.com/Cosmian/kms?tag=5.15.0#3ea3fc849de6f21231118602440657ed90917c38"
 dependencies = [
  "actix-server",
  "cosmian_kms_client",
@@ -5423,7 +5423,7 @@ checksum = "b6c140620e7ffbb22c2dee59cafe6084a59b5ffc27a8859a5f0d494b5d52b6be"
 [[package]]
 name = "utimaco_pkcs11_loader"
 version = "5.15.0"
-source = "git+https://github.com/Cosmian/kms?branch=develop#c33791cc26656aa659248088751299e12125fad5"
+source = "git+https://github.com/Cosmian/kms?tag=5.15.0#3ea3fc849de6f21231118602440657ed90917c38"
 dependencies = [
  "cosmian_kms_base_hsm",
 ]
