@@ -1,7 +1,7 @@
-use async_sqlite::{Pool, PoolBuilder};
 use async_trait::async_trait;
 use cosmian_findex_structs::SERVER_ADDRESS_LENGTH;
 use cosmian_sse_memories::Address;
+use tokio_rusqlite::Connection;
 use tracing::warn;
 
 use crate::{
@@ -14,7 +14,47 @@ use crate::{
 
 pub(crate) struct Sqlite<const WORD_LENGTH: usize> {
     pub(crate) memory: SqliteMemory<Address<SERVER_ADDRESS_LENGTH>, [u8; WORD_LENGTH]>,
-    pub(crate) pool: Pool,
+    pub(crate) pool: SqlitePool,
+}
+
+#[derive(Clone)]
+pub(crate) struct SqlitePool {
+    conn: Connection,
+}
+
+impl SqlitePool {
+    pub(crate) async fn open(
+        path: impl AsRef<std::path::Path>,
+    ) -> Result<Self, tokio_rusqlite::Error<rusqlite::Error>> {
+        // NOTE: `tokio_rusqlite::Connection` is a
+        // single connection serviced by a dedicated background thread.
+        //
+        // For SQLite this is an acceptable default because concurrency is
+        // limited by database-level locking, and increasing the number of
+        // connections usually does not improve throughput (and can increase
+        // lock contention).
+        let conn = Connection::open(path).await?;
+        Ok(Self { conn })
+    }
+
+    pub(crate) async fn conn<F, R>(&self, f: F) -> Result<R, tokio_rusqlite::Error<rusqlite::Error>>
+    where
+        F: FnOnce(&mut rusqlite::Connection) -> Result<R, rusqlite::Error> + Send + 'static,
+        R: Send + 'static,
+    {
+        self.conn.call(f).await
+    }
+
+    pub(crate) async fn conn_mut<F, R>(
+        &self,
+        f: F,
+    ) -> Result<R, tokio_rusqlite::Error<rusqlite::Error>>
+    where
+        F: FnOnce(&mut rusqlite::Connection) -> Result<R, rusqlite::Error> + Send + 'static,
+        R: Send + 'static,
+    {
+        self.conn.call(f).await
+    }
 }
 
 pub const FINDEX_MEMORY_TABLE_NAME: &str = "findex_server_memory";
@@ -35,11 +75,11 @@ impl<const WORD_LENGTH: usize> InstantiationTrait for Sqlite<WORD_LENGTH> {
                 format!("{db_type:?}"),
             ));
         }
-        let pool = PoolBuilder::new().path(db_url).open().await?;
+        let pool = SqlitePool::open(db_url).await?;
 
         if clear_database {
             warn!("clearing database, this operation is irreversible.");
-            pool.conn(move |conn| {
+            pool.conn_mut(move |conn| {
                 conn.execute_batch(&format!(
                     "
                     DROP TABLE IF EXISTS {FINDEX_MEMORY_TABLE_NAME};
@@ -52,7 +92,7 @@ impl<const WORD_LENGTH: usize> InstantiationTrait for Sqlite<WORD_LENGTH> {
         }
 
         let memory = SqliteMemory::new_with_pool(pool.clone(), FINDEX_MEMORY_TABLE_NAME.to_owned());
-        pool.conn(move |conn| {
+        pool.conn_mut(move |conn| {
             conn.execute_batch(&format!(
                 "
                 PRAGMA journal_mode = WAL;

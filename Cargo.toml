@@ -43,15 +43,14 @@ opt-level = 0
 [workspace.dependencies]
 actix-server = { version = "2.5", default-features = false }
 actix-web = { version = "4.9", default-features = false }
-async-sqlite = { version = "=0.4" }
 base64 = "0.22"
 clap = { version = "4.5", default-features = false }
 cosmian_config_utils = "0.3"
 cosmian_crypto_core = { version = "10.2", default-features = false }
 cosmian_findex = "8.0"
 cosmian_sse_memories = "8.0"
-cosmian_kms_cli = { git = "https://github.com/Cosmian/kms", tag = "5.14.1", version = "5.14.1" }
-test_kms_server = { git = "https://github.com/Cosmian/kms", tag = "5.14.1", version = "5.14.1" }
+cosmian_kms_cli = { git = "https://github.com/Cosmian/kms", tag = "5.15.0", version = "5.15.0" }
+test_kms_server = { git = "https://github.com/Cosmian/kms", tag = "5.15.0", version = "5.15.0" }
 cosmian_logger = "0.3"
 der = { version = "0.7", default-features = false }
 hex = "0.4"

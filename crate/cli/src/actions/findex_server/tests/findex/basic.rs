@@ -267,11 +267,7 @@ async fn test_findex_sequential_wrong_guard() -> FindexCliResult<()> {
 #[cfg(not(target_os = "windows"))]
 #[tokio::test]
 async fn test_findex_concurrent_read_write() -> FindexCliResult<()> {
-    test_guarded_write_concurrent::<
-        CUSTOM_WORD_LENGTH,
-        _,
-        cosmian_findex::reexport::tokio::TokioSpawner,
-    >(
+    test_guarded_write_concurrent::<CUSTOM_WORD_LENGTH, _>(
         &Box::pin(create_encryption_layer::<CUSTOM_WORD_LENGTH>()).await?,
         gen_seed(),
         Some(20),

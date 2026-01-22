@@ -131,7 +131,7 @@ fn ensure_url(database_url: &str, alternate_env_variable: &str) -> FResult<Url> 
 fn ensure_sqlite_db(database_url: &str, alternate_env_variable: &str) -> FResult<PathBuf> {
     let path = &retrieve_database_location(database_url, alternate_env_variable)?;
     drop(
-        async_sqlite::rusqlite::Connection::open(path).map_err(|e| {
+        rusqlite::Connection::open(path).map_err(|e| {
             findex_server_error!("Failed to open SQLite database at {}: {}", path, e)
         })?,
     );
