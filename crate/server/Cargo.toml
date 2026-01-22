@@ -1,6 +1,6 @@
 [package]
 name = "cosmian_findex_server"
-version = "0.4.11"
+version = "0.4.12"
 authors.workspace = true
 categories.workspace = true
 edition.workspace = true
@@ -43,7 +43,7 @@ clap = { workspace = true, features = [
   "cargo",
 ] }
 cosmian_crypto_core = { workspace = true }
-cosmian_findex_structs = { path = "../structs", version = "0.4.11" }
+cosmian_findex_structs = { path = "../structs", version = "0.4.12" }
 cosmian_logger = { workspace = true }
 cosmian_sse_memories = { workspace = true, features = ["redis-mem"] }
 dotenvy = "0.15"
