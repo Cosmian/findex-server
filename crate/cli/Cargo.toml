@@ -1,6 +1,6 @@
 [package]
 name = "cosmian_findex_cli"
-version = "0.4.12"
+version = "0.4.13"
 authors.workspace = true
 categories = ["security"]
 edition.workspace = true
@@ -39,8 +39,8 @@ clap = { workspace = true, features = [
 ] }
 cosmian_config_utils = { workspace = true }
 cosmian_findex = { workspace = true, features = ["test-utils"] }
-cosmian_findex_client = { path = "../findex_client", version = "0.4.12" }
-cosmian_findex_structs = { path = "../structs", version = "0.4.12" }
+cosmian_findex_client = { path = "../findex_client", version = "0.4.13" }
+cosmian_findex_structs = { path = "../structs", version = "0.4.13" }
 cosmian_kms_cli = { workspace = true }
 cosmian_logger = { workspace = true }
 cosmian_sse_memories = { workspace = true }
