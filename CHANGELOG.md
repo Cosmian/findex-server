@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.14] - 2026-02-16
+
+### 🚀 Features
+
+- Bump KMS CLI crate from 5.16.0 to 5.16.1
+
 ## [0.4.13] - 2026-02-15
 
 ### 🚀 Features
