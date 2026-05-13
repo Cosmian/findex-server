@@ -149,16 +149,16 @@ async fn test_encrypt_and_index_no_auth() -> FindexCliResult<()> {
     let findex_ctx = start_default_test_findex_server().await;
     let kms_ctx = start_default_test_kms_server().await;
 
-    let ctx = TestsCliContext::new(
+    let ctx = Box::pin(TestsCliContext::new(
         findex_ctx.owner_client_conf.clone(),
         kms_ctx.owner_client_config.clone(),
         SMALL_DATASET,
         vec!["Southborough".to_owned()],
         "States9686",
         10,
-    )
+    ))
     .await?;
-    ctx.run_test_sequence().await
+    Box::pin(ctx.run_test_sequence()).await
 }
 
 #[tokio::test]
@@ -169,16 +169,16 @@ async fn test_encrypt_and_index_cert_auth() -> FindexCliResult<()> {
     let findex_ctx = start_default_test_findex_server_with_cert_auth().await;
     let kms_ctx = start_default_test_kms_server().await;
 
-    let ctx = TestsCliContext::new(
+    let ctx = Box::pin(TestsCliContext::new(
         findex_ctx.owner_client_conf.clone(),
         kms_ctx.owner_client_config.clone(),
         SMALL_DATASET,
         vec!["Southborough".to_owned()],
         "States9686",
         10,
-    )
+    ))
     .await?;
-    ctx.run_test_sequence().await
+    Box::pin(ctx.run_test_sequence()).await
 }
 
 #[ignore = "takes too long for CI"]
@@ -189,7 +189,7 @@ async fn test_encrypt_and_index_huge() -> FindexCliResult<()> {
     let findex_ctx = start_default_test_findex_server_with_cert_auth().await;
     let kms_ctx = start_default_test_kms_server().await;
 
-    let ctx = TestsCliContext::new(
+    let ctx = Box::pin(TestsCliContext::new(
         findex_ctx.owner_client_conf.clone(),
         kms_ctx.owner_client_config.clone(),
         HUGE_DATASET,
@@ -200,7 +200,7 @@ async fn test_encrypt_and_index_huge() -> FindexCliResult<()> {
         ],
         "BDCQ.SEA1AA2011.0680078FNumber0Business Data Collection",
         23350,
-    )
+    ))
     .await?;
-    ctx.run_test_sequence().await
+    Box::pin(ctx.run_test_sequence()).await
 }
