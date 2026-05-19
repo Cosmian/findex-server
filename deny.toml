@@ -75,6 +75,9 @@ ignore = [
   # { id = "RUSTSEC-0000-0000", reason = "you can specify a reason the advisory is ignored" },
   # "a-crate-that-is-yanked@0.1.1", # you can also ignore yanked crate versions if you wish
   # { crate = "a-crate-that-is-yanked@0.1.1", reason = "you can specify why you are ignoring the yanked crate" },
+  { id = "RUSTSEC-2023-0071", reason = "rsa Marvin Attack - transitive dep from KMS via jsonwebtoken, no fix available" },
+  { id = "RUSTSEC-2025-0009", reason = "ring 0.16.x transitive dep from KMS git dependency, cannot upgrade" },
+  { id = "RUSTSEC-2025-0010", reason = "ring 0.16.x unmaintained, transitive dep from KMS git dependency, cannot upgrade" },
 ]
 # If this is true, then cargo deny will use the git executable to fetch advisory database.
 # If this is false, then it uses a built-in git library.

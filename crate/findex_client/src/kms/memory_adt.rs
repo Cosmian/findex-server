@@ -160,7 +160,8 @@ mod tests {
         cosmian_kms_client::{
             KmsClient, KmsClientConfig,
             kmip_2_1::{
-                extra::tagging::EMPTY_TAGS, kmip_types::CryptographicAlgorithm,
+                extra::tagging::{EMPTY_TAGS, VENDOR_ID_COSMIAN},
+                kmip_types::CryptographicAlgorithm,
                 requests::symmetric_key_create_request,
             },
         },
@@ -191,6 +192,7 @@ mod tests {
 
         let k_p = kms_client
             .create(symmetric_key_create_request(
+                VENDOR_ID_COSMIAN,
                 None,
                 256,
                 CryptographicAlgorithm::SHAKE256,
@@ -204,6 +206,7 @@ mod tests {
 
         let k_xts = kms_client
             .create(symmetric_key_create_request(
+                VENDOR_ID_COSMIAN,
                 None,
                 512,
                 CryptographicAlgorithm::AES,
