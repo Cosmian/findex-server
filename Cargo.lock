@@ -440,6 +440,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "arrayvec"
+version = "0.7.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7c02d123df017efcdfbd739ef81735b36c5ba83ec3c59c80a9d7ecc718f92e50"
+
+[[package]]
 name = "asn1-rs"
 version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -912,19 +918,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "console"
-version = "0.15.11"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "054ccb5b10f9f2cbf51eb355ca1d05c2d279ce1804688d0db74b4733a5aeafd8"
-dependencies = [
- "encode_unicode",
- "libc",
- "once_cell",
- "unicode-width",
- "windows-sys 0.59.0",
-]
-
-[[package]]
 name = "const-oid"
 version = "0.9.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1198,8 +1191,8 @@ dependencies = [
 
 [[package]]
 name = "cosmian_kmip"
-version = "5.20.0"
-source = "git+https://github.com/Cosmian/kms?tag=5.20.0#51da03612dbee17c3c60b35ac7d71d9380cda84e"
+version = "5.16.1"
+source = "git+https://github.com/Cosmian/kms?tag=5.16.1#5c1d91e9e72c77dd2bfff0cb0989ed221c4de2c4"
 dependencies = [
  "base64 0.22.1",
  "bitflags",
@@ -1225,8 +1218,8 @@ dependencies = [
 
 [[package]]
 name = "cosmian_kms_access"
-version = "5.20.0"
-source = "git+https://github.com/Cosmian/kms?tag=5.20.0#51da03612dbee17c3c60b35ac7d71d9380cda84e"
+version = "5.16.1"
+source = "git+https://github.com/Cosmian/kms?tag=5.16.1#5c1d91e9e72c77dd2bfff0cb0989ed221c4de2c4"
 dependencies = [
  "cosmian_kmip",
  "serde",
@@ -1234,8 +1227,8 @@ dependencies = [
 
 [[package]]
 name = "cosmian_kms_base_hsm"
-version = "5.20.0"
-source = "git+https://github.com/Cosmian/kms?tag=5.20.0#51da03612dbee17c3c60b35ac7d71d9380cda84e"
+version = "5.16.1"
+source = "git+https://github.com/Cosmian/kms?tag=5.16.1#5c1d91e9e72c77dd2bfff0cb0989ed221c4de2c4"
 dependencies = [
  "async-trait",
  "cosmian_kms_interfaces",
@@ -1252,8 +1245,8 @@ dependencies = [
 
 [[package]]
 name = "cosmian_kms_cli"
-version = "5.20.0"
-source = "git+https://github.com/Cosmian/kms?tag=5.20.0#51da03612dbee17c3c60b35ac7d71d9380cda84e"
+version = "5.16.1"
+source = "git+https://github.com/Cosmian/kms?tag=5.16.1#5c1d91e9e72c77dd2bfff0cb0989ed221c4de2c4"
 dependencies = [
  "base64 0.22.1",
  "clap",
@@ -1263,12 +1256,11 @@ dependencies = [
  "cosmian_kms_client",
  "cosmian_kms_crypto",
  "cosmian_logger 0.5.5",
- "criterion",
  "der",
  "hex",
  "jsonwebtoken",
  "leb128",
- "libc",
+ "num-format",
  "pem",
  "reqwest",
  "serde",
@@ -1286,29 +1278,25 @@ dependencies = [
 
 [[package]]
 name = "cosmian_kms_client"
-version = "5.20.0"
-source = "git+https://github.com/Cosmian/kms?tag=5.20.0#51da03612dbee17c3c60b35ac7d71d9380cda84e"
+version = "5.16.1"
+source = "git+https://github.com/Cosmian/kms?tag=5.16.1#5c1d91e9e72c77dd2bfff0cb0989ed221c4de2c4"
 dependencies = [
- "actix-web",
  "cosmian_crypto_core",
+ "cosmian_http_client",
  "cosmian_kms_client_utils",
  "cosmian_logger 0.5.5",
  "der",
- "oauth2",
  "pem",
- "reqwest",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
- "tokio",
- "tracing",
  "url",
 ]
 
 [[package]]
 name = "cosmian_kms_client_utils"
-version = "5.20.0"
-source = "git+https://github.com/Cosmian/kms?tag=5.20.0#51da03612dbee17c3c60b35ac7d71d9380cda84e"
+version = "5.16.1"
+source = "git+https://github.com/Cosmian/kms?tag=5.16.1#5c1d91e9e72c77dd2bfff0cb0989ed221c4de2c4"
 dependencies = [
  "base64 0.22.1",
  "clap",
@@ -1327,8 +1315,8 @@ dependencies = [
 
 [[package]]
 name = "cosmian_kms_crypto"
-version = "5.20.0"
-source = "git+https://github.com/Cosmian/kms?tag=5.20.0#51da03612dbee17c3c60b35ac7d71d9380cda84e"
+version = "5.16.1"
+source = "git+https://github.com/Cosmian/kms?tag=5.16.1#5c1d91e9e72c77dd2bfff0cb0989ed221c4de2c4"
 dependencies = [
  "aes-gcm-siv",
  "argon2",
@@ -1341,7 +1329,6 @@ dependencies = [
  "k256",
  "num-bigint-dig",
  "openssl",
- "openssl-sys",
  "p256",
  "rust-ini",
  "serde",
@@ -1355,8 +1342,8 @@ dependencies = [
 
 [[package]]
 name = "cosmian_kms_interfaces"
-version = "5.20.0"
-source = "git+https://github.com/Cosmian/kms?tag=5.20.0#51da03612dbee17c3c60b35ac7d71d9380cda84e"
+version = "5.16.1"
+source = "git+https://github.com/Cosmian/kms?tag=5.16.1#5c1d91e9e72c77dd2bfff0cb0989ed221c4de2c4"
 dependencies = [
  "async-trait",
  "cosmian_kmip",
@@ -1369,8 +1356,8 @@ dependencies = [
 
 [[package]]
 name = "cosmian_kms_server"
-version = "5.20.0"
-source = "git+https://github.com/Cosmian/kms?tag=5.20.0#51da03612dbee17c3c60b35ac7d71d9380cda84e"
+version = "5.16.1"
+source = "git+https://github.com/Cosmian/kms?tag=5.16.1#5c1d91e9e72c77dd2bfff0cb0989ed221c4de2c4"
 dependencies = [
  "actix-cors",
  "actix-files",
@@ -1380,6 +1367,7 @@ dependencies = [
  "actix-session",
  "actix-tls",
  "actix-web",
+ "alcoholic_jwt",
  "async-recursion",
  "base64 0.22.1",
  "chrono",
@@ -1389,22 +1377,18 @@ dependencies = [
  "cosmian_kms_server_database",
  "cosmian_logger 0.5.5",
  "crypt2pay_pkcs11_loader",
- "dialoguer",
  "dotenvy",
  "futures",
  "hex",
- "http 1.4.0",
  "jsonwebtoken",
  "num-bigint-dig",
  "openssl",
- "openssl-sys",
  "opentelemetry 0.27.1",
  "opentelemetry-otlp 0.27.0",
  "opentelemetry_sdk 0.27.1",
  "pem",
  "proteccio_pkcs11_loader",
  "reqwest",
- "scratchstack-aws-signature",
  "serde",
  "serde_json",
  "sha2 0.10.9",
@@ -1414,7 +1398,7 @@ dependencies = [
  "thiserror 2.0.18",
  "time",
  "tokio",
- "toml 0.9.12+spec-1.1.0",
+ "toml 0.8.23",
  "tracing",
  "url",
  "utimaco_pkcs11_loader",
@@ -1425,8 +1409,8 @@ dependencies = [
 
 [[package]]
 name = "cosmian_kms_server_database"
-version = "5.20.0"
-source = "git+https://github.com/Cosmian/kms?tag=5.20.0#51da03612dbee17c3c60b35ac7d71d9380cda84e"
+version = "5.16.1"
+source = "git+https://github.com/Cosmian/kms?tag=5.16.1#5c1d91e9e72c77dd2bfff0cb0989ed221c4de2c4"
 dependencies = [
  "async-trait",
  "cosmian_findex",
@@ -1576,7 +1560,6 @@ dependencies = [
  "serde",
  "serde_json",
  "tinytemplate",
- "tokio",
  "walkdir",
 ]
 
@@ -1641,8 +1624,8 @@ checksum = "460fbee9c2c2f33933d720630a6a0bac33ba7053db5344fac858d4b8952d77d5"
 
 [[package]]
 name = "crypt2pay_pkcs11_loader"
-version = "5.20.0"
-source = "git+https://github.com/Cosmian/kms?tag=5.20.0#51da03612dbee17c3c60b35ac7d71d9380cda84e"
+version = "5.16.1"
+source = "git+https://github.com/Cosmian/kms?tag=5.16.1#5c1d91e9e72c77dd2bfff0cb0989ed221c4de2c4"
 dependencies = [
  "cosmian_kms_base_hsm",
 ]
@@ -1937,20 +1920,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "dialoguer"
-version = "0.11.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "658bce805d770f407bc62102fca7c2c64ceef2fbcb2b8bd19d2765ce093980de"
-dependencies = [
- "console",
- "fuzzy-matcher",
- "shell-words",
- "tempfile",
- "thiserror 1.0.69",
- "zeroize",
-]
-
-[[package]]
 name = "difflib"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2062,7 +2031,6 @@ dependencies = [
  "ff",
  "generic-array",
  "group",
- "hkdf",
  "pem-rfc7468",
  "pkcs8",
  "rand_core 0.6.4",
@@ -2070,12 +2038,6 @@ dependencies = [
  "subtle",
  "zeroize",
 ]
-
-[[package]]
-name = "encode_unicode"
-version = "1.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "34aa73646ffb006b8f5147f3dc182bd4bcb190227ce861fc4a4844bf8e3cb2c0"
 
 [[package]]
 name = "encoding_rs"
@@ -2293,15 +2255,6 @@ dependencies = [
  "memchr",
  "pin-project-lite",
  "slab",
-]
-
-[[package]]
-name = "fuzzy-matcher"
-version = "0.3.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "54614a3312934d066701a80f20f15fa3b56d67ac7722b39eea5b4c9dd1d66c94"
-dependencies = [
- "thread_local",
 ]
 
 [[package]]
@@ -2952,18 +2905,11 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "eba32bfb4ffdeaca3e34431072faf01745c9b26d25504aa7a6cf5684334fc4fc"
 dependencies = [
  "base64 0.22.1",
- "ed25519-dalek",
  "getrandom 0.2.17",
- "hmac 0.12.1",
  "js-sys",
- "p256",
- "p384",
  "pem",
- "rand 0.8.6",
- "rsa",
  "serde",
  "serde_json",
- "sha2 0.10.9",
  "signature",
  "simple_asn1",
  "zeroize",
@@ -3013,8 +2959,8 @@ dependencies = [
 
 [[package]]
 name = "kmip-derive"
-version = "5.20.0"
-source = "git+https://github.com/Cosmian/kms?tag=5.20.0#51da03612dbee17c3c60b35ac7d71d9380cda84e"
+version = "5.16.1"
+source = "git+https://github.com/Cosmian/kms?tag=5.16.1#5c1d91e9e72c77dd2bfff0cb0989ed221c4de2c4"
 dependencies = [
  "quote",
  "syn",
@@ -3032,7 +2978,7 @@ version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bbd2bcb4c963f2ddae06a2efc7e9f3591312473c50c6685e1f298068316e66fe"
 dependencies = [
- "spin 0.9.8",
+ "spin",
 ]
 
 [[package]]
@@ -3386,6 +3332,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c6673768db2d862beb9b39a78fdcb1a69439615d5794a1be50caa9bc92c81967"
 
 [[package]]
+name = "num-format"
+version = "0.4.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a652d9771a63711fd3c3deb670acfbe5c30a4072e664d7a3bf5a9e1056ac72c3"
+dependencies = [
+ "arrayvec",
+ "itoa",
+]
+
+[[package]]
 name = "num-integer"
 version = "0.1.46"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3412,7 +3368,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "071dfc062690e90b734c0b2273ce72ad0ffa95f0c74596bc250dcfd960262841"
 dependencies = [
  "autocfg",
- "libm",
 ]
 
 [[package]]
@@ -3729,18 +3684,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "p384"
-version = "0.13.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fe42f1670a52a47d448f14b6a5c61dd78fce51856e68edaa38f7ae3a46b8d6b6"
-dependencies = [
- "ecdsa",
- "elliptic-curve",
- "primeorder",
- "sha2 0.10.9",
-]
-
-[[package]]
 name = "parking_lot"
 version = "0.12.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3843,17 +3786,6 @@ name = "pin-project-lite"
 version = "0.2.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a89322df9ebe1c1578d689c92318e070967d1042b512afbe49518723f4e6d5cd"
-
-[[package]]
-name = "pkcs1"
-version = "0.7.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c8ffb9f10fa047879315e6625af03c164b16962a5368d724ed16323b68ace47f"
-dependencies = [
- "der",
- "pkcs8",
- "spki",
-]
 
 [[package]]
 name = "pkcs11-sys"
@@ -4107,8 +4039,8 @@ dependencies = [
 
 [[package]]
 name = "proteccio_pkcs11_loader"
-version = "5.20.0"
-source = "git+https://github.com/Cosmian/kms?tag=5.20.0#51da03612dbee17c3c60b35ac7d71d9380cda84e"
+version = "5.16.1"
+source = "git+https://github.com/Cosmian/kms?tag=5.16.1#5c1d91e9e72c77dd2bfff0cb0989ed221c4de2c4"
 dependencies = [
  "cosmian_kms_base_hsm",
 ]
@@ -4370,21 +4302,6 @@ dependencies = [
 
 [[package]]
 name = "ring"
-version = "0.16.20"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3053cf52e236a3ed746dfc745aa9cacf1b791d846bdaf412f60a8d7d6e17c8fc"
-dependencies = [
- "cc",
- "libc",
- "once_cell",
- "spin 0.5.2",
- "untrusted 0.7.1",
- "web-sys",
- "winapi",
-]
-
-[[package]]
-name = "ring"
 version = "0.17.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a4689e6c2294d81e88dc6261c768b63bc4fcdb852be6d1352498b114f61383b7"
@@ -4393,28 +4310,8 @@ dependencies = [
  "cfg-if",
  "getrandom 0.2.17",
  "libc",
- "untrusted 0.9.0",
+ "untrusted",
  "windows-sys 0.52.0",
-]
-
-[[package]]
-name = "rsa"
-version = "0.9.10"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b8573f03f5883dcaebdfcf4725caa1ecb9c15b2ef50c43a07b816e06799bb12d"
-dependencies = [
- "const-oid 0.9.6",
- "digest 0.10.7",
- "num-bigint-dig",
- "num-integer",
- "num-traits",
- "pkcs1",
- "pkcs8",
- "rand_core 0.6.4",
- "signature",
- "spki",
- "subtle",
- "zeroize",
 ]
 
 [[package]]
@@ -4501,9 +4398,9 @@ version = "0.103.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "61c429a8649f110dddef65e2a5ad240f747e85f7758a6bccc7e5777bd33f756e"
 dependencies = [
- "ring 0.17.14",
+ "ring",
  "rustls-pki-types",
- "untrusted 0.9.0",
+ "untrusted",
 ]
 
 [[package]]
@@ -4556,34 +4453,6 @@ name = "scopeguard"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
-
-[[package]]
-name = "scratchstack-aws-principal"
-version = "0.3.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b9bc5a143f43c1be0f0ea1e3093ed0ba5981ca53594eab4dcfed3d83e59158b4"
-dependencies = [
- "log",
-]
-
-[[package]]
-name = "scratchstack-aws-signature"
-version = "0.10.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "66ca7b4792cf02b7d4e2f4e68da7cdbdc8d841c21ec3780c527507fc947a5273"
-dependencies = [
- "async-trait",
- "chrono",
- "hex",
- "http 1.4.0",
- "lazy_static",
- "log",
- "regex",
- "ring 0.16.20",
- "scratchstack-aws-principal",
- "subtle",
- "tower 0.4.13",
-]
 
 [[package]]
 name = "sec1"
@@ -4783,12 +4652,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "shell-words"
-version = "1.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dc6fe69c597f9c37bfeeeeeb33da3530379845f10be461a66d16d03eca2ded77"
-
-[[package]]
 name = "shlex"
 version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4852,8 +4715,8 @@ checksum = "67b1b7a3b5fe4f1376887184045fcf45c69e92af734b7aaddc05fb777b6fbd03"
 
 [[package]]
 name = "smartcardhsm_pkcs11_loader"
-version = "5.20.0"
-source = "git+https://github.com/Cosmian/kms?tag=5.20.0#51da03612dbee17c3c60b35ac7d71d9380cda84e"
+version = "5.16.1"
+source = "git+https://github.com/Cosmian/kms?tag=5.16.1#5c1d91e9e72c77dd2bfff0cb0989ed221c4de2c4"
 dependencies = [
  "cosmian_kms_base_hsm",
 ]
@@ -4880,17 +4743,11 @@ dependencies = [
 
 [[package]]
 name = "softhsm2_pkcs11_loader"
-version = "5.20.0"
-source = "git+https://github.com/Cosmian/kms?tag=5.20.0#51da03612dbee17c3c60b35ac7d71d9380cda84e"
+version = "5.16.1"
+source = "git+https://github.com/Cosmian/kms?tag=5.16.1#5c1d91e9e72c77dd2bfff0cb0989ed221c4de2c4"
 dependencies = [
  "cosmian_kms_base_hsm",
 ]
-
-[[package]]
-name = "spin"
-version = "0.5.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6e63cff320ae2c57904679ba7cb63280a3dc4613885beafb148ee7bf9aa9042d"
 
 [[package]]
 name = "spin"
@@ -5069,8 +4926,8 @@ dependencies = [
 
 [[package]]
 name = "test_kms_server"
-version = "5.20.0"
-source = "git+https://github.com/Cosmian/kms?tag=5.20.0#51da03612dbee17c3c60b35ac7d71d9380cda84e"
+version = "5.16.1"
+source = "git+https://github.com/Cosmian/kms?tag=5.16.1#5c1d91e9e72c77dd2bfff0cb0989ed221c4de2c4"
 dependencies = [
  "actix-server",
  "cosmian_kms_client",
@@ -5693,12 +5550,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9629274872b2bfaf8d66f5f15725007f635594914870f65218920345aa11aa8c"
 
 [[package]]
-name = "unicode-width"
-version = "0.2.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b4ac048d71ede7ee76d585517add45da530660ef4390e49b098733c6e897f254"
-
-[[package]]
 name = "unicode-xid"
 version = "0.2.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5713,12 +5564,6 @@ dependencies = [
  "crypto-common 0.1.7",
  "subtle",
 ]
-
-[[package]]
-name = "untrusted"
-version = "0.7.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a156c684c91ea7d62626509bce3cb4e1d9ed5c4d978f7b4352658f96a4c26b4a"
 
 [[package]]
 name = "untrusted"
@@ -5747,8 +5592,8 @@ checksum = "b6c140620e7ffbb22c2dee59cafe6084a59b5ffc27a8859a5f0d494b5d52b6be"
 
 [[package]]
 name = "utimaco_pkcs11_loader"
-version = "5.20.0"
-source = "git+https://github.com/Cosmian/kms?tag=5.20.0#51da03612dbee17c3c60b35ac7d71d9380cda84e"
+version = "5.16.1"
+source = "git+https://github.com/Cosmian/kms?tag=5.16.1#5c1d91e9e72c77dd2bfff0cb0989ed221c4de2c4"
 dependencies = [
  "cosmian_kms_base_hsm",
 ]
@@ -5991,22 +5836,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "winapi"
-version = "0.3.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5c839a674fcd7a98952e593242ea400abe93992746761e38641405d28b00f419"
-dependencies = [
- "winapi-i686-pc-windows-gnu",
- "winapi-x86_64-pc-windows-gnu",
-]
-
-[[package]]
-name = "winapi-i686-pc-windows-gnu"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ac3b87c63620426dd9b991e5ce0329eff545bccbbb34f3be09ff6fb6ab51b7b6"
-
-[[package]]
 name = "winapi-util"
 version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6014,12 +5843,6 @@ checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
  "windows-sys 0.61.2",
 ]
-
-[[package]]
-name = "winapi-x86_64-pc-windows-gnu"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "712e227841d057c1ee1cd2fb22fa7e5a5461ae8e48fa2ca79ec42cfc1931183f"
 
 [[package]]
 name = "windows-core"
@@ -6096,15 +5919,6 @@ name = "windows-sys"
 version = "0.52.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "282be5f36a8ce781fad8c8ae18fa3f9beff57ec1b52cb3de0789201425d9a33d"
-dependencies = [
- "windows-targets",
-]
-
-[[package]]
-name = "windows-sys"
-version = "0.59.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1e38bc4d79ed67fd075bcc251a1c39b32a1776bbe92e5bef1f0bf1f8c531853b"
 dependencies = [
  "windows-targets",
 ]

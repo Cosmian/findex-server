@@ -9,7 +9,7 @@ theme:
   font:
     text: Open Sans
   favicon: eviden-favicon.svg
-  logo: eviden-logo-orange.svg
+  logo: images/eviden-logo-orange.svg
   custom_dir: theme_overrides
   features:
     - content.tabs.link
@@ -28,8 +28,8 @@ markdown_extensions:
       custom_fences:
         - name: mermaid
           class: mermaid
-          format: !!python/name:mermaid2.fence_mermaid_custom
-  - pymdownx.tabbed:
+          # uncomment this only to test locally the mermaid rendering
+          # format: !!python/name:mermaid2.fence_mermaid_custom  - pymdownx.tabbed:
       alternate_style: true
   - pymdownx.emoji
   - pymdownx.details
