@@ -1,12 +1,12 @@
-# Using the Cosmian CLI
+# Using the Eviden CLI
 
-The [Cosmian CLI](../cosmian_cli/index.md) allows to interact both with the
+The [Eviden CLI](../cosmian_cli/index.md) allows to interact both with the
 **KMS server** and **Findex server**. Then you can realize the following operations
 illustrated in [encrypted database](./database.md#how-to-securely-index-new-data).
 
 As prerequisites, you need to have:
 
-- the Cosmian CLI installed on your machine. You can download the latest version of the Cosmian CLI from the [Cosmian package website](https://package.cosmian.com/cli).
+- the Eviden CLI installed on your machine. You can download the latest version of the Cosmian CLI from the [Cosmian package website](https://package.cosmian.com/cli).
 - a running KMS server: follow the instructions in the [quick start guide](../key_management_system/installation/installation_getting_started.md/).
 - a running Findex server: follow the instructions in the [quick start guide](./quick_start.md).
 
@@ -96,4 +96,4 @@ Decrypted record: SouthboroughMAUnited States9686
 
 ## Configuration
 
-Please refer to the [configuration documentation](../cosmian_cli/configuration.md) for more information on how to configure the Cosmian CLI.
+Please refer to the [configuration documentation](../cosmian_cli/configuration.md) for more information on how to configure the Eviden CLI.

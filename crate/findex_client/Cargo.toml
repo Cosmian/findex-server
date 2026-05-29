@@ -21,7 +21,13 @@ base64 = { workspace = true }
 cosmian_findex = { workspace = true }
 cosmian_findex_structs = { path = "../structs", version = "0.4.14" }
 cosmian_http_client = "0.7"
+# Pin transitive KMS deps to =5.16.1 (their crates.io ^5.16.1 ranges float to 5.22.0 which has breaking changes)
+cosmian_kmip = { workspace = true }
+cosmian_kms_access = { workspace = true }
 cosmian_kms_cli = { workspace = true }
+cosmian_kms_client = { workspace = true }
+cosmian_kms_client_utils = { workspace = true }
+cosmian_kms_crypto = { workspace = true }
 cosmian_logger = { workspace = true }
 cosmian_sse_memories = { workspace = true, features = ["redis-mem"] }
 reqwest = { workspace = true, features = ["default", "json", "native-tls"] }
@@ -29,6 +35,9 @@ serde = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }
 uuid = { workspace = true }
+
+[package.metadata.cargo-machete]
+ignored = ["cosmian_kmip", "cosmian_kms_access", "cosmian_kms_client", "cosmian_kms_client_utils", "cosmian_kms_crypto"]
 
 [dev-dependencies]
 cosmian_findex = { workspace = true, features = ["test-utils"] }

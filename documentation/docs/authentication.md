@@ -75,13 +75,13 @@ sequenceDiagram
 !!! info
     JWT is a compact, URL-safe means of representing claims to be transferred between two parties. The claims in a JWT are encoded as a JSON object that is used as the payload of a JSON Web Signature (JWS) structure or as the plaintext of a JSON Web Encryption (JWE) structure. This enables the claims to be digitally signed or integrity protected with a Message Authentication Code (MAC) and/or encrypted.
 
-## Cosmian CLI Configuration
+## Eviden CLI Configuration
 
-[Cosmian CLI](../cosmian_cli/index.md) is helpful to authenticate with the Findex server using OpenID Connect.
+[Eviden CLI](../cosmian_cli/index.md) is helpful to authenticate with the Findex server using OpenID Connect.
 The CLI has to be installed locally and configured with the Findex server URL and OAuth2 configuration.
 
 !!! info
-    The Cosmian CLI realizes this authentication flow using this simple command:
+    The Eviden CLI realizes this authentication flow using this simple command:
     ```sh
     cosmian findex-server login
     ```
