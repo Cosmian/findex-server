@@ -13,19 +13,25 @@ on:
       platforms:
         required: true
         type: string
+  push:
+  pull_request:
+  workflow_dispatch:
 
 jobs:
   cargo-clippy:
+    if: github.event_name == 'workflow_call'
     uses: Cosmian/reusable_workflows/.github/workflows/clippy.yml@develop
     with:
       toolchain: ${{ inputs.toolchain }}
 
   cargo-deny:
+    if: github.event_name == 'workflow_call'
     uses: Cosmian/reusable_workflows/.github/workflows/cargo-audit.yml@develop
     with:
       toolchain: ${{ inputs.toolchain }}
 
   cargo-machete:
+    if: github.event_name == 'workflow_call'
     uses: Cosmian/reusable_workflows/.github/workflows/cargo-machete.yml@develop
     with:
       toolchain: ${{ inputs.toolchain }}
@@ -37,6 +43,7 @@ jobs:
   #     toolchain: ${{ inputs.toolchain }}
 
   build-tests:
+    if: github.event_name == 'workflow_call'
     uses: Cosmian/reusable_workflows/.github/workflows/build_all.yml@develop
     secrets: inherit
     with:
@@ -44,6 +51,7 @@ jobs:
       debug_or_release: ${{ inputs.debug_or_release }}
 
   cargo-publish:
+    if: github.event_name == 'workflow_call'
     uses: Cosmian/reusable_workflows/.github/workflows/cargo-publish-workspace.yml@develop
     with:
       toolchain: ${{ inputs.toolchain }}
@@ -51,6 +59,7 @@ jobs:
       token: ${{ secrets.CRATES_IO }}
 
   docker-image:
+    if: github.event_name == 'workflow_call'
     name: Build docker image
     uses: Cosmian/reusable_workflows/.github/workflows/build_docker_image.yml@develop
     with:
@@ -62,6 +71,7 @@ jobs:
   ### Releases
   ##############################################################################
   push-artifacts:
+    if: github.event_name == 'workflow_call'
     needs:
       - cargo-clippy
       - cargo-deny
@@ -98,3 +108,17 @@ jobs:
           repo: Cosmian/public_documentation
           ref: main
           token: ${{ secrets.PAT_TOKEN }}
+
+  build-documentation:
+    name: Build documentation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install mdBook toolchain
+        run: curl -fsSL https://raw.githubusercontent.com/Cosmian/doc-theme/main/scripts/setup-mdbook.sh | sh
+
+      - name: Build documentation
+        run: |
+          export PATH="$HOME/.cargo/bin:$PATH"
+          cd documentation && mdbook build
