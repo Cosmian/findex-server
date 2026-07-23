@@ -2,7 +2,7 @@
 title = "Findex server"
 authors = ["Cosmian"]
 language = "en"
-src = "src"
+src = "docs"
 
 [build]
 build-dir = "book"

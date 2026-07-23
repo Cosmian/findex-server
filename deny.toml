@@ -75,6 +75,9 @@ ignore = [
   # { id = "RUSTSEC-0000-0000", reason = "you can specify a reason the advisory is ignored" },
   # "a-crate-that-is-yanked@0.1.1", # you can also ignore yanked crate versions if you wish
   # { crate = "a-crate-that-is-yanked@0.1.1", reason = "you can specify why you are ignoring the yanked crate" },
+  { id = "RUSTSEC-2026-0173", reason = "proc-macro-error2 is unmaintained; no safe upgrade available, used transitively via mysql-common-derive" },
+  { id = "RUSTSEC-2026-0194", reason = "quick-xml quadratic DoS; upgrade blocked by cosmian_kmip dependency constraints" },
+  { id = "RUSTSEC-2026-0195", reason = "quick-xml unbounded namespace allocation DoS; upgrade blocked by cosmian_kmip dependency constraints" },
 ]
 # If this is true, then cargo deny will use the git executable to fetch advisory database.
 # If this is false, then it uses a built-in git library.
