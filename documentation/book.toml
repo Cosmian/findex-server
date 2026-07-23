@@ -45,8 +45,5 @@ exclude = [
 command = "mdbook-admonish"
 assets_version = "3.1.0"
 
-[preprocessor.tabs]
-command = "python3 ../../theme/scripts/mdbook_tabs.py"
-
 [preprocessor.mermaid]
 command = "mdbook-mermaid"
