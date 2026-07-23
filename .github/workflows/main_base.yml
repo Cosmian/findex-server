@@ -13,25 +13,19 @@ on:
       platforms:
         required: true
         type: string
-  push:
-  pull_request:
-  workflow_dispatch:
 
 jobs:
   cargo-clippy:
-    if: github.event_name == 'workflow_call'
     uses: Cosmian/reusable_workflows/.github/workflows/clippy.yml@develop
     with:
       toolchain: ${{ inputs.toolchain }}
 
   cargo-deny:
-    if: github.event_name == 'workflow_call'
     uses: Cosmian/reusable_workflows/.github/workflows/cargo-audit.yml@develop
     with:
       toolchain: ${{ inputs.toolchain }}
 
   cargo-machete:
-    if: github.event_name == 'workflow_call'
     uses: Cosmian/reusable_workflows/.github/workflows/cargo-machete.yml@develop
     with:
       toolchain: ${{ inputs.toolchain }}
@@ -43,7 +37,6 @@ jobs:
   #     toolchain: ${{ inputs.toolchain }}
 
   build-tests:
-    if: github.event_name == 'workflow_call'
     uses: Cosmian/reusable_workflows/.github/workflows/build_all.yml@develop
     secrets: inherit
     with:
@@ -51,7 +44,6 @@ jobs:
       debug_or_release: ${{ inputs.debug_or_release }}
 
   cargo-publish:
-    if: github.event_name == 'workflow_call'
     uses: Cosmian/reusable_workflows/.github/workflows/cargo-publish-workspace.yml@develop
     with:
       toolchain: ${{ inputs.toolchain }}
@@ -59,7 +51,6 @@ jobs:
       token: ${{ secrets.CRATES_IO }}
 
   docker-image:
-    if: github.event_name == 'workflow_call'
     name: Build docker image
     uses: Cosmian/reusable_workflows/.github/workflows/build_docker_image.yml@develop
     with:
@@ -71,7 +62,6 @@ jobs:
   ### Releases
   ##############################################################################
   push-artifacts:
-    if: github.event_name == 'workflow_call'
     needs:
       - cargo-clippy
       - cargo-deny
