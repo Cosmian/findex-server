@@ -6,7 +6,7 @@ illustrated in [encrypted database](./database.md#how-to-securely-index-new-data
 
 As prerequisites, you need to have:
 
-- the Eviden CLI installed on your machine. You can download the latest version of the Cosmian CLI from the [Cosmian package website](https://package.cosmian.com/cli).
+- the Eviden CLI installed on your machine. You can download the latest version of the Eviden CLI from the [Cosmian package website](https://package.cosmian.com/cli).
 - a running KMS server: follow the instructions in the [quick start guide](../key_management_system/installation/installation_getting_started.md).
 - a running Findex server: follow the instructions in the [quick start guide](./quick_start.md).
 

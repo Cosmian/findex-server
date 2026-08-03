@@ -1,6 +1,6 @@
-# Eviden Findex server
+# Findex server
 
-The Eviden Findex is a high-performance, [**open-source**](https://github.com/Cosmian/findex-server), server application
+Findex is a high-performance, [**open-source**](https://github.com/Cosmian/findex-server), server application
 written in [**Rust**](https://www.rust-lang.org/) that provides a REST API to index and search encrypted data.
 
 ## What is Findex?
