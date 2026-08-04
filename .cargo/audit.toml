@@ -6,4 +6,6 @@
 ignore = [
     "RUSTSEC-2023-0071", # rsa
     "RUSTSEC-2024-0436", # unmaintained paste
+    "RUSTSEC-2026-0194", # quick-xml: quadratic runtime on duplicate attrs — fixed in >=0.41.0; blocked on cosmian_kmip upgrade
+    "RUSTSEC-2026-0195", # quick-xml: unbounded NS-decl allocation DoS — fixed in >=0.41.0; blocked on cosmian_kmip upgrade
 ]
