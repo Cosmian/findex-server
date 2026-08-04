@@ -77,7 +77,7 @@ sequenceDiagram
 
 ## Eviden CLI Configuration
 
-[Eviden CLI](../kms_clients/index.md) is helpful to authenticate with the Findex server using OpenID Connect.
+[Eviden CLI](../key_management_system/kms_clients/index.md) is helpful to authenticate with the Findex server using OpenID Connect.
 The CLI has to be installed locally and configured with the Findex server URL and OAuth2 configuration.
 
 !!! info
