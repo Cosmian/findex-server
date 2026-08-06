@@ -1,7 +1,7 @@
 # Usage
 
 ```sh
-Cosmian Findex server
+Eviden Findex server
 
 Usage: cosmian_findex_server [OPTIONS]
 

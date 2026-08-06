@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.15] - 2026-08-06
+
+### 🚀 Features
+
+- Rebrand UI and documentation from Cosmian to Eviden (#129)
+- Migrate mkdocs to mdbook (#130)
+
 ## [0.4.14] - 2026-02-16
 
 ### 🚀 Features
