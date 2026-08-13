@@ -80,7 +80,7 @@ The server presents the following endpoints:
 | `/indexes/{index_id}/batch_read`    | retrieve encrypted indexes |
 | `/indexes/{index_id}/guarded_write` | insert encrypted indexes   |
 
-And consequently, the Findex REST client implementation (crate/client/src/rest_client.rs)
+And consequently, the Findex [REST client implementation](https://github.com/Cosmian/findex-server/blob/develop/crate/findex_client/src/rest_client.rs)
 implements the client side of the communication with the server.
 
 Furthermore, the encryption is done by the client before sending the data to the server.
