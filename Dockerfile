@@ -5,17 +5,9 @@ LABEL name="Cosmian Findex server docker container"
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-WORKDIR /root
-
-RUN apt-get update \
-    && apt-get install --no-install-recommends -qq -y \
-    wget \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+WORKDIR /root/findex-server
 
 COPY . /root/findex-server
-
-WORKDIR /root/findex-server
 
 RUN cargo build --release --no-default-features
 
