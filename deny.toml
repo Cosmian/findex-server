@@ -78,6 +78,7 @@ ignore = [
   { id = "RUSTSEC-2026-0173", reason = "proc-macro-error2 is unmaintained; no safe upgrade available, used transitively via mysql-common-derive" },
   { id = "RUSTSEC-2026-0194", reason = "quick-xml quadratic DoS; upgrade blocked by cosmian_kmip dependency constraints" },
   { id = "RUSTSEC-2026-0195", reason = "quick-xml unbounded namespace allocation DoS; upgrade blocked by cosmian_kmip dependency constraints" },
+  { id = "RUSTSEC-2026-0258", reason = "h2 unbounded empty DATA frames, low severity, patched in 0.4.16: fixed for the hyper/reqwest instance (h2 0.4.16), but actix-http 3.x still pins h2 ^0.3 with no patched 0.3.x release available; revisit once actix-web migrates to h2 0.4.x" },
 ]
 # If this is true, then cargo deny will use the git executable to fetch advisory database.
 # If this is false, then it uses a built-in git library.
